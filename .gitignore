@@ -1,0 +1,35 @@
+node_modules
+.env
+.env.*
+!.env.example
+dist
+build
+*.tsbuildinfo
+.cache
+*.log
+*.pid
+coverage
+.nyc_output
+*.tgz
+.pnpm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.js.map
+*.d.ts
+*.js
+
+# 민감 데이터 (절대 커밋 금지)
+*.secret
+*.key
+*.pem
+secrets/

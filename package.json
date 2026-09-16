@@ -1,0 +1,25 @@
+{
+  "name": "password-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted password manager — encrypted vault, Web UI, Firefox extension",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter '**' run dev",
+    "build": "pnpm -r --parallel --filter '**' run build",
+    "lint": "pnpm -r --parallel --filter '**' run lint",
+    "typecheck": "pnpm -r --parallel --filter '**' run typecheck",
+    "test": "pnpm -r --parallel --filter '**' run test",
+    "clean": "pnpm -r --parallel --filter '**' run clean 2>/dev/null || true"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "workspaces": [
+    "apps/web",
+    "apps/browser-firefox",
+    "apps/services/api",
+    "packages/shared"
+  ]
+}
