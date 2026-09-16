@@ -28,6 +28,10 @@ Thumbs.db
 *.d.ts
 *.js
 
+# SQLite databases
+dev.db
+*.db
+
 # 민감 데이터 (절대 커밋 금지)
 *.secret
 *.key
