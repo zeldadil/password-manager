@@ -1,0 +1,1597 @@
+openapi: 3.1.0
+info:
+  title: Secure Password Manager API
+  version: 1.0.0
+  description: |
+    OpenAPI 3.1 specification for the Secure Password Manager.
+
+    Envelope convention: Every response body is wrapped in a header/body envelope
+    (inspired by Passbolt — ADR-001 section 8, adapted). The header block carries
+    transport metadata; the body block carries the entity payload.
+
+    Status codes: status is a human-readable string (success, error, warning).
+    code is a machine-readable integer (200-class success, 400-class client error,
+    500-class server error). The HTTP status line mirrors code.
+
+    UUIDs: All entity IDs are UUID v4, serialized as RFC 4122 strings.
+    No auto-increment integers, no sequential IDs (ADR-001 section 8; ADR-003 section 5).
+
+    Soft delete: Every entity has a deleted boolean. The API filters
+    deleted=false by default on all list endpoints. includeDeleted=true shows
+    soft-deleted items (owner-only, authorization-checked). Hard deletes not exposed.
+
+    Pagination: Cursor-based via page[after], page[before], page[size].
+    Offset/limit rejected in favor of cursors (original decision).
+
+    Filtering: filter[] query parameters provide search/filter semantics
+    (inspired by Passbolt — ADR-001 section 8, adapted). Each entry is field:op:value.
+
+    Include (eager loading): include[] query parameters control related entities
+    (inspired by Passbolt contain[] — ADR-001 section 8, renamed to include[] as
+    an original naming choice). Omitting returns minimal payload.
+
+    Authorization: Every endpoint requires valid JWT in Authorization: Bearer header.
+    Authorization checks centralized in API layer (ADR-002 section 3.2; ADR-003 section 6).
+
+    Passbolt vs. original: Each major contract decision flagged inline with
+    PASSBOLT-INSPIRED or ORIGINAL comments. See ADR-001 for inspired patterns;
+    ADR-003 section 8 for data-model flagging.
+
+  contact:
+    name: Architect
+    email: architect@local
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Dev server
+
+tags:
+  - name: Authentication
+    description: Login, unlock, session management
+  - name: Users
+    description: User account operations
+  - name: Vaults
+    description: Vault metadata (container entity)
+  - name: Resources
+    description: Credential entries (metadata + encrypted secret)
+  - name: Folders
+    description: Folder hierarchy and organization
+  - name: Tags
+    description: Flat labels attached to resources
+  - name: Permissions
+    description: Permission grants (user/group to entity)
+  - name: Groups
+    description: Group containers (post-MVP; schema defined, endpoints deferred)
+
+components:
+  schemas:
+    EnvelopeHeader:
+      type: object
+      required: [id, status, servertime, action, code]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: |
+            Unique ID for this response (UUID v4). Useful for tracing.
+        status:
+          type: string
+          enum: [success, error, warning]
+          description: Human-readable response status.
+        servertime:
+          type: string
+          format: date-time
+          description: Server timestamp (UTC) when the response was generated.
+        action:
+          type: string
+          description: |
+            The action that produced this response (e.g. ListResources,
+            CreateResource, Authenticate). Mirrors the operation name.
+        message:
+          type: string
+          description: Human-readable message. Empty on success; descriptive on error.
+        url:
+          type: string
+          format: uri
+          description: Optional URL related to the response.
+        code:
+          type: integer
+          description: Machine-readable status code. Mirrors the HTTP status line.
+
+    EnvelopeSuccess:
+      type: object
+      required: [header, body]
+      properties:
+        header:
+          $ref: '#/components/schemas/EnvelopeHeader'
+        body:
+          type: object
+          description: |
+            The entity payload. Shape depends on the action. For list endpoints, body
+            contains the paginated collection. For single-entity endpoints, body contains
+            the entity object. The envelope is transparent to the entity shape.
+
+    EnvelopeError:
+      type: object
+      required: [header, body]
+      properties:
+        header:
+          $ref: '#/components/schemas/EnvelopeHeader'
+        body:
+          type: object
+          properties:
+            errors:
+              type: array
+              items:
+                $ref: '#/components/schemas/ErrorDetail'
+            documentationUrl:
+              type: string
+              format: uri
+              description: Link to API documentation for this error class.
+
+    ErrorDetail:
+      type: object
+      required: [code, field, message]
+      properties:
+        code:
+          type: string
+          description: |
+            Machine-readable error code (e.g. VALIDATION_ERROR,
+            NOT_FOUND, FORBIDDEN, UNAUTHORIZED).
+        field:
+          type: string
+          description: The field or parameter that caused the error.
+        message:
+          type: string
+          description: Human-readable description of the error.
+
+    PaginationPage:
+      type: object
+      properties:
+        after:
+          type: string
+          format: uuid
+          description: Opaque cursor — ID of last item on current page.
+        before:
+          type: string
+          format: uuid
+          description: Opaque cursor — ID of first item on current page.
+        size:
+          type: integer
+          description: Number of items returned in this page.
+        total:
+          type: integer
+          description: Total number of items matching the query.
+
+    CommonEntityFields:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID v4 primary key. API-generated.
+        createdAt:
+          type: string
+          format: date-time
+          description: Server-set creation timestamp (UTC).
+        updatedAt:
+          type: string
+          format: date-time
+          description: Server-set last-update timestamp (UTC).
+        deleted:
+          type: boolean
+          description: Soft-delete flag. List endpoints filter deleted=false by default.
+
+    PermissionSummary:
+      type: object
+      description: Compact permission representation for folder masks and inline listings.
+      required: [level, granteeType, granteeId]
+      properties:
+        level:
+          type: string
+          enum: [read, update, owner]
+          description: |
+            read (1): View metadata + secret. Cannot edit, delete, or manage permissions.
+            update (7): Read + edit metadata/secret + delete. Cannot manage permissions.
+            owner (15): Update + manage permissions + transfer ownership.
+            Numeric values preserved from Passbolt for conceptual continuity; stored as enum.
+        granteeType:
+          type: string
+          enum: [user, group]
+          description: User or group grantee (group-as-ARO, ADR-001 section 4).
+        granteeId:
+          type: string
+          format: uuid
+          description: UUID v4 of the User or Group that holds this permission.
+
+    User:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CommonEntityFields'
+        - type: object
+          required: [email, username, salt, kdfParams, vaultKeyEncrypted]
+          properties:
+            email:
+              type: string
+              format: email
+              description: |
+                Unique email address. Plaintext in DB — used for lookup,
+                not a secret (ADR-003 section 3.1 note).
+            username:
+              type: string
+              description: Unique human-readable handle. Plaintext in DB.
+            salt:
+              type: string
+              description: Base64-encoded CSPRNG salt (16+ bytes). Never transmitted.
+            kdfParams:
+              type: object
+              description: |
+                Argon2id parameters (version, memoryCost, timeCost, parallelism).
+                Never transmitted to clients.
+              properties:
+                version:
+                  type: integer
+                memoryCost:
+                  type: integer
+                timeCost:
+                  type: integer
+                parallelism:
+                  type: integer
+            vaultKeyEncrypted:
+              type: string
+              description: |
+                Base64-encoded AEAD-encrypted vault key. Never plaintext.
+                The plaintext vault key is never in the DB (ADR-003 section 3.1; SEC-001).
+            mfaSecret:
+              type: string
+              description: Base32-encoded TOTP secret. null if MFA not enabled.
+            settings:
+              type: object
+              description: User preferences (theme, auto-lock timeout). Plaintext, non-secret.
+              additionalProperties: true
+
+    Vault:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CommonEntityFields'
+        - type: object
+          required: [ownerId, name]
+          properties:
+            ownerId:
+              type: string
+              format: uuid
+              description: UUID v4 of the User who owns this vault. 1:1 with User in MVP.
+            name:
+              type: string
+              description: User-given vault name. Plaintext metadata.
+            description:
+              type: string
+              description: User-given description. Plaintext metadata. Optional.
+            version:
+              type: integer
+              description: |
+                Schema/format version for vault contents. Default 1.
+                Original decision (ADR-003 section 8.2 item 4).
+
+    Resource:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CommonEntityFields'
+        - type: object
+          required: [vaultId, ownerId, name, type, secretCiphertext]
+          properties:
+            vaultId:
+              type: string
+              format: uuid
+              description: UUID v4 of the Vault this resource belongs to.
+            ownerId:
+              type: string
+              format: uuid
+              description: UUID v4 of the User who created this resource.
+            name:
+              type: string
+              description: Required. Human-readable label (e.g. GitHub, Work Email).
+            username:
+              type: string
+              description: |
+                Username/email for this login. Plaintext metadata.
+                Optional. May be encrypted if metadataEncrypted=true.
+            uri:
+              type: string
+              description: |
+                Website/app URL. Plaintext metadata. Optional.
+                May be encrypted if metadataEncrypted=true.
+            description:
+              type: string
+              description: |
+                User notes. Plaintext metadata. Optional.
+                May be encrypted if metadataEncrypted=true.
+            type:
+              type: string
+              description: |
+                Resource type identifier. Fixed set in V1: password-and-description,
+                username-password-uri. Extensible later (ADR-001 section 1).
+            secretCiphertext:
+              type: string
+              description: |
+                Base64-encoded AEAD-encrypted secret payload.
+                NEVER plaintext in DB. Client decrypts with vault key (ADR-002 section 4.3).
+            secretIv:
+              type: string
+              description: Base64-encoded IV for secret encryption.
+            secretTag:
+              type: string
+              description: Base64-encoded GCM authentication tag.
+            metadataEncrypted:
+              type: boolean
+              description: |
+                Whether metadata fields are encrypted. Default false for MVP.
+                When true, metadataCiphertext holds encrypted blob.
+                Per-resource opt-in (ADR-001 section 1; ADR-003 section 8.2 item 2).
+                ORIGINAL granularity.
+            metadataCiphertext:
+              type: string
+              description: Base64-encoded encrypted metadata blob. Present only when
+                metadataEncrypted=true.
+            metadataIv:
+              type: string
+              description: Base64-encoded IV for metadata encryption.
+            metadataTag:
+              type: string
+              description: Base64-encoded GCM tag for metadata.
+            favorite:
+              type: boolean
+              description: |
+                User-designated favorite. Simple boolean flag in V1.
+                ORIGINAL inclusion (ADR-003 section 8.2 item 3).
+            folderId:
+              type: string
+              format: uuid
+              description: UUID v4 of the Folder. null = vault root. Optional.
+            tagIds:
+              type: array
+              items:
+                type: string
+                format: uuid
+              description: UUID v4 array of Tag IDs. Representation resolved by BE-001a.
+            permissionIds:
+              type: array
+              items:
+                type: string
+                format: uuid
+              description: UUID v4 array of Permission IDs. Logical model ADR-003 section 3.5.
+
+    Folder:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CommonEntityFields'
+        - type: object
+          required: [vaultId, ownerId, name]
+          properties:
+            vaultId:
+              type: string
+              format: uuid
+              description: UUID v4 of the Vault this folder belongs to.
+            ownerId:
+              type: string
+              format: uuid
+              description: UUID v4 of the User who created this folder.
+            name:
+              type: string
+              description: Required. Folder label (e.g. Work, Personal).
+            parentId:
+              type: string
+              format: uuid
+              description: UUID v4 of parent Folder. null = root level. Optional.
+            description:
+              type: string
+              description: Folder description. Plaintext metadata. Optional.
+            icon:
+              type: string
+              description: Optional icon identifier for UI. Non-secret metadata. Optional.
+            color:
+              type: string
+              description: Optional color hex for UI. Non-secret metadata. Optional.
+            permissionMask:
+              $ref: '#/components/schemas/PermissionSummary'
+              description: |
+                Permission applied to resources at create/move time (ADR-001 section 2).
+                Where possible propagation — only resources the user has Owner permission
+                on are affected. API implements propagation; no continuous enforcement.
+                See ADR-003 section 3.4 and section 6.3.
+
+    Tag:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CommonEntityFields'
+        - type: object
+          required: [vaultId, name]
+          properties:
+            vaultId:
+              type: string
+              format: uuid
+              description: UUID v4 of the Vault. Tags scoped to a vault (ADR-003 section 3.6).
+            name:
+              type: string
+              description: Required. Unique within the vault (case-insensitive).
+            color:
+              type: string
+              description: Optional display color. Non-secret metadata. Optional.
+
+    Permission:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CommonEntityFields'
+        - type: object
+          required: [targetType, targetId, granteeType, granteeId, level, grantedBy]
+          properties:
+            targetType:
+              type: string
+              enum: [resource, folder, vault]
+              description: Type of entity this permission applies to.
+            targetId:
+              type: string
+              format: uuid
+              description: UUID v4 of the target entity.
+            granteeType:
+              type: string
+              enum: [user, group]
+              description: User or group grantee (group-as-ARO, ADR-001 section 4).
+            granteeId:
+              type: string
+              format: uuid
+              description: UUID v4 of the User or Group that holds this permission.
+            level:
+              type: string
+              enum: [read, update, owner]
+              description: Permission level (see PermissionSummary.level).
+            grantedBy:
+              type: string
+              format: uuid
+              description: UUID v4 of the User who granted this permission.
+
+    Group:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CommonEntityFields'
+        - type: object
+          required: [name, ownerId]
+          properties:
+            name:
+              type: string
+              description: Required. Human-readable group name.
+            description:
+              type: string
+              description: Optional description.
+            ownerId:
+              type: string
+              format: uuid
+              description: UUID v4 of the User who created the group.
+
+  parameters:
+    PageAfter:
+      name: page[after]
+      in: query
+      schema:
+        type: string
+        format: uuid
+      description: Cursor — ID of last item on current page. Pass to get next page.
+
+    PageBefore:
+      name: page[before]
+      in: query
+      schema:
+        type: string
+        format: uuid
+      description: Cursor — ID of first item on current page. Pass to get previous page.
+
+    PageSize:
+      name: page[size]
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Number of items per page. Max 100.
+
+    IncludeRelations:
+      name: include[]
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: |
+        Eager-load related entities. Repeatable. Available includes documented per endpoint.
+        PASSBOLT-INSPIRED (ADR-001 section 8): Passbolt uses contain[] for eager loading.
+        ORIGINAL: we rename to include[] as a naming preference; same concept.
+        Available include keys: permissions, folder, tags, owner, group.
+
+    Filter:
+      name: filter[]
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: |
+        Search/filter parameters. Repeatable. Each entry is field:op:value.
+        PASSBOLT-INSPIRED (ADR-001 section 8): Passbolt uses filter[] for search/filter.
+        ORIGINAL: we define our own operator set and field names.
+        Common operators: eq (exact match), contains (substring, case-insensitive),
+        gt/gte/lt/lte (comparison), in (value in set), null/notNull (null check).
+        Example: filter[]=name:contains:Git&filter[]=type:eq:username-password-uri
+
+    IncludeDeleted:
+      name: includeDeleted
+      in: query
+      schema:
+        type: boolean
+        default: false
+      description: |
+        When true, include soft-deleted entities in list responses. Default false.
+        Authorization-checked — only owner (or users with Owner permission) can see
+        their own soft-deleted items.
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token issued on login/unlock. Short-lived. Refresh token rotation
+        handled separately. Token carries user ID, validated on every request
+        (ADR-002 section 3.2; ADR-003 section 6.2).
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [Authentication]
+      operationId: login
+      summary: Authenticate with master password
+      description: |
+        Exchange master password for a JWT session. Client derives vault key locally via
+        KDF (Argon2id), then sends encrypted vault key to server for verification.
+        Server never sees master password or plaintext vault key (SEC-001; ADR-002 section 4.2).
+        PASSBOLT-INSPIRED (ADR-001 section 7): authentication flow concept.
+        ORIGINAL: master password + KDF to vault key, not OpenPGP/GPGAuth. No server identity challenge.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, vaultKeyProof]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User email address (login identifier).
+                vaultKeyProof:
+                  type: string
+                  description: |
+                    Base64-encoded ciphertext proving the client holds the vault key.
+                    Exact construction defined by SEC-001 / BE-002a.
+                mfaCode:
+                  type: string
+                  description: TOTP code if MFA enabled. Optional.
+      responses:
+        '200':
+          description: Login successful. Returns JWT access + refresh tokens.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '401':
+          description: Invalid credentials or MFA failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      operationId: refreshSession
+      summary: Refresh an expired access token
+      description: |
+        Exchange valid refresh token for new access token. Refresh token rotation enforced —
+        old token invalidated on use (ADR-002 section 4.2).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+                  description: Valid refresh token from previous login or refresh.
+      responses:
+        '200':
+          description: New access token issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '401':
+          description: Invalid or expired refresh token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      operationId: logout
+      summary: Invalidate the current session
+      description: Invalidate access + refresh token pair. Client clears local vault key from memory.
+      responses:
+        '200':
+          description: Session invalidated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users (admin-only, post-MVP)
+      description: |
+        List all users. Restricted to admin/owner contexts. Not in MVP scope.
+        MVP: user can only see their own record.
+      parameters:
+        - $ref: '#/components/parameters/PageAfter'
+        - $ref: '#/components/parameters/PageBefore'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/IncludeDeleted'
+      responses:
+        '200':
+          description: Paginated list of users.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Get a user by ID
+      description: |
+        Get single user record. Requester must be the user themselves (or admin in post-MVP).
+        salt, kdfParams, vaultKeyEncrypted never returned — server-side only.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User record (redacted — no crypto material).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '404':
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /vaults:
+    get:
+      tags: [Vaults]
+      operationId: listVaults
+      summary: List vaults
+      description: |
+        List vaults accessible to authenticated user. MVP: exactly one vault per user (1:1).
+        Filtered to user's own vault by default. Authorization-checked.
+        PASSBOLT-INSPIRED (ADR-001 section 8): envelope + pagination conventions.
+        ORIGINAL: Vault as explicit container separate from User (ADR-003 section 3.2;
+          ADR-003 section 8.2 item 1).
+      parameters:
+        - $ref: '#/components/parameters/PageAfter'
+        - $ref: '#/components/parameters/PageBefore'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/IncludeDeleted'
+        - $ref: '#/components/parameters/IncludeRelations'
+      responses:
+        '200':
+          description: Paginated list of vaults.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+
+  /vaults/{id}:
+    get:
+      tags: [Vaults]
+      operationId: getVault
+      summary: Get a vault by ID
+      description: |
+        Get single vault. Authorization-checked — user must have at least Read access
+        (ownership or explicit permission).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IncludeRelations'
+      responses:
+        '200':
+          description: Vault record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Vault not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /resources:
+    get:
+      tags: [Resources]
+      operationId: listResources
+      summary: List resources
+      description: |
+        List resources in authenticated user's vault. Filtered by vault + authorization.
+        Soft-deleted excluded unless includeDeleted=true.
+      parameters:
+        - $ref: '#/components/parameters/PageAfter'
+        - $ref: '#/components/parameters/PageBefore'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/IncludeDeleted'
+        - $ref: '#/components/parameters/IncludeRelations'
+        - $ref: '#/components/parameters/Filter'
+      responses:
+        '200':
+          description: Paginated list of resources.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    post:
+      tags: [Resources]
+      operationId: createResource
+      summary: Create a new resource
+      description: |
+        Create resource in authenticated user's vault. secretCiphertext must be encrypted
+        client-side with vault key before submission. Server never sees plaintext secret
+        (ADR-002 section 4.3; SEC-001).
+        PASSBOLT-INSPIRED (ADR-001 section 1): resource/secret split — client encrypts
+        secret payload, sends only ciphertext.
+        ORIGINAL: AEAD construction (not OpenPGP); metadata encryption opt-in per-resource from V1.
+        If folderId provided, folder permissionMask applied where possible (ADR-001 section 2;
+          ADR-003 section 6.3).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vaultId, name, type, secretCiphertext, secretIv, secretTag]
+              properties:
+                vaultId:
+                  type: string
+                  format: uuid
+                  description: UUID v4 of target vault.
+                name:
+                  type: string
+                  description: Required. Resource label.
+                username:
+                  type: string
+                  description: Optional. Username/email.
+                uri:
+                  type: string
+                  description: Optional. Website/app URL.
+                description:
+                  type: string
+                  description: Optional. User notes.
+                type:
+                  type: string
+                  enum: [password-and-description, username-password-uri]
+                  description: Resource type. Fixed set in V1.
+                secretCiphertext:
+                  type: string
+                  description: Base64-encoded AEAD-encrypted secret payload.
+                secretIv:
+                  type: string
+                  description: Base64-encoded IV for secret encryption.
+                secretTag:
+                  type: string
+                  description: Base64-encoded GCM tag.
+                metadataEncrypted:
+                  type: boolean
+                  default: false
+                  description: Whether to encrypt metadata fields. Default false.
+                metadataCiphertext:
+                  type: string
+                  description: Required if metadataEncrypted=true. Base64-encoded encrypted metadata.
+                metadataIv:
+                  type: string
+                  description: Required if metadataEncrypted=true.
+                metadataTag:
+                  type: string
+                  description: Required if metadataEncrypted=true.
+                favorite:
+                  type: boolean
+                  default: false
+                folderId:
+                  type: string
+                  format: uuid
+                  description: Optional. Folder to place resource in.
+                tagIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: Optional. Tag IDs to attach.
+      responses:
+        '201':
+          description: Resource created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /resources/{id}:
+    get:
+      tags: [Resources]
+      operationId: getResource
+      summary: Get a resource by ID
+      description: |
+        Get single resource. Authorization-checked. If metadataEncrypted=true, plaintext
+        metadata fields absent — client decrypts metadataCiphertext with vault key.
+        secretCiphertext always returned for client-side decryption.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IncludeRelations'
+      responses:
+        '200':
+          description: Resource record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Resource not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    patch:
+      tags: [Resources]
+      operationId: updateResource
+      summary: Update a resource
+      description: |
+        Partially update resource. Only provided fields updated. Client re-encrypts
+        secretCiphertext (and metadataCiphertext if metadataEncrypted changing) before submission.
+        Authorization-checked — requires Update permission or ownership (ADR-003 section 6.2).
+        If folderId changed, folder permissionMask applied at move time (ADR-001 section 2).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Partial update. Any subset of Resource fields may be provided.
+              properties:
+                name:
+                  type: string
+                username:
+                  type: string
+                uri:
+                  type: string
+                description:
+                  type: string
+                type:
+                  type: string
+                  enum: [password-and-description, username-password-uri]
+                secretCiphertext:
+                  type: string
+                secretIv:
+                  type: string
+                secretTag:
+                  type: string
+                metadataEncrypted:
+                  type: boolean
+                metadataCiphertext:
+                  type: string
+                metadataIv:
+                  type: string
+                metadataTag:
+                  type: string
+                favorite:
+                  type: boolean
+                folderId:
+                  type: string
+                  format: uuid
+                tagIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Resource updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Resource not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    delete:
+      tags: [Resources]
+      operationId: deleteResource
+      summary: Soft-delete a resource
+      description: |
+        Soft-delete (sets deleted=true). Hard deletes not exposed.
+        Authorization-checked — requires Update permission or ownership.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Resource soft-deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Resource not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /folders:
+    get:
+      tags: [Folders]
+      operationId: listFolders
+      summary: List folders
+      description: |
+        List folders in authenticated user's vault. Returns folder tree (parentId preserved).
+        Authorization-checked.
+      parameters:
+        - $ref: '#/components/parameters/PageAfter'
+        - $ref: '#/components/parameters/PageBefore'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/IncludeDeleted'
+        - $ref: '#/components/parameters/IncludeRelations'
+      responses:
+        '200':
+          description: Paginated list of folders.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    post:
+      tags: [Folders]
+      operationId: createFolder
+      summary: Create a new folder
+      description: |
+        Create folder in authenticated user's vault. parentId optional — omit for root-level.
+        permissionMask set on create, updatable later. Authorization-checked — creator is owner.
+        PASSBOLT-INSPIRED (ADR-001 section 2): folder hierarchy with permission mask.
+        ORIGINAL: three-level permission model, Folder.permissionMask field, API implements
+          propagation (ADR-003 section 3.4).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vaultId, name]
+              properties:
+                vaultId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                  description: Required. Folder label.
+                parentId:
+                  type: string
+                  format: uuid
+                  description: Optional. Parent folder ID. null = root level.
+                description:
+                  type: string
+                icon:
+                  type: string
+                color:
+                  type: string
+                permissionMask:
+                  $ref: '#/components/schemas/PermissionSummary'
+      responses:
+        '201':
+          description: Folder created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /folders/{id}:
+    get:
+      tags: [Folders]
+      operationId: getFolder
+      summary: Get a folder by ID
+      description: Authorization-checked.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IncludeRelations'
+      responses:
+        '200':
+          description: Folder record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Folder not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    patch:
+      tags: [Folders]
+      operationId: updateFolder
+      summary: Update a folder
+      description: |
+        Partial update. Authorization-checked — requires Update permission or ownership.
+        permissionMask updatable at any time; changes apply to new create/move operations only.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                parentId:
+                  type: string
+                  format: uuid
+                description:
+                  type: string
+                icon:
+                  type: string
+                color:
+                  type: string
+                permissionMask:
+                  $ref: '#/components/schemas/PermissionSummary'
+      responses:
+        '200':
+          description: Folder updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Folder not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    delete:
+      tags: [Folders]
+      operationId: deleteFolder
+      summary: Soft-delete a folder
+      description: |
+        Soft-delete (sets deleted=true). Resources in folder NOT automatically deleted —
+        they become root-level (folderId set to null). Authorization-checked.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Folder soft-deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Folder not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /tags:
+    get:
+      tags: [Tags]
+      operationId: listTags
+      summary: List tags
+      description: |
+        List tags in authenticated user's vault. Tags scoped to vault (ADR-003 section 3.6).
+        Authorization-checked.
+        PASSBOLT-INSPIRED (ADR-001 section 3): flat, non-hierarchical tags, many-to-many.
+        ORIGINAL: tags scoped to vault (ADR-003 section 8.2).
+      parameters:
+        - $ref: '#/components/parameters/PageAfter'
+        - $ref: '#/components/parameters/PageBefore'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/IncludeDeleted'
+        - $ref: '#/components/parameters/Filter'
+      responses:
+        '200':
+          description: Paginated list of tags.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    post:
+      tags: [Tags]
+      operationId: createTag
+      summary: Create a new tag
+      description: |
+        Create tag in authenticated user's vault. Tag names unique within vault
+        (case-insensitive). Authorization-checked — vault owner owns all tags.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vaultId, name]
+              properties:
+                vaultId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                  description: Required. Unique within vault (case-insensitive).
+                color:
+                  type: string
+      responses:
+        '201':
+          description: Tag created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '400':
+          description: Validation error (e.g. duplicate tag name).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /tags/{id}:
+    get:
+      tags: [Tags]
+      operationId: getTag
+      summary: Get a tag by ID
+      description: Authorization-checked.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tag record.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Tag not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    patch:
+      tags: [Tags]
+      operationId: updateTag
+      summary: Update a tag
+      description: Partial update. Authorization-checked.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                color:
+                  type: string
+      responses:
+        '200':
+          description: Tag updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '400':
+          description: Validation error (e.g. duplicate tag name).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Tag not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    delete:
+      tags: [Tags]
+      operationId: deleteTag
+      summary: Soft-delete a tag
+      description: |
+        Soft-delete tag. Decrements tag reference count on resources.
+        Authorization-checked.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tag soft-deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Tag not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /permissions:
+    get:
+      tags: [Permissions]
+      operationId: listPermissions
+      summary: List permission grants
+      description: |
+        List permission grants accessible to authenticated user. Filtered by user's
+        ownership and group membership. Authorization-checked.
+      parameters:
+        - $ref: '#/components/parameters/PageAfter'
+        - $ref: '#/components/parameters/PageBefore'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/IncludeDeleted'
+        - $ref: '#/components/parameters/IncludeRelations'
+        - $ref: '#/components/parameters/Filter'
+      responses:
+        '200':
+          description: Paginated list of permission grants.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    post:
+      tags: [Permissions]
+      operationId: createPermission
+      summary: Grant a permission
+      description: |
+        Grant permission to user or group on resource, folder, or vault.
+        Authorization-checked — grantor must have Owner-level access to target
+        (ADR-003 section 6.2). Group grants use group-as-ARO model (ADR-001 section 4).
+        PASSBOLT-INSPIRED (ADR-001 section 4, section 5): permission grant concept,
+          group-as-ARO.
+        ORIGINAL: Permission.id as UUID primary key — each grant is a row
+          (ADR-003 section 8.2 item 7). Numeric values preserved for continuity
+          but stored as enum.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetType, targetId, granteeType, granteeId, level]
+              properties:
+                targetType:
+                  type: string
+                  enum: [resource, folder, vault]
+                targetId:
+                  type: string
+                  format: uuid
+                granteeType:
+                  type: string
+                  enum: [user, group]
+                granteeId:
+                  type: string
+                  format: uuid
+                level:
+                  type: string
+                  enum: [read, update, owner]
+      responses:
+        '201':
+          description: Permission granted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized to grant permission on this target.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Target not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /permissions/{id}:
+    delete:
+      tags: [Permissions]
+      operationId: revokePermission
+      summary: Revoke a permission
+      description: |
+        Revoke permission grant. Authorization-checked — revoker must have Owner-level
+        access to target, or be original grantor.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Permission revoked (soft-deleted).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '403':
+          description: Not authorized to revoke this permission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+        '404':
+          description: Permission not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+  /groups:
+    get:
+      tags: [Groups]
+      operationId: listGroups
+      summary: List groups (post-MVP)
+      description: |
+        POST-MVP. Listed for contract completeness only. Not available in V1.
+        Schema defined in ADR-003 section 3.7; implementation deferred to Phase 4.
+      parameters:
+        - $ref: '#/components/parameters/PageAfter'
+        - $ref: '#/components/parameters/PageBefore'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Paginated list of groups (post-MVP).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '501':
+          description: Not implemented in V1.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
+
+    post:
+      tags: [Groups]
+      operationId: createGroup
+      summary: Create a group (post-MVP)
+      description: |
+        POST-MVP. Not available in V1. Schema defined in ADR-003 section 3.7.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, ownerId]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                ownerId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Group created (post-MVP).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeSuccess'
+        '501':
+          description: Not implemented in V1.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeError'
