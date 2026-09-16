@@ -1,0 +1,6 @@
+{
+  "name": "@password-manager/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "React 18 + TypeScript + Vite — Web UI (scaffolded in FE-001a)"
+}
