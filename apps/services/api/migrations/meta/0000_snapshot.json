@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "e7d8b2dc-0508-4e39-aca4-c5ad11451a4d",
+  "id": "50fc86e6-5506-4537-972f-15f603cb96ba",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "folders": {
@@ -106,7 +106,29 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_folders_vault_id": {
+          "name": "idx_folders_vault_id",
+          "columns": [
+            "vault_id"
+          ],
+          "isUnique": false
+        },
+        "idx_folders_owner_id": {
+          "name": "idx_folders_owner_id",
+          "columns": [
+            "owner_id"
+          ],
+          "isUnique": false
+        },
+        "idx_folders_parent_id": {
+          "name": "idx_folders_parent_id",
+          "columns": [
+            "parent_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "folders_vault_id_vaults_id_fk": {
           "name": "folders_vault_id_vaults_id_fk",
@@ -206,7 +228,22 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_group_members_group_id": {
+          "name": "idx_group_members_group_id",
+          "columns": [
+            "group_id"
+          ],
+          "isUnique": false
+        },
+        "idx_group_members_user_id": {
+          "name": "idx_group_members_user_id",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "group_members_group_id_groups_id_fk": {
           "name": "group_members_group_id_groups_id_fk",
@@ -292,7 +329,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_groups_owner_id": {
+          "name": "idx_groups_owner_id",
+          "columns": [
+            "owner_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "groups_owner_id_users_id_fk": {
           "name": "groups_owner_id_users_id_fk",
@@ -386,7 +431,29 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_permissions_target_id": {
+          "name": "idx_permissions_target_id",
+          "columns": [
+            "target_id"
+          ],
+          "isUnique": false
+        },
+        "idx_permissions_grantee_id": {
+          "name": "idx_permissions_grantee_id",
+          "columns": [
+            "grantee_id"
+          ],
+          "isUnique": false
+        },
+        "idx_permissions_granted_by": {
+          "name": "idx_permissions_granted_by",
+          "columns": [
+            "granted_by"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "permissions_granted_by_users_id_fk": {
           "name": "permissions_granted_by_users_id_fk",
@@ -494,6 +561,13 @@
             "token_hash"
           ],
           "isUnique": true
+        },
+        "idx_refresh_tokens_user_id": {
+          "name": "idx_refresh_tokens_user_id",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {
@@ -533,7 +607,22 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_resource_tags_resource_id": {
+          "name": "idx_resource_tags_resource_id",
+          "columns": [
+            "resource_id"
+          ],
+          "isUnique": false
+        },
+        "idx_resource_tags_tag_id": {
+          "name": "idx_resource_tags_tag_id",
+          "columns": [
+            "tag_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "resource_tags_resource_id_resources_id_fk": {
           "name": "resource_tags_resource_id_resources_id_fk",
@@ -719,7 +808,29 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_resources_vault_id": {
+          "name": "idx_resources_vault_id",
+          "columns": [
+            "vault_id"
+          ],
+          "isUnique": false
+        },
+        "idx_resources_owner_id": {
+          "name": "idx_resources_owner_id",
+          "columns": [
+            "owner_id"
+          ],
+          "isUnique": false
+        },
+        "idx_resources_folder_id": {
+          "name": "idx_resources_folder_id",
+          "columns": [
+            "folder_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "resources_vault_id_vaults_id_fk": {
           "name": "resources_vault_id_vaults_id_fk",
@@ -860,7 +971,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_sessions_user_id": {
+          "name": "idx_sessions_user_id",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "sessions_user_id_users_id_fk": {
           "name": "sessions_user_id_users_id_fk",
@@ -933,7 +1052,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_tags_vault_id": {
+          "name": "idx_tags_vault_id",
+          "columns": [
+            "vault_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "tags_vault_id_vaults_id_fk": {
           "name": "tags_vault_id_vaults_id_fk",
@@ -1152,7 +1279,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_vaults_owner_id": {
+          "name": "idx_vaults_owner_id",
+          "columns": [
+            "owner_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "vaults_owner_id_users_id_fk": {
           "name": "vaults_owner_id_users_id_fk",
