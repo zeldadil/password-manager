@@ -63,7 +63,6 @@ export default function Header({
             ref={toggleRef}
             type="button"
             className="app-header__user-toggle"
-            aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-controls={menuOpen ? 'user-menu' : undefined}
             onClick={() => setMenuOpen((open) => !open)}
@@ -71,11 +70,15 @@ export default function Header({
           >
             {userName ?? 'Account'}
           </button>
+          {/*
+            Disclosure pattern: a plain list of links/buttons behind a toggle,
+            not a WAI-ARIA menu (which would require arrow-key navigation). The
+            items are native links/buttons, so Tab + Enter already cover them.
+          */}
           {menuOpen && (
-            <div id="user-menu" className="app-header__menu" role="menu" aria-label="User menu">
+            <div id="user-menu" className="app-header__menu">
               <Link
                 to="/settings"
-                role="menuitem"
                 className="app-header__menu-item"
                 onClick={() => setMenuOpen(false)}
               >
@@ -83,7 +86,6 @@ export default function Header({
               </Link>
               <button
                 type="button"
-                role="menuitem"
                 className="app-header__menu-item"
                 onClick={handleSignOut}
               >

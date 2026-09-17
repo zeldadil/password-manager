@@ -77,5 +77,22 @@ describe('accessibility baseline', () => {
       expect(toggle.getAttribute('aria-expanded')).toBe('false')
       expect(document.activeElement).toBe(toggle)
     })
+
+    it('exposes the user dropdown as a disclosure, not a WAI-ARIA menu', () => {
+      renderAt('/vault')
+      const toggle = screen.getByRole('button', { name: 'Account' })
+      fireEvent.click(toggle)
+
+      // No menu/menuitem roles: native link + button are keyboard-accessible by
+      // default (Tab + Enter), so no arrow-key menu contract is required.
+      expect(screen.queryByRole('menu')).toBeNull()
+      expect(screen.queryByRole('menuitem')).toBeNull()
+
+      // The disclosure toggle carries the expanded state and controls the panel id.
+      expect(toggle.getAttribute('aria-expanded')).toBe('true')
+      expect(toggle.getAttribute('aria-controls')).toBe('user-menu')
+      expect(screen.getByRole('link', { name: 'Settings' })).toBeTruthy()
+      expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy()
+    })
   })
 })
