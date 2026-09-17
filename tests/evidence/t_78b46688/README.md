@@ -71,7 +71,18 @@ Two decisions here are security gates, not cosmetic:
 - `secret-scan` job: red (correct — the leaked token is still live, P0 t_0af5aa3e). gitleaks found
   2 leaks (exit-code 2). truffleHog step was skipped on the first run because gitleaks failed first —
   **caught and fixed**: truffleHog now has `if: always()` so both scanners always emit their report.
+  The uploaded `secret-scan-report` artifact was downloaded and inspected: **0 occurrences of the live
+  token**, 2 findings each with `Raw`/`RawV2`/`SecretParts.key/.value` = `REDACTED`, metadata
+  (DetectorName, Verified:true, file/line) preserved.
+- Artifacts actually present on the run: `gitleaks-results.sarif` (8.5 KB, gitleaks action), 
+  `semgrep-sarif` (134 KB), `secret-scan-report` (764 B, redacted) — three independent evidence streams
+  on a single run.
 - `install-lockfile` and its six downstream jobs: skipped (pre-existing bootstrap deadlock t_ee24fd37).
   The upload steps for those jobs are wired and non-fatal, and will produce their first artifacts once
   the bootstrap lands.
+- PR #15 (feature/t_78b46688 → master) is OPEN. Its `pull_request`-event CI did not fire because the PR
+  is a stacked QA branch (merges QA-001c + QA-001d, both still open) and GitHub reports
+  `mergeable_state: dirty` with no merge commit — so the workflow only runs via `workflow_dispatch`
+  until the stack resolves. Artifact upload was validated on the dispatch run instead.
+
 
