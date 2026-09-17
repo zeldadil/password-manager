@@ -1,0 +1,55 @@
+secret-guard hooks doctor — architect profile
+Generated: 2026-09-17
+
+=== hermes hooks doctor output ===
+
+Checking 2 configured shell hook(s)...
+
+  [pre_tool_call] /home/sap/.hermes/profiles/architect/agent-hooks/qa-signoff-gate.sh
+      ✓ script exists and is executable
+      ✓ allowlisted (approved 2026-09-17T14:54:06.050247Z)
+      ⚠ script modified since approval (was 2026-09-17T14:51:18.836193Z, now 2026-09-17T20:30:27.486547Z) — review changes, then `hermes hooks revoke` + re-approve to refresh
+      ✓ produced valid JSON on synthetic payload (exit=0, 0.066s)
+
+  [pre_tool_call] /home/sap/.hermes/profiles/architect/agent-hooks/secret-guard.sh
+      ✓ script exists and is executable
+      ✓ allowlisted (approved 2026-09-17T20:54:29.282937Z)
+      ✓ script unchanged since approval
+      ✓ produced valid JSON on synthetic payload (exit=0, 0.051s)
+
+1 issue(s) found.  Fix before relying on these hooks.
+
+=== Note ===
+The single issue is the qa-signoff-gate.sh mtime drift (pre-existing, unrelated to
+this task). The secret-guard hook is clean: allowlisted, unchanged since approval,
+valid JSON on synthetic payload.
+
+=== hook configuration (from config.yaml) ===
+
+hooks:
+  pre_tool_call:
+  - matcher: "^kanban_complete$"
+    command: /home/sap/.hermes/profiles/architect/agent-hooks/qa-signoff-gate.sh
+    timeout: 30
+    fail_closed: true
+  - matcher: "^(kanban_comment|kanban_create|kanban_complete)$"
+    command: /home/sap/.hermes/profiles/architect/agent-hooks/secret-guard.sh
+    timeout: 30
+    fail_closed: true
+hooks_auto_accept: true
+
+=== evaluation order ===
+1. qa-signoff-gate.sh fires first (matcher ^kanban_complete$, listed first in config.yaml)
+2. secret-guard.sh fires second (matcher ^(kanban_comment|kanban_create|kanban_complete)$)
+3. Both set fail_closed: true — if either hook crashes or times out, the call is blocked.
+4. The two hooks are independent: secret-guard blocks on secret-shaped text; signoff-gate
+   blocks on missing QA verdict. A kanban_complete carrying a secret AND missing a verdict
+   would be blocked by secret-guard first (it runs second but the first block wins — the
+   dispatcher stops at the first block decision). No interaction bugs: each hook inspects
+   different fields and quotes only rule ids in its reason.
+
+=== live-fire result ===
+9/9 cases passed (see tests/evidence/t_b51a1ff3/live-fire.txt for full transcript).
+
+=== selftest result ===
+16/16 cases passed (see tests/evidence/t_b51a1ff3/selftest-output.txt for full transcript).

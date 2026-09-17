@@ -1,0 +1,27 @@
+secret-guard selftest — fixture board: /tmp/secret-guard-selftest-MBdpw0/board.db
+clean board: /tmp/secret-guard-selftest-MBdpw0/clean.db
+fixture repo: /tmp/secret-guard-selftest-MBdpw0/repo
+
+1. Hook mode — pre_tool_call: kanban_comment / kanban_create / kanban_complete
+  ok   - kanban_comment with Telegram bot token → block + exit 2
+  ok   - kanban_comment with key=value secret → block + exit 2
+  ok   - kanban_comment with AWS key id → block + exit 2
+  ok   - clean kanban_comment → {} + exit 0
+  ok   - clean kanban_create → {} + exit 0
+  ok   - clean kanban_complete → {} + exit 0
+  ok   - kanban_complete with Telegram bot token in summary → block + exit 2
+  ok   - terminal tool passes through (not guarded)
+  ok   - malformed payload → fail closed (block + exit 2, R_SECRET_PARSE_ERROR)
+  ok   - kill switch allows the call
+
+2. Check mode — one-shot text scan
+  ok   - check mode: clean text → exit 0
+  ok   - check mode: text with Telegram bot token → exit 1
+  ok   - check mode: text with key=value secret → exit 1
+  ok   - check mode: text with AWS key id → exit 1
+
+3. Audit mode — whole-board scan
+  ok   - audit mode: clean board → exit 0
+  ok   - audit mode: board with a secret in a comment → exit 1
+
+16/16 cases passed

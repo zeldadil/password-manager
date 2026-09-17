@@ -51,4 +51,49 @@ Full detail, rationale, and absolute rules in [SEC-001](architecture/adr/SEC-001
 - SAST (CodeQL or Semgrep) — configured in QA-001d
 - No stack traces in production error responses
 
+## Secrets in Kanban — absolute rule (SEC-001 extension, T_B51A1FF3)
+
+**Status: Active — 2026-09-17**
+
+A Kanban board is a durable, shared artifact: comment bodies are stored in
+`~/.hermes/kanban.db` and injected into the context of every worker dispatched
+on a card, including workers with nothing to do with credential handling. A
+secret in a card comment or completion summary is one careless copy away from a
+public repo leak. The only distribution channel for secrets is the profile
+`.env` (or a local file outside the repo); a worker that needs one reads it
+programmatically.
+
+**Rule (non-negotiable):**
+
+- Secrets never enter Kanban cards, comments, evidence files, logs, or chat.
+- The only distribution channel is the profile `.env` (or a local file outside
+  the repo). A worker that needs a secret reads it programmatically from there.
+- When a human needs to hand a secret to a worker, they write it into the
+  profile's `.env` (or an out-of-repo local file) and tell the worker the
+  profile or path — they never paste it into a card comment, completion summary,
+  evidence file, or chat log.
+- A `pre_tool_call` hook (`scripts/qa/secret-guard.mjs`, installed per-profile
+  via `scripts/qa/hooks/install-secret-guard.sh`) blocks
+  `kanban_comment` / `kanban_create` / `kanban_complete` calls whose text
+  contains a secret-shaped value. The block reason quotes only rule ids, never
+  the matched value. `fail_closed: true` — if the hook crashes or times out, the
+  call is blocked. A kill switch (`~/.hermes/secret-guard.disabled`) exists for
+  emergency operator override.
+- Evidence under `tests/evidence/<task-id>/` must never contain real secrets.
+  Synthetic fixtures only (per SEC-001 AR-4).
+
+**Hook coverage:**
+
+- Architect profile: installed + allowlisted + `fail_closed: true`
+  (`tests/evidence/t_b51a1ff3/hooks-doctor.txt`).
+- Selftest: 16/16 cases pass (`scripts/qa/secret-guard.selftest.mjs`).
+- Live-fire: 9/9 cases pass (`tests/evidence/t_b51a1ff3/live-fire.txt`).
+- No allowlist/exclusion may silence the guard (TEST_STRATEGY §12.2): the guard
+  file itself contains no real credential (gitleaks + trufflehog clean on the
+  guard source), and the only `.gitleaksignore` entry covers a historical leak
+  in `a503e4d:PROJECT_BRIEF.md` — it does not exempt any hook or test file.
+
+**Reference:** `scripts/qa/secret-guard.mjs` (gate logic), `scripts/qa/hooks/`
+(hook shell wrapper + installer + verifier).
+
 See [architecture/kanban/backlog.md](architecture/kanban/backlog.md) for the task that wires these into CI (QA-001d).
