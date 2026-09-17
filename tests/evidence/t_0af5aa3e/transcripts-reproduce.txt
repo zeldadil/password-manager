@@ -1,0 +1,54 @@
+### date: Thu Sep 17 08:17:21 PM UTC 2026
+### step 1 — fresh mirror clone (the only valid basis for a remote-purge check)
+master tip : eb6044b
+branches   : 31
+
+### step 2 — credential liveness (old value read from public history, never printed)
+old value sha256 : 62fe6fe5053a50ec0570f5845ccd0ad39ea048c24239ae677c8eaa9a082e4aff  (expect 62fe6fe5053a50ec0570f5845ccd0ad39ea048c24239ae677c8eaa9a082e4aff)
+Telegram getMe   : 401
+
+### step 3 — full-history scans, all refs
+gitleaks (pattern) findings by rule:
+      3 generic-api-key
+      2 telegram-bot-api-token
+truffleHog (verification) findings: 0  (verified: 0)
+"verified_secrets":0
+
+### step 4 — per-ref tip exposure (branch tips)
+branch tips still carrying the string: 0 / 31
+
+### step 5 — history reachability (dead string in history)
+  a503e4d not reachable from master
+  543c396 REACHABLE from master
+  refs/pull/*/merge or head still exposing the string:
+    refs/pull/1/merge
+    refs/pull/10/merge
+    refs/pull/11/merge
+    refs/pull/12/merge
+    refs/pull/13/merge
+    refs/pull/14/merge
+    refs/pull/16/merge
+    refs/pull/17/merge
+    refs/pull/2/merge
+    refs/pull/3/merge
+    refs/pull/4/merge
+    refs/pull/5/merge
+    refs/pull/6/merge
+    refs/pull/7/head
+    refs/pull/8/merge
+
+### step 6 — is the rotated token live? (value read from the board comment, never printed)
+Telegram getMe (rotated token): 200  bot=AASLlmHermesBot id=8615677595
+
+### step 7 — do the agent profiles use the rotated token?
+  architect  DEAD token still in .env (channel down)
+  backend    DEAD token still in .env (channel down)
+  browser    DEAD token still in .env (channel down)
+  docs       DEAD token still in .env (channel down)
+  frontend   DEAD token still in .env (channel down)
+  product    DEAD token still in .env (channel down)
+  qa         DEAD token still in .env (channel down)
+  live send test: FAILED (Unauthorized — channel down)
+
+### step 8 — CI secret-scan on master (post-rotation)
+{"conclusion":"success","databaseId":35262427071,"headSha":"eb6044b8bb263182953dedd5af817cb01eeba6ad"}
