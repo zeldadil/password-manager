@@ -105,11 +105,13 @@ Decisions ratified during the project kickoff walkthrough. Each entry records wh
   apps/web/                 # React frontend
   apps/browser-firefox/     # Firefox MV3 extension
   apps/services/api/        # Node/TypeScript API
-  packages/shared/          # Shared contracts (API types, extension↔web messages, crypto interfaces)
+  packages/shared/          # Shared contracts (API types, extension↔web messages)
+  packages/crypto/          # SEC-001 primitives — isolated, audited crypto wrappers at monorepo root
   ```
-  Plus `packages/shared/crypto/` for SEC-001 primitives — pure TypeScript interfaces + implementations (no runtime coupling). Runtime adapters (Web Crypto for browser, Node `crypto` for API) are thin wrappers in each app. Tests and audit trail stay clean.
-- **Rationale:** Matches PROJECT_BRIEF.md stack section. Separating crypto interfaces from runtime implementations keeps the security boundary auditable and testable in isolation — critical for a product that stores user secrets.
+  `packages/crypto/` sits at the monorepo root (not inside `packages/shared/`) so it can be reviewed as a single security boundary. No app may bypass it. Runtime adapters (Web Crypto for browser, Node `crypto` for API) are thin wrappers in each app. (ADR-002 §2.1/§2.3/§5.3 — original architectural decision.)
+- **Rationale:** Matches PROJECT_BRIEF.md stack section. Separating crypto interfaces from runtime implementations keeps the security boundary auditable and testable in isolation — critical for a product that stores user secrets. The isolated-root placement is an original decision (ADR-002 §2.3): Passbolt's PHP stack has no equivalent isolated crypto package.
 - **Owner:** architect
+- **Reconciliation note (2026-09-17):** PROJECT_BRIEF.md kickoff draft said `packages/shared/crypto/` (§9, commit fd555c1-era text). ADR-002 (§2.1, §2.3, §5.3, §9.3) records `packages/crypto/` at monorepo root as an original decision. ADR-002 wins — it is the authoritative architecture document. PROJECT_BRIEF.md text updated above to match. QA-001a's TEST_STRATEGY.md §15.1 followed the ADRs (correct); the earlier PROJECT_BRIEF.md text was the source of the contradiction.
 
 ### Security checklist for gate enforcement
 - **Decision:** Not yet codified — QA-001a owns it. Baseline (no secrets in console/logs/URLs/errors, origin/message control, minimal permissions, tamper detection, backup/restore tested, dependency scan clean) is the starting point. QA-001a expands into `SECURITY_CHECKLIST.md` with per-layer checks (API/Web/Extension), CI-enforced vs. manual-review items, mapping to SEC-001 threat vectors, and evidence requirements per check. Architect reviews and signs off before QA-001b wires it into CI.

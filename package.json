@@ -15,11 +15,5 @@
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
-  },
-  "workspaces": [
-    "apps/web",
-    "apps/browser-firefox",
-    "apps/services/api",
-    "packages/shared"
-  ]
+  }
 }
