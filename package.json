@@ -9,7 +9,10 @@
     "lint": "pnpm -r --parallel --filter '**' run lint",
     "typecheck": "pnpm -r --parallel --filter '**' run typecheck",
     "test": "pnpm -r --parallel --filter '**' run test",
-    "clean": "pnpm -r --parallel --filter '**' run clean 2>/dev/null || true"
+    "clean": "pnpm -r --parallel --filter '**' run clean 2>/dev/null || true",
+    "scan:test-data": "node scripts/qa/scan-test-data.mjs",
+    "validate:fixtures": "node --experimental-strip-types scripts/qa/validate-fixtures.mjs",
+    "validate:coverage-thresholds": "node scripts/qa/validate-coverage-thresholds.mjs"
   },
   "packageManager": "pnpm@9.12.0",
   "engines": {
