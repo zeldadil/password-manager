@@ -1,0 +1,15 @@
+Checking 2 configured shell hook(s)...
+
+  [pre_tool_call] /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh
+      ✓ script exists and is executable
+      ✓ allowlisted (approved 2026-09-17T15:09:07.561957Z)
+      ⚠ script modified since approval (was 2026-09-17T14:51:21.640216Z, now 2026-09-17T20:30:30.343570Z) — review changes, then `hermes hooks revoke` + re-approve to refresh
+      ✓ produced valid JSON on synthetic payload (exit=0, 0.067s)
+
+  [pre_tool_call] /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.sh
+      ✓ script exists and is executable
+      ✓ allowlisted (approved 2026-09-17T21:16:47.012563Z)
+      ✓ script unchanged since approval
+      ✓ produced valid JSON on synthetic payload (exit=0, 0.053s)
+
+1 issue(s) found.  Fix before relying on these hooks.

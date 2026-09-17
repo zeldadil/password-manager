@@ -1,0 +1,14 @@
+Checking 2 configured shell hook(s)...
+
+  [pre_tool_call] /home/sap/.hermes/profiles/backend/agent-hooks/qa-signoff-gate.sh
+      ✓ script exists and is executable
+      ✓ allowlisted (approved 2026-09-17T17:38:03.872518Z)
+      ⚠ script modified since approval (was 2026-09-17T14:51:19.301197Z, now 2026-09-17T20:30:27.947550Z) — review changes, then `hermes hooks revoke` + re-approve to refresh
+      ✓ produced valid JSON on synthetic payload (exit=0, 0.059s)
+
+  [pre_tool_call] /home/sap/.hermes/profiles/backend/agent-hooks/secret-guard.sh
+      ✓ script exists and is executable
+      ✗ not allowlisted — hook will NOT fire at runtime (run with --accept-hooks once, or confirm at the TTY prompt)
+      ℹ skipped JSON smoke test — not allowlisted yet. Approve the hook first (via TTY prompt or --accept-hooks), then re-run `hermes hooks doctor`.
+
+2 issue(s) found.  Fix before relying on these hooks.

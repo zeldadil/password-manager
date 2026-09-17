@@ -1,0 +1,72 @@
+QA t_b51a1ff3 round-2 execution transcript — 2026-09-17T22:10:40Z
+reviewer: qa (run 477)  ·  reviewed revision: 9f5daab (origin/fix/telegram-token-rotation-t_28951254)
+
+### 1. reviewed revision is published and the guard is tracked (round-1 D1)
+9f5daab SEC-001 / T_B51A1FF3: mechanical guard against secrets in Kanban comments/evidence (D1+D2+D3+A3+A5+A6 fix)
+  tracked: scripts/qa/hooks/fix-allowlist-mtime.py
+  tracked: scripts/qa/hooks/install-secret-guard.sh
+  tracked: scripts/qa/hooks/patch-config.py
+  tracked: scripts/qa/hooks/reapprove.py
+  tracked: scripts/qa/hooks/secret-guard.sh
+  tracked: scripts/qa/hooks/verify-secret-guard.sh
+  tracked: scripts/qa/secret-guard.mjs
+  tracked: scripts/qa/secret-guard.selftest.mjs
+
+### 2. selftest (fresh clone)
+  ok   - audit mode: clean board → exit 0
+  ok   - audit mode: board with a secret in a comment → exit 1
+
+21/21 cases passed
+
+### 3. installed gate vs reviewed repo copy — sha256 per profile
+2e60bb23d0a2c858ff25be1408741115e1b7d9472773eede33706f0d748a0f2e  /home/sap/.hermes/profiles/architect/agent-hooks/secret-guard.mjs
+5cfffb0e7be39fe933e6b41b1d8d8df5fcd77e59abae6f63b3a1d5dba9fe78d6  /home/sap/.hermes/profiles/backend/agent-hooks/secret-guard.mjs
+5cfffb0e7be39fe933e6b41b1d8d8df5fcd77e59abae6f63b3a1d5dba9fe78d6  /home/sap/.hermes/profiles/browser/agent-hooks/secret-guard.mjs
+5cfffb0e7be39fe933e6b41b1d8d8df5fcd77e59abae6f63b3a1d5dba9fe78d6  /home/sap/.hermes/profiles/docs/agent-hooks/secret-guard.mjs
+5cfffb0e7be39fe933e6b41b1d8d8df5fcd77e59abae6f63b3a1d5dba9fe78d6  /home/sap/.hermes/profiles/frontend/agent-hooks/secret-guard.mjs
+5cfffb0e7be39fe933e6b41b1d8d8df5fcd77e59abae6f63b3a1d5dba9fe78d6  /home/sap/.hermes/profiles/product/agent-hooks/secret-guard.mjs
+5cfffb0e7be39fe933e6b41b1d8d8df5fcd77e59abae6f63b3a1d5dba9fe78d6  /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.mjs
+2e60bb23d0a2c858ff25be1408741115e1b7d9472773eede33706f0d748a0f2e  /tmp/qa-verify-b51a1ff3-C6E4/repo/scripts/qa/secret-guard.mjs
+  (repo copy = reviewed 9f5daab; 2e60bb23 = D2-fixed, 5cfffb0e = pre-D2 stale)
+
+### 4. card's own verifier, all profiles, live
+   ok   - consent granted (headless workers do not need the interactive prompt)
+   ok   - hermes hooks doctor clean (transcript: /tmp/secret-guard-doctor-qa.txt)
+   ok   - live fire — payload with Telegram bot token blocked (action:block)
+   ok   - live fire — clean payload allowed (exit 0, no dispatcher contribution)
+
+verification: 78 ok · 6 FAIL
+
+### 5. true runtime wire shape (tool_input, as agent/shell_hooks.py::_payload_fields emits)
+-- CASE A: installed qa hook (stale) + token in kanban_complete.result
+{}
+   exit=0   (0 = ALLOWED -> D2 fix not deployed on this profile)
+-- CASE B: installed architect hook (fresh) + same payload
+   exit=2   (2 = BLOCKED)
+-- CASE C: repo copy (reviewed) + same payload
+   exit=2   (2 = BLOCKED)
+-- CASE D (control): installed qa hook + token in a COMMENT BODY
+   exit=2   (2 = BLOCKED -> plumbing works; CASE A is stale code, not plumbing)
+
+### 6. verifier doctor-check pattern vs real doctor wording (D3 residue)
+  doctor backend says: 2 issue(s) found.  Fix before relying on these hooks.
+  repo pattern 'issue(s)? found' matched: 1 (1 = NO match -> verifier prints 'doctor clean' on a broken profile)
+
+### 7. verifier consent-check scope (D3 residue)
+      - /home/sap/.hermes/profiles/backend/agent-hooks/qa-signoff-gate.sh matcher='^kanban_complete$' (timeout=30s, ✓ allowed)
+      - /home/sap/.hermes/profiles/backend/agent-hooks/secret-guard.sh matcher='^(kanban_comment|kanban_create|kanban_complete)$' (timeout=30s, ✗ not allowlisted)
+  (signoff-gate line carries 'allowed' -> grep passes, although secret-guard itself is not allowlisted)
+
+### 8. AC3 scanners
+[90m10:11PM[0m [32mINF[0m [1m19 commits scanned.[0m
+[90m10:11PM[0m [32mINF[0m [1mscanned ~378527 bytes (378.53 KB) in 283ms[0m
+[90m10:11PM[0m [33mWRN[0m [1mleaks found: 1[0m
+gitleaks findings: 1
+ - generic-api-key | scripts/qa/secret-guard.selftest.mjs | line 41 | commit 9f5daab3
+2026-09-17T22:11:07Z	info-0	trufflehog	finished scanning	{"chunks": 94, "bytes": 643742, "verified_secrets": 0, "unverified_secrets": 0, "scan_duration": "32.784839ms", "trufflehog_version": "3.97.5", "verification_caching": {"Hits":0,"Misses":0,"HitsWasted":0,"AttemptsSaved":0,"VerificationTimeSpentMS":0}}
+
+### 9. AC5 — no allowlist/exclusion silences the guard
+  ls: cannot access '/home/sap/.hermes/secret-guard.disabled': No such file or directory
+  guard-source allowlist hits: 0
+  .gitleaksignore entries:
+2

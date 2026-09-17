@@ -1,0 +1,23 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 41,
+  "EndLine": 41,
+  "StartColumn": 24,
+  "EndColumn": 78,
+  "Match": "token is 8615677595:REDACTED",
+  "Secret": "REDACTED",
+  "File": "scripts/qa/secret-guard.selftest.mjs",
+  "SymlinkFile": "",
+  "Commit": "9f5daab3b9f664985c5e838ffd782de0e1a779c8",
+  "Link": "https://github.com/zeldadil/password-manager/blob/9f5daab3b9f664985c5e838ffd782de0e1a779c8/scripts/qa/secret-guard.selftest.mjs#L41",
+  "Entropy": 4.6290035,
+  "Author": "architect (Hermes)",
+  "Email": "architect@password-manager.dev",
+  "Date": "2026-09-17T21:59:24Z",
+  "Message": "SEC-001 / T_B51A1FF3: mechanical guard against secrets in Kanban comments/evidence (D1+D2+D3+A3+A5+A6 fix)\n\nD1: commit the secret-guard implementation (was untracked on every branch):\n  - scripts/qa/secret-guard.mjs (gate logic, hermetic across Hermes wire shapes)\n  - scripts/qa/secret-guard.selftest.mjs (21/21 control matrix)\n  - scripts/qa/hooks/secret-guard.sh (shell wrapper)\n  - scripts/qa/hooks/install-secret-guard.sh (per-profile installer)\n  - scripts/qa/hooks/verify-secret-guard.sh (structural+live verifier, D3-fixed)\n  - scripts/qa/hooks/patch-config.py (config.yaml patcher)\n  - scripts/qa/hooks/reapprove.py + fix-allowlist-mtime.py (approval helpers)\n\nD2: scanPayload() now scans kanban_complete result field + top-level artifacts\n  (not just summary + metadata evidence paths). Adds selftest cases proving block.\n  Also widened guarded tool set per advisory A5:\n  kanban_request_review/summary, kanban_block/reason, kanban_request_changes/reason.\n\nD3: verify-secret-guard.sh:\n  - grep for \"✓ allowed\" (Hermes prints this, not \"✓ allowlisted\")\n  - judge doctor by its report text (\"issue(s) found\"), not exit code\n  - live-fire payload uses Hermes wire shape (tool_name + args at top-level)\n\nA3: SECURITY.md now records evaluation order / interaction with QA sign-off gate\n  (two independent pre_tool_call hooks, list-order, first-block-wins, both fail_closed).\n\nA5: widened matcher from 3 tools to 6 (kanban_comment/create/complete + request_review/\n  block/request_changes). Card-scoped expansion; same failure mode, one line each.\n\nA6: SECURITY.md states this is process control, not a tamper-proof boundary.\n\nEvidence: tests/evidence/t_b51a1ff3/{hooks-doctor,live-fire,selftest-output}.txt\n  regenerated — hooks doctor clean (both hooks allowlisted + unchanged), live-fire\n  shows hermes hooks test block+allow with synthetic fixture (12345678:AAA...), no\n  real credentials anywhere (AC3). Selftest 21/21.",
+  "Tags": [],
+  "Fingerprint": "9f5daab3b9f664985c5e838ffd782de0e1a779c8:scripts/qa/secret-guard.selftest.mjs:generic-api-key:41"
+ }
+]
