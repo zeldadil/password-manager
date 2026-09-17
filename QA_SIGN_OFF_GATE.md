@@ -31,6 +31,17 @@ The gate is mechanical: `scripts/qa/signoff-gate.mjs` evaluates it, a Hermes `pr
 | **Detection (board audit)** | `node scripts/qa/signoff-gate.mjs audit` (exit 1 on violations) | Full-board report for QA / release / retro audits; suitable for cron or a CI job. |
 | **Human review** | `kanban_request_review` / `kanban_request_changes` | Unchanged: the gate never replaces review, it only guarantees a verdict+evidence exists. |
 
+The board audit (`audit`) runs on demand for retro and release checks, and since the
+`qa-signoff-audit` workflow was wired in CI-001h (`t_ea0783c5`, PR #17) it also runs as a scheduled
+CI job (`.github/workflows/qa-signoff-audit.yml`, Mondays 06:17 UTC). The scheduled run is driven by
+a self-hosted runner registered on the trusted host, selected by the repository variable
+`QA_SIGNOFF_AUDIT_RUNNER` (the workflow `runs-on` already reads it as an escape hatch). A
+GitHub-hosted runner cannot see the canonical board (`~/.hermes/kanban.db` on the trusted host), so
+the scheduled job would be red every week without this transport; the decision that lands it is
+recorded in `docs/decisions/qa-signoff-gate-followups-t_527d4720.md`. The audit reports; it is
+deliberately not a required status check on `master` (CI-001h AC3/AC4) - branch protection is
+unchanged.
+
 ### What the gate is *not*
 
 The board database and the profile configs live on the trusted host, and the hook runs with the worker's own credentials. The gate therefore guarantees **no accidental or silent non-compliant completion, plus a durable audit trail** — it is a process control, not a tamper-proof boundary against a hostile agent (any agent with shell access could edit the board or touch the kill switch). Tamper *detection* is the audit layer's job: `hermes hooks doctor` flags hook-script drift, and the verifier below compares the installed gate against the reviewed repo copy by SHA-256.
@@ -222,7 +233,7 @@ Verified by `scripts/qa/hooks/verify-signoff-gate.sh --all --live` → **91 chec
 
 | # | Item | Owner |
 |---|---|---|
-| 1 | Whether the board audit also runs as a CI job (`qa-signoff`) — `.github/workflows/ci.yml` is currently a collision hotspot across CI cards, so this needs a decision, not a silent edit | `architect` |
+| 1 | Whether the board audit also runs as a CI job (`qa-signoff`) — **CLOSED by t_527d4720 (2026-09-17):** the audit runs as a scheduled CI job (`.github/workflows/qa-signoff-audit.yml`, Mondays 06:17 UTC) on a **self-hosted runner** registered on the trusted host, selected by the repository variable `QA_SIGNOFF_AUDIT_RUNNER`. The workflow ships with PR #17 (`feature/t_ea0783c5`); the transport decision (self-hosted runner chosen over a published snapshot, which was rejected because the repo is public and the board carries card titles/bodies/comments/evidence paths/assignees) is recorded in `docs/decisions/qa-signoff-gate-followups-t_527d4720.md`. The audit is deliberately **not** a required check on `master` (CI-001h AC3/AC4) — branch protection is unchanged; it reports, it does not gate merges. | `architect` (closed) |
 | 2 | Pre-epoch backlog (26 cards) — retrofit with verdict+evidence, or formally leave grandfathered | `architect` + `qa` |
 | 3 | `R7` security-track detection is a keyword heuristic (security Test Type + crypto/bridge keyword); confirm the classification list against ADR-002 §5.3 / ADR-005 §9.2 | `architect` |
 | 4 | Advisory-only cross-board audit: non-default boards (e.g. release-track boards) run the same hook, but the audit needs `--db` pointed at them | `qa` |
