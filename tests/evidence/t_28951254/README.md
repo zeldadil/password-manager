@@ -1,0 +1,128 @@
+# Evidence — t_28951254 (Telegram token rotation propagation)
+
+**Date:** 2026-09-17T20:29:15Z UTC  
+**Task:** t_28951254 — P0 follow-up: propagate the ROTATED Telegram token to all 7 profiles' `.env`  
+**Parent:** t_0af5aa3e (QA rotation verdict, pass-with-conditions)  
+
+---
+
+## 1. Source of truth
+
+The rotated token was read programmatically from the Kanban board —
+newest `dashboard` comment on card `t_0af5aa3e` — via:
+
+```
+sqlite3 ~/.hermes/kanban.db   "select body from task_comments where task_id='t_0af5aa3e' and author='dashboard'    order by created_at desc limit 1;" | grep -oE '[0-9]{8,12}:[A-Za-z0-9_-]{35}' | head -1
+```
+
+**The token value is NOT reproduced anywhere in this file.**
+All references below are either `<TOKEN-REDACTED>` placeholders or
+sha256 hashes of the value.
+
+Rotated token sha256: `df5ccd96d61f23a350efd8b3cb1e84b33ee552660446b167e07085e7baacadd2`  
+Rotated token length: 46 characters  
+
+---
+
+## 2. Per-profile .env state (after update)
+
+Every profile now has exactly one uncommented `TELEGRAM_BOT_TOKEN` line
+with the rotated value.  For each profile the line as it appears in the
+file (token redacted):
+
+  architect: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  backend: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  browser: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  docs: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  frontend: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  product: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  qa: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+
+All seven files also retain the original commented-out placeholder
+`# TELEGRAM_BOT_TOKEN=` at line 398 (harmless, left untouched).
+
+Duplicate `TELEGRAM_BOT_TOKEN` lines that previously existed in
+`browser`, `docs`, `frontend`, and `qa` have been removed — one line
+per file.
+
+---
+
+## 3. architect/config.yaml
+
+`~/.hermes/profiles/architect/config.yaml` was checked.  Before the fix
+line 104 contained a `bot_token:` literal whose sha256
+(`62fe6fe5053a50ec0570f5845ccd0ad39ea048c24239ae677c8eaa9a082e4aff`)
+did **not** match the rotated token — it was likely a stale/different
+value and was redundant with the `${TELEGRAM_BOT_TOKEN}` reference on
+line 245.  It has been removed.
+
+Redacted snippet:
+
+  config.yaml:102: telegram:
+  config.yaml:188:   telegram:
+  config.yaml:189:     - hermes-telegram
+  config.yaml:243:   telegram:
+  config.yaml:245:     token: ${TELEGRAM_BOT_TOKEN}
+  config.yaml:247:       platform: telegram
+  config.yaml:254: TELEGRAM_HOME_CHANNEL: 956145756
+
+After the fix the only telegram reference is:
+```
+token: ${TELEGRAM_BOT_TOKEN}
+```
+
+---
+
+## 4. Live channel verification
+
+Two profiles were used to send a real Telegram message to
+`telegram:956145756` (the team channel, chat id 956145756).  Both
+returned exit 0 (`sent`).
+
+| Profile    | Command                                                        | Exit code |
+|------------|----------------------------------------------------------------|-----------|
+| architect  | `hermes send --to telegram:956145756 "t_28951254: architect test"` | 0 |
+| backend    | `hermes send --to telegram:956145756 "t_28951254: backend test"`    | 0 |
+
+`getMe` for the configured value returns HTTP 200 (bot
+`AASLlmHermesBot`, id `8615677595`) — verified by QA on parent
+`t_0af5aa3e` and re-confirmed by the successful sends above.
+
+---
+
+## 5. Secret-handling statement
+
+**No secret was written into this repository.**
+
+- The rotated token value was read from the Kanban board into a shell
+  variable and a Python string in memory only.  It was never printed,
+  echoed, or logged in cleartext.
+- Script stdout emitted only sha256 hashes and the token length.
+- The evidence README uses `<TOKEN-REDACTED>` placeholders and sha256
+  hashes; the token value does not appear anywhere in the repo.
+- The workspace scripts (`fetch_token.sh`, `update_telegram_token.py`,
+  `verify_config_token.py`, `remove_config_literal.py`) are kept in
+  this task's scratch workspace only and are NOT committed to the repo.
+- The `.env` files updated are in `~/.hermes/profiles/` — outside the
+  repo — and contain the live token.  They are not part of this commit.
+
+---
+
+## 6. Acceptance-criteria checklist
+
+| # | Criteria | Status |
+|---|----------|--------|
+| 1 | `TELEGRAM_BOT_TOKEN` in all 7 profiles' `.env` is the rotated value; no dead value remains | PASS (sha256 match per file) |
+| 2 | Duplicate `TELEGRAM_BOT_TOKEN` lines removed (exactly one per file); `config.yaml` checked | PASS |
+| 3 | `hermes send` exit 0 from at least two profiles; `getMe` 200 | PASS (architect + backend) |
+| 4 | `tests/evidence/t_28951254/README.md` with redacted transcript; no secret in repo; commit + push on a branch (not master) | PASS (this file) |
+| 5 | `gitleaks detect --source . --no-banner --redact` and `trufflehog filesystem . --results=verified,unknown` clean on evidence dir; CI secret-scan green | pending scan |
+
+---
+
+## 7. Files in this evidence directory
+
+- `README.md` (this file)
+
+Generated by `build_evidence.py` (scratch workspace
+`t_28951254`).  That script is not committed.
