@@ -1,0 +1,240 @@
+QA review transcript — t_b51a1ff3 (security guard vs secrets in Kanban)
+host: ai-server · date: 2026-09-17T21:23:45+00:00 · repo: /home/sap/password-manager
+branch: fix/telegram-token-rotation-t_28951254 · HEAD: 48b89a3
+
+############ D1: guard sources tracked in git? ############
+-- git status --short (repo root)
+?? .worktrees/
+?? filter-fix.sh
+?? scripts/
+?? tests/evidence/t_e348e0b7/
+-- git ls-files scripts/qa/  (empty = untracked)
+-- does any commit anywhere contain the guard? 
+48b89a359b5771153bcbd267f6c0bc03bcb92d9f:SECURITY.md
+48b89a359b5771153bcbd267f6c0bc03bcb92d9f:tests/evidence/t_b51a1ff3/hooks-doctor.txt
+48b89a359b5771153bcbd267f6c0bc03bcb92d9f:tests/evidence/t_b51a1ff3/live-fire.txt
+48b89a359b5771153bcbd267f6c0bc03bcb92d9f:tests/evidence/t_b51a1ff3/selftest-output.txt
+-- files in the implementation commit 48b89a3
+48b89a359b5771153bcbd267f6c0bc03bcb92d9f SEC-001 / T_B51A1FF3: mechanical guard against secrets in Kanban comments/evidence + process rule
+
+ SECURITY.md                                   | 45 ++++++++++++++++++++++
+ tests/evidence/t_b51a1ff3/hooks-doctor.txt    | 55 +++++++++++++++++++++++++++
+ tests/evidence/t_b51a1ff3/live-fire.txt       | 51 +++++++++++++++++++++++++
+ tests/evidence/t_b51a1ff3/selftest-output.txt | 27 +++++++++++++
+ 4 files changed, 178 insertions(+)
+-- is 48b89a3 pushed?
+origin/fix/telegram-token-rotation-t_28951254 = 9a0a4bb
+-- branches containing 48b89a3 (remote):
+-- git check-ignore scripts/qa/secret-guard.mjs (exit 1 = not ignored):
+[check-ignore exit=1]
+
+############ D2: kanban_complete field coverage ############
+-- token in summary (expect block/exit 2):
+      exit=2  elapsed=0.103s
+  → /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.sh
+      exit=2  elapsed=0.05s
+      stdout: {"decision":"block","reason":"secret-guard: blocked — the call text matches secret-shaped patterns (rule ids: R_SECRET_TELEGRAM_BOT_TOKEN).\nNo secret value is quoted in this reason — only rule ids. Do not paste the value into any repo file, evidence, log, or chat.\nDistribution channel for secrets: profile `.env` only (or a local file outside the repo). A worker that needs one reads it program...
+-- token in result (expect block; observed ALLOW):
+  → /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.sh
+      exit=0  elapsed=0.05s
+      stdout: {}
+
+############ AC1: hermes hooks test — qa profile (real dispatcher path) ############
+-- BLOCK case (kanban_comment + synthetic token fixture):
+Firing 1 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.sh
+      exit=2  elapsed=0.061s
+      stdout: {"decision":"block","reason":"secret-guard: blocked — the call text matches secret-shaped patterns (rule ids: R_SECRET_TELEGRAM_BOT_TOKEN).\nNo secret value is quoted in this reason — only rule ids. Do not paste the value into any repo file, evidence, log, or chat.\nDistribution channel for secrets: profile `.env` only (or a local file outside the repo). A worker that needs one reads it program...
+      parsed (Hermes wire shape): {"action": "block", "message": "secret-guard: blocked \u2014 the call text matches secret-shaped patterns (rule ids: R_SECRET_TELEGRAM_BOT_TOKEN).\nNo secret value is quoted in this reason \u2014 only rule ids. Do not paste the value into any repo file, evidence, log, or chat.\nDistribution channel for secrets: profile `.env` only (or a local file outside the repo). A worker that needs one reads it programmatically.\nPolicy: SEC-001 (no secrets in board) + T_B51A1FF3 \u00b7 tool: secret-guard.mjs"}
+
+-- ALLOW case (clean comment):
+Firing 1 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.sh
+      exit=0  elapsed=0.064s
+      stdout: {}
+      parsed: <none — hook contributed nothing to the dispatcher>
+
+-- BLOCK case, architect profile:
+Firing 1 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/architect/agent-hooks/secret-guard.sh
+      exit=2  elapsed=0.065s
+      stdout: {"decision":"block","reason":"secret-guard: blocked — the call text matches secret-shaped patterns (rule ids: R_SECRET_TELEGRAM_BOT_TOKEN).\nNo secret value is quoted in this reason — only rule ids. Do not paste the value into any repo file, evidence, log, or chat.\nDistribution channel for secrets: profile `.env` only (or a local file outside the repo). A worker that needs one reads it program...
+      parsed (Hermes wire shape): {"action": "block", "message": "secret-guard: blocked \u2014 the call text matches secret-shaped patterns (rule ids: R_SECRET_TELEGRAM_BOT_TOKEN).\nNo secret value is quoted in this reason \u2014 only rule ids. Do not paste the value into any repo file, evidence, log, or chat.\nDistribution channel for secrets: profile `.env` only (or a local file outside the repo). A worker that needs one reads it programmatically.\nPolicy: SEC-001 (no secrets in board) + T_B51A1FF3 \u00b7 tool: secret-guard.mjs"}
+
+
+############ AC1: selftest control matrix (reproduced) ############
+fixture repo: /tmp/secret-guard-selftest-VuR5Fk/repo
+
+1. Hook mode — pre_tool_call: kanban_comment / kanban_create / kanban_complete
+  ok   - kanban_comment with Telegram bot token → block + exit 2
+  ok   - kanban_comment with key=value secret → block + exit 2
+  ok   - kanban_comment with AWS key id → block + exit 2
+  ok   - clean kanban_comment → {} + exit 0
+  ok   - clean kanban_create → {} + exit 0
+  ok   - clean kanban_complete → {} + exit 0
+  ok   - kanban_complete with Telegram bot token in summary → block + exit 2
+  ok   - terminal tool passes through (not guarded)
+  ok   - malformed payload → fail closed (block + exit 2, R_SECRET_PARSE_ERROR)
+  ok   - kill switch allows the call
+
+2. Check mode — one-shot text scan
+  ok   - check mode: clean text → exit 0
+  ok   - check mode: text with Telegram bot token → exit 1
+  ok   - check mode: text with key=value secret → exit 1
+  ok   - check mode: text with AWS key id → exit 1
+
+3. Audit mode — whole-board scan
+  ok   - audit mode: clean board → exit 0
+  ok   - audit mode: board with a secret in a comment → exit 1
+
+16/16 cases passed
+
+############ AC1: installed copy vs repo copy (sha256) ############
+5cfffb0e7be39fe933e6b41b1d8d8df5fcd77e59abae6f63b3a1d5dba9fe78d6  scripts/qa/secret-guard.mjs
+271a65a18e5a60d24ad3c19f271f38024d23145c696a22b71ff3cb0797ad9470  scripts/qa/hooks/secret-guard.sh
+architect 5cfffb0e7be39fe9
+backend   5cfffb0e7be39fe9
+browser   5cfffb0e7be39fe9
+docs      5cfffb0e7be39fe9
+frontend  5cfffb0e7be39fe9
+product   5cfffb0e7be39fe9
+qa        5cfffb0e7be39fe9
+
+############ AC2: process rule + gate-doc cross reference ############
+-- SECURITY.md new section present:
+54:## Secrets in Kanban — absolute rule (SEC-001 extension, T_B51A1FF3)
+-- SECURITY.md mentions evaluation order / sign-off gate interaction (expect 0 hits):
+0
+-- QA_SIGN_OFF_GATE.md in this branch tree:
+0
+-- QA_SIGN_OFF_GATE.md on origin/master:
+0
+
+############ AC3: guard source free of credentials ############
+-- gitleaks detect --source . --no-banner --redact:
+[90m9:23PM[0m [32mINF[0m [1m160 commits scanned.[0m
+[90m9:23PM[0m [32mINF[0m [1mscanned ~4196544 bytes (4.20 MB) in 454ms[0m
+[90m9:23PM[0m [33mWRN[0m [1mleaks found: 6[0m
+-- findings by file/rule (fingerprints, values redacted):
+findings from --source . : 6
+   tests/evidence/t_28951254/README.md 22 generic-api-key fingerprint= 9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859:tests/evidence/t_28951254/README.md:generic-api-key:22
+   tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md 14 telegram-bot-api-token fingerprint= 258ca92b8234d6dc7d41f55b39fdeb00a00c335c:tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md:telegram-bot-api-token:14
+   scripts/qa/signoff-gate.selftest.mjs 353 generic-api-key fingerprint= 8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.selftest.mjs:generic-api-key:353
+   scripts/qa/signoff-gate.selftest.mjs 353 generic-api-key fingerprint= cd5c7b33b116b3e9d7147cf37ebf81093041d3bb:scripts/qa/signoff-gate.selftest.mjs:generic-api-key:353
+   scripts/qa/signoff-gate.selftest.mjs 353 generic-api-key fingerprint= 31b49b87081695c7d41dbf177518acd10c5ca18d:scripts/qa/signoff-gate.selftest.mjs:generic-api-key:353
+   PROJECT_BRIEF.md 87 telegram-bot-api-token fingerprint= 543c396d8bf4289492b80066a93e8c9f51de8c2a:PROJECT_BRIEF.md:telegram-bot-api-token:87
+-- trufflehog filesystem scripts/qa --results=verified,unknown:
+2026-09-17T21:23:53Z	info-0	trufflehog	finished scanning	{"chunks": 8, "bytes": 57034, "verified_secrets": 0, "unverified_secrets": 0, "scan_duration": "8.537453ms", "trufflehog_version": "3.97.5", "verification_caching": {"Hits":0,"Misses":0,"HitsWasted":0,"AttemptsSaved":0,"VerificationTimeSpentMS":0}}
+
+############ AC1/AC4: hooks doctor, all 7 profiles ############
+----- architect -----
+  [pre_tool_call] /home/sap/.hermes/profiles/architect/agent-hooks/secret-guard.sh
+      ✓ script exists and is executable
+      ✓ allowlisted (approved 2026-09-17T20:54:29.282937Z)
+      ⚠ script modified since approval (was 2026-09-17T20:35:34.324066Z, now 2026-09-17T21:07:57.511960Z) — review changes, then `hermes hooks revoke` + re-approve to refresh
+      ✓ produced valid JSON on synthetic payload (exit=0, 0.055s)
+----- backend -----
+  [pre_tool_call] /home/sap/.hermes/profiles/backend/agent-hooks/secret-guard.sh
+      ✓ script exists and is executable
+      ✗ not allowlisted — hook will NOT fire at runtime (run with --accept-hooks once, or confirm at the TTY prompt)
+----- browser -----
+  [pre_tool_call] /home/sap/.hermes/profiles/browser/agent-hooks/secret-guard.sh
+      ✓ script exists and is executable
+      ✗ not allowlisted — hook will NOT fire at runtime (run with --accept-hooks once, or confirm at the TTY prompt)
+----- docs -----
+  [pre_tool_call] /home/sap/.hermes/profiles/docs/agent-hooks/secret-guard.sh
+      ✓ script exists and is executable
+      ✗ not allowlisted — hook will NOT fire at runtime (run with --accept-hooks once, or confirm at the TTY prompt)
+----- frontend -----
+  [pre_tool_call] /home/sap/.hermes/profiles/frontend/agent-hooks/secret-guard.sh
+      ✓ script exists and is executable
+      ✗ not allowlisted — hook will NOT fire at runtime (run with --accept-hooks once, or confirm at the TTY prompt)
+----- product -----
+  [pre_tool_call] /home/sap/.hermes/profiles/product/agent-hooks/secret-guard.sh
+      ✓ script exists and is executable
+      ✗ not allowlisted — hook will NOT fire at runtime (run with --accept-hooks once, or confirm at the TTY prompt)
+----- qa -----
+  [pre_tool_call] /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.sh
+      ✓ script exists and is executable
+      ✓ allowlisted (approved 2026-09-17T21:16:47.012563Z)
+      ✓ script unchanged since approval
+      ✓ produced valid JSON on synthetic payload (exit=0, 0.051s)
+
+############ D4: the card's own verifier output ############
+── architect (/home/sap/.hermes/profiles/architect)
+   FAIL - hook is not allowlisted — non-TTY workers would silently skip it
+── backend (/home/sap/.hermes/profiles/backend)
+   FAIL - hook is not allowlisted — non-TTY workers would silently skip it
+── browser (/home/sap/.hermes/profiles/browser)
+   FAIL - hook is not allowlisted — non-TTY workers would silently skip it
+── docs (/home/sap/.hermes/profiles/docs)
+   FAIL - hook is not allowlisted — non-TTY workers would silently skip it
+── frontend (/home/sap/.hermes/profiles/frontend)
+   FAIL - hook is not allowlisted — non-TTY workers would silently skip it
+── product (/home/sap/.hermes/profiles/product)
+   FAIL - hook is not allowlisted — non-TTY workers would silently skip it
+── qa (/home/sap/.hermes/profiles/qa)
+   FAIL - hook is not allowlisted — non-TTY workers would silently skip it
+verification: 63 ok · 7 FAIL
+-- hooks list consent token actually printed by hermes (vs verifier grep string '✓ allowlisted'):
+    - /home/sap/.hermes/profiles/architect/agent-hooks/qa-signoff-gate.sh matcher='^kanban_complete$' (timeout=30s, ✓ allowed)
+    - /home/sap/.hermes/profiles/architect/agent-hooks/secret-guard.sh matcher='^(kanban_comment|kanban_create|kanban_complete)$' (timeout=30s, ✓ allowed)
+-- verifier grep count for '✓ allowlisted' (0 = false FAIL):
+0
+-- hermes hooks doctor exit code while printing issues (exit 0 = false 'clean' in verifier):
+doctor exit=0
+2 issue(s) found.  Fix before relying on these hooks.
+
+############ D4: committed live-fire fixture is non-matching (not reproducible) ############
+[exit=0 — 0 means ALLOW]
+secret-guard check: secret-shaped pattern(s) found: R_SECRET_TELEGRAM_BOT_TOKEN
+No value is printed — rule ids only.
+[exit=1 — 1 means BLOCK]
+
+############ AC5: no allowlist/exclusion silences the guard ############
+-- internal allowlist/exclusion inside the guard:
+[grep exit=1 (1 = none)]
+-- .gitleaksignore:
+
+
+a503e4d:PROJECT_BRIEF.md:telegram-bot-api-token
+-- kill switch present?
+ls: cannot access '/home/sap/.hermes/secret-guard.disabled': No such file or directory
+ls: cannot access '/home/sap/.hermes/profiles/*/secret-guard.disabled': No such file or directory
+
+############ leak-free proof: guard catches the REAL leaked comment ############
+-- (value piped straight into check mode; never printed) --
+[check exit=1]
+-- rule ids reported:
+secret-guard check: secret-shaped pattern(s) found: R_SECRET_TELEGRAM_BOT_TOKEN
+No value is printed — rule ids only.
+-- board audit (whole board, rule ids only):
+secret-guard audit: 1 task(s) carry secret-shaped text (db: /home/sap/.hermes/kanban.db)
+  t_0af5aa3e P0: rotate + purge leaked Telegram bot token (public git history) @qa [R_SECRET_TELEGRAM_BOT_TOKEN]
+No values are printed — rule ids only.
+[audit pipeline status above; true exit code:]
+[audit exit=1 — 1 means secret-shaped text found]
+
+############ deliverable 3: rotation question posted on t_0af5aa3e ############
+id  author     created              len 
+--  ---------  -------------------  ----
+36  dashboard  2026-09-17 15:39:17  33  
+39  architect  2026-09-17 16:58:10  1531
+40  dashboard  2026-09-17 17:23:23  88  
+41  qa         2026-09-17 17:30:03  4028
+46  dashboard  2026-09-17 20:08:55  83  
+47  dashboard  2026-09-17 20:09:34  89  
+48  qa         2026-09-17 20:19:06  4353
+57  architect  2026-09-17 21:07:36  1475
+
+############ e2e: real kanban_comment from this worker session WITH a synthetic fixture ############
+Observed result of a genuine kanban_comment(t_b51a1ff3) tool call carrying fixture
+  '9999999999:FAKEFIXTURE...' (this review run 474, 2026-09-17 ~21:21Z):
+  error: "secret-guard: blocked — the call text matches secret-shaped patterns
+          (rule ids: R_SECRET_TELEGRAM_BOT_TOKEN). No secret value is quoted in this
+          reason — only rule ids. ..."
+Proof the guard blocked it rather than the board swallowing it — comments on this card:
+0
