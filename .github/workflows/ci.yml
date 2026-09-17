@@ -11,8 +11,13 @@ name: CI
 # run in parallel after a green install so that every gate reports its own
 # pass/fail verdict (a skipped job would hide a real result).
 #
+# QA-001d (this card) added the `sast` job (Semgrep) and the truffleHog step
+# in `secret-scan`. Both security scans run INDEPENDENT of `install-lockfile`:
+# they inspect source + git history and do not need installed dependencies, so
+# a secret or source-level vulnerability must be flagged even when the lockfile
+# is out of sync (a skipped security gate is a false sense of safety).
+#
 # Deferred to later QA cards (kept out of scope here):
-#   - `sast` (Semgrep/CodeQL) + truffleHog secret scan ......... QA-001d
 #   - Playwright cross-browser install + full E2E matrix ....... QA-001c
 #   - Unit coverage thresholds (Tier A 80/70/90) ............... QA-001e
 #
@@ -151,7 +156,9 @@ jobs:
 
   secret-scan:
     name: secret-scan
-    needs: [install-lockfile]
+    # QA-001d: removed `needs: [install-lockfile]` — secret scanning must run
+    # even when dependencies are not installed (a secret leaked while the
+    # lockfile is out of sync must still be caught).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -161,6 +168,47 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: truffleHog secret scan (entropy + verified)
+        env:
+          TRUFFLEHOG_VERSION: "3.97.5"
+        run: |
+          curl -sSfL -o trufflehog.tar.gz \
+            "https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/trufflehog_${TRUFFLEHOG_VERSION}_linux_amd64.tar.gz"
+          tar -xzf trufflehog.tar.gz trufflehog
+          ./trufflehog git file://. --no-update --results=verified,unknown --fail
+
+  sast:
+    name: sast
+    # QA-001d: Semgrep SAST, independent of `install-lockfile` (scans source,
+    # needs no node_modules). OWASP Top 10 + security-audit rulesets; SARIF is
+    # uploaded to GitHub code scanning and retained as an artifact (QA-001g).
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Semgrep SAST
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --config p/owasp-top-ten \
+            --sarif --output semgrep.sarif \
+            .
+      - name: Upload Semgrep SARIF to GitHub code scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+      - name: Upload Semgrep SARIF as build artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semgrep-sarif
+          path: semgrep.sarif
+          if-no-files-found: warn
 
   build:
     name: build
