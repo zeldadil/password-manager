@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 export interface HeaderProps {
@@ -18,6 +18,7 @@ export default function Header({
 }: HeaderProps) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const toggleRef = useRef<HTMLButtonElement>(null)
 
   const handleLock = () => {
     if (onLock) onLock()
@@ -28,6 +29,16 @@ export default function Header({
     setMenuOpen(false)
     if (onSignOut) onSignOut()
     else navigate('/login')
+  }
+
+  // Escape closes the menu and returns focus to the toggle so keyboard users are
+  // never left with an orphaned open menu (WCAG 2.1.1 Keyboard).
+  const handleMenuKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Escape' && menuOpen) {
+      event.preventDefault()
+      setMenuOpen(false)
+      toggleRef.current?.focus()
+    }
   }
 
   return (
@@ -49,16 +60,19 @@ export default function Header({
 
         <div className="app-header__user">
           <button
+            ref={toggleRef}
             type="button"
             className="app-header__user-toggle"
             aria-haspopup="menu"
             aria-expanded={menuOpen}
+            aria-controls={menuOpen ? 'user-menu' : undefined}
             onClick={() => setMenuOpen((open) => !open)}
+            onKeyDown={handleMenuKeyDown}
           >
             {userName ?? 'Account'}
           </button>
           {menuOpen && (
-            <div className="app-header__menu" role="menu" aria-label="User menu">
+            <div id="user-menu" className="app-header__menu" role="menu" aria-label="User menu">
               <Link
                 to="/settings"
                 role="menuitem"
