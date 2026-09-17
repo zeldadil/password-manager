@@ -48,5 +48,5 @@ export function createQueryClient(): QueryClient {
   });
 }
 
-/** The application-wide query client, mounted once in {@link App}'s provider tree. */
+/** The application-wide query client, mounted once at the app root in `main.tsx`. */
 export const queryClient = createQueryClient();
