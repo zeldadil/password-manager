@@ -7,7 +7,7 @@
 
 > **No credential value appears in this document.** The leaked value is referred to by
 > `sha256=62fe6fe5053a50ec0570f5845ccd0ad39ea048c24239ae677c8eaa9a082e4aff` (46 chars, "the old value").
-> The rotated value is referred to only through its Telegram identity (`@AASLlmHermesBot`, bot id `8615677595`) and is not
+> The rotated value is referred to only through its Telegram identity (`@AASLlmHermesBot`, bot id `<BOT_ID_REDACTED>`) and is not
 > fingerprinted here either — it is a live credential. Never copy a value from a board comment into any repo/evidence/log.
 
 ---
@@ -30,7 +30,7 @@
 
 **AC1 interpretation:**
 - Trufflehog **PASS**: 0 verified findings (the only tool that actually tries to use the credential).
-- Gitleaks: 2 residual `telegram-bot-api-token` pattern hits remain on **master-only history** (commits `543c396` + `a503e4d`). These are not on any branch tip, not reachable from any non-master branch, and the matched substring is the dead/bot-id-only truncated form `8615677595:***` (the full 46-char secret is not present in either commit's current tree — master tip was sanitized by PR #19). The pattern hits are the pattern-matching tool flagging the bot-id prefix as a telegram token shape.
+- Gitleaks: 2 residual `telegram-bot-api-token` pattern hits remain on **master-only history** (commits `543c396` + `a503e4d`). These are not on any branch tip, not reachable from any non-master branch, and the matched substring is the dead/bot-id-only truncated form `<BOT_ID_REDACTED>:***` (the full 46-char secret is not present in either commit's current tree — master tip was sanitized by PR #19). The pattern hits are the pattern-matching tool flagging the bot-id prefix as a telegram token shape.
 - The 2 residual gitleaks hits are on master history, which is **branch-protected** and cannot be force-pushed by this agent. See AC6.
 
 ### AC2: git grep for full-token regex over every remote branch tip = 0 hits
@@ -38,7 +38,7 @@
 Verified against **GitHub API** (`GET /repos/{repo}/contents/PROJECT_BRIEF.md?ref={branch}`) for all 32 branches, plus local mirror `git grep` with full-token regex `[0-9]{8,12}:[A-Za-z0-9_-]{35}`:
 
 - **All 32 branch tips: 0 full-token hits** (local + GitHub API agree).
-- Bot-id-only truncated form `8615677595:...` appears in the decision-log prose of `feature/t_ee24fd37` (line 161, describing what happened — not the credential itself); this is not a credential leak.
+- Bot-id-only truncated form `<BOT_ID_REDACTED>:...` appears in the decision-log prose of `feature/t_ee24fd37` (line 161, describing what happened — not the credential itself); this is not a credential leak.
 
 ### AC3: evidence-file re-leak removed
 

@@ -37,8 +37,8 @@ Date:        2026-09-17T14:52:13Z
 Fingerprint: 8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.selftest.mjs:generic-api-key:353
 Link:        https://github.com/zeldadil/password-manager/blob/8a8b2e3034b8e28daf0988373a20864161e119ee/scripts/qa/signoff-gate.selftest.mjs#L353
 
-Finding:     ...qa`, `docs`) using `TELEGRAM_BOT_TOKEN=[1;3;m8615677595:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s[0m`, `TELEGRAM_ALLOWED_...
-Secret:      [1;3;m8615677595:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s[0m
+Finding:     ...qa`, `docs`) using `TELEGRAM_BOT_TOKEN=[1;3;m<BOT_ID_REDACTED>:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s[0m`, `TELEGRAM_ALLOWED_...
+Secret:      [1;3;m<BOT_ID_REDACTED>:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s[0m
 RuleID:      telegram-bot-api-token
 Entropy:     4.923352
 File:        PROJECT_BRIEF.md
@@ -50,8 +50,8 @@ Date:        2026-09-17T13:32:33Z
 Fingerprint: 543c396d8bf4289492b80066a93e8c9f51de8c2a:PROJECT_BRIEF.md:telegram-bot-api-token:87
 Link:        https://github.com/zeldadil/password-manager/blob/543c396d8bf4289492b80066a93e8c9f51de8c2a/PROJECT_BRIEF.md?plain=1#L87
 
-Finding:     ...qa`, `docs`) using `TELEGRAM_BOT_TOKEN=[1;3;m8615677595:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s[0m`, `TELEGRAM_ALLOWED_...
-Secret:      [1;3;m8615677595:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s[0m
+Finding:     ...qa`, `docs`) using `TELEGRAM_BOT_TOKEN=[1;3;m<BOT_ID_REDACTED>:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s[0m`, `TELEGRAM_ALLOWED_...
+Secret:      [1;3;m<BOT_ID_REDACTED>:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s[0m
 RuleID:      telegram-bot-api-token
 Entropy:     4.923352
 File:        PROJECT_BRIEF.md
