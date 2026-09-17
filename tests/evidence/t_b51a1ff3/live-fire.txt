@@ -1,0 +1,51 @@
+secret-guard live-fire — architect profile
+Hook: /home/sap/.hermes/profiles/architect/agent-hooks/secret-guard.sh
+Fixture DB: /tmp/secret-guard-live-T1wh5i/board.db
+Date: 2026-09-17
+
+Test method: direct shell invocation of secret-guard.sh with synthetic pre_tool_call
+payloads. This is the exact path a real Hermes hook event takes (stdin → hook script →
+node secret-guard.mjs hook → decision JSON on stdout).
+
+=== Block cases (all must exit 2 + decision:block + rule id in reason) ===
+
+  ok - kanban_comment with Telegram bot token → block + exit 2
+       rule: R_SECRET_TELEGRAM_BOT_TOKEN
+       payload: {"hook_event_name":"pre_tool_call","tool_name":"kanban_comment",
+                 "tool_input":{"task_id":"t_b0000001",
+                 "body":"deployment done — bot token 8615677595:AAA...AAA is live"},
+                 "session_id":"sess_test","cwd":"/tmp","profile":"architect",
+                 "extra":{"task_id":"t_b0000001"}}
+
+  ok - kanban_comment with key=value secret → block + exit 2
+       rule: R_SECRET_KEY_VALUE_PAIR
+       payload: body = "API key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+  ok - kanban_comment with AWS key id → block + exit 2
+       rule: R_SECRET_AWS_ACCESS_KEY_ID
+       payload: body = "deployed with AKIA0123456789ABCDEF"
+
+  ok - kanban_complete with token in summary → block + exit 2
+       rule: R_SECRET_TELEGRAM_BOT_TOKEN
+       payload: summary = "done — token 8615677595:AAA...AAA"
+
+  ok - malformed payload → fail closed (block + exit 2, R_SECRET_PARSE_ERROR)
+       payload: "{not json"
+
+=== Allow cases (all must exit 0 + {}) ===
+
+  ok - clean kanban_comment → {} + exit 0
+       payload: body = "QA-VERDICT: pass — evidence: tests/evidence/t_b0000000/README.md"
+
+  ok - clean kanban_create → {} + exit 0
+       payload: title = "new task", body = "some clean description"
+
+  ok - clean kanban_complete → {} + exit 0
+       payload: summary = "all tests pass"
+
+=== Pass-through (not guarded) ===
+
+  ok - terminal tool passes through (exit 0, {})
+
+=== Summary ===
+9/9 cases passed · 0 failed
