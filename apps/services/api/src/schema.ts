@@ -16,9 +16,21 @@
  * plaintext metadata. No crypto is performed in this file — columns
  * store opaque blobs. Crypto code lives in BE-002a + packages/crypto/
  * (gated by SEC-001).
+ *
+ * Indexing (BE-001b, ADR-003 §9.1): SQLite does NOT auto-index foreign-key
+ * columns (unlike Postgres, where an FK implies an index). Every non-PK,
+ * non-cascade-optimized FK column therefore carries an explicit index here
+ * so the ownership/authorization lookups in ADR-003 §6 (per-request auth
+ * flow) run in O(log n) instead of a full table scan. Index names follow the
+ * `idx_<table>_<column>` convention. Polymorphic grantee/target columns on
+ * `permissions` (target_id, grantee_id) are indexed too — they are the hot
+ * lookup keys for auth, even though they are not declared as DB FKs.
+ * Unique constraints (users.email, users.username, refresh_tokens.token_hash)
+ * are declared inline via `.unique()` and produce their own indexes, which
+ * are preserved verbatim.
  */
 
-import { sqliteTable, text, integer, blob, foreignKey } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, blob, foreignKey, index } from 'drizzle-orm/sqlite-core';
 import { relations } from 'drizzle-orm';
 
 // ─── Common column helpers ──────────────────────────────────────────────
@@ -92,7 +104,10 @@ export const vaults = sqliteTable('vaults', {
   createdAt: createdAt().notNull(),
   updatedAt: updatedAt().notNull(),
   deletedAt: deletedAt(),
-});
+}, (table) => ({
+  // FK index: ownership lookups by owner (ADR-003 §6 auth flow).
+  idx_vaults_owner_id: index('idx_vaults_owner_id').on(table.ownerId),
+}));
 
 // ─── Folder ────────────────────────────────────────────────────────────
 // ADR-003 Section 3.4. Self-referential tree via parentId.
@@ -133,6 +148,10 @@ export const folders = sqliteTable('folders', {
     columns: [table.parentId],
     foreignColumns: [table.id],
   }),
+  // FK indexes: traversal by vault/owner/parent (ADR-003 §6 auth flow + tree).
+  idx_folders_vault_id: index('idx_folders_vault_id').on(table.vaultId),
+  idx_folders_owner_id: index('idx_folders_owner_id').on(table.ownerId),
+  idx_folders_parent_id: index('idx_folders_parent_id').on(table.parentId),
 }));
 
 // ─── Resource ──────────────────────────────────────────────────────────
@@ -179,7 +198,12 @@ export const resources = sqliteTable('resources', {
   createdAt: createdAt().notNull(),
   updatedAt: updatedAt().notNull(),
   deletedAt: deletedAt(),
-});
+}, (table) => ({
+  // FK indexes: scope resources by vault + ownership + folder (ADR-003 §6).
+  idx_resources_vault_id: index('idx_resources_vault_id').on(table.vaultId),
+  idx_resources_owner_id: index('idx_resources_owner_id').on(table.ownerId),
+  idx_resources_folder_id: index('idx_resources_folder_id').on(table.folderId),
+}));
 
 // ─── Tag ───────────────────────────────────────────────────────────────
 // ADR-003 Section 3.6. Flat, many-to-many with resources.
@@ -196,7 +220,10 @@ export const tags = sqliteTable('tags', {
   createdAt: createdAt().notNull(),
   updatedAt: updatedAt().notNull(),
   deletedAt: deletedAt(),
-});
+}, (table) => ({
+  // FK index: scope tags by vault (ADR-003 §6 auth flow).
+  idx_tags_vault_id: index('idx_tags_vault_id').on(table.vaultId),
+}));
 
 // ─── Resource ↔ Tag junction ────────────────────────────────────────────
 // ADR-003 Section 8.1 Open Q1 (resolved: junction table for portability)
@@ -208,7 +235,11 @@ export const resourceTags = sqliteTable('resource_tags', {
   tagId: uuid('tag_id')
     .notNull()
     .references(() => tags.id, { onDelete: 'cascade' }),
-});
+}, (table) => ({
+  // Indexes on both FK columns for bidirectional join lookups.
+  idx_resource_tags_resource_id: index('idx_resource_tags_resource_id').on(table.resourceId),
+  idx_resource_tags_tag_id: index('idx_resource_tags_tag_id').on(table.tagId),
+}));
 
 // ─── Permission ────────────────────────────────────────────────────────
 // ADR-003 Section 3.5 / ADR-001 Section 5. Enum levels 1/7/15.
@@ -235,7 +266,13 @@ export const permissions = sqliteTable('permissions', {
   createdAt: createdAt().notNull(),
   updatedAt: updatedAt().notNull(),
   deletedAt: deletedAt(),
-});
+}, (table) => ({
+  // FK + polymorphic-lookup indexes for the per-request auth flow
+  // (ADR-003 §6.2: query by targetType+targetId and granteeType+granteeId).
+  idx_permissions_target_id: index('idx_permissions_target_id').on(table.targetId),
+  idx_permissions_grantee_id: index('idx_permissions_grantee_id').on(table.granteeId),
+  idx_permissions_granted_by: index('idx_permissions_granted_by').on(table.grantedBy),
+}));
 
 // ─── Group ─────────────────────────────────────────────────────────────
 // ADR-003 Section 3.7. Post-MVP schema but defined for coherence.
@@ -251,7 +288,10 @@ export const groups = sqliteTable('groups', {
   createdAt: createdAt().notNull(),
   updatedAt: updatedAt().notNull(),
   deletedAt: deletedAt(),
-});
+}, (table) => ({
+  // FK index: ownership lookups by owner (ADR-003 §6 auth flow).
+  idx_groups_owner_id: index('idx_groups_owner_id').on(table.ownerId),
+}));
 
 // ─── Group membership junction ─────────────────────────────────────────
 // ADR-003 Section 3.7.
@@ -270,7 +310,11 @@ export const groupMembers = sqliteTable('group_members', {
   createdAt: createdAt().notNull(),
   updatedAt: updatedAt().notNull(),
   deletedAt: deletedAt(),
-});
+}, (table) => ({
+  // Indexes on both FK columns for bidirectional membership lookups.
+  idx_group_members_group_id: index('idx_group_members_group_id').on(table.groupId),
+  idx_group_members_user_id: index('idx_group_members_user_id').on(table.userId),
+}));
 
 // ─── Auth domain tables ────────────────────────────────────────────────
 // Included in baseline migration so auth flow (BE-002a–BE-002h) storage
@@ -302,7 +346,10 @@ export const sessions = sqliteTable('sessions', {
   createdAt: createdAt().notNull(),
   updatedAt: updatedAt().notNull(),
   deletedAt: deletedAt(),
-});
+}, (table) => ({
+  // FK index: session lookups by user (ADR-003 §6 auth flow).
+  idx_sessions_user_id: index('idx_sessions_user_id').on(table.userId),
+}));
 
 export const refreshTokens = sqliteTable('refresh_tokens', {
   id: uuid('id').primaryKey(),
@@ -325,7 +372,10 @@ export const refreshTokens = sqliteTable('refresh_tokens', {
   createdAt: createdAt().notNull(),
   updatedAt: updatedAt().notNull(),
   deletedAt: deletedAt(),
-});
+}, (table) => ({
+  // FK index: token lookups by user (refresh rotation, revocation).
+  idx_refresh_tokens_user_id: index('idx_refresh_tokens_user_id').on(table.userId),
+}));
 
 // ─── Relations ─────────────────────────────────────────────────────────
 
