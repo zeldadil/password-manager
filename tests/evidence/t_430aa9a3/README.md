@@ -17,6 +17,8 @@ audit of the real board at activation.
 | `live-fire-<profile>.txt` (7) | `hermes hooks test pre_tool_call --for-tool kanban_complete` against a fixture board, for every installed profile: non-compliant card → `exit=2` + `{"action":"block","message":…}`; compliant card → `exit=0` + `{}` (no dispatcher contribution). |
 | `verify-all-live.txt` | `scripts/qa/hooks/verify-signoff-gate.sh --all --live` → **91 checks, 0 failures** across the 7 profiles: installed + executable, SHA-256 matches the reviewed repo copy, config carries the entry with `fail_closed: true` + `hooks_auto_accept: true`, `hermes config get hooks` resolves it, `hermes hooks list` shows it, `hermes hooks doctor` clean, both live-fire paths correct. |
 | `hook-wiring.txt` | Installer dry run, the resulting `hooks:` block in a profile `config.yaml`, `hermes hooks list`, `hermes hooks doctor`. |
+| `self-check-block-before-verdict.txt` | The gate run against **this card** (`t_430aa9a3`) before the QA verdict comment existed → `exit=1`, `R1_QA_VERDICT_MISSING` + `R4_EVIDENCE_MISSING`. The gate blocks its own author. |
+| `self-check-pass-after-verdict.txt` | The same card after the verdict comment → `exit=0`. Point-in-time pair, captured 2026-09-17. |
 | `hooks-doctor-qa.txt` | `hermes hooks doctor` transcript for the `qa` profile. |
 | `reproduce.sh` | Regenerates every transcript above (builds its own fixture board in a temp dir; mutates nothing on the board or in any profile). |
 
