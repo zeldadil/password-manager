@@ -237,6 +237,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: truffleHog secret scan (entropy + verified, JSON report)
+        # `if: always()` — truffleHog must produce its report even when the
+        # gitleaks step above already failed on a finding, otherwise the
+        # evidence-collection contract (§11: "on every run") is silently broken
+        # on exactly the runs where secrets are present.
+        if: always()
         env:
           TRUFFLEHOG_VERSION: "3.97.5"
         run: |

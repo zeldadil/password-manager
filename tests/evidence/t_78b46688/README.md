@@ -56,8 +56,22 @@ Two decisions here are security gates, not cosmetic:
 
 ## Findings flagged to owning agents (not fixed here)
 
-- **P1 — gitleaks-action@v2 runtime EOL.** `gitleaks/gitleaks-action@v2` runs on the Node 20
-  runtime, which GitHub removed from hosted runners 2026-09-16 (action's own README). It still
-  executed in today's run, but it will break imminently and silently disable the secret-scan gate.
-  Fix is a drop-in `@v2 → @v3` (Node 24). Owned by QA-001d's scanner wiring — flagged, not patched
-  (scope boundary).
+- **P1 — gitleaks-action@v2 runtime deprecation.** The secret-scan live run emits:
+  `Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on
+  Node.js 24: actions/checkout@v4, actions/upload-artifact@v4, gitleaks/gitleaks-action@v2`.
+  GitHub's own timeline (action README + changelog) removes the Node 20 runtime from hosted runners;
+  today the runner force-runs these on Node 24 with a warning, but this is a deprecation that will
+  become a hard break. Migrating `gitleaks-action@v2 → @v3` (Node 24) is a drop-in fix. Owned by
+  QA-001d's scanner wiring — flagged, not patched (scope boundary).
+
+## Live CI validation (workflow_dispatch run 35233831094)
+
+- `sast` job: green — Semgrep ran, SARIF uploaded to code scanning AND retained as artifact
+  (upload-artifact step succeeded).
+- `secret-scan` job: red (correct — the leaked token is still live, P0 t_0af5aa3e). gitleaks found
+  2 leaks (exit-code 2). truffleHog step was skipped on the first run because gitleaks failed first —
+  **caught and fixed**: truffleHog now has `if: always()` so both scanners always emit their report.
+- `install-lockfile` and its six downstream jobs: skipped (pre-existing bootstrap deadlock t_ee24fd37).
+  The upload steps for those jobs are wired and non-fatal, and will produce their first artifacts once
+  the bootstrap lands.
+
