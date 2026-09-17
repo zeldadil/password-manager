@@ -1,0 +1,13 @@
+# QA sign-off gate dogfood — t_0af5aa3e
+# pre-complete BEFORE the verdict comment (2026-09-17T20:1xZ): exit 0, 0 FAIL,
+#   advisories only: A3_EVIDENCE_UNVERIFIED (no repo root in cwd) x3
+# after the verdict comment (attachment 10) follows:
+
+QA sign-off gate — check t_0af5aa3e (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_0af5aa3e  P0: rotate + purge leaked Telegram bot token (public git history) @qa
+        warn A3_EVIDENCE_UNVERIFIED: evidence path could not be verified (no repo root): tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md
+        warn A3_EVIDENCE_UNVERIFIED: evidence path could not be verified (no repo root): tests/evidence/t_0af5aa3e/QA-VERDICT.md
+        warn A3_EVIDENCE_UNVERIFIED: evidence path could not be verified (no repo root): scripts/qa/signoff-gate.selftest.mjs
+        warn A3_EVIDENCE_UNVERIFIED: evidence path could not be verified (no repo root): tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md
+exit=0
