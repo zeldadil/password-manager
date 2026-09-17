@@ -13,7 +13,7 @@ name: CI
 #
 # Deferred to later QA cards (kept out of scope here):
 #   - `sast` (Semgrep/CodeQL) + truffleHog secret scan ......... QA-001d
-#   - Playwright cross-browser install + full E2E matrix ....... QA-001c
+#   - Playwright cross-browser install + full E2E matrix ....... QA-001c (implemented below)
 #   - Unit coverage thresholds (Tier A 80/70/90) ............... QA-001e
 #
 # NOTE: the root `pnpm -r --parallel --filter '**' run <script>` delegation
@@ -128,6 +128,16 @@ jobs:
           cache: pnpm
       - name: Install dependencies (frozen lockfile)
         run: pnpm install --frozen-lockfile
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package.json', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+      - name: Install Playwright browsers (Chromium, Firefox, WebKit)
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
       - name: E2E tests
         run: pnpm test:e2e
 
