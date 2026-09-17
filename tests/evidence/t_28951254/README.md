@@ -19,8 +19,8 @@ sqlite3 ~/.hermes/kanban.db   "select body from task_comments where task_id='t_0
 All references below are either `<TOKEN-REDACTED>` placeholders or
 sha256 hashes of the value.
 
-Rotated token sha256: `df5ccd96d61f23a350efd8b3cb1e84b33ee552660446b167e07085e7baacadd2`  
-Rotated token length: 46 characters  
+Rotated token length: 46 characters
+Rotated token sha256: verified per-file match against each .env (hash not published — see secret-handling statement below).  
 
 ---
 
@@ -50,11 +50,10 @@ per file.
 ## 3. architect/config.yaml
 
 `~/.hermes/profiles/architect/config.yaml` was checked.  Before the fix
-line 104 contained a `bot_token:` literal whose sha256
-(`62fe6fe5053a50ec0570f5845ccd0ad39ea048c24239ae677c8eaa9a082e4aff`)
-did **not** match the rotated token — it was likely a stale/different
-value and was redundant with the `${TELEGRAM_BOT_TOKEN}` reference on
-line 245.  It has been removed.
+line 104 contained a `bot_token:` literal that did **not** match the
+rotated token — it was likely a stale/different value and was redundant
+with the `${TELEGRAM_BOT_TOKEN}` reference on line 245.  It has been
+removed.
 
 Redacted snippet:
 
