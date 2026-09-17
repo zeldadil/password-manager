@@ -28,6 +28,11 @@ Thumbs.db
 *.d.ts
 *.js
 
+# Playwright artifacts (uploaded by QA-001g, never committed)
+test-results/
+playwright-report/
+blob-report/
+
 # 민감 데이터 (절대 커밋 금지)
 *.secret
 *.key
