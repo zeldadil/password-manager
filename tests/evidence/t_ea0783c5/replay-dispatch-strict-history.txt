@@ -420,5 +420,5 @@ _Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required ch
 === job result: FAILURE ===
     failing step: Run the board audit (exit 1)
     failing step: Enforce the audit outcome (exit 1)
-    scratch: /tmp/qa-signoff-replay-q2d7x4xo
+    scratch: /tmp/qa-signoff-replay-b4rkhm4x
 replay-exit=0

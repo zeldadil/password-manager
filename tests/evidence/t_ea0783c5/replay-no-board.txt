@@ -1,7 +1,7 @@
 $ python3 tests/evidence/t_ea0783c5/replay-job.py .github/workflows/qa-signoff-audit.yml no-board
 === replay: qa-signoff-audit.yml · scenario=no-board · event=schedule ===
     job=qa-signoff-audit  steps=9  repo=/home/sap/password-manager/.worktrees/t_ea0783c5
-    inputs={}  HERMES_KANBAN_DB=  HOME=/tmp/qa-signoff-replay-m3lyhebd/no-such-home
+    inputs={}  HERMES_KANBAN_DB=  HOME=/tmp/qa-signoff-replay-ll9fb7as/no-such-home
   SIM   Checkout (actions/checkout@v4) — repository already checked out at /home/sap/password-manager/.worktrees/t_ea0783c5
   SIM   pnpm/action-setup@v4 (pnpm/action-setup@v4) — toolchain action, no-op on this host (node v22.23.2 is already available)
   SIM   actions/setup-node@v4 (actions/setup-node@v4) — toolchain action, no-op on this host (node v22.23.2 is already available)
@@ -69,5 +69,5 @@ _Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required ch
 
 === job result: FAILURE ===
     failing step: Enforce the audit outcome (exit 1)
-    scratch: /tmp/qa-signoff-replay-m3lyhebd
+    scratch: /tmp/qa-signoff-replay-ll9fb7as
 replay-exit=0
