@@ -1,0 +1,73 @@
+$ python3 tests/evidence/t_ea0783c5/replay-job.py .github/workflows/qa-signoff-audit.yml no-board
+=== replay: qa-signoff-audit.yml · scenario=no-board · event=schedule ===
+    job=qa-signoff-audit  steps=9  repo=/home/sap/password-manager/.worktrees/t_ea0783c5
+    inputs={}  HERMES_KANBAN_DB=  HOME=/tmp/qa-signoff-replay-m3lyhebd/no-such-home
+  SIM   Checkout (actions/checkout@v4) — repository already checked out at /home/sap/password-manager/.worktrees/t_ea0783c5
+  SIM   pnpm/action-setup@v4 (pnpm/action-setup@v4) — toolchain action, no-op on this host (node v22.23.2 is already available)
+  SIM   actions/setup-node@v4 (actions/setup-node@v4) — toolchain action, no-op on this host (node v22.23.2 is already available)
+  RUN   Verify the gate script is present
+        $ set -euo pipefail
+        | v22.23.2
+        exit=0
+  RUN   Resolve the board database
+        $ set -uo pipefail
+        | ::warning title=QA sign-off audit not run::no board database found on this runner (board_db input, HERMES_KANBAN_DB, HOME/.hermes/kanban.db). The audit did NOT run — this run does not certify board compliance.
+        exit=0
+  SKIP  Run the board audit   (if: steps.board.outputs.available == 'true')
+  SIM   Upload the audit report (actions/upload-artifact@v4) — artifact 'qa-signoff-audit': NO FILES (if-no-files-found=warn)
+  RUN   Write the run summary
+        $ set -uo pipefail
+        | --- summary written ---
+        | ## QA sign-off gate — board audit
+        | 
+        | | field | value |
+        | |---|---|
+        | | ref | refs/heads/feature/t_ea0783c5 |
+        | | event | schedule |
+        | | board | none found on this runner |
+        | 
+        | ### AUDIT NOT RUN
+        | 
+        | No board database was found on this runner, so the board audit did not run.
+        | **This run does not certify board compliance** — it is not evidence that the
+        | board passes. Fix the board transport before reading any colour from this
+        | workflow: set the repository variable `QA_SIGNOFF_AUDIT_RUNNER` to a
+        | self-hosted runner that has the board mounted, or pass the `board_db`
+        | dispatch input.
+        | 
+        | ---
+        | _Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._
+        exit=0
+  RUN   Enforce the audit outcome
+        $ set -uo pipefail
+        | ::error title=QA sign-off audit not run::no board database on this runner — refusing to finish green for an audit that did not happen.
+        exit=1
+
+=== run summary (GITHUB_STEP_SUMMARY) ===
+## QA sign-off gate — board audit
+
+| field | value |
+|---|---|
+| ref | refs/heads/feature/t_ea0783c5 |
+| event | schedule |
+| board | none found on this runner |
+
+### AUDIT NOT RUN
+
+No board database was found on this runner, so the board audit did not run.
+**This run does not certify board compliance** — it is not evidence that the
+board passes. Fix the board transport before reading any colour from this
+workflow: set the repository variable `QA_SIGNOFF_AUDIT_RUNNER` to a
+self-hosted runner that has the board mounted, or pass the `board_db`
+dispatch input.
+
+---
+_Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._
+
+=== artifact dir ===
+    qa-signoff-audit
+
+=== job result: FAILURE ===
+    failing step: Enforce the audit outcome (exit 1)
+    scratch: /tmp/qa-signoff-replay-m3lyhebd
+replay-exit=0

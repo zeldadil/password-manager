@@ -1,0 +1,13 @@
+$ git diff --stat origin/master...HEAD
+ .github/workflows/qa-signoff-audit.yml      | 212 +++++++++++++++++++++++++++
+ tests/evidence/t_ea0783c5/check-workflow.py | 123 ++++++++++++++++
+ tests/evidence/t_ea0783c5/replay-job.py     | 215 ++++++++++++++++++++++++++++
+ tests/evidence/t_ea0783c5/run-evidence.sh   |  37 +++++
+ 4 files changed, 587 insertions(+)
+
+$ git diff --name-only origin/master...HEAD -- .github/workflows/ci.yml
+(empty above = ci.yml untouched by this branch)
+
+$ sha256sum .github/workflows/qa-signoff-audit.yml .github/workflows/ci.yml
+838e83c74d7e6661e3a3a9f9b8522ebe8bbf6b8ddf31494c62154896242cc139  .github/workflows/qa-signoff-audit.yml
+b97341c9bcb43da8dc3a75b6db05e623bb4a638d0f4e43eecd05712016b605fb  .github/workflows/ci.yml
