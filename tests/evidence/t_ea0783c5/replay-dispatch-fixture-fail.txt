@@ -1,0 +1,130 @@
+$ python3 tests/evidence/t_ea0783c5/replay-job.py .github/workflows/qa-signoff-audit.yml dispatch-fixture-fail
+=== replay: qa-signoff-audit.yml · scenario=dispatch-fixture-fail · event=workflow_dispatch ===
+    job=qa-signoff-audit  steps=9  repo=/home/sap/password-manager/.worktrees/t_ea0783c5
+    inputs={'board_db': '/tmp/qa-signoff-replay-vvk9h14k/fixture-board.db', 'strict_history': 'false'}  HERMES_KANBAN_DB=/tmp/qa-signoff-replay-vvk9h14k/fixture-board.db  HOME=/home/sap
+  SIM   Checkout (actions/checkout@v4) — repository already checked out at /home/sap/password-manager/.worktrees/t_ea0783c5
+  SIM   pnpm/action-setup@v4 (pnpm/action-setup@v4) — toolchain action, no-op on this host (node v22.23.2 is already available)
+  SIM   actions/setup-node@v4 (actions/setup-node@v4) — toolchain action, no-op on this host (node v22.23.2 is already available)
+  RUN   Verify the gate script is present
+        $ set -euo pipefail
+        | v22.23.2
+        exit=0
+  RUN   Resolve the board database
+        $ set -uo pipefail
+        | Board database: /tmp/qa-signoff-replay-vvk9h14k/fixture-board.db
+        exit=0
+  RUN   Run the board audit
+        $ set -uo pipefail
+        | + node scripts/qa/signoff-gate.mjs audit --repo /home/sap/password-manager/.worktrees/t_ea0783c5 --db /tmp/qa-signoff-replay-vvk9h14k/fixture-board.db
+        | QA sign-off gate — audit (db: /tmp/qa-signoff-replay-vvk9h14k/fixture-board.db, epoch: 2026-09-17T15:00:00.000Z)
+        |   enforced (done at/after epoch or pre-complete): 2  ·  pass: 1  ·  FAIL: 1
+        |   FAIL t_deadbeef  CI-001h replay fixture: post-epoch card with no verdict and no evidence @backend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |   ok   t_33dcad7d  QA-001h follow-ups: sign-off gate — CI wiring decision + pre-epoch retrofit + R7 mapping sign-off @architect
+        |         warn X1_EXCEPTION: QA sign-off exception recorded by architect: ` marker — both mechanisms exist and are audit-visible (X1_EXCEPTION on every run).
+        |         warn A2_DEFERRAL_OPEN: QA verdict deferred to t_ea0783c5 (qa, status=running) — audit tracks it until it lands
+        |   grandfathered (done before epoch — advisory only): 27
+        |       warn t_9840ccdd  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_3ca45da2  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_258f91c8  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_ad18d4ed  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_08b02da9  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_5f82ac57  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_7ec83773  no verdict/evidence recorded
+        |       warn t_f8a5c949  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_f463b44f  completed before the gate epoch — no QA verdict (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING
+        |       warn t_415897da  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       … and 17 more (use --json for the full list)
+        exit=1
+  SIM   Upload the audit report (actions/upload-artifact@v4) — artifact 'qa-signoff-audit': ['qa-signoff-audit.txt']
+  RUN   Write the run summary
+        $ set -uo pipefail
+        | --- summary written ---
+        | ## QA sign-off gate — board audit
+        | 
+        | | field | value |
+        | |---|---|
+        | | ref | refs/heads/feature/t_ea0783c5 |
+        | | event | workflow_dispatch |
+        | | board | /tmp/qa-signoff-replay-vvk9h14k/fixture-board.db |
+        | 
+        | ### Audit report (exit code 1)
+        | 
+        | ```text
+        | QA sign-off gate — audit (db: /tmp/qa-signoff-replay-vvk9h14k/fixture-board.db, epoch: 2026-09-17T15:00:00.000Z)
+        |   enforced (done at/after epoch or pre-complete): 2  ·  pass: 1  ·  FAIL: 1
+        |   FAIL t_deadbeef  CI-001h replay fixture: post-epoch card with no verdict and no evidence @backend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |   ok   t_33dcad7d  QA-001h follow-ups: sign-off gate — CI wiring decision + pre-epoch retrofit + R7 mapping sign-off @architect
+        |         warn X1_EXCEPTION: QA sign-off exception recorded by architect: ` marker — both mechanisms exist and are audit-visible (X1_EXCEPTION on every run).
+        |         warn A2_DEFERRAL_OPEN: QA verdict deferred to t_ea0783c5 (qa, status=running) — audit tracks it until it lands
+        |   grandfathered (done before epoch — advisory only): 27
+        |       warn t_9840ccdd  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_3ca45da2  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_258f91c8  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_ad18d4ed  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_08b02da9  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_5f82ac57  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_7ec83773  no verdict/evidence recorded
+        |       warn t_f8a5c949  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       warn t_f463b44f  completed before the gate epoch — no QA verdict (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING
+        |       warn t_415897da  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+        |       … and 17 more (use --json for the full list)
+        | ```
+        | 
+        | ---
+        | _Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._
+        exit=0
+  RUN   Enforce the audit outcome
+        $ set -uo pipefail
+        | Board audit exit code: 1
+        exit=1
+
+=== run summary (GITHUB_STEP_SUMMARY) ===
+## QA sign-off gate — board audit
+
+| field | value |
+|---|---|
+| ref | refs/heads/feature/t_ea0783c5 |
+| event | workflow_dispatch |
+| board | /tmp/qa-signoff-replay-vvk9h14k/fixture-board.db |
+
+### Audit report (exit code 1)
+
+```text
+QA sign-off gate — audit (db: /tmp/qa-signoff-replay-vvk9h14k/fixture-board.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 2  ·  pass: 1  ·  FAIL: 1
+  FAIL t_deadbeef  CI-001h replay fixture: post-epoch card with no verdict and no evidence @backend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+  ok   t_33dcad7d  QA-001h follow-ups: sign-off gate — CI wiring decision + pre-epoch retrofit + R7 mapping sign-off @architect
+        warn X1_EXCEPTION: QA sign-off exception recorded by architect: ` marker — both mechanisms exist and are audit-visible (X1_EXCEPTION on every run).
+        warn A2_DEFERRAL_OPEN: QA verdict deferred to t_ea0783c5 (qa, status=running) — audit tracks it until it lands
+  grandfathered (done before epoch — advisory only): 27
+      warn t_9840ccdd  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_3ca45da2  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_258f91c8  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_ad18d4ed  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_08b02da9  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_5f82ac57  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_7ec83773  no verdict/evidence recorded
+      warn t_f8a5c949  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_f463b44f  completed before the gate epoch — no QA verdict (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING
+      warn t_415897da  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      … and 17 more (use --json for the full list)
+```
+
+---
+_Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._
+
+=== artifact dir ===
+    qa-signoff-audit
+    qa-signoff-audit/qa-signoff-audit.txt
+
+=== job result: FAILURE ===
+    failing step: Run the board audit (exit 1)
+    failing step: Enforce the audit outcome (exit 1)
+    scratch: /tmp/qa-signoff-replay-vvk9h14k
+replay-exit=0
