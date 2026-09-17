@@ -13,6 +13,8 @@
     "lint": "prettier --check . 2>/dev/null || true",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:integration": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "migrate": "tsx src/migrate.ts",

@@ -5,8 +5,8 @@
  * security (stack-trace / secret-leak regression).
  *
  * Security note (SEC-001 AR-4): NO real credential ever appears in this file.
- * Any token-like value is assembled at runtime from fragments so it cannot be
- * matched by gitleaks and so the file stays clean on public master.
+ * Any token-like value is assembled at runtime from fragments so it cannot
+ * be matched by gitleaks and so the file stays clean on public master.
  */
 import type { FastifyBaseLogger, FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
