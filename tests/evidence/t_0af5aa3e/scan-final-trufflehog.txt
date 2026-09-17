@@ -1,0 +1,5 @@
+🐷🔑🐷  TruffleHog. Unearth your secrets. 🐷🔑🐷
+
+2026-09-17T20:38:47Z	info-0	trufflehog	running source	{"source_manager_worker_id": "Kf2DW", "with_units": true}
+2026-09-17T20:38:47Z	info-0	trufflehog	scanning repo	{"source_manager_worker_id": "Kf2DW", "unit_kind": "dir", "unit": "/tmp/trufflehog-203691-1568827253", "repo": "file:///home/sap/.hermes/kanban/workspaces/t_80fc0326/nonbare-verify"}
+2026-09-17T20:38:47Z	info-0	trufflehog	finished scanning	{"chunks": 811, "bytes": 2245868, "verified_secrets": 0, "unverified_secrets": 0, "scan_duration": "343.701268ms", "trufflehog_version": "3.97.5", "verification_caching": {"Hits":0,"Misses":1,"HitsWasted":0,"AttemptsSaved":0,"VerificationTimeSpentMS":211}}
