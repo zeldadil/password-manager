@@ -41,6 +41,30 @@ const vault = await client.get<{ id: string; name: string }>('/vaults/{id}');
 const created = await client.post<Resource>('/resources', { name: 'GitHub' });
 ```
 
+## State management (FE-001g)
+
+Two layers, kept strictly separate:
+
+- **Server state → React Query (TanStack Query v5).** Resources, folders, tags,
+  vault metadata and session status are cached and refetched by TanStack Query.
+  The shared client is built by `createQueryClient()` in `src/queryClient.ts` and
+  mounted once in `main.tsx` via `QueryClientProvider`. Default policy: 30s stale
+  time, 5m cache retention, 2 retries on reads, 0 retries on writes.
+- **UI state → Zustand v5.** Ephemeral chrome state that is not server data lives
+  in small stores under `src/stores/`:
+  - `useUiStore` — `sidebarOpen` (expand/collapse the navigation sidebar).
+  - `useThemeStore` — `theme` (`dark` | `light`), dark by default.
+
+Both stores are in-memory only — no persistence surface. Theme application
+(CSS variables / `color-scheme`) is owned by the FE-001d theme system.
+
+```ts
+import { useThemeStore, useUiStore } from './stores';
+
+const sidebarOpen = useUiStore((s) => s.sidebarOpen);
+const theme = useThemeStore((s) => s.theme);
+```
+
 ## Security note
 
 This app handles user secrets (vault key, decrypted resource secrets). Sensitive values are
