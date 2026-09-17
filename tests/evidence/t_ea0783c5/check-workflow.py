@@ -18,6 +18,7 @@ import yaml
 
 WF = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(".github/workflows/qa-signoff-audit.yml")
 CI = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(".github/workflows/ci.yml")
+PROT = Path(sys.argv[3]) if len(sys.argv) > 3 else None
 
 text = WF.read_text()
 doc = yaml.safe_load(text)
@@ -111,6 +112,15 @@ expected = ["install-lockfile", "lint-typecheck", "unit", "integration", "e2e",
             "dependency-audit", "secret-scan", "build"]
 check(ci_jobs == expected if ci_jobs == expected else all(j in ci_jobs for j in expected),
       f"AC4 per-PR job graph in ci.yml unchanged: {ci_jobs}")
+
+if PROT and PROT.exists():
+    prot = json.loads(PROT.read_text())
+    contexts = (prot.get("required_status_checks") or {}).get("contexts") or []
+    print(f"  live branch protection required checks: {sorted(contexts)}")
+    check("qa-signoff-audit" not in contexts,
+          "AC3 live master branch protection does not require qa-signoff-audit")
+    check(set(expected) <= set(contexts),
+          "AC3 the 8 pre-existing required checks are still the only required set")
 
 print()
 if failures:
