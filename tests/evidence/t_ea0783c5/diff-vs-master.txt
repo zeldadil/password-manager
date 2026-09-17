@@ -1,0 +1,28 @@
+$ git diff --stat origin/master...HEAD
+ .github/workflows/qa-signoff-audit.yml             | 212 +++++++++++
+ tests/evidence/t_ea0783c5/README.md                | 177 +++++++++
+ tests/evidence/t_ea0783c5/actionlint.txt           |   5 +
+ tests/evidence/t_ea0783c5/actions-run-demo-log.txt | 364 ++++++++++++++++++
+ tests/evidence/t_ea0783c5/actions-run-demo.txt     |  17 +
+ tests/evidence/t_ea0783c5/branch-protection.json   |   1 +
+ tests/evidence/t_ea0783c5/branch-protection.txt    |  88 +++++
+ tests/evidence/t_ea0783c5/check-workflow.py        | 133 +++++++
+ tests/evidence/t_ea0783c5/check-workflow.txt       |  68 ++++
+ tests/evidence/t_ea0783c5/diff-vs-master.txt       |  13 +
+ .../t_ea0783c5/gate-script-borrowed.sha256         |   3 +
+ .../t_ea0783c5/gh-workflow-dispatch-attempt.txt    |   6 +
+ tests/evidence/t_ea0783c5/replay-board-present.txt | 119 ++++++
+ .../t_ea0783c5/replay-dispatch-fixture-fail.txt    | 130 +++++++
+ .../t_ea0783c5/replay-dispatch-strict-history.txt  | 424 +++++++++++++++++++++
+ tests/evidence/t_ea0783c5/replay-job.py            | 215 +++++++++++
+ tests/evidence/t_ea0783c5/replay-no-board.txt      |  73 ++++
+ tests/evidence/t_ea0783c5/run-evidence.sh          |  59 +++
+ tests/evidence/t_ea0783c5/workflow.sha256          |   1 +
+ 19 files changed, 2108 insertions(+)
+
+$ git diff --name-only origin/master...HEAD -- .github/workflows/ci.yml
+(empty above = ci.yml untouched by this branch)
+
+$ sha256sum .github/workflows/qa-signoff-audit.yml .github/workflows/ci.yml
+838e83c74d7e6661e3a3a9f9b8522ebe8bbf6b8ddf31494c62154896242cc139  .github/workflows/qa-signoff-audit.yml
+b97341c9bcb43da8dc3a75b6db05e623bb4a638d0f4e43eecd05712016b605fb  .github/workflows/ci.yml

@@ -1,0 +1,68 @@
+$ python3 tests/evidence/t_ea0783c5/check-workflow.py .github/workflows/qa-signoff-audit.yml .github/workflows/ci.yml tests/evidence/t_ea0783c5/branch-protection.json
+== .github/workflows/qa-signoff-audit.yml ==
+triggers: ['schedule', 'workflow_dispatch']
+  PASS  AC1 workflow name
+  PASS  AC1/AC4 triggers are exactly {schedule, workflow_dispatch} (no pull_request/push)
+  PASS  AC4 the parsed trigger map has no pull_request/push key
+  PASS  AC1 weekly cron is well-formed: 17 6 * * 1
+  PASS  AC1 cron fires weekly (dow fixed, dom/month wildcards): 17 6 * * 1
+  PASS  AC1 job id/name `qa-signoff-audit` exists
+  PASS  AC1 job display name is `qa-signoff-audit`
+  PASS  AC4 audit job has no `needs:` (does not join the per-PR graph)
+  steps:
+    - Checkout
+    - pnpm/action-setup@v4
+    - actions/setup-node@v4
+    - Verify the gate script is present
+    - Resolve the board database
+    - Run the board audit
+    - Upload the audit report
+    - Write the run summary
+    - Enforce the audit outcome
+  PASS  AC2 an audit step exists
+  PASS  AC2 invokes scripts/qa/signoff-gate.mjs
+  PASS  AC2 runs `audit --repo <repo-root>` against the repo checkout
+  PASS  AC2 passes an explicit resolved board (--db)
+  PASS  AC2 writes the workflow run summary (GITHUB_STEP_SUMMARY)
+  PASS  AC2 summary is derived from the audit output, not hardcoded
+  PASS  AC2 summary embeds the captured audit report (counts + FAIL cards)
+  PASS  board resolution step exists
+  PASS  resolution order includes $HERMES_KANBAN_DB
+  PASS  resolution order includes ~/.hermes/kanban.db
+  PASS  resolution order includes the workflow_dispatch board_db input
+  PASS  resolution publishes an availability output
+  PASS  an explicit outcome-enforcement step exists
+  PASS  missing board fails the job (no silent green)
+  PASS  enforcement runs even when earlier steps failed
+  PASS  minimal workflow permissions: {'contents': 'read'}
+  PASS  no repository secret is referenced by this workflow
+  PASS  AC3 no branch-protection mutation / no branch filters
+  PASS  AC3/AC4 audit job is absent from ci.yml (unknown to branch protection as a check)
+  PASS  AC4 per-PR job graph in ci.yml unchanged: ['install-lockfile', 'lint-typecheck', 'unit', 'integration', 'e2e', 'dependency-audit', 'secret-scan', 'build']
+  live branch protection required checks: ['build', 'dependency-audit', 'e2e', 'install-lockfile', 'integration', 'lint-typecheck', 'secret-scan', 'unit']
+  PASS  AC3 live master branch protection does not require qa-signoff-audit
+  PASS  AC3 the 8 pre-existing required checks are still the only required set
+
+RESULT: all workflow acceptance checks passed
+{
+  "workflow": ".github/workflows/qa-signoff-audit.yml",
+  "triggers": [
+    "schedule",
+    "workflow_dispatch"
+  ],
+  "jobs": [
+    "qa-signoff-audit"
+  ],
+  "steps": [
+    "Checkout",
+    "pnpm/action-setup@v4",
+    "actions/setup-node@v4",
+    "Verify the gate script is present",
+    "Resolve the board database",
+    "Run the board audit",
+    "Upload the audit report",
+    "Write the run summary",
+    "Enforce the audit outcome"
+  ]
+}
+exit=0

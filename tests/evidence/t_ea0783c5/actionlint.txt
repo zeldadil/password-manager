@@ -1,0 +1,5 @@
+$ actionlint -color=false .github/workflows/qa-signoff-audit.yml .github/workflows/ci.yml
+exit=0  (no output above = 0 problems)
+
+$ actionlint -color=false   # every workflow in the repo
+exit=0  (no output above = 0 problems)

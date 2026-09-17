@@ -1,0 +1,364 @@
+qa-signoff-audit	Set up job	﻿2026-09-17T15:14:44.1502417Z Current runner version: '2.337.0'
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1538889Z ##[group]Runner Image Provisioner
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1540280Z Hosted Compute Agent
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1541293Z Version: 20260828.587
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1542930Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1544272Z Build Date: 2026-08-28T16:44:25Z
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1545429Z Worker ID: {279efd91-7400-4a8c-a9d6-44361314c771}
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1547012Z Azure Region: eastus
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1548026Z ##[endgroup]
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1550401Z ##[group]Operating System
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1551553Z Ubuntu
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1552432Z 24.04.5
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1553388Z LTS
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1554271Z ##[endgroup]
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1555302Z ##[group]Runner Image
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1556363Z Image: ubuntu-24.04
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1557559Z Version: 20260907.300.1
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1559517Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1562560Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1564293Z ##[endgroup]
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1566098Z ##[group]GITHUB_TOKEN Permissions
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1569373Z Contents: read
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1570474Z Metadata: read
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1571379Z ##[endgroup]
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1574381Z Secret source: Actions
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1576173Z Cache mode: write
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.1577935Z Prepare workflow directory
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.2397140Z Prepare all required actions
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.2464091Z Getting action download info
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.4287962Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.5446781Z Download action repository 'pnpm/action-setup@v4' (SHA:b906affcce14559ad1aafd4ab0e942779e9f58b1)
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.7379857Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+qa-signoff-audit	Set up job	2026-09-17T15:14:44.8255176Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+qa-signoff-audit	Set up job	2026-09-17T15:14:45.0342497Z Complete job name: qa-signoff-audit
+qa-signoff-audit	Checkout	﻿2026-09-17T15:14:45.1094427Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1109562Z ##[group]Run actions/checkout@v4
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1110789Z with:
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1111541Z   repository: zeldadil/password-manager
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1119017Z   token: ***
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1119848Z   ssh-strict: true
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1120542Z   ssh-user: git
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1121252Z   persist-credentials: true
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1121976Z   clean: true
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1122712Z   sparse-checkout-cone-mode: true
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1123663Z   fetch-depth: 1
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1124487Z   fetch-tags: false
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1125271Z   show-progress: true
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1126070Z   lfs: false
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1127046Z   submodules: false
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1127919Z   set-safe-directory: true
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1128821Z   allow-unsafe-pr-checkout: false
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1130211Z env:
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1130960Z   NODE_VERSION: 22
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1131772Z   PNPM_VERSION: 9.12.0
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1133123Z   HERMES_KANBAN_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.1134656Z ##[endgroup]
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2224870Z Syncing repository: zeldadil/password-manager
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2227897Z ##[group]Getting Git version info
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2229189Z Working directory is '/home/runner/work/password-manager/password-manager'
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2230978Z [command]/usr/bin/git version
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2339971Z git version 2.55.0
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2395066Z ##[endgroup]
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2405329Z Temporarily overriding HOME='/home/runner/work/_temp/07ef825e-3e3c-4412-aa97-be7eb5f68c17' before making global git config changes
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2408262Z Adding repository directory to the temporary git global config as a safe directory
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2418904Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/password-manager/password-manager
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2475900Z Deleting the contents of '/home/runner/work/password-manager/password-manager'
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2481555Z ##[group]Initializing the repository
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2487253Z [command]/usr/bin/git init /home/runner/work/password-manager/password-manager
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2634486Z hint: Using 'master' as the name for the initial branch. This default branch name
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2637144Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2639045Z hint: to use in all of your new repositories, which will suppress this warning,
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2640601Z hint: call:
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2641648Z hint:
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2642732Z hint: 	git config --global init.defaultBranch <name>
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2643919Z hint:
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2645017Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2646976Z hint: 'development'. The just-created branch can be renamed via this command:
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2648511Z hint:
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2649674Z hint: 	git branch -m <name>
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2650643Z hint:
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2651828Z hint: Disable this message with "git config set advice.defaultBranchName false"
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2653914Z Initialized empty Git repository in /home/runner/work/password-manager/password-manager/.git/
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2659145Z [command]/usr/bin/git remote add origin https://github.com/zeldadil/password-manager
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2727491Z ##[endgroup]
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2729064Z ##[group]Disabling automatic garbage collection
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2731881Z [command]/usr/bin/git config --local gc.auto 0
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2777850Z ##[endgroup]
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2778636Z ##[group]Setting up auth
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2779387Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.2813169Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.3252449Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.3292562Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.3521747Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.3561292Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.3791893Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.3833379Z ##[endgroup]
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.3834732Z ##[group]Fetching the repository
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.3844650Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +7f796f74e3a568343386c4c2f125b627b15c1c0a:refs/remotes/origin/ci-001h-demo
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6358447Z From https://github.com/zeldadil/password-manager
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6360666Z  * [new ref]         7f796f74e3a568343386c4c2f125b627b15c1c0a -> origin/ci-001h-demo
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6366331Z ##[endgroup]
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6368412Z ##[group]Determining the checkout info
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6370523Z ##[endgroup]
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6378475Z [command]/usr/bin/git sparse-checkout disable
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6447328Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6483534Z ##[group]Checking out the ref
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6489488Z [command]/usr/bin/git checkout --progress --force -B ci-001h-demo refs/remotes/origin/ci-001h-demo
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6600524Z Switched to a new branch 'ci-001h-demo'
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6606343Z branch 'ci-001h-demo' set up to track 'origin/ci-001h-demo'.
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6612025Z ##[endgroup]
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6658684Z [command]/usr/bin/git log -1 --format=%H
+qa-signoff-audit	Checkout	2026-09-17T15:14:45.6685364Z 7f796f74e3a568343386c4c2f125b627b15c1c0a
+qa-signoff-audit	Run pnpm/action-setup@v4	﻿2026-09-17T15:14:45.7081618Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7087908Z ##[group]Run pnpm/action-setup@v4
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7089020Z with:
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7089820Z   version: 9.12.0
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7090722Z   dest: ~/setup-pnpm
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7091647Z   run_install: null
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7092535Z   cache: false
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7093464Z   cache_dependency_path: pnpm-lock.yaml
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7094706Z   package_json_file: package.json
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7095807Z   standalone: false
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7096830Z env:
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7097619Z   NODE_VERSION: 22
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7098504Z   PNPM_VERSION: 9.12.0
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7100148Z   HERMES_KANBAN_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.7102080Z ##[endgroup]
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:45.8642783Z ##[group]Running self-installer...
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.2875056Z (node:2277) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.2878433Z (Use `node --trace-deprecation ...` to show where the warning was created)
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.4869174Z Progress: resolved 1, reused 0, downloaded 0, added 0
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.4988282Z Packages: +1
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.4989877Z +
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.8733607Z Progress: resolved 1, reused 0, downloaded 1, added 1, done
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.9125339Z 
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.9126330Z dependencies:
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.9127421Z + pnpm 9.12.0 (12.4.2 is available)
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.9127790Z 
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.9165397Z Done in 879ms
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.9342384Z ##[endgroup]
+qa-signoff-audit	Run pnpm/action-setup@v4	2026-09-17T15:14:46.9344899Z Installation Completed!
+qa-signoff-audit	Run actions/setup-node@v4	﻿2026-09-17T15:14:46.9537686Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9539049Z ##[group]Run actions/setup-node@v4
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9539303Z with:
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9539518Z   node-version: 22
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9539724Z   always-auth: false
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9539935Z   check-latest: false
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9542298Z   token: ***
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9542533Z env:
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9542716Z   NODE_VERSION: 22
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9542922Z   PNPM_VERSION: 9.12.0
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9543312Z   HERMES_KANBAN_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9543806Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:46.9544111Z ##[endgroup]
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:47.0989696Z Found in cache @ /opt/hostedtoolcache/node/22.23.2/x64
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:47.0994796Z (node:2291) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:47.0995993Z (Use `node --trace-deprecation ...` to show where the warning was created)
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:47.0997666Z ##[group]Environment details
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:47.5666154Z node: v22.23.2
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:47.5667529Z npm: 10.9.8
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:47.5668106Z yarn: 1.22.22
+qa-signoff-audit	Run actions/setup-node@v4	2026-09-17T15:14:47.5668696Z ##[endgroup]
+qa-signoff-audit	Verify the gate script is present	﻿2026-09-17T15:14:47.5794194Z ##[group]Run set -euo pipefail
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5794620Z [36;1mset -euo pipefail[0m
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5794955Z [36;1mif [ ! -f scripts/qa/signoff-gate.mjs ]; then[0m
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5795772Z [36;1m  echo "::error title=Gate script missing::scripts/qa/signoff-gate.mjs is not on this ref — the board audit cannot run. The script ships with the QA-001h gate card (PR #16)."[0m
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5796505Z [36;1m  exit 1[0m
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5797042Z [36;1mfi[0m
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5797244Z [36;1mnode --version[0m
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5845756Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5846123Z env:
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5846314Z   NODE_VERSION: 22
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5846528Z   PNPM_VERSION: 9.12.0
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5847287Z   HERMES_KANBAN_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5847819Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5848126Z ##[endgroup]
+qa-signoff-audit	Verify the gate script is present	2026-09-17T15:14:47.5966883Z v22.23.2
+qa-signoff-audit	Resolve the board database	﻿2026-09-17T15:14:47.6005475Z ##[group]Run set -uo pipefail
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6005811Z [36;1mset -uo pipefail[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6006052Z [36;1mdb=""[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6006428Z [36;1mfor candidate in "$BOARD_INPUT" "${HERMES_KANBAN_DB:-}" "$HOME/.hermes/kanban.db"; do[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6007237Z [36;1m  if [ -n "$candidate" ] && [ -f "$candidate" ]; then[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6007561Z [36;1m    db="$candidate"[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6007789Z [36;1m    break[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6007984Z [36;1m  fi[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6008170Z [36;1mdone[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6008361Z [36;1mif [ -n "$db" ]; then[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6008652Z [36;1m  printf 'available=true\n' >> "$GITHUB_OUTPUT"[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6009018Z [36;1m  printf 'db=%s\n' "$db" >> "$GITHUB_OUTPUT"[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6009332Z [36;1m  echo "Board database: $db"[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6009593Z [36;1melse[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6009834Z [36;1m  printf 'available=false\n' >> "$GITHUB_OUTPUT"[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6010159Z [36;1m  printf 'db=\n' >> "$GITHUB_OUTPUT"[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6011058Z [36;1m  echo "::warning title=QA sign-off audit not run::no board database found on this runner (board_db input, HERMES_KANBAN_DB, HOME/.hermes/kanban.db). The audit did NOT run — this run does not certify board compliance."[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6011918Z [36;1mfi[0m
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6048325Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6048681Z env:
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6048867Z   NODE_VERSION: 22
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6049077Z   PNPM_VERSION: 9.12.0
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6049479Z   HERMES_KANBAN_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6049975Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6050272Z   BOARD_INPUT: 
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6050477Z ##[endgroup]
+qa-signoff-audit	Resolve the board database	2026-09-17T15:14:47.6109506Z Board database: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Run the board audit	﻿2026-09-17T15:14:47.6160758Z ##[group]Run set -uo pipefail
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6161077Z [36;1mset -uo pipefail[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6161402Z [36;1margs=(audit --repo "$GITHUB_WORKSPACE" --db "$BOARD_DB")[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6161777Z [36;1mif [ "$STRICT_HISTORY" = "true" ]; then[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6162071Z [36;1m  args+=(--strict-history)[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6162317Z [36;1mfi[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6162575Z [36;1mecho "+ node scripts/qa/signoff-gate.mjs ${args[*]}"[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6162910Z [36;1mset +e[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6163300Z [36;1mnode scripts/qa/signoff-gate.mjs "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/qa-signoff-audit.txt"[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6163770Z [36;1mcode="${PIPESTATUS[0]}"[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6164018Z [36;1mset -e[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6164304Z [36;1mprintf '%s\n' "$code" > "$RUNNER_TEMP/qa-signoff-audit.exit"[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6164867Z [36;1mprintf 'exit=%s\n' "$code" >> "$GITHUB_OUTPUT"[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6165169Z [36;1mexit "$code"[0m
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6199383Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6199726Z env:
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6199909Z   NODE_VERSION: 22
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6200117Z   PNPM_VERSION: 9.12.0
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6200511Z   HERMES_KANBAN_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6201041Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6201531Z   BOARD_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6201930Z   STRICT_HISTORY: 
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6202132Z ##[endgroup]
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.6260135Z + node scripts/qa/signoff-gate.mjs audit --repo /home/runner/work/password-manager/password-manager --db /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.7043813Z QA sign-off gate — audit (db: /home/runner/work/password-manager/password-manager/.ci-demo/board.db, epoch: 2026-09-17T15:00:00.000Z)
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.7045550Z   enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+qa-signoff-audit	Run the board audit	2026-09-17T15:14:47.7046865Z   ok   t_democard  CI-001h demo: synthetic compliant card @backend
+qa-signoff-audit	Upload the audit report	﻿2026-09-17T15:14:47.7132582Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7133883Z ##[group]Run actions/upload-artifact@v4
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7134162Z with:
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7134359Z   name: qa-signoff-audit
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7134636Z   path: /home/runner/work/_temp/qa-signoff-audit.txt
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7134953Z   if-no-files-found: warn
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7135178Z   retention-days: 30
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7135411Z   compression-level: 6
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7135625Z   overwrite: false
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7135836Z   include-hidden-files: false
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7136066Z env:
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7136241Z   NODE_VERSION: 22
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7136444Z   PNPM_VERSION: 9.12.0
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7137149Z   HERMES_KANBAN_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7137895Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.7157018Z ##[endgroup]
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.8918932Z (node:2340) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.8920647Z (Use `node --trace-deprecation ...` to show where the warning was created)
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.8997559Z With the provided path, there will be 1 file uploaded
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.9018900Z Artifact name is valid!
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:47.9019908Z Root directory input is valid!
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:48.1177294Z Beginning upload of artifact content to blob storage
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:48.1361573Z (node:2340) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:48.1776978Z Uploaded bytes 367
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:48.1973172Z Finished uploading artifact content to blob storage!
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:48.1974310Z SHA256 digest of uploaded artifact zip is b8cbf2e1e4112a4e38fc82f9bd5f113ba7cd63031eb4a833acdab8660a79d65e
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:48.1975915Z Finalizing artifact upload
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:48.4049272Z Artifact qa-signoff-audit.zip successfully finalized. Artifact ID 10504782093
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:48.4051143Z Artifact qa-signoff-audit has been successfully uploaded! Final size is 367 bytes. Artifact ID is 10504782093
+qa-signoff-audit	Upload the audit report	2026-09-17T15:14:48.4068460Z Artifact download URL: https://github.com/zeldadil/password-manager/actions/runs/35238945449/artifacts/10504782093
+qa-signoff-audit	Write the run summary	﻿2026-09-17T15:14:48.4190372Z ##[group]Run set -uo pipefail
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4190881Z [36;1mset -uo pipefail[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4191194Z [36;1mboard_shown="${BOARD_DB:-none found on this runner}"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4191523Z [36;1m{[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4191771Z [36;1m  echo "## QA sign-off gate — board audit"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4192067Z [36;1m  echo[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4192278Z [36;1m  echo "| field | value |"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4192539Z [36;1m  echo "|---|---|"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4192814Z [36;1m  echo "| ref | refs/heads/ci-001h-demo |"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4193113Z [36;1m  echo "| event | push |"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4193382Z [36;1m  echo "| board | $board_shown |"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4193643Z [36;1m  echo[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4193916Z [36;1m  if [ -f "$RUNNER_TEMP/qa-signoff-audit.txt" ]; then[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4194388Z [36;1m    audit_exit="$(cat "$RUNNER_TEMP/qa-signoff-audit.exit" 2>/dev/null || echo '?')"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4194855Z [36;1m    echo "### Audit report (exit code $audit_exit)"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4195204Z [36;1m    echo[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4195406Z [36;1m    echo '```text'[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4195671Z [36;1m    cat "$RUNNER_TEMP/qa-signoff-audit.txt"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4195972Z [36;1m    echo '```'[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4196182Z [36;1m  else[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4196385Z [36;1m    echo "### AUDIT NOT RUN"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4197019Z [36;1m    echo[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4197403Z [36;1m    echo "No board database was found on this runner, so the board audit did not run."[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4197980Z [36;1m    echo "**This run does not certify board compliance** — it is not evidence that the"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4198553Z [36;1m    echo "board passes. Fix the board transport before reading any colour from this"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4199131Z [36;1m    echo "workflow: set the repository variable \`QA_SIGNOFF_AUDIT_RUNNER\` to a"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4199706Z [36;1m    echo "self-hosted runner that has the board mounted, or pass the \`board_db\`"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4200149Z [36;1m    echo "dispatch input."[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4200408Z [36;1m  fi[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4200599Z [36;1m  echo[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4200790Z [36;1m  echo "---"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4201372Z [36;1m  echo "_Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4201990Z [36;1m} >> "$GITHUB_STEP_SUMMARY"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4202268Z [36;1mecho "--- summary written ---"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4202553Z [36;1mcat "$GITHUB_STEP_SUMMARY"[0m
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4241358Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4241721Z env:
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4241917Z   NODE_VERSION: 22
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4242132Z   PNPM_VERSION: 9.12.0
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4242526Z   HERMES_KANBAN_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4243020Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4243471Z   BOARD_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4243859Z ##[endgroup]
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4334322Z --- summary written ---
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4343777Z ## QA sign-off gate — board audit
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4344143Z 
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4344287Z | field | value |
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4344520Z |---|---|
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4344787Z | ref | refs/heads/ci-001h-demo |
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4345069Z | event | push |
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4345628Z | board | /home/runner/work/password-manager/password-manager/.ci-demo/board.db |
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4346040Z 
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4346309Z ### Audit report (exit code 0)
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4346822Z 
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4346988Z ```text
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4348415Z QA sign-off gate — audit (db: /home/runner/work/password-manager/password-manager/.ci-demo/board.db, epoch: 2026-09-17T15:00:00.000Z)
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4349313Z   enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4350222Z   ok   t_democard  CI-001h demo: synthetic compliant card @backend
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4350570Z ```
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4350682Z 
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4350766Z ---
+qa-signoff-audit	Write the run summary	2026-09-17T15:14:48.4351433Z _Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._
+qa-signoff-audit	Enforce the audit outcome	﻿2026-09-17T15:14:48.4388357Z ##[group]Run set -uo pipefail
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4388666Z [36;1mset -uo pipefail[0m
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4388912Z [36;1mif [ "true" != "true" ]; then[0m
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4389549Z [36;1m  echo "::error title=QA sign-off audit not run::no board database on this runner — refusing to finish green for an audit that did not happen."[0m
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4390160Z [36;1m  exit 1[0m
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4390357Z [36;1mfi[0m
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4390674Z [36;1mcode="$(cat "$RUNNER_TEMP/qa-signoff-audit.exit" 2>/dev/null || echo 3)"[0m
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4391091Z [36;1mecho "Board audit exit code: $code"[0m
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4391378Z [36;1mexit "$code"[0m
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4428214Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4428560Z env:
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4428747Z   NODE_VERSION: 22
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4428958Z   PNPM_VERSION: 9.12.0
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4429363Z   HERMES_KANBAN_DB: /home/runner/work/password-manager/password-manager/.ci-demo/board.db
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4429908Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4430209Z ##[endgroup]
+qa-signoff-audit	Enforce the audit outcome	2026-09-17T15:14:48.4500725Z Board audit exit code: 0
+qa-signoff-audit	Post Run actions/setup-node@v4	﻿2026-09-17T15:14:48.4576847Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+qa-signoff-audit	Post Run actions/setup-node@v4	2026-09-17T15:14:48.4578099Z Post job cleanup.
+qa-signoff-audit	Post Run actions/setup-node@v4	2026-09-17T15:14:48.5829027Z (node:2360) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+qa-signoff-audit	Post Run actions/setup-node@v4	2026-09-17T15:14:48.5829909Z (Use `node --trace-deprecation ...` to show where the warning was created)
+qa-signoff-audit	Post Run pnpm/action-setup@v4	﻿2026-09-17T15:14:48.6010325Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+qa-signoff-audit	Post Run pnpm/action-setup@v4	2026-09-17T15:14:48.6012485Z Post job cleanup.
+qa-signoff-audit	Post Run pnpm/action-setup@v4	2026-09-17T15:14:48.7504203Z Pruning is unnecessary.
+qa-signoff-audit	Post Checkout	﻿2026-09-17T15:14:48.7671985Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.7673464Z Post job cleanup.
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.8664752Z [command]/usr/bin/git version
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.8710041Z git version 2.55.0
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.8754914Z Temporarily overriding HOME='/home/runner/work/_temp/1937d0a5-e24a-4dbb-a771-3279df36d7b0' before making global git config changes
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.8756869Z Adding repository directory to the temporary git global config as a safe directory
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.8761408Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/password-manager/password-manager
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.8804406Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.8849900Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.9111548Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.9144463Z http.https://github.com/.extraheader
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.9158251Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.9198957Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.9514810Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+qa-signoff-audit	Post Checkout	2026-09-17T15:14:48.9553738Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+qa-signoff-audit	Complete job	﻿2026-09-17T15:14:48.9943790Z Cleaning up orphan processes
+qa-signoff-audit	Complete job	2026-09-17T15:14:49.0280709Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4, pnpm/action-setup@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
