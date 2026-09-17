@@ -11,15 +11,25 @@ name: CI
 # run in parallel after a green install so that every gate reports its own
 # pass/fail verdict (a skipped job would hide a real result).
 #
-# QA-001d (this card) added the `sast` job (Semgrep) and the truffleHog step
-# in `secret-scan`. Both security scans run INDEPENDENT of `install-lockfile`:
+# QA-001d added the `sast` job (Semgrep) and the truffleHog step in
+# `secret-scan`. Both security scans run INDEPENDENT of `install-lockfile`:
 # they inspect source + git history and do not need installed dependencies, so
 # a secret or source-level vulnerability must be flagged even when the lockfile
 # is out of sync (a skipped security gate is a false sense of safety).
 #
+# QA-001g (this card) wired artifact upload into every job per TEST_STRATEGY
+# §11 "Evidence Collection". Every job that produces a machine-readable report
+# uploads it with `actions/upload-artifact@v4` under `if: always()` so the
+# evidence is retained even when the gate FAILS (a failing test's report is the
+# most important one). Retention mirrors §11:
+#   - test reports + coverage + Playwright trace + web-ext lint ... 14 days
+#   - gitleaks/truffleHog JSON + Semgrep SARIF + audit JSON ........ 90 days
+# `if-no-files-found: warn` (not `error`) keeps the upload non-fatal during the
+# monorepo bootstrap, when the reporters are wired but no suite has produced a
+# report yet.
+#
 # Deferred to later QA cards (kept out of scope here):
 #   - Unit coverage thresholds (Tier A 80/70/90) ............... QA-001e
-#   - Artifact upload (test reports, coverage, scan results) ... QA-001g
 #
 # NOTE: the root `pnpm -r --parallel --filter '**' run <script>` delegation
 # (inherited from ARC-001e) silently skips workspaces that do not define the
@@ -99,6 +109,17 @@ jobs:
         run: pnpm test:unit
       # Tier A coverage thresholds (unit >=80%, critical paths >=90%) are
       # enforced in QA-001e once the fixtures/generator land.
+      - name: Upload unit test report (JUnit XML + coverage)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-report
+          path: |
+            coverage/
+            **/junit.xml
+            test-results/*.xml
+          if-no-files-found: warn
+          retention-days: 14
 
   integration:
     name: integration
@@ -117,6 +138,17 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Integration tests
         run: pnpm test:integration
+      - name: Upload integration test report (JUnit XML + coverage)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-report
+          path: |
+            coverage/
+            **/junit.xml
+            test-results/*.xml
+          if-no-files-found: warn
+          retention-days: 14
 
   e2e:
     name: e2e
@@ -145,6 +177,16 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium firefox webkit
       - name: E2E tests
         run: pnpm test:e2e
+      - name: Upload Playwright HTML report + traces/screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 14
 
   dependency-audit:
     name: dependency-audit
@@ -161,8 +203,24 @@ jobs:
           cache: pnpm
       - name: Install dependencies (frozen lockfile)
         run: pnpm install --frozen-lockfile
-      - name: Audit production dependencies
-        run: pnpm audit --prod --audit-level high
+      - name: Audit production dependencies (JSON report)
+        run: |
+          # Preserve the audit exit code (high/critical MUST fail the gate) while
+          # still writing the machine-readable report. `set +e` keeps `bash -e`
+          # from aborting before the report is flushed.
+          set +e
+          pnpm audit --prod --audit-level high --json > audit-report.json
+          STATUS=$?
+          set -e
+          exit $STATUS
+      - name: Upload dependency audit JSON report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-audit-report
+          path: audit-report.json
+          if-no-files-found: warn
+          retention-days: 90
 
   secret-scan:
     name: secret-scan
@@ -178,14 +236,38 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: truffleHog secret scan (entropy + verified)
+      - name: truffleHog secret scan (entropy + verified, JSON report)
         env:
           TRUFFLEHOG_VERSION: "3.97.5"
         run: |
           curl -sSfL -o trufflehog.tar.gz \
             "https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/trufflehog_${TRUFFLEHOG_VERSION}_linux_amd64.tar.gz"
           tar -xzf trufflehog.tar.gz trufflehog
-          ./trufflehog git file://. --no-update --results=verified,unknown --fail
+          # Capture the raw JSON to a temp file so the --fail exit code is
+          # preserved, then REDACT the secret material (Raw/RawV2/SecretParts)
+          # before anything leaves the runner. A scan report must never
+          # re-publish the very secret it found (QA-001g; TEST_STRATEGY §7).
+          # `set +e` is required: under the runner's `bash -e`, a truffleHog
+          # finding (exit 183) would abort the step before redaction runs.
+          set +e
+          ./trufflehog git file://. --no-update --results=verified,unknown --json --fail > trufflehog-raw.json
+          STATUS=$?
+          set -e
+          jq -c 'if type == "object" then
+                   (if .Raw then .Raw = "REDACTED" else . end) |
+                   (if .RawV2 then .RawV2 = "REDACTED" else . end) |
+                   (if .SecretParts then (.SecretParts.key = "REDACTED" | .SecretParts.value = "REDACTED") else . end)
+                 else . end' trufflehog-raw.json > trufflehog-report.json
+          rm -f trufflehog-raw.json
+          exit $STATUS
+      - name: Upload secret-scan report (truffleHog JSON, redacted)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: secret-scan-report
+          path: trufflehog-report.json
+          if-no-files-found: warn
+          retention-days: 90
 
   sast:
     name: sast
@@ -219,6 +301,7 @@ jobs:
           name: semgrep-sarif
           path: semgrep.sarif
           if-no-files-found: warn
+          retention-days: 90
 
   build:
     name: build
@@ -237,3 +320,13 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build all workspaces
         run: pnpm build
+      - name: Upload build + web-ext lint output
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-artifacts
+          path: |
+            apps/browser-firefox/web-ext-artifacts/
+            **/web-ext-lint*.txt
+          if-no-files-found: warn
+          retention-days: 14
