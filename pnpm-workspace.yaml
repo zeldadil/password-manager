@@ -1,0 +1,6 @@
+packages:
+  - "apps/web"
+  - "apps/browser-firefox"
+  - "apps/services/api"
+  - "packages/shared"
+  - "packages/crypto"
