@@ -55,17 +55,18 @@ Full detail, rationale, and absolute rules in [SEC-001](architecture/adr/SEC-001
 
 **Status: Active — 2026-09-17**
 
-A Kanban board is a durable, shared artifact: comment bodies are stored in
+A Kanban board is a durable, shared artifact: comment bodies, completion
+summaries, run `result` fields, and run metadata are all stored in
 `~/.hermes/kanban.db` and injected into the context of every worker dispatched
 on a card, including workers with nothing to do with credential handling. A
-secret in a card comment or completion summary is one careless copy away from a
-public repo leak. The only distribution channel for secrets is the profile
-`.env` (or a local file outside the repo); a worker that needs one reads it
-programmatically.
+secret in any durable board/run content is one careless copy away from a public
+repo leak. The only distribution channel for secrets is the profile `.env` (or a
+local file outside the repo); a worker that needs one reads it programmatically.
 
 **Rule (non-negotiable):**
 
-- Secrets never enter Kanban cards, comments, evidence files, logs, or chat.
+- Secrets never enter Kanban cards, comments, completion summaries, run `result`
+  fields, evidence files, logs, or chat.
 - The only distribution channel is the profile `.env` (or a local file outside
   the repo). A worker that needs a secret reads it programmatically from there.
 - When a human needs to hand a secret to a worker, they write it into the
@@ -81,6 +82,36 @@ programmatically.
   emergency operator override.
 - Evidence under `tests/evidence/<task-id>/` must never contain real secrets.
   Synthetic fixtures only (per SEC-001 AR-4).
+
+**Evaluation order / interaction with the QA sign-off gate (SEC-001 + QA-001h):**
+
+The board runs two **independent** `pre_tool_call` hooks on every profile that
+writes to the board (after rollout). Hermes evaluates `hooks.pre_tool_call`
+entries in list order and applies the first block it encounters — whichever hook
+fires first wins; a block short-circuits the call. Both hooks set
+`fail_closed: true`, so a crash or timeout in either one blocks the call.
+
+1. `scripts/qa/hooks/qa-signoff-gate.sh` → `scripts/qa/signoff-gate.mjs`
+   matcher: `^kanban_complete$` — enforces the QA verdict + evidence rule
+   (QA-001h, `t_430aa9a3`, documented in `QA_SIGN_OFF_GATE.md` on
+   `qa/t_5455942d-gate-fix`).
+2. `scripts/qa/hooks/secret-guard.sh` → `scripts/qa/secret-guard.mjs`
+   matcher: `^(kanban_comment|kanban_create|kanban_complete)$` — enforces the
+   no-secrets rule (SEC-001 extension, this card).
+
+They are independent: the secret guard can block a `kanban_complete` whose
+`result` or top-level `artifacts` contains a token even if the sign-off gate has
+not yet run; the sign-off gate can block a clean `kanban_complete` that lacks a
+verdict even though the secret guard passed. Neither hook silences the other —
+there is no allowlist shared between them and no ordering dependency on
+correctness.
+
+**Cross-reference (open items):**
+- `QA_SIGN_OFF_GATE.md` is not yet in this tree — it lives on
+  `qa/t_5455942d-gate-fix` (unmerged). Once that branch merges, the sentence
+  "documented in `QA_SIGN_OFF_GATE.md`" above becomes resolvable in-tree. Owner:
+  `qa`. Until then the sign-off gate rule is documented by its own branch and by
+  `t_430aa9a3`; this card's rule is self-contained in this section.
 
 **Hook coverage:**
 
