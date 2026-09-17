@@ -1,10 +1,10 @@
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { routes } from './routes'
+
+const router = createBrowserRouter(routes)
+
 function App() {
-  return (
-    <main>
-      <h1>Password Manager</h1>
-      <p>Web UI scaffold — React 18 + TypeScript + Vite.</p>
-    </main>
-  )
+  return <RouterProvider router={router} />
 }
 
 export default App
