@@ -1,7 +1,3 @@
 export default function VaultPage() {
-  return (
-    <main>
-      <h1>Vault</h1>
-    </main>
-  )
+  return <h1>Vault</h1>
 }
