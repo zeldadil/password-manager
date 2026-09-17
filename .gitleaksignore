@@ -1,8 +1,16 @@
 # .gitleaksignore — secret-scan exceptions
 
-# Commit a503e4d introduced a Telegram bot token in PROJECT_BRIEF.md §9.
-# The line has been scrubbed from the tracked file, but the value persists in git history.
-# This entry suppresses that specific historical leak so PRs aren't blocked by a
-# commit that predates them. The token must still be rotated by the repo owner.
+# DEPRECATED: The Telegram bot token that was introduced in a503e4d has been
+# purged from git history via filter-branch (P0 SEC-INCIDENT t_0af5aa3e).
+# The token value 8615677595:*** no longer exists in any commit.
+# This entry is kept for the transition period until CI is re-run post-rotation.
+# After the new token is in place and CI passes green, this file should be
+# reduced to only genuinely safe exclusions (test fixtures, etc.).
+#
+# IMPORTANT: The token must still be rotated by the repo owner (@user via @BotFather
+# /revoke + /token). History rewrite removes the old value from git, but does not
+# invalidate it on Telegram's servers. Branch protection on master blocks
+# force-push — a human admin must temporarily lift protection, push the rewritten
+# master, then re-enable it. See incident report in tests/evidence/.
 
 a503e4d:PROJECT_BRIEF.md:telegram-bot-api-token
