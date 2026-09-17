@@ -53,7 +53,30 @@ printf '  regenerated %s\n' "$E/gh-workflow-dispatch-attempt.txt"
 
 sha256sum "$WF" > "$E/workflow.sha256"
 printf '  wrote %s\n' "$E/workflow.sha256"
+
+printf '$ gh pr checks 17 --repo zeldadil/password-manager\n' > "$E/pr-checks.txt"
+gh pr checks 17 --repo zeldadil/password-manager >> "$E/pr-checks.txt" 2>&1
+printf '\n$ gh pr view 17 --repo zeldadil/password-manager --json number,title,mergeable,mergeStateStatus,url\n' >> "$E/pr-checks.txt"
+gh pr view 17 --repo zeldadil/password-manager --json number,title,mergeable,mergeStateStatus,url >> "$E/pr-checks.txt" 2>&1
+printf '  regenerated %s\n' "$E/pr-checks.txt"
+
+printf '$ gh run view 35238945449 --repo zeldadil/password-manager\n' > "$E/actions-run-demo.txt"
+printf '(the ci-001h-demo branch was deleted after capture; run records are retained)\n\n' >> "$E/actions-run-demo.txt"
+gh run view 35238945449 --repo zeldadil/password-manager >> "$E/actions-run-demo.txt" 2>&1
+printf '\n$ gh run view 35238945449 --json databaseId,headBranch,event,headSha,workflowName,conclusion,url,createdAt\n' >> "$E/actions-run-demo.txt"
+gh run view 35238945449 --repo zeldadil/password-manager --json databaseId,headBranch,event,headSha,workflowName,conclusion,url,createdAt >> "$E/actions-run-demo.txt" 2>&1
+printf '\n$ gh run download 35238945449 -n qa-signoff-audit && cat qa-signoff-audit.txt\n' >> "$E/actions-run-demo.txt"
+printf 'QA sign-off gate — audit (db: /home/runner/work/password-manager/password-manager/.ci-demo/board.db, epoch: 2026-09-17T15:00:00.000Z)\n' >> "$E/actions-run-demo.txt"
+printf '  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0\n' >> "$E/actions-run-demo.txt"
+printf '  ok   t_democard  CI-001h demo: synthetic compliant card @backend\n' >> "$E/actions-run-demo.txt"
+printf '  (artifact content captured by hand; sha256 dfdc28a73241739b83c140d260d55d9bb2acd34ccc52e0ac560d9ce24fd60f88)\n' >> "$E/actions-run-demo.txt"
+printf '  regenerated %s\n' "$E/actions-run-demo.txt"
 printf '$ sha256sum scripts/qa/signoff-gate.mjs   # borrowed for the replays only\n' > "$E/gate-script-borrowed.sha256"
-sha256sum scripts/qa/signoff-gate.mjs >> "$E/gate-script-borrowed.sha256" 2>&1
-sha256sum "$(cd ../t_430aa9a3 && pwd)/scripts/qa/signoff-gate.mjs" >> "$E/gate-script-borrowed.sha256" 2>&1
+if [ -f scripts/qa/signoff-gate.mjs ]; then
+  sha256sum scripts/qa/signoff-gate.mjs >> "$E/gate-script-borrowed.sha256" 2>&1
+  sha256sum "$(cd ../t_430aa9a3 && pwd)/scripts/qa/signoff-gate.mjs" >> "$E/gate-script-borrowed.sha256" 2>&1
+  printf '(left and right hashes must match: the replay must use the reviewed PR #16 script)\n' >> "$E/gate-script-borrowed.sha256"
+else
+  printf 'NOT PRESENT in this worktree at regeneration time — copy it back per README §6 to re-run the replays\n' >> "$E/gate-script-borrowed.sha256"
+fi
 printf '  wrote %s\n' "$E/gate-script-borrowed.sha256"

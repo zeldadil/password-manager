@@ -1,0 +1,12 @@
+$ gh pr checks 17 --repo zeldadil/password-manager
+build	pass	10s	https://github.com/zeldadil/password-manager/actions/runs/35239211187/job/105263049950	
+dependency-audit	pass	8s	https://github.com/zeldadil/password-manager/actions/runs/35239211187/job/105263049750	
+e2e	pass	17s	https://github.com/zeldadil/password-manager/actions/runs/35239211187/job/105263049836	
+install-lockfile	pass	10s	https://github.com/zeldadil/password-manager/actions/runs/35239211187/job/105262970571	
+integration	pass	9s	https://github.com/zeldadil/password-manager/actions/runs/35239211187/job/105263049715	
+lint-typecheck	pass	11s	https://github.com/zeldadil/password-manager/actions/runs/35239211187/job/105263049905	
+secret-scan	pass	10s	https://github.com/zeldadil/password-manager/actions/runs/35239211187/job/105263050219	
+unit	pass	13s	https://github.com/zeldadil/password-manager/actions/runs/35239211187/job/105263049727	
+
+$ gh pr view 17 --repo zeldadil/password-manager --json number,title,mergeable,mergeStateStatus,url
+{"mergeStateStatus":"CLEAN","mergeable":"MERGEABLE","number":17,"title":"CI-001h: wire the QA sign-off gate board audit as a scheduled CI job","url":"https://github.com/zeldadil/password-manager/pull/17"}

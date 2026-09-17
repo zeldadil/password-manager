@@ -18,7 +18,7 @@ known gaps are stated in "Not verified / open gaps" and are not claimed as passi
 | 1 | New scheduled job `qa-signoff-audit`, weekly cron + `workflow_dispatch` | `check-workflow.txt`, `actionlint.txt` | job id/name `qa-signoff-audit`; triggers exactly `{schedule, workflow_dispatch}`; cron `17 6 * * 1` (weekly) |
 | 2 | Runs `node scripts/qa/signoff-gate.mjs audit --repo <repo-root>`; surfaces counts + FAIL cards | `replay-*.txt`, `actions-run-demo-log.txt` L228–231, L306–320 | real invocation `audit --repo /home/runner/work/password-manager/password-manager --db …`; summary shows `enforced … pass: 1 · FAIL: 0`; fixture scenario shows the `FAIL t_deadbeef` card with `R1_QA_VERDICT_MISSING` / `R4_EVIDENCE_MISSING` |
 | 3 | Not a required status check on `master` (no branch-protection change) | `branch-protection.json` / `.txt`, `check-workflow.txt` | live API: required contexts = `build, dependency-audit, e2e, install-lockfile, integration, lint-typecheck, secret-scan, unit` — `qa-signoff-audit` absent; no protection write was ever issued |
-| 4 | Per-PR job graph in `ci.yml` unchanged (no `needs:`, no `pull_request` trigger) | `diff-vs-master.txt`, `check-workflow.txt` | `git diff … -- .github/workflows/ci.yml` empty; job has no `needs:`; parsed trigger map has no `pull_request`/`push` |
+| 4 | Per-PR job graph in `ci.yml` unchanged (no `needs:`, no `pull_request` trigger) | `diff-vs-master.txt`, `check-workflow.txt`, `pr-checks.txt` | `git diff … -- .github/workflows/ci.yml` empty; job has no `needs:`; parsed trigger map has no `pull_request`/`push`; live PR #17 runs exactly the same 8 checks, all **pass** (run 35239211187), and the new workflow adds no PR-time check |
 | 5 | Evidence: diff + a run URL (or a note why a dispatch run is impossible) | `diff-vs-master.txt`, `actions-run-demo*.txt`, `gh-workflow-dispatch-attempt.txt` | live run **35238945449** (success, artifact uploaded); pre-merge `workflow_dispatch` is impossible ⇒ `HTTP 404`, documented in §4 |
 
 ## 2. How it was verified (and what each method does *not* prove)
@@ -172,6 +172,7 @@ bash tests/evidence/t_ea0783c5/run-evidence.sh             # regenerates every t
 | `replay-dispatch-fixture-fail.txt` | local replay: injected violating card → FAIL card surfaced, FAILURE |
 | `replay-dispatch-strict-history.txt` | local replay: `--strict-history` → 27-card pre-epoch backlog, FAILURE |
 | `gh-workflow-dispatch-attempt.txt` | why a pre-merge dispatch run is impossible (HTTP 404) |
+| `pr-checks.txt` | live required checks on PR #17 — same 8 jobs, all pass; PR `CLEAN`/`MERGEABLE` |
 | `actions-run-demo.txt` / `-log.txt` | the live GitHub Actions run 35238945449 |
 | `workflow.sha256`, `gate-script-borrowed.sha256` | hashes of the workflow and of the borrowed gate script |
 | `check-workflow.py`, `replay-job.py`, `run-evidence.sh` | the harnesses (re-runnable, see §6) |
