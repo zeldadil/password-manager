@@ -238,6 +238,76 @@ const DEFER_PHANTOM = card({
   comments: [qaVerdict("QA-VERDICT: deferred — t_deadbeef")],
 });
 
+// ── t_5455942d regression fixtures ──────────────────────────────────────────
+// The operative (newest) verdict is the only one whose evidence paths R5
+// resolves; superseded verdicts/handoffs must not block a compliant card.
+const SUPERSEDED_MISSING = card({
+  title: "BE-911 operative verdict fine, superseded comments name missing artifacts",
+  body: "**Test Types:** unit",
+  comments: [
+    {
+      author: "architect",
+      body: "Handoff — record it as\n`QA-VERDICT: pass — evidence: tests/evidence/__ID__/gone-architect.md` and complete the card.",
+    },
+    qaVerdict("QA-VERDICT: fail — evidence: tests/evidence/__ID__/gone-old-verdict.md\nSuperseded by the verdict recorded below."),
+    qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md"),
+  ],
+});
+fixtureFile(`tests/evidence/${SUPERSEDED_MISSING}/README.md`);
+
+const OPERATIVE_MISSING = card({
+  title: "BE-912 operative verdict names a missing artifact (R5 must still fire)",
+  body: "**Test Types:** unit",
+  comments: [
+    qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md"),
+    qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/retracted-file.md"),
+  ],
+});
+fixtureFile(`tests/evidence/${OPERATIVE_MISSING}/README.md`);
+
+const REF_ONLY = card({
+  title: "BE-913 operative evidence exists on another ref of the repo only",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/ref-only.md")],
+});
+
+const DEFER_SUPPRESSED = card({
+  title: "BE-914 explicit verdict + linked qa child is NOT a deferral",
+  body: "**Test Types:** unit",
+  comments: [
+    qaVerdict(
+      "QA-VERDICT: pass-with-conditions — evidence: tests/evidence/__ID__/README.md\nFollow-up: t_0000000a tracks the residual item.",
+    ),
+  ],
+});
+fixtureFile(`tests/evidence/${DEFER_SUPPRESSED}/README.md`);
+const DEFER_SUPPRESSED_CHILD = card({
+  title: "QA-914b qa-owned repair child (unrelated to a verdict)",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  status: "todo",
+  completed: null,
+});
+
+// ── fixture git repo: evidence committed on an earlier ref (A4 case) ────────
+const gitRepo = join(root, "gitrepo");
+const refOnlyRel = `tests/evidence/${REF_ONLY}/ref-only.md`;
+function gitFixture(args) {
+  execFileSync("git", ["-C", gitRepo, ...args], { stdio: ["ignore", "pipe", "pipe"] });
+}
+mkdirSync(gitRepo, { recursive: true });
+gitFixture(["init", "-q", "-b", "main"]);
+gitFixture(["config", "user.email", "fixture@example.invalid"]);
+gitFixture(["config", "user.name", "gate fixture"]);
+writeFileSync(join(gitRepo, "README.md"), "fixture repo\n");
+mkdirSync(dirname(join(gitRepo, refOnlyRel)), { recursive: true });
+writeFileSync(join(gitRepo, refOnlyRel), "evidence committed on the branch (not in the tip)\n");
+gitFixture(["add", "-A"]);
+gitFixture(["commit", "-qm", "add the evidence artifact"]);
+rmSync(join(gitRepo, refOnlyRel));
+gitFixture(["add", "-A"]);
+gitFixture(["commit", "-qm", "remove it from the working tip — still reachable on the branch history"]);
+
 function taskRowSQL(c) {
   const esc = (s) => String(s).replace(/'/g, "''");
   const rows = [
@@ -269,6 +339,7 @@ function buildBoard() {
     ...CARDS.map(taskRowSQL),
     `INSERT INTO task_links (parent_id,child_id) VALUES ('${DEFERRED_DONE}','${DEFERRED_CHILD_DONE}');`,
     `INSERT INTO task_links (parent_id,child_id) VALUES ('${DEFERRED_OPEN}','${DEFERRED_CHILD_OPEN}');`,
+    `INSERT INTO task_links (parent_id,child_id) VALUES ('${DEFER_SUPPRESSED}','${DEFER_SUPPRESSED_CHILD}');`,
   ].join("\n");
   execFileSync("sqlite3", [db], { input: sql });
 }
@@ -282,7 +353,15 @@ function runGate(args, input, env = {}) {
     const out = execFileSync("node", [GATE, ...args], {
       encoding: "utf8",
       input: input ?? "",
-      env: { ...process.env, ...env },
+      // Hermetic: never let the ambient kanban identity/location variables of the
+      // host running the selftest leak into a case (t_5455942d).
+      env: {
+        ...process.env,
+        HERMES_KANBAN_TASK: "",
+        HERMES_KANBAN_WORKSPACE: "",
+        HERMES_KANBAN_BRANCH: "",
+        ...env,
+      },
       stdio: ["pipe", "pipe", "pipe"],
     });
     return { code: 0, out };
@@ -299,6 +378,26 @@ function check(name, condition, detail = "") {
     failures.push(`${name}${detail ? ` — ${detail}` : ""}`);
     console.log(`  FAIL - ${name}${detail ? ` — ${detail}` : ""}`);
   }
+}
+
+/** `check ... --json` through the gate, parsed. */
+function gateJson(taskId, repoOverride = repo) {
+  const r = runGate(["check", "--task", taskId, "--db", db, "--repo", repoOverride, "--json"]);
+  let parsed = null;
+  try {
+    parsed = JSON.parse(r.out);
+  } catch {
+    parsed = null;
+  }
+  return { code: r.code, out: r.out, parsed };
+}
+
+function advisoryRules(res) {
+  return res.parsed ? res.parsed.advisories.map((a) => a.rule) : [];
+}
+
+function violationRules(res) {
+  return res.parsed ? res.parsed.violations.map((v) => v.rule) : [];
 }
 
 function expectRule(label, taskId, rule, { preComplete = false, forbid = [] } = {}) {
@@ -325,7 +424,7 @@ console.log(`fixture repo: ${repo}`);
 buildBoard();
 
 console.log("\n1. Compliant cards (must produce ZERO violations — anti-vacuous control):");
-for (const [label, tid] of [
+for (const [label, tid, repoOverride] of [
   ["Path A verdict + repo evidence", OK],
   ["crypto card with AR-6 architect sign-off", ARCH_SIGNED],
   ["evidence uploaded as attachment", ATTACHED],
@@ -335,16 +434,48 @@ for (const [label, tid] of [
   ["pass-with-conditions naming a follow-up", CONDITIONAL_TRACKED],
   ["grandfathered pre-epoch card", PRE_EPOCH],
   ["recorded QA sign-off exception", EXCEPTION],
+  ["superseded comments name missing artifacts", SUPERSEDED_MISSING],
+  ["operative evidence committed on another ref", REF_ONLY, gitRepo],
+  ["explicit verdict + linked qa repair child", DEFER_SUPPRESSED],
 ]) {
-  const r = runGate(["check", "--task", tid, "--db", db, "--repo", repo, "--json"]);
-  let parsed = null;
-  try {
-    parsed = JSON.parse(r.out);
-  } catch {
-    parsed = null;
-  }
-  const rules = parsed ? parsed.violations.map((v) => v.rule) : [];
-  check(label, r.code === 0 && parsed !== null && rules.length === 0, `exit=${r.code} rules=[${rules.join(",")}] out=${r.out.slice(0, 160).replace(/\n/g, " ")}`);
+  const res = gateJson(tid, repoOverride || repo);
+  check(
+    label,
+    res.code === 0 && res.parsed !== null && violationRules(res).length === 0,
+    `exit=${res.code} rules=[${violationRules(res).join(",")}] out=${res.out.slice(0, 160).replace(/\n/g, " ")}`,
+  );
+}
+
+console.log("\n1b. t_5455942d regressions (fail closed only on unverifiable input):");
+{
+  const sup = gateJson(SUPERSEDED_MISSING);
+  check(
+    "superseded verdict/handoff paths are advisory (A5), never R5",
+    sup.code === 0 && advisoryRules(sup).includes("A5_EVIDENCE_SUPERSEDED") && !advisoryRules(sup).includes("A4_EVIDENCE_OFF_TREE"),
+    `exit=${sup.code} adv=[${advisoryRules(sup).join(",")}]`,
+  );
+
+  const ref = gateJson(REF_ONLY, gitRepo);
+  const viaRef = ref.parsed ? ref.parsed.facts.evidence.filter((e) => e.via_ref).map((e) => e.value) : [];
+  check(
+    "operative evidence on another ref is accepted (A4, no R5)",
+    ref.code === 0 && advisoryRules(ref).includes("A4_EVIDENCE_OFF_TREE") && viaRef.length === 1,
+    `exit=${ref.code} adv=[${advisoryRules(ref).join(",")}] via_ref=[${viaRef.join(",")}] out=${ref.out.slice(0, 160).replace(/\n/g, " ")}`,
+  );
+
+  const def = gateJson(DEFER_SUPPRESSED);
+  check(
+    "explicit verdict + linked qa child is NOT a deferral (no A2)",
+    def.code === 0 && def.parsed !== null && def.parsed.facts.deferral === null && !advisoryRules(def).includes("A2_DEFERRAL_OPEN"),
+    `exit=${def.code} deferral=${JSON.stringify(def.parsed && def.parsed.facts.deferral)} adv=[${advisoryRules(def).join(",")}]`,
+  );
+
+  const legacy = gateJson(DEFERRED_OPEN);
+  check(
+    "linked qa child with NO verdict still counts as a deferral (A2 fires — heuristic intact)",
+    legacy.code === 0 && legacy.parsed !== null && legacy.parsed.facts.deferral !== null && advisoryRules(legacy).includes("A2_DEFERRAL_OPEN"),
+    `exit=${legacy.code} deferral=${JSON.stringify(legacy.parsed && legacy.parsed.facts.deferral)} adv=[${advisoryRules(legacy).join(",")}]`,
+  );
 }
 
 console.log("\n2. Rule coverage (every rule must fire on its own non-compliant card):");
@@ -355,6 +486,9 @@ expectRule("fail verdict on a done card", FAIL_ON_DONE, "R3_VERDICT_NOT_TERMINAL
 expectRule("blocked verdict on a done card", BLOCKED_ON_DONE, "R3_VERDICT_NOT_TERMINAL");
 expectRule("verdict without evidence", NO_EVIDENCE, "R4_EVIDENCE_MISSING", { forbid: ["R1_QA_VERDICT_MISSING"] });
 expectRule("named evidence file missing", MISSING_FILE, "R5_EVIDENCE_FILE_MISSING");
+expectRule("operative verdict names a missing artifact (scoping is not vacuous)", OPERATIVE_MISSING, "R5_EVIDENCE_FILE_MISSING", {
+  forbid: ["R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"],
+});
 expectRule("pass-with-conditions without follow-up", UNTRACKED_CONDITIONS, "R6_CONDITIONS_UNTRACKED");
 expectRule("crypto card without architect sign-off", SEC_NO_ARCH, "R7_SECURITY_TRACK_SIGNOFF_MISSING");
 expectRule("deferral to a non-QA card", DEFER_NON_QA, "R8_DEFERRAL_TARGET_INVALID", { forbid: ["R2_QA_VERDICT_INVALID"] });
@@ -443,6 +577,153 @@ console.log("\n5. Hook mode (pre_tool_call: kanban_complete):");
 
   const noTask = runGate(["hook", "--db", db], JSON.stringify({ tool_name: "kanban_complete", tool_input: {} }), { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: "" });
   check("no resolvable task id → fail closed (block)", noTask.code === 2, `exit=${noTask.code}`);
+
+  // ── t_5455942d: resolving the session id instead of the task id ───────────
+  const sessionShape = "20260917_201256_021f5e";
+  const sessionPayload = JSON.stringify({
+    hook_event_name: "pre_tool_call",
+    tool_name: "kanban_complete",
+    tool_input: { summary: "no explicit task_id (tool default)" },
+    session_id: sessionShape,
+    cwd: repo,
+    profile: "qa",
+    extra: { task_id: sessionShape, tool_call_id: "tc_1" },
+  });
+
+  const sessionEnv = runGate(["hook", "--db", db], sessionPayload, { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: OK });
+  check(
+    "(a) session id in extra.task_id + HERMES_KANBAN_TASK set → allow ({} + exit 0)",
+    sessionEnv.code === 0 && sessionEnv.out.trim() === "{}",
+    `exit=${sessionEnv.code} out=${sessionEnv.out.trim().slice(0, 220)}`,
+  );
+
+  const sessionOnly = runGate(["hook", "--db", db], sessionPayload, { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: "" });
+  let sessionDirective = null;
+  try {
+    sessionDirective = JSON.parse(sessionOnly.out.split("\n")[0]);
+  } catch {
+    sessionDirective = null;
+  }
+  check(
+    "(b) session id only → block, reason names the source and the id shape",
+    sessionOnly.code === 2 &&
+      sessionDirective &&
+      /extra\.task_id/.test(sessionDirective.reason) &&
+      /not a task id/.test(sessionDirective.reason) &&
+      /Hermes session id/.test(sessionDirective.reason),
+    `exit=${sessionOnly.code} out=${sessionOnly.out.slice(0, 260).replace(/\n/g, " ")}`,
+  );
+
+  const explicitId = runGate(["hook", "--db", db], payload(OK), { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: "" });
+  check("(c) explicit tool_input.task_id → allow", explicitId.code === 0 && explicitId.out.trim() === "{}", `exit=${explicitId.code}`);
+
+  const unknownId = runGate(["hook", "--db", db], payload("t_deadbeef"), { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: OK });
+  let unknownDirective = null;
+  try {
+    unknownDirective = JSON.parse(unknownId.out.split("\n")[0]);
+  } catch {
+    unknownDirective = null;
+  }
+  check(
+    "(d) unknown task id → block, reason names the source of the id",
+    unknownId.code === 2 &&
+      unknownDirective &&
+      /t_deadbeef/.test(unknownDirective.reason) &&
+      /tool_input\.task_id/.test(unknownDirective.reason),
+    `exit=${unknownId.code} out=${unknownId.out.slice(0, 260).replace(/\n/g, " ")}`,
+  );
+
+  // A run id (numeric) is resolved through the board, never treated as a card id.
+  const runRow = execFileSync("sqlite3", ["-json", "--", db, `SELECT id FROM task_runs WHERE task_id='${QA_OWN}' LIMIT 1`], {
+    encoding: "utf8",
+  }).trim();
+  const runId = runRow ? JSON.parse(runRow)[0].id : null;
+  const runPayload = JSON.stringify({
+    hook_event_name: "pre_tool_call",
+    tool_name: "kanban_complete",
+    tool_input: { task_id: runId, summary: "dispatcher passed a run id" },
+    session_id: sessionShape,
+    cwd: repo,
+    profile: "qa",
+    extra: { tool_call_id: "tc_2" },
+  });
+  const viaRunId = runGate(["hook", "--db", db], runPayload, { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: "" });
+  check(
+    "(e) numeric run id in tool_input.task_id → resolved to its card via the board → allow",
+    runId !== null && viaRunId.code === 0 && viaRunId.out.trim() === "{}",
+    `run=${runId} exit=${viaRunId.code} out=${viaRunId.out.trim().slice(0, 220)}`,
+  );
+
+  // The real dispatcher-worker shape: Hermes scrubs the kanban identity variables
+  // out of the hook's env (agent/delegation_context.py::scrub_kanban_env), so the
+  // hook must fall back to the worker's location. Evidence: hook-env-probe.py.
+  // The worker's cwd holds its own evidence, exactly like a real workspace.
+  const workerCwd = join(root, "workspaces", OK);
+  mkdirSync(dirname(join(workerCwd, "tests/evidence", OK, "README.md")), { recursive: true });
+  writeFileSync(join(workerCwd, "tests/evidence", OK, "README.md"), "synthetic evidence fixture (worker workspace)\n");
+  const workerPayload = JSON.stringify({
+    hook_event_name: "pre_tool_call",
+    tool_name: "kanban_complete",
+    tool_input: { summary: "natural call — task_id defaulted by the tool" },
+    session_id: sessionShape,
+    cwd: workerCwd,
+    profile: "backend",
+    extra: { task_id: sessionShape, tool_call_id: "tc_3" },
+  });
+
+  const viaWorkspace = runGate(["hook", "--db", db], workerPayload, {
+    HERMES_KANBAN_DB: db,
+    HERMES_KANBAN_TASK: "",
+    HERMES_KANBAN_WORKSPACE: workerCwd,
+  });
+  check(
+    "(f) identity vars scrubbed (no HERMES_KANBAN_TASK) + session id in extra → resolved from HERMES_KANBAN_WORKSPACE → allow",
+    viaWorkspace.code === 0 && viaWorkspace.out.trim() === "{}",
+    `exit=${viaWorkspace.code} out=${viaWorkspace.out.trim().slice(0, 260)}`,
+  );
+
+  const viaCwd = runGate(["hook", "--db", db], workerPayload, {
+    HERMES_KANBAN_DB: db,
+    HERMES_KANBAN_TASK: "",
+    HERMES_KANBAN_WORKSPACE: "",
+    HERMES_KANBAN_BRANCH: "",
+  });
+  check(
+    "(g) same payload, workspace var empty → resolved from the worker's cwd basename → allow",
+    viaCwd.code === 0 && viaCwd.out.trim() === "{}",
+    `exit=${viaCwd.code} out=${viaCwd.out.trim().slice(0, 260)}`,
+  );
+
+  const noLocation = JSON.stringify({
+    hook_event_name: "pre_tool_call",
+    tool_name: "kanban_complete",
+    tool_input: { summary: "no id, no location" },
+    session_id: sessionShape,
+    cwd: repo,
+    profile: "backend",
+    extra: { task_id: sessionShape },
+  });
+  const unresolvable = runGate(["hook", "--db", db], noLocation, {
+    HERMES_KANBAN_DB: db,
+    HERMES_KANBAN_TASK: "",
+    HERMES_KANBAN_WORKSPACE: "",
+    HERMES_KANBAN_BRANCH: "",
+  });
+  let unresolvableDirective = null;
+  try {
+    unresolvableDirective = JSON.parse(unresolvable.out.split("\n")[0]);
+  } catch {
+    unresolvableDirective = null;
+  }
+  check(
+    "(h) no id and no task-shaped location → still fails closed, listing every source tried",
+    unresolvable.code === 2 &&
+      unresolvableDirective &&
+      /tool_input\.task_id=<empty>/.test(unresolvableDirective.reason) &&
+      /extra\.task_id/.test(unresolvableDirective.reason) &&
+      /cwd=/.test(unresolvableDirective.reason),
+    `exit=${unresolvable.code} out=${unresolvable.out.slice(0, 300).replace(/\n/g, " ")}`,
+  );
 
   // kill switch
   const kill = join(root, "signoff-gate.disabled");
