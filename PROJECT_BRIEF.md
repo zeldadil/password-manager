@@ -84,9 +84,10 @@ root task, all secret-storage/crypto/bridge work depends on it.
 Decisions ratified during the project kickoff walkthrough. Each entry records what was decided, by whom, and the rationale. These are living decisions — update this log as ADRs are written and gates close.
 
 ### Telegram status-updates channel
-- **Decision:** Telegram bot configured for all 6 agent profiles (`architect`, `backend`, `frontend`, `browser`, `qa`, `docs`) using the bot token from `@BotFather` and `TELEGRAM_ALLOWED_USERS=956145756`.
+- **Decision:** Telegram bot configured for all 6 agent profiles (`architect`, `backend`, `frontend`, `browser`, `qa`, `docs`) using `TELEGRAM_BOT_TOKEN=${REDACTED_TELEGRAM_TOKEN}`, `TELEGRAM_ALLOWED_USERS=956145756`.
 - **Rationale:** Standing instruction requires every Kanban task completion (done/review) or block to be reported via `hermes send --to telegram` immediately — no batching, no waiting. The channel is the team's operational heartbeat.
-- **Credential handling:** The bot token is **never written into any repo file** — only in each profile's `.env` (gitignored) and `config.yaml` (gitignored). The decision log records the *decision* and the *user ID*, never the token value.
+- **Tested:** `hermes send --to telegram:956145756 "test"` succeeded from @backend profile. All profiles now have `.env` (token + allowed users) and `config.yaml` (target, home_channel, home_channel_name) set.
+- **Owner:** architect
 
 ### SEC-001 deliverable format
 - **Decision:** SEC-001 threat model + 9 crypto decisions live in a **single ADR: `ADR-002-security-model.md`**. Atomic gate — Architect + QA sign off together; downstream tasks need one reference.
