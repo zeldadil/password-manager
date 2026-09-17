@@ -1,0 +1,8 @@
+# .gitleaksignore — secret-scan exceptions
+
+# Commit a503e4d introduced a Telegram bot token in PROJECT_BRIEF.md §9.
+# The line has been scrubbed from the tracked file, but the value persists in git history.
+# This entry suppresses that specific historical leak so PRs aren't blocked by a
+# commit that predates them. The token must still be rotated by the repo owner.
+
+a503e4d:PROJECT_BRIEF.md:telegram-bot-api-token
