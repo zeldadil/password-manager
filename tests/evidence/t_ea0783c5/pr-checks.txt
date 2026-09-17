@@ -1,3 +1,5 @@
+# Captured on the CI-001h worktree (feature/t_ea0783c5) for PR #17.
+# $ gh pr checks 17 --repo zeldadil/password-manager
 build	pass	11s	https://github.com/zeldadil/password-manager/actions/runs/35239371580/job/105263588730	
 dependency-audit	pass	11s	https://github.com/zeldadil/password-manager/actions/runs/35239371580/job/105263588833	
 e2e	pass	10s	https://github.com/zeldadil/password-manager/actions/runs/35239371580/job/105263589151	
