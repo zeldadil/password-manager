@@ -7,7 +7,7 @@
 Firing 1 hook(s) for event 'pre_tool_call':
 
   → /home/sap/.hermes/profiles/architect/agent-hooks/secret-guard.sh
-      exit=2  elapsed=0.066s
+      exit=2  elapsed=0.065s
       stdout: {"decision":"block","reason":"secret-guard: blocked — the call text matches secret-shaped patterns (rule ids: R_SECRET_TELEGRAM_BOT_TOKEN).\nNo secret value is quoted in this reason — only rule ids. Do not paste the value into any repo file, evidence, log, or chat.\nDistribution channel for secrets: profile `.env` only (or a local file outside the repo). A worker that needs one reads it program...
       parsed (Hermes wire shape): {"action": "block", "message": "secret-guard: blocked \u2014 the call text matches secret-shaped patterns (rule ids: R_SECRET_TELEGRAM_BOT_TOKEN).\nNo secret value is quoted in this reason \u2014 only rule ids. Do not paste the value into any repo file, evidence, log, or chat.\nDistribution channel for secrets: profile `.env` only (or a local file outside the repo). A worker that needs one reads it programmatically.\nPolicy: SEC-001 (no secrets in board) + T_B51A1FF3 \u00b7 tool: secret-guard.mjs"}
 
@@ -16,15 +16,47 @@ Firing 1 hook(s) for event 'pre_tool_call':
 Firing 1 hook(s) for event 'pre_tool_call':
 
   → /home/sap/.hermes/profiles/architect/agent-hooks/secret-guard.sh
-      exit=0  elapsed=0.065s
+      exit=0  elapsed=0.067s
       stdout: {}
       parsed: <none — hook contributed nothing to the dispatcher>
 
 
 ## Direct hook invocation (selftest equivalent)
 # Block: echo token text | node scripts/qa/secret-guard.mjs check
-secret-guard check: secret-shaped pattern(s) found: R_SECRET_TELEGRAM_BOT_TOKEN
-No value is printed — rule ids only.
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sap/password-manager/scripts/qa/hooks/scripts/qa/secret-guard.mjs'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v22.23.2
 exit=1
 # Allow: echo clean text | node scripts/qa/secret-guard.mjs check
-exit=0
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/sap/password-manager/scripts/qa/hooks/scripts/qa/secret-guard.mjs'
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v22.23.2
+exit=1

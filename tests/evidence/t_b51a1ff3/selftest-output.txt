@@ -1,6 +1,6 @@
-secret-guard selftest — fixture board: /tmp/secret-guard-selftest-MBdpw0/board.db
-clean board: /tmp/secret-guard-selftest-MBdpw0/clean.db
-fixture repo: /tmp/secret-guard-selftest-MBdpw0/repo
+secret-guard selftest — fixture board: /tmp/secret-guard-selftest-b5Kd39/board.db
+clean board: /tmp/secret-guard-selftest-b5Kd39/clean.db
+fixture repo: /tmp/secret-guard-selftest-b5Kd39/repo
 
 1. Hook mode — pre_tool_call: kanban_comment / kanban_create / kanban_complete
   ok   - kanban_comment with Telegram bot token → block + exit 2
@@ -10,6 +10,11 @@ fixture repo: /tmp/secret-guard-selftest-MBdpw0/repo
   ok   - clean kanban_create → {} + exit 0
   ok   - clean kanban_complete → {} + exit 0
   ok   - kanban_complete with Telegram bot token in summary → block + exit 2
+  ok   - kanban_complete with Telegram bot token in result → block + exit 2 (D2)
+  ok   - kanban_complete with Telegram bot token in top-level artifacts → block + exit 2 (D2)
+  ok   - kanban_request_review with Telegram bot token in summary → block + exit 2 (A5)
+  ok   - kanban_block with Telegram bot token in reason → block + exit 2 (A5)
+  ok   - kanban_request_changes with Telegram bot token in reason → block + exit 2 (A5)
   ok   - terminal tool passes through (not guarded)
   ok   - malformed payload → fail closed (block + exit 2, R_SECRET_PARSE_ERROR)
   ok   - kill switch allows the call
@@ -24,4 +29,4 @@ fixture repo: /tmp/secret-guard-selftest-MBdpw0/repo
   ok   - audit mode: clean board → exit 0
   ok   - audit mode: board with a secret in a comment → exit 1
 
-16/16 cases passed
+21/21 cases passed

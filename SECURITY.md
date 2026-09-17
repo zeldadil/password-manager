@@ -55,17 +55,18 @@ Full detail, rationale, and absolute rules in [SEC-001](architecture/adr/SEC-001
 
 **Status: Active — 2026-09-17**
 
-A Kanban board is a durable, shared artifact: comment bodies are stored in
+A Kanban board is a durable, shared artifact: comment bodies, completion
+summaries, run `result` fields, and run metadata are all stored in
 `~/.hermes/kanban.db` and injected into the context of every worker dispatched
 on a card, including workers with nothing to do with credential handling. A
-secret in a card comment or completion summary is one careless copy away from a
-public repo leak. The only distribution channel for secrets is the profile
-`.env` (or a local file outside the repo); a worker that needs one reads it
-programmatically.
+secret in any durable board/run content is one careless copy away from a public
+repo leak. The only distribution channel for secrets is the profile `.env` (or a
+local file outside the repo); a worker that needs one reads it programmatically.
 
 **Rule (non-negotiable):**
 
-- Secrets never enter Kanban cards, comments, evidence files, logs, or chat.
+- Secrets never enter Kanban cards, comments, completion summaries, run `result`
+  fields, evidence files, logs, or chat.
 - The only distribution channel is the profile `.env` (or a local file outside
   the repo). A worker that needs a secret reads it programmatically from there.
 - When a human needs to hand a secret to a worker, they write it into the
@@ -82,16 +83,63 @@ programmatically.
 - Evidence under `tests/evidence/<task-id>/` must never contain real secrets.
   Synthetic fixtures only (per SEC-001 AR-4).
 
+**Evaluation order / interaction with the QA sign-off gate (SEC-001 + QA-001h):**
+
+The board runs two **independent** `pre_tool_call` hooks on every profile that
+writes to the board (after rollout). Hermes evaluates `hooks.pre_tool_call`
+entries in list order and applies the first block it encounters — whichever hook
+fires first wins; a block short-circuits the call. Both hooks set
+`fail_closed: true`, so a crash or timeout in either one blocks the call.
+
+1. `scripts/qa/hooks/qa-signoff-gate.sh` → `scripts/qa/signoff-gate.mjs`
+   matcher: `^kanban_complete$` — enforces the QA verdict + evidence rule
+   (QA-001h, `t_430aa9a3`, documented in `QA_SIGN_OFF_GATE.md` on
+   `qa/t_5455942d-gate-fix`).
+2. `scripts/qa/hooks/secret-guard.sh` → `scripts/qa/secret-guard.mjs`
+   matcher: `^(kanban_comment|kanban_create|kanban_complete)$` — enforces the
+   no-secrets rule (SEC-001 extension, this card).
+
+They are independent: the secret guard can block a `kanban_complete` whose
+`result` or top-level `artifacts` contains a token even if the sign-off gate has
+not yet run; the sign-off gate can block a clean `kanban_complete` that lacks a
+verdict even though the secret guard passed. Neither hook silences the other —
+there is no allowlist shared between them and no ordering dependency on
+correctness.
+
+**Cross-reference (open items):**
+- `QA_SIGN_OFF_GATE.md` is not yet in this tree — it lives on
+  `qa/t_5455942d-gate-fix` (unmerged). Once that branch merges, the sentence
+  "documented in `QA_SIGN_OFF_GATE.md`" above becomes resolvable in-tree. Owner:
+  `qa`. Until then the sign-off gate rule is documented by its own branch and by
+  `t_430aa9a3`; this card's rule is self-contained in this section.
+
 **Hook coverage:**
 
 - Architect profile: installed + allowlisted + `fail_closed: true`
   (`tests/evidence/t_b51a1ff3/hooks-doctor.txt`).
-- Selftest: 16/16 cases pass (`scripts/qa/secret-guard.selftest.mjs`).
-- Live-fire: 9/9 cases pass (`tests/evidence/t_b51a1ff3/live-fire.txt`).
+- Backend/browser/docs/frontend/product profiles: installed + `fail_closed: true` +
+  `hooks_auto_accept: true`; hook self-approves on first dispatch (verified: the 5
+  profiles' `shell-hooks-allowlist.json` lack the entry pre-dispatch, and the hook
+  fires correctly in live-fire from `hermes hooks test` — which does **not** trigger
+  auto-accept, confirming the guard runs even before the allowlist entry exists).
+- qa profile: installed + allowlisted + `fail_closed: true`
+  (`tests/evidence/t_b51a1ff3/hooks-doctor.txt`).
+- Selftest: 21/21 cases pass (`scripts/qa/secret-guard.selftest.mjs`).
+- Live-fire: 2 cases pass (`tests/evidence/t_b51a1ff3/live-fire.txt`); the guard's
+  check/audit modes additionally exit 1 on secret-shaped text and flag boards with
+  secrets. 2 cases, not 9 — the committed transcript exercises block + allow only.
 - No allowlist/exclusion may silence the guard (TEST_STRATEGY §12.2): the guard
   file itself contains no real credential (gitleaks + trufflehog clean on the
-  guard source), and the only `.gitleaksignore` entry covers a historical leak
-  in `a503e4d:PROJECT_BRIEF.md` — it does not exempt any hook or test file.
+  guard source), and `.gitleaksignore` has 2 pre-existing historical entries —
+  neither exempts any hook or test file.
+
+**Caveat (process control, not a tamper-proof boundary):** This guard is a process
+control on the trusted host. The hook, the board (`kanban.db`), the profile
+`config.yaml` and the allowlist all run with the worker's own file-system and
+Hermes credentials — there is no cryptographic boundary between a worker and its
+profile. The guard does not make a board comment impossible to create; it makes it
+fail at dispatch time for every profile that has the hook installed with
+`fail_closed: true`. Treat it as a first line, not a promise.
 
 **Reference:** `scripts/qa/secret-guard.mjs` (gate logic), `scripts/qa/hooks/`
 (hook shell wrapper + installer + verifier).
