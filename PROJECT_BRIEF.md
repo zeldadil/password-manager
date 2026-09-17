@@ -84,7 +84,7 @@ root task, all secret-storage/crypto/bridge work depends on it.
 Decisions ratified during the project kickoff walkthrough. Each entry records what was decided, by whom, and the rationale. These are living decisions — update this log as ADRs are written and gates close.
 
 ### Telegram status-updates channel
-- **Decision:** Telegram bot configured for all 6 agent profiles (`architect`, `backend`, `frontend`, `browser`, `qa`, `docs`) using `TELEGRAM_BOT_TOKEN=<REDACTED>`, `TELEGRAM_ALLOWED_USERS=956145756`.
+- **Decision:** Telegram bot configured for all 6 agent profiles (`architect`, `backend`, `frontend`, `browser`, `qa`, `docs`) using `TELEGRAM_BOT_TOKEN=<redacted>`, `TELEGRAM_ALLOWED_USERS=956145756`.
 - **Rationale:** Standing instruction requires every Kanban task completion (done/review) or block to be reported via `hermes send --to telegram` immediately — no batching, no waiting. The channel is the team's operational heartbeat.
 - **Tested:** `hermes send --to telegram:956145756 "test"` succeeded from @backend profile. All profiles now have `.env` (token + allowed users) and `config.yaml` (target, home_channel, home_channel_name) set.
 - **Owner:** architect
