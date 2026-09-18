@@ -1,0 +1,37 @@
+### clone HEAD
+823d7abeaf0f0df51a1c49bd6ee7b738bea3ea15
+823d7ab docs(evidence): t_4e1b6937 — record round-2 CI run 35396296260 (10/10) for the D1 fix
+c8fa859 fix(web): t_4e1b6937 — make the secret-hygiene spec actually assert the envelope error
+
+### remote branch head (fetched now)
+823d7abeaf0f0df51a1c49bd6ee7b738bea3ea15
+
+### working tree status
+
+### diff stat 9709272..823d7ab (round-1 reviewed head -> round-2 head)
+ apps/web/src/api/envelope.test.ts           |  66 ++++++++++---
+ tests/evidence/t_4e1b6937/README.md         |  72 +++++++++++++-
+ tests/evidence/t_4e1b6937/d1_sensitivity.py | 142 ++++++++++++++++++++++++++++
+ 3 files changed, 264 insertions(+), 16 deletions(-)
+
+### implementation files changed 9709272..823d7ab
+tests/evidence/t_4e1b6937/README.md
+tests/evidence/t_4e1b6937/d1_sensitivity.py
+
+### sha256 of the reviewed artifact + attachments
+e1a958de05c0f74212ff5c6a605eb58794337397c6ce4bc30fa5bf4c9c640c18  apps/web/src/api/envelope.test.ts
+ed481c11c8598a9a6a0b8691d825cf0ec3717c0d11f4ae9195e6195f1953f29c  tests/evidence/t_4e1b6937/README.md
+d45fabfac38ca6d9e629c4958b3b6c592eb8f7ff57720ec9c51d906987dec5bb  tests/evidence/t_4e1b6937/d1_sensitivity.py
+ed481c11c8598a9a6a0b8691d825cf0ec3717c0d11f4ae9195e6195f1953f29c  /home/sap/.hermes/kanban/attachments/t_4e1b6937/README_1.md
+d45fabfac38ca6d9e629c4958b3b6c592eb8f7ff57720ec9c51d906987dec5bb  /home/sap/.hermes/kanban/attachments/t_4e1b6937/d1_sensitivity.py
+
+### hygiene greps
+-- .only/.skip/.todo in apps/web/src (excluding css class names):
+   none
+-- console/localStorage/sessionStorage/cookie in the changed spec:
+   none
+
+### gitleaks (source tree incl. new harness)
+
+[90m9:30PM[0m [32mINF[0m [1mscanned ~723767 bytes (723.77 KB) in 318ms[0m
+[90m9:30PM[0m [32mINF[0m [1mno leaks found[0m

@@ -1,0 +1,56 @@
+
+=== A  FIXED spec + M10 (token into documentationUrl fallback)
+    expected FAIL -> got FAIL (exit 1)
+    Test Files  1 failed (1)
+    Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      failing: never echoes the bearer token into the thrown error 10ms
+      failing: never echoes the bearer token into a 401 error thrown without a refresh attempt 2ms
+      failing: never echoes the bearer token into the thrown error
+      failing: never echoes the bearer token into a 401 error thrown without a refresh attempt
+    AS EXPECTED: yes
+
+=== B  PRE-FIX spec (9709272) + M10 -- must stay green (defect reproduces)
+    expected PASS -> got PASS (exit 0)
+    Test Files  1 passed (1)
+    Tests  10 passed (10)
+    AS EXPECTED: yes
+
+=== C  FIXED spec + M13 (token appended to envelope message)
+    expected FAIL -> got FAIL (exit 1)
+    Test Files  1 failed (1)
+    Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+      failing: never echoes the bearer token into the thrown error 9ms
+      failing: never echoes the bearer token into a 401 error thrown without a refresh attempt 1ms
+      failing: never echoes the bearer token into the thrown error
+      failing: never echoes the bearer token into a 401 error thrown without a refresh attempt
+    AS EXPECTED: yes
+
+=== D  FIXED spec + M12 (token in generic non-envelope branch)
+    expected FAIL -> got FAIL (exit 1)
+    Test Files  1 failed (1)
+    Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+    AS EXPECTED: yes
+
+=== E  FIXED spec + degraded fixture (shared Response) -- guard must catch it
+    expected FAIL -> got FAIL (exit 1)
+    Test Files  1 failed (1)
+    Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      failing: never echoes the bearer token into the thrown error 9ms
+      failing: never echoes the bearer token into the thrown error
+    AS EXPECTED: yes
+
+=== F  FIXED spec, no mutation
+    expected PASS -> got PASS (exit 0)
+    Test Files  1 passed (1)
+    Tests  11 passed (11)
+    AS EXPECTED: yes
+
+=== git status --porcelain after restore: ''
+
+=== SUMMARY
+  OK   A fixed spec + M10
+  OK   B pre-fix spec + M10
+  OK   C fixed spec + M13
+  OK   D fixed spec + M12
+  OK   E fixed spec + degraded fixture
+  OK   F fixed spec, clean

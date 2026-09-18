@@ -135,12 +135,14 @@ run **35396296260** (head `c8fa859`) = `CI` **success**. PR #26 `headRefOid` = `
 
 | File | Purpose |
 |---|---|
-| `d1_r2_sensitivity.py` / `d1_r2_sensitivity.log` | scenarios A–F, exit 0 |
-| `d1_scenario_a_detail.py` / `scenario_A_full.log` | observed failure detail for M10 on the fixed spec |
+| `d1_r2_sensitivity.py` / `d1_r2_sensitivity.txt` | scenarios A–F, exit 0 |
+| `d1_scenario_a_detail.py` / `scenario_A_full.txt` | observed failure detail for M10 on the fixed spec |
 | `d1_scenario_b.py` | pre-fix spec + M10 standalone (10/10 PASS ⇒ defect reproduces) |
-| `regression_mutations.py` / `regression_mutations.log` | round-1 mutation set, 8/8 killed |
-| `run_suite.sh` / `suite.log` | CI-parity install/typecheck/lint/unit/integration/build |
-| `collect_scope.sh` / `scope.log` | heads, diff scope, sha256, hygiene greps, gitleaks |
+| `regression_mutations.py` / `regression_mutations.txt` | round-1 mutation set, 8/8 killed |
+| `run_suite.sh` / `suite.txt` | CI-parity install/typecheck/lint/unit/integration/build |
+| `collect_scope.sh` / `scope.txt` | heads, diff scope, sha256, hygiene greps, gitleaks |
+
+_(the transcripts are published as `.txt` because the repo gitignores `*.log`.)_
 
 _No secret value is reproduced in this file: the marker is the specs' own in-memory fixture string (already in the
 public repo), shown here as `<token-marker>`; the raw transcripts in this directory quote it verbatim._

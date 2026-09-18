@@ -1,0 +1,10 @@
+exit=0
+
+ RUN  v5.0.1 /home/sap/.hermes/kanban/workspaces/t_4e1b6937/qa_r2/pm/apps/web
+
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  21:27:37
+   Duration  1.05s (environment 86%, transform 9%, tests 2%, import 2%, worker 1%)
+

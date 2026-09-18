@@ -1,0 +1,29 @@
+OK  M1 route guard: catch-all redirect pushes instead of replacing
+      spec=src/routes.guards.test.tsx
+      -> FAILED (expected): ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ | Test Files  1 failed (1) | Tests  1 failed | 16 passed (17)
+OK  M3 API client: envelope code>=400 branch dropped
+      spec=src/api/envelope.test.ts
+      -> FAILED (expected): ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ | Test Files  1 failed (1) | Tests  1 failed | 10 passed (11)
+OK  M4 API client: base URL trailing-slash normalization dropped
+      spec=src/api/envelope.test.ts
+      -> FAILED (expected): ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ | Test Files  1 failed (1) | Tests  1 failed | 10 passed (11)
+OK  M5 theme store: toggle flattened to always 'light'
+      spec=src/stores/themeToggle.test.ts
+      -> FAILED (expected): ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ | Test Files  1 failed (1) | Tests  1 failed | 7 passed (8)
+OK  M6 header: aria-controls always set even when collapsed
+      spec=src/components/layout/layout.contract.test.tsx
+      -> FAILED (expected): ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ | Test Files  1 failed (1) | Tests  1 failed | 11 passed (12)
+OK  M8 theme detector: hardcoded hex introduced into a component stylesheet
+      spec=src/theme.test.ts
+      -> FAILED (expected): ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ | Test Files  1 failed (1) | Tests  1 failed | 2 passed (3)
+OK  M9 theme detector: standalone colour keyword introduced
+      spec=src/theme.test.ts
+      -> FAILED (expected): ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ | Test Files  1 failed (1) | Tests  1 failed | 2 passed (3)
+OK  M11 SEC-001 sensor: theme toggle starts persisting to localStorage
+      spec=src/stores/themeToggle.test.ts
+      -> FAILED (expected): ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ | Test Files  1 failed (1) | Tests  1 failed | 7 passed (8)
+
+post-mutation tree clean: YES
+full suite after revert: green (Test Files  19 passed (19) | Tests  143 passed (143))
+
+regression verdicts: 8/8 specs failed as expected

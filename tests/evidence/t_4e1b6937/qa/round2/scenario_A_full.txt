@@ -1,0 +1,49 @@
+exit=1
+
+ RUN  v5.0.1 /home/sap/.hermes/kanban/workspaces/t_4e1b6937/qa_r2/pm/apps/web
+
+ ❯ src/api/envelope.test.ts (11 tests | 2 failed) 32ms
+   ❯ ApiClient — secret hygiene in errors (2)
+     × never echoes the bearer token into the thrown error 10ms
+     × never echoes the bearer token into a 401 error thrown without a refresh attempt 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/api/envelope.test.ts > ApiClient — secret hygiene in errors > never echoes the bearer token into the thrown error
+AssertionError: expected '{"kind":"http","httpStatus":401,"acti…' not to contain 'super-secret-jwt'
+
+Expected: "super-secret-jwt"
+Received: "{"kind":"http","httpStatus":401,"action":"TestAction","details":[{"code":"UNAUTHORIZED","field":"","message":"invalid token"}],"documentationUrl":"Bearer super-secret-jwt","name":"ApiError"}"
+
+ ❯ src/api/envelope.test.ts:213:39
+    211|     ])
+    212|
+    213|     expect(JSON.stringify(error)).not.toContain('super-secret-jwt')
+       |                                       ^
+    214|     expect((error as ApiError).message).not.toContain('super-secret-jw…
+    215|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/api/envelope.test.ts > ApiClient — secret hygiene in errors > never echoes the bearer token into a 401 error thrown without a refresh attempt
+AssertionError: expected '{"kind":"http","httpStatus":401,"acti…' not to contain 'super-secret-jwt'
+
+Expected: "super-secret-jwt"
+Received: "{"kind":"http","httpStatus":401,"action":"TestAction","details":[{"code":"UNAUTHORIZED","field":"","message":"invalid token"}],"documentationUrl":"Bearer super-secret-jwt","name":"ApiError"}"
+
+ ❯ src/api/envelope.test.ts:236:39
+    234|     expect(error).toMatchObject({ kind: 'http', httpStatus: 401, actio…
+    235|
+    236|     expect(JSON.stringify(error)).not.toContain('super-secret-jwt')
+       |                                       ^
+    237|     expect((error as ApiError).message).not.toContain('super-secret-jw…
+    238|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 9 passed (11)
+   Start at  21:28:59
+   Duration  1.14s (environment 86%, transform 8%, tests 3%, import 2%, worker 1%)
+

@@ -1,0 +1,66 @@
+pnpm -> /home/sap/.hermes/kanban/workspaces/t_4e1b6937/qa_r2/shim/pnpm | 9.12.0 | node v22.23.2
+########## pnpm typecheck ##########
+
+> password-manager@0.1.0 typecheck /home/sap/.hermes/kanban/workspaces/t_4e1b6937/qa_r2/pm
+> pnpm -r --parallel --filter '**' run typecheck
+
+apps/web typecheck$ tsc -b
+apps/web typecheck: Done
+[typecheck] exit=0
+########## pnpm lint ##########
+
+> password-manager@0.1.0 lint /home/sap/.hermes/kanban/workspaces/t_4e1b6937/qa_r2/pm
+> pnpm -r --parallel --filter '**' run lint
+
+apps/web lint$ eslint . && prettier --check .
+apps/web lint: Checking formatting...
+apps/web lint: All matched files use Prettier code style!
+apps/web lint: Done
+[lint] exit=0
+########## pnpm test:unit ##########
+
+> password-manager@0.1.0 test:unit /home/sap/.hermes/kanban/workspaces/t_4e1b6937/qa_r2/pm
+> pnpm -r --parallel --filter '**' run test:unit
+
+apps/web test:unit$ vitest run --exclude '**/node_modules/**' --exclude '**/dist/**' --exclude 'src/**/*.integration.test.{ts,tsx}'
+apps/web test:unit:  RUN  v5.0.1 /home/sap/.hermes/kanban/workspaces/t_4e1b6937/qa_r2/pm/apps/web
+apps/web test:unit:  Test Files  19 passed (19)
+apps/web test:unit:       Tests  143 passed (143)
+apps/web test:unit:    Start at  21:29:40
+apps/web test:unit:    Duration  11.04s (environment 77%, tests 12%, import 8%, transform 2%, worker 1%)
+apps/web test:unit: Environment  jsdom was created 19 times · 21.71s total, 77% of tracked time
+apps/web test:unit:              create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+apps/web test:unit:              learn more: https://vitest.dev/guide/improving-performance#test-environments
+apps/web test:unit: Done
+[test:unit] exit=0
+########## pnpm test:integration ##########
+
+> password-manager@0.1.0 test:integration /home/sap/.hermes/kanban/workspaces/t_4e1b6937/qa_r2/pm
+> pnpm -r --parallel --filter '**' run test:integration
+
+apps/web test:integration$ vitest run --passWithNoTests --config vitest.integration.config.ts
+apps/web test:integration:  RUN  v5.0.1 /home/sap/.hermes/kanban/workspaces/t_4e1b6937/qa_r2/pm/apps/web
+apps/web test:integration: No test files found, exiting with code 0
+apps/web test:integration: include: src/**/*.integration.test.{ts,tsx}
+apps/web test:integration: exclude:  **/node_modules/**, **/.git/**
+apps/web test:integration: Done
+[test:integration] exit=0
+########## pnpm build ##########
+
+> password-manager@0.1.0 build /home/sap/.hermes/kanban/workspaces/t_4e1b6937/qa_r2/pm
+> pnpm -r --parallel --filter '**' run build
+
+apps/web build$ tsc -b && vite build
+apps/web build: vite v8.3.0 building client environment for production...
+apps/web build: transforming...
+apps/web build: ✓ 84 modules transformed.
+apps/web build: rendering chunks...
+apps/web build: computing gzip size...
+apps/web build: dist/index.html                   0.40 kB │ gzip:  0.27 kB
+apps/web build: dist/assets/index-T50bQ0PC.css    2.74 kB │ gzip:  1.04 kB
+apps/web build: dist/assets/index-Dl8kBAdm.js   233.68 kB │ gzip: 74.91 kB
+apps/web build: ✓ built in 165ms
+apps/web build: Done
+[build] exit=0
+########## vitest version ##########
+vitest/4.1.10 linux-x64 node-v22.23.2
