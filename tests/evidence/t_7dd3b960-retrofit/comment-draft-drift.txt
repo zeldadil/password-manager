@@ -1,0 +1,74 @@
+=================================================================== t_9840ccdd
+--- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_9840ccdd.md	2026-09-18 21:32:15.839705729 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_9840ccdd.md	2026-09-18 21:32:15.841705744 +0000
+@@ -9,7 +9,7 @@
+ | 1 | threat model covers all 7 minimum vectors | **met** — Part 1, `### Vector 1` … `### Vector 7`: local file/backup access · partial API compromise · hostile extension/malicious page · leakage via logs/errors/URLs/telemetry · stolen device/unlocked session · forgotten master password · corrupted backup/failed migration. Each records scenario, assets, attack surface, controls and residual risk |
+ | 2 | all 9 mandatory crypto decisions documented **with rationale** | **met** — Part 2, `### Decision 1` … `### Decision 9`, each with an explicit `**Rationale:**` block: D1 KDF (Argon2id, 64 MB / 3 iterations / 4 lanes / 32-byte output, per-user salt), D2 AEAD (AES-256-GCM, 12-byte nonce, 16-byte tag, alternatives considered), D3 key hierarchy + storage schema, D4 nonce/IV (CSPRNG, never reused, never `Math.random`), D5 integrity (tag verified on every decrypt, no plaintext on failure), D6 lock/unlock lifecycle (derive → hold in process memory → clear), D7 recovery kit, D8 encrypted backup, D9 browser bridge |
+ | 3 | absolute rules explicitly acknowledged | **met** — Part 3, `### AR-1` … `### AR-6`: no home-grown crypto · no real secrets anywhere (code/tests/logs/errors/URLs/env/config/DB/telemetry) · positive + negative tests per crypto change · synthetic fixtures only · migration and rollback strategy · code review for crypto changes |
+-| 4 | signed off by **Architect + QA**, **recorded in the document** | **NOT MET** — §5 Sign-off row 2 is `\| QA \| (pending) \| \| \|` and the header still reads `**Status:** Signed (Architect) — Pending QA sign-off`. `git grep` over `$(git rev-list --all) -- architecture/adr/` finds the same `(pending)` row on **every ref**: no QA signature was ever recorded in the artifact. §5's own prose says "**QA sign-off is still required.** … the QA profile (`qa`) must also sign before this gate is fully closed and downstream tasks may start" |
++| 4 | signed off by **Architect + QA**, **recorded in the document** | **NOT MET** — §5 Sign-off row 2 is `| QA | (pending) | | |` and the header still reads `**Status:** Signed (Architect) — Pending QA sign-off`. `git grep` over `$(git rev-list --all) -- architecture/adr/` finds the same `(pending)` row on **every ref**: no QA signature was ever recorded in the artifact. §5's own prose says "**QA sign-off is still required.** … the QA profile (`qa`) must also sign before this gate is fully closed and downstream tasks may start" |
+ | 5 | gate blocks the downstream secret-storage tasks (BE-002, BE-003, BR-002, BR-003, FE-002, FE-003) via explicit `--parent` links | **met (transitively)** — measured over `task_links`: the transitive closure from `t_9840ccdd` reaches **112** descendants and covers **54/54** of the named families (BE-002 8/8 · BE-003 11/11 · BR-002 8/8 · BR-003 7/7 · FE-002 8/8 · FE-003 12/12). Direct children: `t_16f8ad84` (BE-002a), `t_fe3b76ea` (BE-003a), `t_83dc1b35` (BR-002a), `t_3ca45da2` (ADR-002), `t_93cf5611` (DOC-001d). Part 4's note that FE-002/FE-003/BR-003 hang off BE-002h/BE-003k/BR-002h rather than off SEC-001 directly is **accurate**, and those chains exist on the board (`t_8d52bcc9` → `t_3b58b7ef`; `t_e4341d18` → `t_a9d5cb1b`; `t_7b33595a` + `t_e4341d18` → `t_4b263ba0`) |
+ 
+ **Why this is not `pass`.** Criterion 4 is a stated acceptance criterion of the card, not a courtesy — SEC-001 *is* the security gate, and its own Purpose makes Architect **+ QA** sign-off the precondition for writing downstream secret-storage code. The card was completed with that criterion unmet. This verdict does **not** sign the document, and must not be read as one: a retro-verification of the card's acceptance criteria is not a QA sign-off on the threat model.
+=================================================================== t_3ca45da2
+=================================================================== t_08b02da9
+=================================================================== t_ac6a1f3f
+--- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_ac6a1f3f.md	2026-09-18 21:32:15.839705729 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_ac6a1f3f.md	2026-09-18 21:32:15.841705744 +0000
+@@ -7,7 +7,7 @@
+                  does not exist: <throwaway absolute path> (repo: <clone>; not found on any ref)
+ ```
+ 
+-The operative verdict named a deliberately non-compliant **negative-control document created in a throwaway absolute path outside the repo**. That path is not committed and exists in no checkout, so the card's entire evidence set was unresolvable *to the audit* — even though the real evidence was already committed and passing. This is finding P2 of `docs/decisions/qa-signoff-gate-s10-open-items-t_7dd3b960.md` §3.5: a pointer the audit cannot prove is not evidence, however good the artifact behind it is.
++The operative verdict named a deliberately non-compliant **negative-control document kept in a throwaway absolute path outside the repo**. That path is not committed and exists in no checkout, so the card's entire evidence set was unresolvable *to the audit* — even though the real evidence was already committed and passing. This is finding P2 of `docs/decisions/qa-signoff-gate-s10-open-items-t_7dd3b960.md` §3.5: a pointer the audit cannot prove is not evidence, however good the artifact behind it is.
+ 
+ **Repair.** The pointer now names only committed artifacts, each resolvable on a ref of the clone with `git rev-list --max-count=1 --all -- <path>`:
+ 
+=================================================================== t_a2cf1744
+--- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_a2cf1744.md	2026-09-18 21:32:15.839705729 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_a2cf1744.md	2026-09-18 21:32:15.841705744 +0000
+@@ -9,7 +9,7 @@
+                  card id, issue/PR link, or follow-up item
+ ```
+ 
+-The card's only verdict lived in **run metadata** (`metadata.verdict`), and metadata carries no path or URL pointer — `collectEvidence` reads evidence from verdict *comments*, card attachments and the `artifacts`/`evidence` keys only. So the audit saw verdict-present / evidence-absent even though the whole artifact set was committed on `feature/t_a2cf1744` (`303caca`, PR #14). One comment fixes both rules.
++The card's only verdict lived in **run metadata** (`metadata.verdict`), and metadata carries no path or URL pointer — the audit reads evidence from verdict *comments*, card attachments and the `artifacts`/`evidence` keys only. So it saw verdict-present / evidence-absent even though the whole artifact set was committed on `feature/t_a2cf1744` (`303caca`, PR #14). One comment fixes both rules.
+ 
+ **Committed pointers added** — each resolvable with `git rev-list --max-count=1 --all -- <path>`:
+ 
+@@ -17,7 +17,7 @@
+ |---|---|
+ | tests/evidence/t_a2cf1744/README.md | 303caca (`feature/t_a2cf1744`) |
+ | .github/workflows/ci.yml | bf9da1ea |
+-| https://github.com/zeldadil/password-manager/pull/14 | n/a (live PR URL) |
++| https://github.com/zeldadil/password-manager/pull/14 | live PR URL |
+ 
+ **Acceptance criterion, restated as recorded** — *"Playwright MCP configured for E2E (Chromium, Firefox, WebKit)"*: met **at the config level**, and that is all the record claims. `playwright.config.ts` defines the three projects (`chromium`, `firefox`, `webkit`) plus a stubbed `firefox-extension` project; three `@playwright/mcp@0.0.81` servers are registered (one per engine, headless); the three browser binaries install; `chromium` and `firefox` were verified passing locally, `webkit` was configured with its binary downloaded. Full transcript: `tests/evidence/t_a2cf1744/README.md` §2.
+ 
+@@ -27,4 +27,4 @@
+ 
+ **Follow-up:** `t_ee24fd37` (the bootstrap blocker that owns condition 2 — no new follow-up card is created by this repair). Condition 1 is closed by the first green CI `e2e` run.
+ 
+-Scope note: this repair changes **no verdict** and claims **no new verification** — the baseline audit counted this card's verdict from metadata and only its evidence pointer was missing. The `--strict-history` retrofit view additionally required the `A1_HISTORY_UNGATED` check to pass, which needs a verdict *and* an evidence pointer to be visible on the card; both are now on it.
++Scope note: this repair changes **no verdict** and claims **no new verification** — the baseline audit already counted this card's verdict from metadata; only its evidence pointer was missing. The `--strict-history` retrofit view additionally requires the `A1_HISTORY_UNGATED` check to pass, which needs a verdict *and* an evidence pointer visible on the card; both are now on it.
+=================================================================== t_5fe41426
+--- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_5fe41426.md	2026-09-18 21:32:15.839705729 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_5fe41426.md	2026-09-18 21:32:15.840705737 +0000
+@@ -8,7 +8,7 @@
+ ```
+ 
+ * `R4` is cleared by the repair of `t_a2cf1744` (same date), which now names committed evidence instead of keeping its pointer only in run metadata.
+-* `A1` is **not** cleared by that edit alone — and this is a measured correction to a claim in the retrofit proposal, which said the deferral target's repair was "the same edit" that fixes this card. Under `--strict-history`, `A1_HISTORY_UNGATED` fires when the card has no valid verdict of its own **or** no evidence pointer. A deferral satisfies `R1` but leaves the card's own valid-verdict list empty, so the card keeps failing the retrofit view. The deferral's own rule — the deferred verdict **and its evidence must live on the target** — is exactly why the landed verdict also has to be visible here.
++* `A1` is **not** cleared by that edit alone — a measured correction to the retrofit proposal, which said the deferral target's repair was "the same edit" that fixes this card. Under `--strict-history`, `A1_HISTORY_UNGATED` fires when the card has no valid verdict of its own **or** no evidence pointer. A deferral satisfies `R1` but leaves the card's own valid-verdict list empty, so the card keeps failing the retrofit view. The deferral's own rule — the deferred verdict **and its evidence must live on the target** — is exactly why the landed verdict also has to be visible here.
+ 
+ **Committed pointers added** — each resolvable with `git rev-list --max-count=1 --all -- <path>`:
+ 
+@@ -16,7 +16,7 @@
+ |---|---|
+ | tests/evidence/t_5fe41426/README.md | 543c396 (`feature/t_5fe41426`) |
+ | .github/workflows/ci.yml | bf9da1ea (and present on `master` today, `name: CI`, 8 jobs) |
+-| https://github.com/zeldadil/password-manager/pull/7 | n/a (live PR URL) |
++| https://github.com/zeldadil/password-manager/pull/7 | live PR URL |
+ 
+ **Conditions, carried over from the deferral target (not re-derived here).** WebKit unverified locally (94 OS packages, no root; CI `--with-deps` resolves it) and the `e2e` job cannot produce a live run until `t_ee24fd37` commits the pnpm manifest + lockfile, because `install-lockfile` blocks every downstream job.
+ 
