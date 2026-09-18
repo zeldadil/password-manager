@@ -1,5 +1,5 @@
 t_338f47fd — gate verdict on this card before it is completed (dogfood)
-date: 2026-09-18T21:52:36Z
+date: 2026-09-18T21:56:20Z
 command: node scripts/qa/signoff-gate.mjs check --task t_338f47fd --pre-complete --repo /home/sap/password-manager/.worktrees/t_338f47fd
 
 QA sign-off gate — check t_338f47fd (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)

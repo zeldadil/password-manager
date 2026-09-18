@@ -1,5 +1,5 @@
 t_338f47fd — live fire of the INSTALLED hook for this card's own completion
-date: 2026-09-18T21:52:36Z
+date: 2026-09-18T21:56:21Z
 cwd:   /home/sap/.hermes/kanban/workspaces/t_338f47fd   (the hook resolves evidence paths against this directory)
 board: /home/sap/.hermes/kanban.db
 evidence mirror: /home/sap/.hermes/kanban/workspaces/t_338f47fd/tests/evidence/t_338f47fd/
@@ -11,12 +11,12 @@ evidence mirror: /home/sap/.hermes/kanban/workspaces/t_338f47fd/tests/evidence/t
 Firing 2 hook(s) for event 'pre_tool_call':
 
   → /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh
-      exit=0  elapsed=0.116s
+      exit=0  elapsed=0.157s
       stdout: {}
       parsed: <none — hook contributed nothing to the dispatcher>
 
   → /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.sh
-      exit=0  elapsed=0.053s
+      exit=0  elapsed=0.057s
       stdout: {}
       parsed: <none — hook contributed nothing to the dispatcher>
 
