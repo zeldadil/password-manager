@@ -143,4 +143,7 @@ non-QA record. These surfaced gaps are routed as a follow-up card (retro-verific
 | `gate-fix.diff` | the change (gate + selftest + policy doc) |
 | `install-all-apply.txt`, `installed-hashes.txt`, `verify-all-live.txt`, `hermes-hooks-doctor.txt` | re-install, hash equality, structural + live verification, doctor transcripts |
 | `hook-live-fire-author-rule.txt` | per-profile live fire of the author rule through the dispatcher path |
+| `dogfood-before-verdict.txt`, `dogfood-after-verdict.txt`, `dogfood.sh` | the gate's verdict on **this** card before (2 violations) and after (0) the verdict comment |
+| `own-completion-live-fire.txt` | live fire of the installed hook for this card's own completion, from the worker workspace (allowed, `{}`) |
+| `verdict-comment-onboard.md` | the operative verdict comment as it reads back **from the board** (authoritative copy — the posted body may be normalised, so the board is the record) |
 | `reinstall-and-verify.sh` | regenerates the four install/verify/doctor/hook-fire transcripts |
