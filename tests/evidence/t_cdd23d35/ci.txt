@@ -1,0 +1,31 @@
+# FE-001k — CI evidence for PR #30
+
+Head verified: `8ccdf872048cbc8bbba9fece208b10b422fe80d4` (branch `feature/t_cdd23d35`)
+PR: https://github.com/zeldadil/password-manager/pull/30 (base `feature/t_4e1b6937`)
+CI run: https://github.com/zeldadil/password-manager/actions/runs/35398221990 — 10/10 checks passed
+
+```
+gh pr checks 30
+Semgrep OSS        pass  2s   https://github.com/zeldadil/password-manager/runs/105771954269
+build              pass  20s  .../runs/35398221990/job/105771927448
+dependency-audit   pass  12s  .../runs/35398221990/job/105771927468
+e2e                pass  9s   .../runs/35398221990/job/105771927453
+install-lockfile   pass  13s  .../runs/35398221990/job/105771854252
+integration        pass  10s  .../runs/35398221990/job/105771927411
+lint-typecheck     pass  20s  .../runs/35398221990/job/105771927465
+sast               pass  30s  .../runs/35398221990/job/105771854392
+secret-scan        pass  12s  .../runs/35398221990/job/105771854570
+unit               pass  23s  .../runs/35398221990/job/105771927538
+```
+
+The `unit` job (which is where the axe sweep runs in CI, via `pnpm test:unit`):
+
+```
+gh run view --job 105771927538 --log
+apps/web test:unit:  ✓ src/a11y/routes.a11y.test.tsx (19 tests) 2159ms
+apps/web test:unit:  Test Files  20 passed (20)
+apps/web test:unit:       Tests  162 passed (162)
+```
+
+`pnpm install --frozen-lockfile` passed, i.e. the committed `pnpm-lock.yaml` carries the `axe-core@4.13.0`
+importer + package + snapshot entries in sync with `apps/web/package.json`.
