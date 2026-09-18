@@ -39,14 +39,32 @@ The board database and the profile configs live on the trusted host, and the hoo
 
 ## 3. Verdict vocabulary and where it is recorded
 
-| Source | How it is detected | Accepted for |
-|---|---|---|
-| **Marker comment** (preferred) | body contains `QA-VERDICT: <token>` — case/spacing-insensitive, `QA verdict — <token>` also parses | any card |
-| **QA-authored comment** | comment by the `qa` profile containing `verdict … <token>` | any card |
-| **Structured handoff** | completed run metadata `verdict` (e.g. `_metadata_.verdict` written by `kanban_complete`) | QA's own artifact cards (self-validation per §12 row 4) |
-| **Deferral** | `QA-VERDICT: deferred — t_xxxxxxxx`, or a linked child card assigned to `qa` **when the card records no verdict of its own** | any card whose QA review is a downstream card |
+**Author rule (decided 2026-09-18, `t_338f47fd`).** A QA verdict is a record **made by the QA profile** — that is what
+the block text, §5.1 and this table have always said. Until `t_338f47fd` the *marker* path did not check it: one
+`QA-VERDICT: pass — evidence: …` comment written by `architect`, `frontend`, `dashboard` or any other profile
+satisfied `R1`/`R2`/`R3` on that card and cleared the fail-closed completion hook. Every **comment**-based source
+below now requires a `qa`-profile author; a marker from any other author is **discounted**, keeps `R1` unsatisfied,
+and is reported as `A7_VERDICT_AUTHOR_IGNORED` on every audit (never silently dropped).
+
+| Source | How it is detected | Author rule | Accepted for |
+|---|---|---|---|
+| **Marker comment** (preferred) | body contains `QA-VERDICT: <token>` — case/spacing-insensitive, `QA verdict — <token>` also parses | **`qa` profile only.** Another author's marker is not a verdict (`A7_VERDICT_AUTHOR_IGNORED`) | any card |
+| **QA-authored comment** (loose) | comment by the `qa` profile containing `verdict … <token>` | **`qa` profile only** — unchanged: this path was always author-checked | any card |
+| **Structured handoff** | completed run metadata `verdict` (e.g. `_metadata_.verdict` written by `kanban_complete`) | **none — deliberately author-independent.** The one documented exception: it is the completing run's own structured record, and `--pre-complete` evaluation happens *before* the run that carries it has ended. A non-QA run that self-declares is reported as `A8_VERDICT_SELF_DECLARED` on every audit, so the residual gap is visible instead of silent | QA's own artifact cards (self-validation per §12 row 4) |
+| **Deferral** | `QA-VERDICT: deferred — t_xxxxxxxx` **from the `qa` profile**, or a linked child card assigned to `qa` **when the card records no verdict of its own** | marker: **`qa` profile only** (`A7`); the linked-child fallback is board state, not an authored record | any card whose QA review is a downstream card |
 
 When several sources exist, the **newest** one is the operative verdict.
+
+**Human overrides are exceptions, not verdicts.** A human (or the dashboard) closing a card does not write a QA
+verdict: record `qa-signoff-exception: …` (§5.6), which the gate reports as `X1_EXCEPTION` in every audit. A
+`QA-VERDICT:` marker written by `dashboard`/`human` is discounted like any other non-QA author — the audited escape
+hatch is the exception marker, not a verdict written on QA's behalf.
+
+**What this rule does and does not claim.** The board is writable by the profiles themselves (see "What the gate is
+not" above), so the author rule removes the *quiet* path to a verdict nobody issued — the one that needed no forgery
+at all, only the wrong author — not a hostile agent's ability to edit the board. Consequence to expect: cards that
+were passing on a non-QA record now surface as `R1` failures rather than passing; the measured live-board delta is in
+`tests/evidence/t_338f47fd/README.md`.
 
 ---
 
@@ -56,7 +74,7 @@ When several sources exist, the **newest** one is the operative verdict.
 
 | Rule | Check | How to satisfy |
 |---|---|---|
-| `R1_QA_VERDICT_MISSING` | no QA verdict and no valid deferral | record a verdict comment, or defer to a QA-owned child card |
+| `R1_QA_VERDICT_MISSING` | no QA verdict and no valid deferral | record a verdict comment **from the `qa` profile** (§3 — a marker written by another profile is discounted, `A7`), or defer to a QA-owned child card |
 | `R2_QA_VERDICT_INVALID` | a verdict token outside `pass · pass-with-conditions · fail · blocked` | use an exact vocabulary token |
 | `R3_VERDICT_NOT_TERMINAL` | card is `done` while its latest verdict is `fail`/`blocked` | fix the defect and re-verdict, or move the card back to the owning agent |
 | `R4_EVIDENCE_MISSING` | no attachment, no named artifact, no run-metadata artifact | attach the file (`kanban attach`) or name a CI run URL / committed path in the verdict comment |
@@ -70,6 +88,8 @@ When several sources exist, the **newest** one is the operative verdict.
 | `A4_EVIDENCE_OFF_TREE` | operative evidence exists in the repo **on another ref**, not in this worker's checkout | report-only — accepted as committed evidence (§5.3) |
 | `A5_EVIDENCE_SUPERSEDED` | a path named in a **superseded** verdict/handoff is absent from this checkout | report-only — history must not block a compliant card |
 | `A6_EVIDENCE_CITED` | a path named in the operative verdict only as a **citation** — reporting another card's artifact, cross-checking it, quoting a defect transcript — is absent from this checkout | report-only — the card that *reports* a broken pointer elsewhere must stay completable (§5.7) |
+| `A7_VERDICT_AUTHOR_IGNORED` | a `QA-VERDICT: <token>` (or `deferred`) comment written by a profile other than `qa` — **discounted, not a verdict** (§3, `t_338f47fd`) | report-only — it does not satisfy `R1`, so the card must record its verdict from the `qa` profile; the advisory is what tells you the comment you are looking at is not the one the gate reads |
+| `A8_VERDICT_SELF_DECLARED` | the operative verdict comes from the run metadata of a **non-`qa`** run — accepted per §3 (the one author-independent source) | report-only — a self-declared verdict must never be invisible; the card should still carry a QA review |
 | `X1_EXCEPTION` | a recorded `qa-signoff-exception:` marker (§5.6) | report-only — exceptions stay visible in every audit |
 
 **Fail closed only on genuinely unverifiable input** (added 2026-09-17, `t_5455942d`). The gate blocks when it cannot
@@ -87,7 +107,7 @@ heuristic are scoped to the operative verdict, and a task id must have the shape
 hermes kanban comment <task-id> --author qa --body "QA-VERDICT: <token> — <one-line basis>. Evidence: <artifact>"
 ```
 
-The **evidence pointer must be in the same comment** (or attached via `kanban attach`) — "tests pass" alone is not evidence (TEST_STRATEGY §11). Keep the `Evidence:` label: it is what the gate reads as *this card's own* evidence (§5.7), and it is what lets the same comment quote another card's path without claiming it.
+The **evidence pointer must be in the same comment** (or attached via `kanban attach`) — "tests pass" alone is not evidence (TEST_STRATEGY §11). Keep the `Evidence:` label: it is what the gate reads as *this card's own* evidence (§5.7), and it is what lets the same comment quote another card's path without claiming it. The **author is normative too** (§3): the comment must be written by the `qa` profile — a `QA-VERDICT:` marker written by any other profile is discounted as `A7_VERDICT_AUTHOR_IGNORED` and leaves `R1` unsatisfied.
 
 ### 5.2 Examples
 
@@ -135,6 +155,12 @@ hermes kanban comment <task-id> --author qa --body "QA-VERDICT: deferred — t_x
 ```
 
 The named card must exist and be assigned to a QA profile. The gate then requires **that** card to carry the verdict + evidence; while it is open the audit reports `A2_DEFERRAL_OPEN`. A deferral is not a way to skip QA — it is a way to move the verdict to the card that actually performs it.
+
+**Only the `qa` profile may record a deferral marker** (§3, `t_338f47fd`): `QA-VERDICT: deferred — …` written by
+another profile is discounted (`A7_VERDICT_AUTHOR_IGNORED`). It neither satisfies `R1` nor is judged by `R8` — which
+also removes a whole class of false `R8`: on `t_f49d448c` an **architect**-authored `deferred` marker governed a card
+whose QA verdict had already landed (§8, `t_58280940`), and on `t_80fc0326` the reverse held — an architect marker hid
+a broken chain (its `qa` child `t_c3cb6842` is `done` without a verdict), so that `R8` now fires.
 
 **Linked-child heuristic (narrowed 2026-09-17, `t_5455942d`).** A card that records **no verdict of its own** and has a
 `qa`-assigned child card is read as a deferral to that child (convenience for pre-created review children). That
@@ -370,6 +396,7 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 5 | A comment that *quotes* the recommended `QA-VERDICT: …` line (e.g. an Architect handoff showing the exact command to paste) is parsed as a verdict. With `R5` scoped to the operative verdict the harm is contained, but if such a quote is the *newest* record it becomes operative. **Partly decided (`t_99e408c5`, 2026-09-18):** §5.7 now defines code spans/fences as documentation for **evidence extraction** (claim vs citation, `A6_EVIDENCE_CITED`), and `VERDICT_MARKER_RE`/`DEFERRAL_RE` already carry the leading-boundary guard (`t_c3cb6842`/`t_58280940`). What remains open is giving the **marker** regexes the same code-span/fence exclusion — a change to verdict *detection*, deliberately not bundled with the evidence fix | `qa` (gate lane) |
 | 6 | Hermes-core observation (config, not a repo defect): the hook subprocess env still carries `HERMES_DASHBOARD_BASIC_AUTH_USERNAME/PASSWORD/SECRET` — see `hook-env-probe.py`. Any hook script of any profile can read the dashboard admin credentials; consider whether hooks need them (they do not) | `architect` (owns the Hermes install/profile config) |
 | 7 | Hermes-core observation (payload, not a repo defect): the `pre_tool_call` payload's `extra.task_id` is the *session id* (`agent/inline_tool_executors.py::tool_hook_ids` → `effective_task_id`), and the kanban identity keys are scrubbed from hook subprocesses (`agent/delegation_context.py::scrub_kanban_env`). The gate now compensates from the worker's location §6.4; do **not** "fix" this by un-scrubbing the identity keys — that scrub is deliberate runtime scoping | `architect` (record only) |
+| 8 | Run-metadata `verdict` is the one author-independent verdict source, kept deliberately by `t_338f47fd` (AC 1c: "run-metadata sources keep their current behaviour"), so a non-QA run still satisfies `R1` by self-declaring; `A8_VERDICT_SELF_DECLARED` makes it visible. Decide whether `R1` should also reject a non-`qa` run's metadata — one live card depends on it today (`t_710ed14c`, an `architect` run), so the decision needs that card's QA review first | `qa` (gate lane) |
 
 ---
 
@@ -381,3 +408,4 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 2026-09-17 | `t_5455942d` — fail closed only on genuinely unverifiable input: (1) task-id resolution requires the `t_[0-9a-z]+` shape, so a session id in `extra.task_id` no longer blocks a compliant completion; the hook then falls back to `$HERMES_KANBAN_TASK`, the workspace basename, the checkout `cwd` and the branch name (Hermes scrubs the kanban identity vars from hook subprocesses — §6.4), and resolves a numeric run id through the board; (2) `R5` resolves the **operative (newest) verdict's** evidence only, accepts a path present on **any ref** (`A4_EVIDENCE_OFF_TREE`) and reports superseded paths as `A5_EVIDENCE_SUPERSEDED`; (3) the "linked QA child ⇒ deferral" heuristic is suppressed once the card carries an explicit verdict. Selftest 33 → 49 cases; §8.1 troubleshooting + §6.4 resolution table added; verifier fixed (matcher quoting, `--fixture-repo`); hook re-installed in all 7 profiles |
 | 2026-09-18 | `t_58280940` — a deferral marker is operative only while it is the **newest** QA record on the card, and `DEFERRAL_RE` gained the same leading boundary as `VERDICT_MARKER_RE`, so a stale or merely *quoted* `QA-VERDICT: deferred — t_…` no longer hijacks `R8` on a card whose verdict has landed. Selftest 49 → 58 cases |
 | 2026-09-18 | `t_99e408c5` — **§5.7 claim vs citation**: `R5` resolves only the paths the operative verdict *claims* (inside an `Evidence:`/`Artifacts:` label, or outside code spans/fences when it carries no label); a path the verdict merely quotes about another card is a citation reported as `A6_EVIDENCE_CITED`, so a card can report a broken evidence pointer elsewhere without failing on it. Evidence pointers now carry `scope` (`claim`/`citation`/`history`) in the `--json` facts; a cited path that exists in the repo no longer emits `A4`. Claimed-but-missing evidence still fails `R5` in every shape. Selftest 58 → 66 cases; hook re-installed in all 7 profiles (see `tests/evidence/t_99e408c5/`) |
+| 2026-09-18 | `t_338f47fd` — **§3 author rule**: a *comment* records a verdict only when the `qa` profile wrote it. `VERDICT_MARKER_RE` was matched without any author check, so one `QA-VERDICT: <token>` comment from `architect`/`frontend`/`dashboard` satisfied `R1`/`R2`/`R3` and cleared the fail-closed completion hook (reproduced on `0af4a453` and the installed `28b0b771`). The marker path and the deferral marker now require a `qa` author; a discounted record is reported as `A7_VERDICT_AUTHOR_IGNORED` instead of being dropped, and a non-QA run-metadata verdict — still accepted, the one documented author-independent source — is reported as `A8_VERDICT_SELF_DECLARED`. Run metadata and the loose `verdict: …` path keep their behaviour (§10 item 8). Selftest 66 → 81 cases; live-board A/B, the reported fixture replay and the re-install are in `tests/evidence/t_338f47fd/` |

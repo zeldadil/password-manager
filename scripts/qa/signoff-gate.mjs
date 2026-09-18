@@ -47,7 +47,14 @@
  *     inside an `Evidence:`/`Artifacts:` label, or — when the comment carries no
  *     label — the paths outside code spans/fences. A path the verdict merely
  *     *cites* about another card is reported as `A6_EVIDENCE_CITED` and never as
- *     this card's missing evidence (t_99e408c5; QA_SIGN_OFF_GATE.md §5.7).
+ *     this card's missing evidence (t_99e408c5; QA_SIGN_OFF_GATE.md §5.7);
+ *   - a *comment* records a verdict only when a QA profile wrote it (QA_SIGN_OFF_GATE.md
+ *     §3 author rule, t_338f47fd): the marker path used to accept any author, so one
+ *     `QA-VERDICT: pass — evidence: …` comment from `architect`/`frontend`/`dashboard`
+ *     cleared R1/R2/R3 through the fail-closed completion hook. A discounted marker is
+ *     reported as `A7_VERDICT_AUTHOR_IGNORED`; a run-metadata verdict stays
+ *     author-independent by design (§3 row 3) and is reported as
+ *     `A8_VERDICT_SELF_DECLARED` when a non-QA run self-declares it.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -283,11 +290,26 @@ function normalizeVerdictToken(raw) {
  * Every verdict source on the card, oldest → newest.
  * Precedence: explicit `QA-VERDICT:` marker comment > QA-authored "verdict"
  * comment > completed-run metadata `verdict` (the structured handoff).
+ *
+ * **Author rule (§3, t_338f47fd).** A *comment* records a verdict only when a
+ * QA profile wrote it — the marker path used to accept any author, so one
+ * `QA-VERDICT: pass — evidence: …` comment written by `architect`, `frontend`,
+ * `dashboard` or any other profile satisfied R1/R2/R3 and the fail-closed
+ * completion hook. The marker a non-QA author wrote is *not* a verdict; it is
+ * reported by `collectIgnoredVerdicts` (A7_VERDICT_AUTHOR_IGNORED) so the
+ * discounting is never silent.
+ *
+ * Run metadata is deliberately the one author-independent source (§3 row 3):
+ * it is the completing run's own structured handoff, and `--pre-complete`
+ * evaluation happens before the run that carries it has ended.
  */
 export function collectVerdicts(board, task) {
   const found = [];
   for (const c of board.commentsByTask.get(task.id) || []) {
     const text = c.body || "";
+    // §3: only a QA profile records a QA verdict — both comment paths, not just
+    // the loose one.
+    if (!QA_PROFILES.has(String(c.author || "").trim())) continue;
     const marker = VERDICT_MARKER_RE.exec(text);
     if (marker) {
       found.push({
@@ -300,7 +322,7 @@ export function collectVerdicts(board, task) {
       });
       continue;
     }
-    if (QA_PROFILES.has(String(c.author || "").trim())) {
+    {
       const loose = VERDICT_LOOSE_RE.exec(text);
       if (loose) {
         found.push({
@@ -344,6 +366,40 @@ function parseJson(text) {
 }
 
 /**
+ * Verdict-shaped records the gate **discounts** (§3, t_338f47fd) — reported so
+ * the discounting is never silent (A7/A8):
+ *
+ *   author_ignored  — a `QA-VERDICT: <token>` comment written by a non-QA
+ *                     profile. Before this rule it was accepted as the card's
+ *                     verdict, which made every R1/R2/R3 outcome (and the
+ *                     fail-closed completion hook) forgeable by any profile
+ *                     with board write access to the card.
+ *   self_declared   — the operative verdict comes from a run-metadata `verdict`
+ *                     written by a non-QA run. Still **accepted** (§3 row 3,
+ *                     the documented author-independent source), but a
+ *                     self-declared verdict must not be invisible.
+ *
+ * Returns `{ ignored: [...], selfDeclared: [...] }`.
+ */
+export function collectDiscountedVerdicts(board, task, operativeVerdict = null) {
+  const comments = board.commentsByTask.get(task.id) || [];
+  const ignored = [];
+  for (const c of comments) {
+    const author = String(c.author || "").trim();
+    if (QA_PROFILES.has(author)) continue;
+    const m = VERDICT_MARKER_RE.exec(c.body || "");
+    if (!m) continue;
+    ignored.push({ author, raw: m[1], token: normalizeVerdictToken(m[1]), at: c.created_at });
+  }
+  const selfDeclared = [];
+  if (operativeVerdict && operativeVerdict.source === "run-metadata") {
+    const author = String(operativeVerdict.author || "").trim();
+    if (!QA_PROFILES.has(author)) selfDeclared.push({ author, token: operativeVerdict.token });
+  }
+  return { ignored, selfDeclared };
+}
+
+/**
  * A QA deferral is legal only when it points at a real, QA-owned card
  * (either an explicit `QA-VERDICT: deferred — t_xxxxxxxx` comment or a linked
  * child card whose assignee is a QA profile).
@@ -362,11 +418,21 @@ function parseJson(text) {
  * `qa`-owned repair work would be re-read as an open deferral (t_5455942d
  * defect 3). An explicit deferral marker wins over that heuristic — and only
  * over that heuristic: it does not win over a newer verdict.
+ *
+ * **Author rule (§3, t_338f47fd).** A deferral *marker* is a QA verdict record
+ * (`QA-VERDICT: deferred — …`), so only a QA profile may record it: a
+ * non-QA-authored `deferred` marker neither satisfies R1 nor blocks a card
+ * through R8 (the live instance of the latter was t_f49d448c, where an
+ * `architect` marker blocked a card whose QA verdict had landed). The
+ * linked-child fallback is untouched — it is board state, not an authored
+ * record.
  */
 export function collectDeferral(board, task) {
   // Comments arrive in `created_at` order (loadBoard), so the last match is the
   // newest marker — mirroring how collectVerdicts sorts its sources.
-  const markers = (board.commentsByTask.get(task.id) || []).filter((c) => DEFERRAL_RE.test(c.body || ""));
+  const markers = (board.commentsByTask.get(task.id) || []).filter(
+    (c) => QA_PROFILES.has(String(c.author || "").trim()) && DEFERRAL_RE.test(c.body || ""),
+  );
   const marker = markers.length ? markers[markers.length - 1] : null;
   const operativeVerdict = collectVerdicts(board, task).filter((v) => VERDICTS.has(v.token)).pop() || null;
   const linked = board
@@ -544,6 +610,11 @@ export function evaluateCard(board, task, opts = {}) {
   // `deferred` is a legal marker value but not a verdict — §5.4 handles it (R8).
   const invalid = verdicts.filter((v) => v.token && !VERDICTS.has(v.token) && v.token !== "deferred");
   const deferral = collectDeferral(board, task);
+  // Verdict-shaped records the gate discounts (§3 author rule, t_338f47fd):
+  // non-QA marker comments (ignored) and a non-QA run-metadata verdict (accepted
+  // as the one documented author-independent source, but reported). Both are
+  // advisories — they change visibility, never the verdict set.
+  const discounted = collectDiscountedVerdicts(board, task, valid.length ? valid[valid.length - 1] : null);
   const evidence = collectEvidence(board, task, repoRoot);
   const missingFiles = evidence.filter((p) => p.exists === false);
   // Before the facts are rendered, try to satisfy the operative verdict's
@@ -581,6 +652,10 @@ export function evaluateCard(board, task, opts = {}) {
       origin: p.origin,
     })),
     exception,
+    discounted_verdicts: {
+      ignored: discounted.ignored,
+      self_declared: discounted.selfDeclared,
+    },
   };
 
   // R2 — a verdict token outside the §12 vocabulary.
@@ -588,6 +663,21 @@ export function evaluateCard(board, task, opts = {}) {
     add(
       "R2_QA_VERDICT_INVALID",
       `verdict "${v.raw}" (${v.source}${v.author ? ` by ${v.author}` : ""}) is not one of: ${[...VERDICTS].join(", ")}`,
+    );
+  }
+
+  // A7/A8 — the §3 author rule, reported so discounting is never silent
+  // (t_338f47fd). Advisories only: neither changes which sources are accepted.
+  for (const ig of discounted.ignored) {
+    advise(
+      "A7_VERDICT_AUTHOR_IGNORED",
+      `a \`QA-VERDICT: ${ig.raw}\` comment written by "${ig.author}" is not a QA verdict (§3: only a qa-profile comment records one) — ignored`,
+    );
+  }
+  for (const sd of discounted.selfDeclared) {
+    advise(
+      "A8_VERDICT_SELF_DECLARED",
+      `the operative verdict "${sd.token}" comes from the run metadata of a "${sd.author}" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review`,
     );
   }
 

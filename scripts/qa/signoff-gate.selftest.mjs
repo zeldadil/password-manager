@@ -244,15 +244,18 @@ const DEFER_PHANTOM = card({
 // the newest one is the operative verdict". Before the fix the gate collected
 // the OLDEST deferral marker and evaluated R8 on it unconditionally, so a card
 // that had already recorded its verdict stayed permanently uncompletable.
+//
+// Both records are `qa`-authored: per the §3 author rule (t_338f47fd) only a QA
+// profile records a verdict, so a marker from another author is not a live
+// deferral at all and this case would otherwise be vacuous. The marker names
+// OK (a *done non-QA* card), so it is an R8 violation the moment it is
+// operative — which is what proves the ordering, not the authorship.
 const STALE_DEFERRAL = card({
   title: "BE-915 stale deferral marker, QA verdict recorded afterwards",
   body: "**Test Types:** unit",
   comments: [
-    { author: "architect", body: `QA-VERDICT: deferred — ${OK} (waiting on the gate)` },
-    {
-      author: "dashboard",
-      body: "@qa check this ticket please : QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md",
-    },
+    qaVerdict(`QA-VERDICT: deferred — ${OK} (waiting on the gate)`),
+    qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md"),
   ],
 });
 fixtureFile(`tests/evidence/${STALE_DEFERRAL}/README.md`);
@@ -451,6 +454,109 @@ const NOLABEL_PROSE_MISSING = card({
   comments: [qaVerdict("QA-VERDICT: pass — see tests/evidence/__ID__/prose-missing.md for the transcript.")],
 });
 
+// ── t_338f47fd regression fixtures ──────────────────────────────────────────
+// `VERDICT_MARKER_RE` was matched **without an author check**, so one
+// `QA-VERDICT: <token>` comment written by `architect`, `frontend`, `dashboard`
+// or any other profile cleared R1/R2/R3 on that card — and the fail-closed
+// completion hook with it. Not theoretical: the live board carries 16 such
+// comments, and on t_e348e0b7 / t_28951254 / t_28f60dc1 / t_2162d273 the
+// architect-authored marker *is* the operative verdict.
+//
+// The two cards below carry the **same comment text** and differ only in its
+// author — authorship is the whole variable, so the pair isolates it.
+const SAME_MARKER_TEXT = "QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md";
+
+const QA_MARKER_AUTHOR = card({
+  title: "QA-930 the marker comment authored by qa (non-vacuity control)",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  comments: [qaVerdict(SAME_MARKER_TEXT)],
+});
+fixtureFile(`tests/evidence/${QA_MARKER_AUTHOR}/README.md`);
+
+const NONQA_MARKER_AUTHOR = card({
+  title: "BE-930 the same marker comment authored by architect (must NOT satisfy R1)",
+  body: "**Test Types:** unit",
+  comments: [{ author: "architect", body: SAME_MARKER_TEXT }],
+});
+fixtureFile(`tests/evidence/${NONQA_MARKER_AUTHOR}/README.md`);
+
+// R3 half of the impact: a non-QA `blocked` marker must not make a done card
+// fail R3 either — the verdict is author-scoped as a whole, not only for R1.
+const NONQA_BLOCKED_MARKER = card({
+  title: "BE-931 non-QA 'blocked' marker must not create R3 on a done card",
+  body: "**Test Types:** unit",
+  comments: [
+    {
+      author: "architect",
+      body: "QA-VERDICT: blocked — waiting on the vault KDF — evidence: https://github.com/zeldadil/password-manager/actions/runs/1",
+    },
+  ],
+});
+
+// A deferral marker is a QA verdict record too (§3 row 4): a non-QA `deferred`
+// marker may neither satisfy R1 nor be judged by R8.
+const NONQA_DEFERRAL = card({
+  title: "BE-932 deferral marker from a non-QA author is not a deferral",
+  body: "**Test Types:** unit",
+  comments: [{ author: "architect", body: `QA-VERDICT: deferred — ${DEFERRED_CHILD_DONE}` }],
+});
+
+// The live thread shape (t_f49d448c / t_58280940, reported defect transcript):
+// an architect deferral marker plus a dashboard verdict marker. Under the old
+// gate this card passed R1; under the author rule neither record is a verdict.
+const NONQA_MARKERS_LIVE_SHAPE = card({
+  title: "BE-933 architect deferral marker + dashboard verdict marker (live shape)",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "architect", body: `QA-VERDICT: deferred — ${OK} (waiting on the gate)` },
+    {
+      author: "dashboard",
+      body: "@qa check this ticket please : QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md",
+    },
+  ],
+});
+fixtureFile(`tests/evidence/${NONQA_MARKERS_LIVE_SHAPE}/README.md`);
+
+// Anti-degradation controls for the two sources the author rule must NOT touch
+// (§3 AC 1c): a qa-authored loose verdict is still a verdict, and a non-QA loose
+// verdict is still ignored exactly as before (it never was a marker).
+const LOOSE_QA = card({
+  title: "QA-934 qa-authored loose verdict (path unchanged)",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  comments: [
+    qaVerdict("Round-2 review of the envelope tests — verdict: pass.\nEvidence: tests/evidence/__ID__/README.md"),
+  ],
+});
+fixtureFile(`tests/evidence/${LOOSE_QA}/README.md`);
+
+const LOOSE_NONQA = card({
+  title: "BE-934 loose verdict from a non-QA author (author rule already applied here)",
+  body: "**Test Types:** unit",
+  comments: [{ author: "frontend", body: "verdict: pass — evidence: tests/evidence/__ID__/README.md" }],
+});
+fixtureFile(`tests/evidence/${LOOSE_NONQA}/README.md`);
+
+// Run metadata remains the one author-independent source (§3 row 3, AC 1c):
+// accepted — but a non-QA run self-declaring its verdict is reported as A8 so
+// the residual, documented hole is never invisible.
+const NONQA_RUN_METADATA = card({
+  title: "BE-935 non-QA run-metadata verdict (accepted per §3, reported as A8)",
+  body: "**Test Types:** unit",
+  runs: [
+    {
+      profile: "architect",
+      status: "done",
+      outcome: "completed",
+      metadata: JSON.stringify({
+        verdict: "pass",
+        artifacts: ["https://github.com/zeldadil/password-manager/actions/runs/333"],
+      }),
+    },
+  ],
+});
+
 // ── fixture git repo: evidence committed on an earlier ref (A4 case) ────────
 const gitRepo = join(root, "gitrepo");
 const refOnlyRel = `tests/evidence/${REF_ONLY}/ref-only.md`;
@@ -602,6 +708,9 @@ for (const [label, tid, repoOverride] of [
   ["stale deferral marker + newer QA verdict (t_58280940)", STALE_DEFERRAL],
   ["stale deferral marker to an open QA child + newer verdict", STALE_DEFERRAL_OPEN_CHILD],
   ["quoted deferral marker later in the thread + verdict (t_58280940)", STALE_DEFERRAL_QUOTED],
+  ["non-vacuity control: the marker comment authored by qa", QA_MARKER_AUTHOR],
+  ["qa-authored loose verdict (unchanged)", LOOSE_QA],
+  ["non-QA run-metadata verdict accepted (§3 row 3, A8 only)", NONQA_RUN_METADATA],
 ]) {
   const res = gateJson(tid, repoOverride || repo);
   check(
@@ -744,6 +853,93 @@ console.log("\n1c. t_99e408c5 regressions (R5 adjudicates claims, not citations)
   );
 }
 
+console.log("\n1d. t_338f47fd regressions (VERDICT_MARKER_RE had no author check):");
+{
+  const nonQa = gateJson(NONQA_MARKER_AUTHOR);
+  check(
+    "(a) the marker comment authored by architect does NOT satisfy R1",
+    nonQa.code === 1 && violationRules(nonQa).includes("R1_QA_VERDICT_MISSING"),
+    `exit=${nonQa.code} rules=[${violationRules(nonQa).join(",")}]`,
+  );
+  check(
+    "(a) no verdict is collected from it at all — R2/R3 cannot fire off it either",
+    nonQa.parsed !== null && nonQa.parsed.facts.verdict === null,
+    `verdict=${nonQa.parsed && JSON.stringify(nonQa.parsed.facts.verdict)}`,
+  );
+  check(
+    "(a) the discounted marker is reported as A7_VERDICT_AUTHOR_IGNORED, never dropped silently",
+    advisoryRules(nonQa).includes("A7_VERDICT_AUTHOR_IGNORED") &&
+      nonQa.parsed.facts.discounted_verdicts.ignored.some((x) => x.author === "architect"),
+    `adv=[${advisoryRules(nonQa).join(",")}] discounted=${JSON.stringify(nonQa.parsed && nonQa.parsed.facts.discounted_verdicts)}`,
+  );
+
+  const qaAuthored = gateJson(QA_MARKER_AUTHOR);
+  check(
+    "(b) the SAME comment authored by qa does satisfy R1 (non-vacuity control)",
+    qaAuthored.code === 0 &&
+      qaAuthored.parsed !== null &&
+      qaAuthored.parsed.facts.verdict === "pass" &&
+      violationRules(qaAuthored).length === 0,
+    `exit=${qaAuthored.code} verdict=${qaAuthored.parsed && qaAuthored.parsed.facts.verdict} rules=[${violationRules(qaAuthored).join(",")}]`,
+  );
+
+  const blocked = gateJson(NONQA_BLOCKED_MARKER);
+  check(
+    "a non-QA `blocked` marker cannot create R3 on a done card",
+    blocked.code === 1 &&
+      !violationRules(blocked).includes("R3_VERDICT_NOT_TERMINAL") &&
+      violationRules(blocked).includes("R1_QA_VERDICT_MISSING"),
+    `exit=${blocked.code} rules=[${violationRules(blocked).join(",")}]`,
+  );
+
+  const deferral = gateJson(NONQA_DEFERRAL);
+  check(
+    "a non-QA `deferred` marker is not a deferral: R1 fires, R8 must not",
+    deferral.code === 1 &&
+      deferral.parsed !== null &&
+      deferral.parsed.facts.deferral === null &&
+      violationRules(deferral).includes("R1_QA_VERDICT_MISSING") &&
+      !violationRules(deferral).includes("R8_DEFERRAL_TARGET_INVALID"),
+    `exit=${deferral.code} deferral=${JSON.stringify(deferral.parsed && deferral.parsed.facts.deferral)} rules=[${violationRules(deferral).join(",")}]`,
+  );
+
+  const liveShape = gateJson(NONQA_MARKERS_LIVE_SHAPE);
+  check(
+    "live thread shape (architect deferral + dashboard verdict marker) records no verdict",
+    liveShape.code === 1 &&
+      liveShape.parsed !== null &&
+      violationRules(liveShape).includes("R1_QA_VERDICT_MISSING") &&
+      !violationRules(liveShape).includes("R8_DEFERRAL_TARGET_INVALID") &&
+      advisoryRules(liveShape).filter((r) => r === "A7_VERDICT_AUTHOR_IGNORED").length === 2,
+    `exit=${liveShape.code} rules=[${violationRules(liveShape).join(",")}] adv=[${advisoryRules(liveShape).join(",")}]`,
+  );
+
+  // ── AC 1c: the two sources the author rule must NOT change ────────────────
+  const looseNonQa = gateJson(LOOSE_NONQA);
+  check(
+    "(c) loose path unchanged: a non-QA `verdict: …` is still ignored (already was) and is not a marker (no A7)",
+    looseNonQa.code === 1 &&
+      violationRules(looseNonQa).includes("R1_QA_VERDICT_MISSING") &&
+      !advisoryRules(looseNonQa).includes("A7_VERDICT_AUTHOR_IGNORED"),
+    `exit=${looseNonQa.code} rules=[${violationRules(looseNonQa).join(",")}] adv=[${advisoryRules(looseNonQa).join(",")}]`,
+  );
+  const meta = gateJson(NONQA_RUN_METADATA);
+  check(
+    "(c) run metadata unchanged: a non-QA run-metadata verdict is still accepted (A8 reports it)",
+    meta.code === 0 &&
+      meta.parsed !== null &&
+      meta.parsed.facts.verdict === "pass" &&
+      advisoryRules(meta).includes("A8_VERDICT_SELF_DECLARED"),
+    `exit=${meta.code} verdict=${meta.parsed && meta.parsed.facts.verdict} adv=[${advisoryRules(meta).join(",")}]`,
+  );
+  const metaQa = gateJson(QA_OWN);
+  check(
+    "(c) a qa run-metadata verdict raises no A8 (the advisory is specific to a non-QA declaration)",
+    !advisoryRules(metaQa).includes("A8_VERDICT_SELF_DECLARED"),
+    `adv=[${advisoryRules(metaQa).join(",")}]`,
+  );
+}
+
 console.log("\n2. Rule coverage (every rule must fire on its own non-compliant card):");
 expectRule("no verdict, no evidence", NO_VERDICT, "R1_QA_VERDICT_MISSING");
 expectRule("no verdict, no evidence", NO_VERDICT, "R4_EVIDENCE_MISSING");
@@ -837,6 +1033,29 @@ console.log("\n5. Hook mode (pre_tool_call: kanban_complete):");
 
   const allowed = runGate(["hook", "--db", db], payload(OK), { HERMES_KANBAN_DB: db });
   check("compliant card → {} + exit 0", allowed.code === 0 && allowed.out.trim() === "{}", `exit=${allowed.code} out=${allowed.out.trim().slice(0, 120)}`);
+
+  // t_338f47fd: the defect's real impact — a non-QA marker comment satisfied the
+  // fail-closed completion hook. The author is the only variable between these
+  // two fires (same comment text, same board, same payload shape).
+  const nonQaHook = runGate(["hook", "--db", db], payload(NONQA_MARKER_AUTHOR), { HERMES_KANBAN_DB: db });
+  let nonQaDirective = null;
+  try {
+    nonQaDirective = JSON.parse(nonQaHook.out.split("\n")[0]);
+  } catch {
+    nonQaDirective = null;
+  }
+  check(
+    "a non-QA marker comment does NOT clear the fail-closed hook (block + exit 2, reason names R1)",
+    nonQaHook.code === 2 && nonQaDirective && nonQaDirective.decision === "block" && /R1_QA_VERDICT_MISSING/.test(nonQaDirective.reason),
+    `exit=${nonQaHook.code} out=${nonQaHook.out.slice(0, 240).replace(/\n/g, " ")}`,
+  );
+
+  const qaHook = runGate(["hook", "--db", db], payload(QA_MARKER_AUTHOR), { HERMES_KANBAN_DB: db });
+  check(
+    "the same comment authored by qa still allows the completion (non-vacuity control)",
+    qaHook.code === 0 && qaHook.out.trim() === "{}",
+    `exit=${qaHook.code} out=${qaHook.out.trim().slice(0, 160)}`,
+  );
 
   const viaExtra = runGate(["hook", "--db", db], payload(OK, "extra"), { HERMES_KANBAN_DB: db });
   check("task id resolved from extra.task_id", viaExtra.code === 0, `exit=${viaExtra.code} out=${viaExtra.out.trim().slice(0, 120)}`);
