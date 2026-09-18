@@ -13,9 +13,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "test:unit": "vitest run",
+    "test:unit": "vitest run --exclude '**/node_modules/**' --exclude '**/dist/**' --exclude 'src/**/*.integration.test.{ts,tsx}'",
     "test:watch": "vitest",
-    "test:integration": "vitest run --passWithNoTests 'src/**/*.integration.test.{ts,tsx}'",
+    "test:integration": "vitest run --passWithNoTests --config vitest.integration.config.ts",
     "preview": "vite preview"
   },
   "dependencies": {
