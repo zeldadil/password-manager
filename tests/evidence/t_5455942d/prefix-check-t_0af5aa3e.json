@@ -1,0 +1,146 @@
+{
+  "mode": "check",
+  "db": "/home/sap/.hermes/kanban.db",
+  "repo": "/home/sap/.hermes/kanban/workspaces/t_5455942d/fixture-repo-operative-only",
+  "task_id": "t_0af5aa3e",
+  "violations": [
+    {
+      "rule": "R5_EVIDENCE_FILE_MISSING",
+      "detail": "evidence file named in the verdict does not exist: tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md (repo: /home/sap/.hermes/kanban/workspaces/t_5455942d/fixture-repo-operative-only)"
+    },
+    {
+      "rule": "R5_EVIDENCE_FILE_MISSING",
+      "detail": "evidence file named in the verdict does not exist: tests/evidence/t_0af5aa3e/QA-VERDICT.md (repo: /home/sap/.hermes/kanban/workspaces/t_5455942d/fixture-repo-operative-only)"
+    },
+    {
+      "rule": "R5_EVIDENCE_FILE_MISSING",
+      "detail": "evidence file named in the verdict does not exist: scripts/qa/signoff-gate.selftest.mjs (repo: /home/sap/.hermes/kanban/workspaces/t_5455942d/fixture-repo-operative-only)"
+    }
+  ],
+  "advisories": [
+    {
+      "rule": "A2_DEFERRAL_OPEN",
+      "detail": "QA verdict deferred to t_5455942d (qa, status=running) — audit tracks it until it lands"
+    }
+  ],
+  "facts": {
+    "task_id": "t_0af5aa3e",
+    "title": "P0: rotate + purge leaked Telegram bot token (public git history)",
+    "assignee": "qa",
+    "status": "done",
+    "completed_at": 1789676460,
+    "post_epoch": true,
+    "verdict": "pass-with-conditions",
+    "invalid_verdicts": [],
+    "deferral": {
+      "target": "t_5455942d",
+      "marker": false,
+      "linked": [
+        {
+          "id": "t_5455942d",
+          "status": "running"
+        }
+      ]
+    },
+    "evidence": [
+      {
+        "kind": "path",
+        "value": "tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md",
+        "exists": false,
+        "origin": "marker-comment-comment"
+      },
+      {
+        "kind": "path",
+        "value": "tests/evidence/t_0af5aa3e/QA-VERDICT.md",
+        "exists": false,
+        "origin": "marker-comment-comment"
+      },
+      {
+        "kind": "path",
+        "value": "scripts/qa/signoff-gate.selftest.mjs",
+        "exists": false,
+        "origin": "marker-comment-comment"
+      },
+      {
+        "kind": "path",
+        "value": "tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md",
+        "exists": true,
+        "origin": "marker-comment-comment"
+      },
+      {
+        "kind": "attachment",
+        "value": "QA-VERDICT-t_0af5aa3e.md",
+        "exists": true,
+        "origin": "attachment"
+      },
+      {
+        "kind": "attachment",
+        "value": "QA-VERDICT-ROTATION-t_0af5aa3e.md",
+        "exists": true,
+        "origin": "attachment"
+      },
+      {
+        "kind": "attachment",
+        "value": "QA-VERDICT-ROTATION.md",
+        "exists": true,
+        "origin": "attachment"
+      },
+      {
+        "kind": "attachment",
+        "value": "reproduce.sh",
+        "exists": true,
+        "origin": "attachment"
+      },
+      {
+        "kind": "attachment",
+        "value": "transcripts-reproduce.txt",
+        "exists": true,
+        "origin": "attachment"
+      },
+      {
+        "kind": "attachment",
+        "value": "gate-check-post-verdict.txt",
+        "exists": true,
+        "origin": "attachment"
+      },
+      {
+        "kind": "attachment",
+        "value": "gitrepo-post-purge-state.md",
+        "exists": true,
+        "origin": "attachment"
+      },
+      {
+        "kind": "abs",
+        "value": "/home/sap/.hermes/kanban/attachments/t_0af5aa3e/QA-VERDICT-ROTATION.md",
+        "exists": true,
+        "origin": "run-metadata.artifacts"
+      },
+      {
+        "kind": "abs",
+        "value": "/home/sap/.hermes/kanban/attachments/t_0af5aa3e/reproduce.sh",
+        "exists": true,
+        "origin": "run-metadata.artifacts"
+      },
+      {
+        "kind": "abs",
+        "value": "/home/sap/.hermes/kanban/attachments/t_0af5aa3e/transcripts-reproduce.txt",
+        "exists": true,
+        "origin": "run-metadata.artifacts"
+      },
+      {
+        "kind": "abs",
+        "value": "/home/sap/.hermes/kanban/attachments/t_0af5aa3e/gate-check-post-verdict.txt",
+        "exists": true,
+        "origin": "run-metadata.artifacts"
+      },
+      {
+        "kind": "abs",
+        "value": "/home/sap/.hermes/kanban/attachments/t_0af5aa3e/gitrepo-post-purge-state.md",
+        "exists": true,
+        "origin": "run-metadata.artifacts"
+      }
+    ],
+    "exception": null,
+    "security_track": false
+  }
+}

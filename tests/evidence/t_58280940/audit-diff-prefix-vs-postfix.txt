@@ -1,0 +1,8 @@
+counts pre : {'done_cards': 41, 'enforced': 14, 'failures': 8, 'grandfathered': 27}
+counts post: {'done_cards': 41, 'enforced': 14, 'failures': 7, 'grandfathered': 27}
+
+t_f49d448c: pre=['R8_DEFERRAL_TARGET_INVALID']  post=[]
+
+cards whose enforced verdict changed: 1
+cards failing pre : 8
+cards failing post: 7
