@@ -1,0 +1,27 @@
+# QA reviewer probe — 2026-09-18T21:56:01.853Z
+
+## Q1 — app: main landmark demoted to <div> (AppShell)
+   a11y lane: exit 1 — tests 11 failed | 8 passed (19)
+   rule ids named in the failure output: landmark-one-main, region
+   failing assertions: 11 — e.g. src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /vault (Vault)
+
+## Q2 — document: index.html loses lang="en"
+   a11y lane: exit 1 — tests 16 failed | 3 passed (19)
+   rule ids named in the failure output: html-has-lang
+   failing assertions: 16 — e.g. src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /login (Login (pre-auth))
+
+## Q3 — app: Sidebar nav gets an invalid ARIA attribute (aria-labeledby typo)
+   a11y lane: exit 1 — tests 11 failed | 8 passed (19)
+   rule ids named in the failure output: aria-valid-attr
+   failing assertions: 11 — e.g. src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /vault (Vault)
+
+## Q4 — routes: a NEW route (/audit, no <h1>) added to the route table but not to the a11y ROUTES list
+   a11y lane: exit 0 — tests 19 passed (19)
+   rule ids named in the failure output: (none)
+   failing assertions: 0
+
+   unit lane with the same mutation: exit 0 — tests 162 passed (162)
+   unit lane failures: (none)
+
+## clean tree (control): exit 0 — tests 19 passed (19)
+## git diff --stat after all reverts: (empty — tree clean)

@@ -1,0 +1,23 @@
+$ pnpm exec vitest run --config vitest.qa.config.ts --reporter=verbose   (QA probe spec, cwd apps/web)
+EXIT_PROBE=0
+QA-PROBE-A {"report":{"landmark-one-main":{"passes":1,"incomplete":null,"violations":null,"inapplicable":null},"page-has-heading-one":{"passes":1,"incomplete":null,"violations":null,"inapplicable":null}},"incompleteIds":[],"gradedRules":29}
+QA-PROBE-B {"polyfillError":"TypeError: document.elementFromPoint is not a function","incompleteIds":["landmark-one-main","page-has-heading-one"],"violations":[],"pageLevelInPasses":[]}
+ ✓ qa-probe/axe-probe.spec.tsx > QA probe — the sweep harness is a real sensor > A: stub installed -> page-level rules evaluate for real 265ms
+QA-PROBE-C {"bypassWithSkipLink":{"passes":1,"incomplete":null,"violations":null,"inapplicable":null},"bypassWithoutSkipLink":{"passes":1,"incomplete":null,"violations":null,"inapplicable":null},"regionWithoutSkipLink":{"passes":16,"incomplete":null,"violations":null,"inapplicable":null},"violationsWithoutSkipLink":[]}
+ ✓ qa-probe/axe-probe.spec.tsx > QA probe — the sweep harness is a real sensor > B: stub removed -> axe skips those rules (the finding reproduces) 76ms
+ ✓ qa-probe/axe-probe.spec.tsx > QA probe — the sweep harness is a real sensor > C: does `bypass` still pass without the skip link? 102ms
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+
+$ node probe-m3-equivalent.mjs   (skip-link target id dropped from <main>)
+{
+  "exit": 1,
+  "tests": "11 failed | 8 passed (19)",
+  "ruleIdsInFailures": [
+    "region"
+  ],
+  "requiredPassesMisses": [],
+  "distinctViolationNames": 1,
+  "treeCleanAfter": true
+}
+EXIT_M3=0

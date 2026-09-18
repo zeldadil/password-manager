@@ -1,0 +1,14 @@
+$ gh pr view 30 --json ... (live)
+{"baseRefName":"feature/t_4e1b6937","headRefName":"feature/t_cdd23d35","headRefOid":"48f6e278abb24b7f6410837192bc53b722c1399a","mergeStateStatus":"CLEAN","number":30,"state":"OPEN","title":"FE-001k: a11y tests — axe-core on all routes, zero violations","url":"https://github.com/zeldadil/password-manager/pull/30"}
+
+$ gh pr checks 30
+Semgrep OSS	pass	3s	https://github.com/zeldadil/password-manager/runs/105773233850	
+build	pass	14s	https://github.com/zeldadil/password-manager/actions/runs/35398608361/job/105773170788	
+dependency-audit	pass	10s	https://github.com/zeldadil/password-manager/actions/runs/35398608361/job/105773170759	
+e2e	pass	14s	https://github.com/zeldadil/password-manager/actions/runs/35398608361/job/105773170458	
+install-lockfile	pass	11s	https://github.com/zeldadil/password-manager/actions/runs/35398608361/job/105773090322	
+integration	pass	11s	https://github.com/zeldadil/password-manager/actions/runs/35398608361/job/105773170309	
+lint-typecheck	pass	17s	https://github.com/zeldadil/password-manager/actions/runs/35398608361/job/105773170394	
+sast	pass	37s	https://github.com/zeldadil/password-manager/actions/runs/35398608361/job/105773090053	
+secret-scan	pass	13s	https://github.com/zeldadil/password-manager/actions/runs/35398608361/job/105773090269	
+unit	pass	27s	https://github.com/zeldadil/password-manager/actions/runs/35398608361/job/105773170429	

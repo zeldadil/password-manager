@@ -1,0 +1,37 @@
+# fresh clone: /home/sap/qa-clones/rev-t_cdd23d35-105454
+# head: 48f6e278abb24b7f6410837192bc53b722c1399a  48f6e27 docs(evidence): t_cdd23d35 — record both CI runs (10/10 each) for PR #30
+# install: EXIT=0
+
+$ pnpm exec vitest run --config vitest.a11y.config.ts --reporter=verbose   (cwd apps/web)
+
+ RUN  v5.0.1 /home/sap/qa-clones/rev-t_cdd23d35-105454/apps/web
+
+stderr | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /login (Login (pre-auth))
+⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition.
+
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /login (Login (pre-auth)) 205ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /unlock (Unlock (pre-auth)) 34ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /vault (Vault) 80ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /resources/res-123 (Resource detail) 66ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /folders (Folders) 50ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /tags (Tags) 44ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /settings (Settings) 46ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /generator (Password generator) 42ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > / (root guard) 38ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /no/such/route (not-found guard) 25ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > grades the shell with the user disclosure open as well 74ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core harness — the sweep can actually fail > reports missing <h1> as page-has-heading-one 70ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core harness — the sweep can actually fail > reports no <main> landmark as landmark-one-main 78ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core harness — the sweep can actually fail > reports image without alt text as image-alt 76ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core harness — the sweep can actually fail > reports button without an accessible name as button-name 68ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core harness — document and rule-set integrity > mirrors the production <html lang> from index.html instead of inventing one 35ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core harness — document and rule-set integrity > declares no non-empty <title> in the source document that the app must override 0ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core harness — document and rule-set integrity > only excludes rules that exist in axe, so the exclusion list cannot rot 1ms
+ ✓ src/a11y/routes.a11y.test.tsx > axe-core harness — document and rule-set integrity > does not run the rules that jsdom cannot evaluate 36ms
+
+ Test Files  1 passed (1)
+      Tests  19 passed (19)
+   Start at  21:58:15
+   Duration  2.49s (tests 46%, environment 34%, import 13%, transform 8%)
+
+EXIT_A11Y=0

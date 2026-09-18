@@ -1,0 +1,25 @@
+$ git diff --stat 823d7ab..HEAD   (reviewed head vs FE-001i base)
+ apps/web/package.json                        |   2 +
+ apps/web/src/a11y/axe.ts                     | 103 ++++++++
+ apps/web/src/a11y/routes.a11y.test.tsx       | 238 +++++++++++++++++
+ apps/web/tsconfig.node.json                  |   7 +-
+ apps/web/vitest.a11y.config.ts               |  24 ++
+ pnpm-lock.yaml                               |   9 +
+ tests/evidence/t_cdd23d35/README.md          | 138 ++++++++++
+ tests/evidence/t_cdd23d35/a11y-lane.txt      |  31 +++
+ tests/evidence/t_cdd23d35/a11y-sweep.json    | 382 +++++++++++++++++++++++++++
+ tests/evidence/t_cdd23d35/ci.txt             |  38 +++
+ tests/evidence/t_cdd23d35/gates.txt          |  39 +++
+ tests/evidence/t_cdd23d35/mutation-check.mjs | 213 +++++++++++++++
+ tests/evidence/t_cdd23d35/mutations.txt      |  35 +++
+ tests/evidence/t_cdd23d35/unit-lane.txt      |  14 +
+ 14 files changed, 1272 insertions(+), 1 deletion(-)
+
+$ git status --short   (clone state; qa-probe files are the reviewer's untracked scratch)
+?? apps/web/qa-probe/
+?? apps/web/vitest.qa.config.ts
+
+$ git ls-remote origin refs/heads/feature/t_cdd23d35 refs/heads/feature/t_4e1b6937 refs/heads/master
+823d7abeaf0f0df51a1c49bd6ee7b738bea3ea15	refs/heads/feature/t_4e1b6937
+48f6e278abb24b7f6410837192bc53b722c1399a	refs/heads/feature/t_cdd23d35
+dff2553c91e099dc8731f4099031f6853cea14f0	refs/heads/master

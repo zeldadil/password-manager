@@ -1,0 +1,18 @@
+$ sha256sum <branch file> vs <card attachment>
+95299a3cb183e49b1d30c6c42df39c804453d09005e1bb5bf6cc7a3cfbba57eb  tests/evidence/t_cdd23d35/a11y-lane.txt
+9b00df5487c1f1145ceac1a317264a33b016ec59faac57239fd7aa1cae265e28  tests/evidence/t_cdd23d35/a11y-sweep.json
+edb5784b9335a1902f9e077c34409fba558f1327af66c0e4e66dfbef9d876470  tests/evidence/t_cdd23d35/ci.txt
+0896288821454714a1ea17283e8a90eabe78a38c5a5a331285b768b6cef20570  tests/evidence/t_cdd23d35/gates.txt
+1cb652565d4552a46654a83ab25926038e4c94203068da4b7e12c2b6d81578b1  tests/evidence/t_cdd23d35/mutation-check.mjs
+4d4c26353b7fd53f1e8f5b7e6e2e914b3bf1510e194d2f0aea6433eb35536a7f  tests/evidence/t_cdd23d35/mutations.txt
+2058036c6d42f6ba0526c315f7cc77d18b07912f94c3dbdd9ffb2919e82e02b1  tests/evidence/t_cdd23d35/README.md
+8d399f4bdf0cfee986de6752b5e5073be13832735fd555e9db5e4b3a5e2375f9  tests/evidence/t_cdd23d35/unit-lane.txt
+---
+95299a3cb183e49b1d30c6c42df39c804453d09005e1bb5bf6cc7a3cfbba57eb  /home/sap/.hermes/kanban/attachments/t_cdd23d35/a11y-lane.txt
+9b00df5487c1f1145ceac1a317264a33b016ec59faac57239fd7aa1cae265e28  /home/sap/.hermes/kanban/attachments/t_cdd23d35/a11y-sweep.json
+edb5784b9335a1902f9e077c34409fba558f1327af66c0e4e66dfbef9d876470  /home/sap/.hermes/kanban/attachments/t_cdd23d35/ci.txt
+0896288821454714a1ea17283e8a90eabe78a38c5a5a331285b768b6cef20570  /home/sap/.hermes/kanban/attachments/t_cdd23d35/gates.txt
+1cb652565d4552a46654a83ab25926038e4c94203068da4b7e12c2b6d81578b1  /home/sap/.hermes/kanban/attachments/t_cdd23d35/mutation-check.mjs
+4d4c26353b7fd53f1e8f5b7e6e2e914b3bf1510e194d2f0aea6433eb35536a7f  /home/sap/.hermes/kanban/attachments/t_cdd23d35/mutations.txt
+2058036c6d42f6ba0526c315f7cc77d18b07912f94c3dbdd9ffb2919e82e02b1  /home/sap/.hermes/kanban/attachments/t_cdd23d35/README.md
+8d399f4bdf0cfee986de6752b5e5073be13832735fd555e9db5e4b3a5e2375f9  /home/sap/.hermes/kanban/attachments/t_cdd23d35/unit-lane.txt
