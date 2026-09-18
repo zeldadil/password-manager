@@ -1,0 +1,13 @@
+t_338f47fd — installed gate vs repo copy
+date: 2026-09-18T21:47:25Z
+repo copy: scripts/qa/signoff-gate.mjs sha256 85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+
+ok   qa         85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   architect  85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   backend    85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   frontend   85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   docs       85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   product    85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   browser    85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+
+result: all 7 installed copies match the repo copy

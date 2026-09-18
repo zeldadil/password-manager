@@ -1,0 +1,76 @@
+t_338f47fd — every verdict source the gate sees, by author (board copy, read-only)
+date: 2026-09-18T21:49:43Z
+board copy: /tmp/t_338f47fd-inv.kfZQ36/board.db sha256 e057429f0803070d91178be582e1a632c7d2e1062d1e71e31f01d001c97f129b  (copy of /home/sap/.hermes/kanban.db)
+
+======================================================================
+BEFORE — prefix gate /tmp/t_338f47fd-inv.kfZQ36/prefix-gate.mjs sha256 28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab
+(the marker path accepted ANY author, so these comment sources were verdicts)
+======================================================================
+t_710ed14c status=done     op-source=run-metadata     author=architect    token=pass-with-conditions   valid=yes  <== NON-QA OPERATIVE
+t_4f872624 status=blocked  op-source=marker-comment   author=architect    token=pass                   valid=yes  <== NON-QA OPERATIVE
+t_18230e85 status=blocked  op-source=marker-comment   author=architect    token=pass                   valid=yes  <== NON-QA OPERATIVE
+t_99e408c5 status=done     op-source=marker-comment   author=qa           token=pass                   valid=yes
+
+non-QA *valid* verdict sources on the board: 16; of which operative: 7
+  OPERATIVE-NON-QA t_e348e0b7 (done) via marker-comment by architect: pass
+  OPERATIVE-NON-QA t_28951254 (done) via marker-comment by architect: pass
+  OPERATIVE-NON-QA t_28f60dc1 (done) via marker-comment by architect: pass
+  OPERATIVE-NON-QA t_2162d273 (done) via marker-comment by architect: pass
+  OPERATIVE-NON-QA t_710ed14c (done) via run-metadata by architect: pass-with-conditions
+  OPERATIVE-NON-QA t_4f872624 (blocked) via marker-comment by architect: pass
+  OPERATIVE-NON-QA t_18230e85 (blocked) via marker-comment by architect: pass
+
+--- marker-comment verdicts authored by a non-QA profile (the defect class) ---
+  t_f49d448c (done) by architect: deferred  [valid=NO]
+  t_f49d448c (done) by dashboard: pass  [valid=yes]
+  t_f49d448c (done) by human: pass  [valid=yes]
+  t_527d4720 (done) by architect: pass  [valid=yes]
+  t_80fc0326 (done) by architect: pass  [valid=yes]
+  t_80fc0326 (done) by architect: pass-with-conditions  [valid=yes]
+  t_80fc0326 (done) by architect: pass  [valid=yes]
+  t_e348e0b7 (done) by architect: pass  [valid=yes]
+  t_28951254 (done) by architect: pass  [valid=yes]
+  t_28f60dc1 (done) by architect: pass  [valid=yes]
+  t_2162d273 (done) by architect: pass  [valid=yes]
+  t_710ed14c (done) by architect: pass-with-conditions  [valid=yes]
+  t_4f872624 (blocked) by architect: pass  [valid=yes]
+  t_4f872624 (blocked) by architect: pass  [valid=yes]
+  t_18230e85 (blocked) by architect: pass  [valid=yes]
+  t_18230e85 (blocked) by architect: pass  [valid=yes]
+  count: 16
+
+======================================================================
+AFTER — fixed gate /home/sap/password-manager/.worktrees/t_338f47fd/scripts/qa/signoff-gate.mjs sha256 85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+======================================================================
+t_710ed14c   done     run-metadata     architect    pass-with-conditions       yes    2026-09-18T21:28:17.000Z
+t_99e408c5   done     marker-comment   qa           pass                       yes    2026-09-18T21:35:27.000Z
+
+--- operative (newest) verdict per task, and its author ---
+t_9840ccdd status=done     op-source=marker-comment   author=qa           token=pass-with-conditions   valid=yes
+t_3ca45da2 status=done     op-source=marker-comment   author=qa           token=pass                   valid=yes
+t_08b02da9 status=done     op-source=marker-comment   author=qa           token=pass                   valid=yes
+t_f49d448c status=done     op-source=qa-comment       author=qa           token=deferred               valid=NO
+t_4e1b6937 status=done     op-source=run-metadata     author=qa           token=pass                   valid=yes
+t_ac6a1f3f status=done     op-source=marker-comment   author=qa           token=pass                   valid=yes
+t_5fe41426 status=done     op-source=marker-comment   author=qa           token=pass-with-conditions   valid=yes
+t_a2cf1744 status=done     op-source=marker-comment   author=qa           token=pass-with-conditions   valid=yes
+t_18ae13ea status=done     op-source=run-metadata     author=qa           token=pass-with-conditions   valid=yes
+t_78b46688 status=done     op-source=run-metadata     author=qa           token=pass-with-conditions   valid=yes
+t_430aa9a3 status=done     op-source=run-metadata     author=qa           token=pass-with-conditions   valid=yes
+t_0af5aa3e status=done     op-source=run-metadata     author=qa           token=pass-with-conditions   valid=yes
+t_ea0783c5 status=done     op-source=run-metadata     author=qa           token=pass                   valid=yes
+t_527d4720 status=done     op-source=run-metadata     author=architect    token=pass-comment-          valid=NO
+t_80fc0326 status=done     op-source=qa-comment       author=qa           token=changes                valid=NO
+t_b51a1ff3 status=done     op-source=qa-comment       author=qa           token=changes                valid=NO
+t_5455942d status=done     op-source=run-metadata     author=qa           token=pass                   valid=yes
+t_58280940 status=done     op-source=qa-comment       author=qa           token=pass                   valid=yes
+t_7dd3b960 status=done     op-source=run-metadata     author=qa           token=pass                   valid=yes
+t_4242bee8 status=done     op-source=run-metadata     author=qa           token=pass                   valid=yes
+t_710ed14c status=done     op-source=run-metadata     author=architect    token=pass-with-conditions   valid=yes  <== NON-QA OPERATIVE
+t_99e408c5 status=done     op-source=marker-comment   author=qa           token=pass                   valid=yes
+
+non-QA *valid* verdict sources on the board: 1; of which operative: 1
+  OPERATIVE-NON-QA t_710ed14c (done) via run-metadata by architect: pass-with-conditions
+
+--- marker-comment verdicts authored by a non-QA profile (the defect class) ---
+  count: 0

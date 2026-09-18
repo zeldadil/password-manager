@@ -1,0 +1,116 @@
+t_338f47fd — the SAME suite against the PREFIX gate (the 8 new cases must be red)
+date: 2026-09-18T21:49:02Z
+prefix gate: /tmp/t_338f47fd-ev.tOYe3n/signoff-gate.mjs sha256 28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  (the revision installed in all 7 profiles before this fix)
+command:     node <tmp>/signoff-gate.selftest.mjs
+
+QA sign-off gate selftest — fixture board: /tmp/signoff-gate-selftest-uf2UJT/board.db
+fixture repo: /tmp/signoff-gate-selftest-uf2UJT/repo
+
+1. Compliant cards (must produce ZERO violations — anti-vacuous control):
+  ok   - Path A verdict + repo evidence
+  ok   - crypto card with AR-6 architect sign-off
+  ok   - evidence uploaded as attachment
+  ok   - QA-owned card with run-metadata verdict
+  ok   - deferral to a completed QA child
+  ok   - deferral to an open QA child (advisory only)
+  ok   - pass-with-conditions naming a follow-up
+  ok   - grandfathered pre-epoch card
+  ok   - recorded QA sign-off exception
+  ok   - superseded comments name missing artifacts
+  ok   - operative evidence committed on another ref
+  ok   - explicit verdict + linked qa repair child
+  ok   - stale deferral marker + newer QA verdict (t_58280940)
+  ok   - stale deferral marker to an open QA child + newer verdict
+  ok   - quoted deferral marker later in the thread + verdict (t_58280940)
+  ok   - non-vacuity control: the marker comment authored by qa
+  ok   - qa-authored loose verdict (unchanged)
+  ok   - non-QA run-metadata verdict accepted (§3 row 3, A8 only)
+
+1b. t_5455942d regressions (fail closed only on unverifiable input):
+  ok   - superseded verdict/handoff paths are advisory (A5), never R5
+  ok   - operative evidence on another ref is accepted (A4, no R5)
+  ok   - explicit verdict + linked qa child is NOT a deferral (no A2)
+  ok   - linked qa child with NO verdict still counts as a deferral (A2 fires — heuristic intact)
+  ok   - stale deferral marker is superseded by the newer verdict — no R8, no deferral (t_58280940)
+  ok   - stale deferral marker to an open QA child is superseded too — no A2 (t_58280940)
+  ok   - a marker that only appears in a code span is not a deferral (no phantom R8)
+  ok   - a quoted marker must not hijack the newest-marker ordering over a real one (t_58280940)
+
+1c. t_99e408c5 regressions (R5 adjudicates claims, not citations):
+  ok   - a verdict quoting another card's missing path is NOT blocked by R5 (the reported instance)
+  ok   - the quoted path is reported as A6_EVIDENCE_CITED (the audit still sees it)
+  ok   - the reporting card's own labelled evidence stays the claim it resolves
+  ok   - citing another card's artifact that exists produces no R5 and no A6 noise
+  ok   - no label: a quoted path in a code span is a citation (no R5, A6 fires)
+  ok   - labelled evidence file missing (R5 control) → R5_EVIDENCE_FILE_MISSING
+  ok   - labelled evidence file missing inside a code span is still a claim (R5 control) → R5_EVIDENCE_FILE_MISSING
+  ok   - no label: a missing path in plain prose is still a claim (R5 control) → R5_EVIDENCE_FILE_MISSING
+
+1d. t_338f47fd regressions (VERDICT_MARKER_RE had no author check):
+  FAIL - (a) the marker comment authored by architect does NOT satisfy R1 — exit=0 rules=[]
+  FAIL - (a) no verdict is collected from it at all — R2/R3 cannot fire off it either — verdict="pass"
+  FAIL - (a) the discounted marker is reported as A7_VERDICT_AUTHOR_IGNORED, never dropped silently — adv=[] discounted=undefined
+  ok   - (b) the SAME comment authored by qa does satisfy R1 (non-vacuity control)
+  FAIL - a non-QA `blocked` marker cannot create R3 on a done card — exit=1 rules=[R3_VERDICT_NOT_TERMINAL]
+  FAIL - a non-QA `deferred` marker is not a deferral: R1 fires, R8 must not — exit=1 deferral={"target":"t_b0000005","marker":true,"linked":[]} rules=[R4_EVIDENCE_MISSING]
+  FAIL - live thread shape (architect deferral + dashboard verdict marker) records no verdict — exit=0 rules=[] adv=[]
+  ok   - (c) loose path unchanged: a non-QA `verdict: …` is still ignored (already was) and is not a marker (no A7)
+  FAIL - (c) run metadata unchanged: a non-QA run-metadata verdict is still accepted (A8 reports it) — exit=0 verdict=pass adv=[]
+  ok   - (c) a qa run-metadata verdict raises no A8 (the advisory is specific to a non-QA declaration)
+
+2. Rule coverage (every rule must fire on its own non-compliant card):
+  ok   - no verdict, no evidence → R1_QA_VERDICT_MISSING
+  ok   - no verdict, no evidence → R4_EVIDENCE_MISSING
+  ok   - verdict token outside vocabulary → R2_QA_VERDICT_INVALID
+  ok   - fail verdict on a done card → R3_VERDICT_NOT_TERMINAL
+  ok   - blocked verdict on a done card → R3_VERDICT_NOT_TERMINAL
+  ok   - verdict without evidence → R4_EVIDENCE_MISSING
+  ok   - named evidence file missing → R5_EVIDENCE_FILE_MISSING
+  ok   - operative verdict names a missing artifact (scoping is not vacuous) → R5_EVIDENCE_FILE_MISSING
+  ok   - pass-with-conditions without follow-up → R6_CONDITIONS_UNTRACKED
+  ok   - crypto card without architect sign-off → R7_SECURITY_TRACK_SIGNOFF_MISSING
+  ok   - deferral to a non-QA card → R8_DEFERRAL_TARGET_INVALID
+  ok   - deferral to a phantom card → R8_DEFERRAL_TARGET_INVALID
+  ok   - newest record is a deferral to a non-QA card (superseding is ordered, not amnesty) → R8_DEFERRAL_TARGET_INVALID
+  ok   - quoted marker is documentation, not a deferral (R8 must not fire) → R1_QA_VERDICT_MISSING
+
+3. --strict-history turns grandfathered gaps into failures:
+  ok   - pre-epoch card fails under --strict-history
+  ok   - same card is advisory-only without --strict-history
+
+4. Audit on the fixture board reports the enforced failures and exits 1:
+  ok   - audit exits 1 with enforced failures
+  ok   - audit counts the grandfathered card separately
+
+5. Hook mode (pre_tool_call: kanban_complete):
+  ok   - non-compliant card → block directive + exit 2
+  ok   - compliant card → {} + exit 0
+  FAIL - a non-QA marker comment does NOT clear the fail-closed hook (block + exit 2, reason names R1) — exit=0 out={} 
+  ok   - the same comment authored by qa still allows the completion (non-vacuity control)
+  ok   - task id resolved from extra.task_id
+  ok   - task id resolved from HERMES_KANBAN_TASK
+  ok   - other tool names pass through
+  ok   - unparseable payload → fail closed (block)
+  ok   - unreadable board → fail closed (block)
+  ok   - no resolvable task id → fail closed (block)
+  ok   - (a) session id in extra.task_id + HERMES_KANBAN_TASK set → allow ({} + exit 0)
+  ok   - (b) session id only → block, reason names the source and the id shape
+  ok   - (c) explicit tool_input.task_id → allow
+  ok   - (d) unknown task id → block, reason names the source of the id
+  ok   - (e) numeric run id in tool_input.task_id → resolved to its card via the board → allow
+  ok   - (f) identity vars scrubbed (no HERMES_KANBAN_TASK) + session id in extra → resolved from HERMES_KANBAN_WORKSPACE → allow
+  ok   - (g) same payload, workspace var empty → resolved from the worker's cwd basename → allow
+  ok   - (h) no id and no task-shaped location → still fails closed, listing every source tried
+  ok   - kill switch allows completion
+
+73/81 cases passed
+
+FAILED CASES:
+  - (a) the marker comment authored by architect does NOT satisfy R1 — exit=0 rules=[]
+  - (a) no verdict is collected from it at all — R2/R3 cannot fire off it either — verdict="pass"
+  - (a) the discounted marker is reported as A7_VERDICT_AUTHOR_IGNORED, never dropped silently — adv=[] discounted=undefined
+  - a non-QA `blocked` marker cannot create R3 on a done card — exit=1 rules=[R3_VERDICT_NOT_TERMINAL]
+  - a non-QA `deferred` marker is not a deferral: R1 fires, R8 must not — exit=1 deferral={"target":"t_b0000005","marker":true,"linked":[]} rules=[R4_EVIDENCE_MISSING]
+  - live thread shape (architect deferral + dashboard verdict marker) records no verdict — exit=0 rules=[] adv=[]
+  - (c) run metadata unchanged: a non-QA run-metadata verdict is still accepted (A8 reports it) — exit=0 verdict=pass adv=[]
+  - a non-QA marker comment does NOT clear the fail-closed hook (block + exit 2, reason names R1) — exit=0 out={} 
