@@ -28,17 +28,19 @@ envelope convention from `ADR-004-api-contract.yaml`:
   refresh) is thrown as a single `ApiError` with machine-readable `code` and `details`.
 
 ```ts
-import { ApiClient, InMemoryTokenStore } from './api';
+import { ApiClient, InMemoryTokenStore } from './api'
 
-const tokenStore = new InMemoryTokenStore(); // in-memory only — never persisted
+const tokenStore = new InMemoryTokenStore() // in-memory only — never persisted
 const client = new ApiClient({
   baseUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1',
   tokenStore,
-  onUnauthorized: () => { /* route to /unlock */ },
-});
+  onUnauthorized: () => {
+    /* route to /unlock */
+  },
+})
 
-const vault = await client.get<{ id: string; name: string }>('/vaults/{id}');
-const created = await client.post<Resource>('/resources', { name: 'GitHub' });
+const vault = await client.get<{ id: string; name: string }>('/vaults/{id}')
+const created = await client.post<Resource>('/resources', { name: 'GitHub' })
 ```
 
 ## State management (FE-001g)
@@ -59,10 +61,10 @@ Both stores are in-memory only — no persistence surface. Theme application
 (CSS variables / `color-scheme`) is owned by the FE-001d theme system.
 
 ```ts
-import { useThemeStore, useUiStore } from './stores';
+import { useThemeStore, useUiStore } from './stores'
 
-const sidebarOpen = useUiStore((s) => s.sidebarOpen);
-const theme = useThemeStore((s) => s.theme);
+const sidebarOpen = useUiStore((s) => s.sidebarOpen)
+const theme = useThemeStore((s) => s.theme)
 ```
 
 ## Security note

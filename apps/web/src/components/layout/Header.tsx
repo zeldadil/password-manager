@@ -84,11 +84,7 @@ export default function Header({
               >
                 Settings
               </Link>
-              <button
-                type="button"
-                className="app-header__menu-item"
-                onClick={handleSignOut}
-              >
+              <button type="button" className="app-header__menu-item" onClick={handleSignOut}>
                 Sign out
               </button>
             </div>

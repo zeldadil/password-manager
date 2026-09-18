@@ -1,15 +1,15 @@
-import type { EnvelopeErrorBody, EnvelopeHeader, ErrorDetail } from './types';
+import type { EnvelopeErrorBody, EnvelopeHeader, ErrorDetail } from './types'
 
-export type ApiErrorKind = 'network' | 'http' | 'envelope' | 'unauthorized';
+export type ApiErrorKind = 'network' | 'http' | 'envelope' | 'unauthorized'
 
 interface ApiErrorOptions {
-  message: string;
-  kind: ApiErrorKind;
-  httpStatus?: number;
-  action?: string | null;
-  details?: ErrorDetail[];
-  documentationUrl?: string;
-  cause?: unknown;
+  message: string
+  kind: ApiErrorKind
+  httpStatus?: number
+  action?: string | null
+  details?: ErrorDetail[]
+  documentationUrl?: string
+  cause?: unknown
 }
 
 /**
@@ -21,30 +21,30 @@ interface ApiErrorOptions {
  * crypto material is ever embedded in an error (SEC-001 AR-2 / AR-4).
  */
 export class ApiError extends Error {
-  readonly kind: ApiErrorKind;
-  readonly httpStatus: number;
-  readonly action: string | null;
-  readonly details: ErrorDetail[];
-  readonly documentationUrl: string | undefined;
+  readonly kind: ApiErrorKind
+  readonly httpStatus: number
+  readonly action: string | null
+  readonly details: ErrorDetail[]
+  readonly documentationUrl: string | undefined
 
   constructor(options: ApiErrorOptions) {
-    super(options.message, options.cause !== undefined ? { cause: options.cause } : undefined);
-    this.name = 'ApiError';
-    this.kind = options.kind;
-    this.httpStatus = options.httpStatus ?? 0;
-    this.action = options.action ?? null;
-    this.details = options.details ?? [];
-    this.documentationUrl = options.documentationUrl;
+    super(options.message, options.cause !== undefined ? { cause: options.cause } : undefined)
+    this.name = 'ApiError'
+    this.kind = options.kind
+    this.httpStatus = options.httpStatus ?? 0
+    this.action = options.action ?? null
+    this.details = options.details ?? []
+    this.documentationUrl = options.documentationUrl
   }
 
   /** True when the request was rejected as unauthorized (HTTP 401). */
   get isUnauthorized(): boolean {
-    return this.httpStatus === 401 || this.kind === 'unauthorized';
+    return this.httpStatus === 401 || this.kind === 'unauthorized'
   }
 
   /** First machine-readable error code (from the error envelope), if any. */
   get code(): string | null {
-    return this.details[0]?.code ?? null;
+    return this.details[0]?.code ?? null
   }
 }
 
@@ -60,9 +60,9 @@ export function apiErrorFromEnvelope(
   header: EnvelopeHeader | undefined,
   body: EnvelopeErrorBody | undefined,
 ): ApiError {
-  const details = body?.errors ?? [];
+  const details = body?.errors ?? []
   const message =
-    header?.message || details[0]?.message || `Request failed with status ${httpStatus}`;
+    header?.message || details[0]?.message || `Request failed with status ${httpStatus}`
 
   return new ApiError({
     message,
@@ -71,7 +71,7 @@ export function apiErrorFromEnvelope(
     action: header?.action ?? null,
     details,
     documentationUrl: body?.documentationUrl,
-  });
+  })
 }
 
 /**
@@ -80,10 +80,10 @@ export function apiErrorFromEnvelope(
  */
 export function toApiError(cause: unknown, fallbackMessage = 'Network error'): ApiError {
   if (cause instanceof ApiError) {
-    return cause;
+    return cause
   }
   if (cause instanceof Error) {
-    return new ApiError({ message: cause.message, kind: 'network', cause });
+    return new ApiError({ message: cause.message, kind: 'network', cause })
   }
-  return new ApiError({ message: fallbackMessage, kind: 'network', cause });
+  return new ApiError({ message: fallbackMessage, kind: 'network', cause })
 }

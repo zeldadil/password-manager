@@ -1,15 +1,15 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
 
 /** Supported UI themes. Dark mode is the default (FE-001d). */
-export type ThemeMode = 'dark' | 'light';
+export type ThemeMode = 'dark' | 'light'
 
 export interface ThemeState {
   /** The currently active theme. */
-  theme: ThemeMode;
+  theme: ThemeMode
   /** Replace the active theme with an explicit value. */
-  setTheme: (theme: ThemeMode) => void;
+  setTheme: (theme: ThemeMode) => void
   /** Flip between `dark` and `light`. */
-  toggleTheme: () => void;
+  toggleTheme: () => void
 }
 
 /**
@@ -27,4 +27,4 @@ export const useThemeStore = create<ThemeState>()((set) => ({
   theme: 'dark',
   setTheme: (theme) => set({ theme }),
   toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
-}));
+}))

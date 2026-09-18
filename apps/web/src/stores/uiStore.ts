@@ -1,12 +1,12 @@
-import { create } from 'zustand';
+import { create } from 'zustand'
 
 export interface UiState {
   /** Whether the left navigation sidebar is expanded. */
-  sidebarOpen: boolean;
+  sidebarOpen: boolean
   /** Explicitly expand or collapse the sidebar. */
-  setSidebarOpen: (open: boolean) => void;
+  setSidebarOpen: (open: boolean) => void
   /** Flip the sidebar between expanded and collapsed. */
-  toggleSidebar: () => void;
+  toggleSidebar: () => void
 }
 
 /**
@@ -21,4 +21,4 @@ export const useUiStore = create<UiState>()((set) => ({
   sidebarOpen: true,
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-}));
+}))
