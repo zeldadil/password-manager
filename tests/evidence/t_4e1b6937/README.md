@@ -143,3 +143,8 @@ pnpm build            84 modules · 233.68 kB (gzip 74.91 kB)
 gitleaks detect --no-git  no leaks found (includes the new evidence script)
 ```
 
+CI run **35396296260** on the round-2 head (`c8fa859`) — **10/10 checks pass**
+(install-lockfile, lint-typecheck, unit, integration, e2e, dependency-audit, secret-scan, sast, build + Semgrep OSS),
+unit job log: `Test Files 19 passed (19)` · `Tests 143 passed (143)`.
+PR: https://github.com/zeldadil/password-manager/pull/26
+
