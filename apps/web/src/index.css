@@ -2,7 +2,13 @@
    through variables — index.css never hardcodes a color. */
 
 :root {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
   line-height: 1.5;
 }
 

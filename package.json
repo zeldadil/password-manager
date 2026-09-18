@@ -9,6 +9,9 @@
     "lint": "pnpm -r --parallel --filter '**' run lint",
     "typecheck": "pnpm -r --parallel --filter '**' run typecheck",
     "test": "pnpm -r --parallel --filter '**' run test",
+    "test:integration": "pnpm -r --parallel --filter '**' run test:integration",
+    "format": "pnpm -r --parallel --filter '**' run format",
+    "format:check": "pnpm -r --parallel --filter '**' run format:check",
     "clean": "pnpm -r --parallel --filter '**' run clean 2>/dev/null || true"
   },
   "packageManager": "pnpm@9.12.0",
