@@ -100,7 +100,7 @@ for profile in "${PROFILES[@]}"; do
       bad "hermes hooks list does not show the hook"
     fi
     if HERMES_HOME="${pd}" hermes hooks doctor >"/tmp/secret-guard-doctor-${profile}.txt" 2>&1; then
-      if grep -qiE "issue.*found" "/tmp/secret-guard-doctor-${profile}.txt"; then
+      if grep -qF 'issue(s) found.' "/tmp/secret-guard-doctor-${profile}.txt"; then
         bad "hermes hooks doctor reports issues — see /tmp/secret-guard-doctor-${profile}.txt"
       else
         ok "hermes hooks doctor clean (transcript: /tmp/secret-guard-doctor-${profile}.txt)"
