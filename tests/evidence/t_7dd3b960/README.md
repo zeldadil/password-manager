@@ -44,3 +44,11 @@ evidence path and assignee (the same reason the board-snapshot transport was rej
 `docs/decisions/qa-signoff-gate-followups-t_527d4720.md`). Regenerate them locally against your own board before
 re-running the analyses. No secret value appears in any committed file — the evidence was scanned for
 token-shaped strings and with `gitleaks` before the push.
+
+## Dogfood transcripts (the gate checking this card)
+
+| file | what it shows |
+|---|---|
+| `dogfood-before-verdict.txt` | `check --task t_7dd3b960 --pre-complete` before any verdict comment → `R4_EVIDENCE_MISSING` |
+| `dogfood-after-verdict.txt` | after the first verdict comment, which **quoted** another card's missing evidence path while reporting a defect → `R5_EVIDENCE_FILE_MISSING` on *this* card, for a path it never claimed (P1 finding, routed as a follow-up card) |
+| `dogfood-after-superseding-verdict.txt` | after a superseding verdict comment without the quoted path → exit 0, and that same path is then correctly downgraded to the `A5_EVIDENCE_SUPERSEDED` advisory |
