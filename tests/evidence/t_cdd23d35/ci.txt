@@ -1,8 +1,15 @@
 # FE-001k — CI evidence for PR #30
 
-Head verified: `8ccdf872048cbc8bbba9fece208b10b422fe80d4` (branch `feature/t_cdd23d35`)
 PR: https://github.com/zeldadil/password-manager/pull/30 (base `feature/t_4e1b6937`)
-CI run: https://github.com/zeldadil/password-manager/actions/runs/35398221990 — 10/10 checks passed
+
+| CI run | head | result |
+|---|---|---|
+| https://github.com/zeldadil/password-manager/actions/runs/35398221990 | `8ccdf872048cbc8bbba9fece208b10b422fe80d4` (code + first evidence) | 10/10 checks pass |
+| https://github.com/zeldadil/password-manager/actions/runs/35398455295 | `d8da408c181f44e3134b7bfba0043d999701807e` (evidence: CI record) | 10/10 checks pass |
+
+Commits after `d8da408` are evidence-text only and touch no code or test file.
+
+First run, full check list:
 
 ```
 gh pr checks 30

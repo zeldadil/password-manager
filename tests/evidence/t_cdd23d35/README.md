@@ -30,9 +30,16 @@ root      pnpm test:integration   no specs yet, exit 0 (passWithNoTests — FE-0
 root      pnpm build         84 modules, 233.68 kB (gzip 74.91 kB) — unchanged → gates.txt
 ```
 
-CI on the pushed head (`8ccdf87`): PR #30, run `35398221990` — **10/10 checks pass**, with
-`pnpm test:unit` in the `unit` job reporting `src/a11y/routes.a11y.test.tsx (19 tests)` and
-`Test Files 20 passed (20) · Tests 162 passed (162)` → `ci.txt`.
+CI: PR #30 — **10/10 checks pass on both pushes of this branch**:
+
+| CI run | head | result |
+|---|---|---|
+| `35398221990` | `8ccdf87` (code + first evidence) | 10/10 pass |
+| `35398455295` | `d8da408` (evidence: CI record) | 10/10 pass |
+
+The `unit` job — where the sweep runs in CI, via `pnpm test:unit` — reported
+`src/a11y/routes.a11y.test.tsx (19 tests)` and `Test Files 20 passed (20) · Tests 162 passed (162)`
+→ `ci.txt`. Commits after `d8da408` are evidence-text only: they touch no code or test file.
 
 Both the 8 screens and the 2 fail-closed guards are graded, at the path they actually resolve to:
 
