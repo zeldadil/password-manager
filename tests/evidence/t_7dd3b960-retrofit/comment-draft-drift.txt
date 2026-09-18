@@ -1,6 +1,6 @@
 =================================================================== t_9840ccdd
---- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_9840ccdd.md	2026-09-18 21:32:15.839705729 +0000
-+++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_9840ccdd.md	2026-09-18 21:32:15.841705744 +0000
+--- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_9840ccdd.md	2026-09-18 21:34:04.247488677 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_9840ccdd.md	2026-09-18 21:34:04.249488692 +0000
 @@ -9,7 +9,7 @@
  | 1 | threat model covers all 7 minimum vectors | **met** — Part 1, `### Vector 1` … `### Vector 7`: local file/backup access · partial API compromise · hostile extension/malicious page · leakage via logs/errors/URLs/telemetry · stolen device/unlocked session · forgotten master password · corrupted backup/failed migration. Each records scenario, assets, attack surface, controls and residual risk |
  | 2 | all 9 mandatory crypto decisions documented **with rationale** | **met** — Part 2, `### Decision 1` … `### Decision 9`, each with an explicit `**Rationale:**` block: D1 KDF (Argon2id, 64 MB / 3 iterations / 4 lanes / 32-byte output, per-user salt), D2 AEAD (AES-256-GCM, 12-byte nonce, 16-byte tag, alternatives considered), D3 key hierarchy + storage schema, D4 nonce/IV (CSPRNG, never reused, never `Math.random`), D5 integrity (tag verified on every decrypt, no plaintext on failure), D6 lock/unlock lifecycle (derive → hold in process memory → clear), D7 recovery kit, D8 encrypted backup, D9 browser bridge |
@@ -13,8 +13,8 @@
 =================================================================== t_3ca45da2
 =================================================================== t_08b02da9
 =================================================================== t_ac6a1f3f
---- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_ac6a1f3f.md	2026-09-18 21:32:15.839705729 +0000
-+++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_ac6a1f3f.md	2026-09-18 21:32:15.841705744 +0000
+--- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_ac6a1f3f.md	2026-09-18 21:34:04.247488677 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_ac6a1f3f.md	2026-09-18 21:34:04.249488692 +0000
 @@ -7,7 +7,7 @@
                   does not exist: <throwaway absolute path> (repo: <clone>; not found on any ref)
  ```
@@ -25,8 +25,8 @@
  **Repair.** The pointer now names only committed artifacts, each resolvable on a ref of the clone with `git rev-list --max-count=1 --all -- <path>`:
  
 =================================================================== t_a2cf1744
---- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_a2cf1744.md	2026-09-18 21:32:15.839705729 +0000
-+++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_a2cf1744.md	2026-09-18 21:32:15.841705744 +0000
+--- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_a2cf1744.md	2026-09-18 21:34:04.247488677 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_a2cf1744.md	2026-09-18 21:34:04.249488692 +0000
 @@ -9,7 +9,7 @@
                   card id, issue/PR link, or follow-up item
  ```
@@ -52,8 +52,8 @@
 -Scope note: this repair changes **no verdict** and claims **no new verification** — the baseline audit counted this card's verdict from metadata and only its evidence pointer was missing. The `--strict-history` retrofit view additionally required the `A1_HISTORY_UNGATED` check to pass, which needs a verdict *and* an evidence pointer to be visible on the card; both are now on it.
 +Scope note: this repair changes **no verdict** and claims **no new verification** — the baseline audit already counted this card's verdict from metadata; only its evidence pointer was missing. The `--strict-history` retrofit view additionally requires the `A1_HISTORY_UNGATED` check to pass, which needs a verdict *and* an evidence pointer visible on the card; both are now on it.
 =================================================================== t_5fe41426
---- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_5fe41426.md	2026-09-18 21:32:15.839705729 +0000
-+++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_5fe41426.md	2026-09-18 21:32:15.840705737 +0000
+--- /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments-draft/t_5fe41426.md	2026-09-18 21:34:04.247488677 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_4242bee8/tests/evidence/t_7dd3b960-retrofit/comments/t_5fe41426.md	2026-09-18 21:34:04.249488692 +0000
 @@ -8,7 +8,7 @@
  ```
  

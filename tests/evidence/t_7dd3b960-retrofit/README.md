@@ -59,6 +59,8 @@ recorded at completion and are **not** a new verdict. No comment claims a verifi
 | `reproduce.sh` | re-runs the whole verification against a clone + the live board |
 | `reproduce-run.txt` | the transcript of that re-run (rc=0, `SHA256SUMS` verified) |
 | `scan-secrets.sh`, `gitleaks-retrofit.txt`, `trufflehog-retrofit.txt` | pre-push secret scan of this directory: gitleaks `no leaks found`, trufflehog 0 verified / 0 unverified across 40 files |
+| `ab-gate-revision.txt` | A/B of the PR #25 gate revision vs the revision now installed in all 7 profiles, over the same board |
+| `dogfood/transcript.txt`, `dogfood/payload-block-control.json` | this card's own gate state: `check` twice, a live hook ALLOW fire, and a live hook BLOCK control |
 | `SHA256SUMS` | digests of every file in this directory |
 
 ---
@@ -87,9 +89,10 @@ subset check: after-pre-epoch-fails ⊆ before-pre-epoch-fails -> true
   expected the 3 retro-verifications to take 24 → 21; the 3 record repairs then take it to 18, because each of
   the three repaired cards also fails `--strict-history` at baseline and is fixed by its repair. Both readings
   satisfy "at most 21"; the measured number is 18.
-* One card entered the done-audit **during** this run (`t_710ed14c`, a sibling architect card completed
-  concurrently) and passes; the board is shared, which is why the before/after pair is captured as an artefact
-  rather than asserted to be reproducible later.
+* **Two cards entered the done-audit during this run** (`t_710ed14c`, `t_4e1b6937` — sibling architect cards
+  completed concurrently) and both pass; the board is shared, which is why the before/after pair is captured as
+  an artefact rather than asserted to be reproducible later. A later re-run (`ab-gate-revision.txt`, 47 done
+  cards) still reports pre-epoch **18** with the same cleared set and 0 newly failing.
 
 ### 3.1 One claim in the card body is half true, measured
 
@@ -152,7 +155,45 @@ decision record closed on all six cards.
 
 ---
 
-## 6. Not claimed
+## 6. Gate-revision observation (measured, reported not fixed)
+
+The **enforced** gate revision is no longer the revision the baseline was measured at. While this card ran, the
+copy installed in all 7 profiles moved:
+
+| revision | sha256 | where |
+|---|---|---|
+| PR #25 (baseline + every audit here) | `0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55` | on `qa/t_58280940-r8-stale-deferral`; installed copies until 2026-09-18 21:32 |
+| currently installed in all 7 profiles | `28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab` | **no ref of the clone carries it** |
+| `master` (unchanged) | `44e15f95fcf133367d14f633ab1d2d812ccbe8f1b7666d78d762b65a73bc604b` | `scripts/qa/signoff-gate.mjs` on `94fb9de` |
+
+Consequences, both measured:
+
+* **Criterion 1 is revision-robust.** `ab-gate-revision.txt` A/Bs the two revisions over the same board:
+  identical outcome — pre-epoch `24 → 18`, cleared set exactly the 6 targeted cards, `0` newly failing,
+  post-epoch `6 → 6`.
+* **The gate semantics and the committed gate have diverged again.** The installed revision's block message
+  cites `QA_SIGN_OFF_GATE.md` §5.7 and requires the evidence path to follow an `Evidence:` label — text the
+  `0af4a453` revision does not contain — and no branch or PR carries that revision. This is the parent card's
+  S2 ("gate-revision coupling") finding with the sign flipped: then CI ran a *stale* gate, now the profiles run
+  an *uncommitted* one. Reported here for the merge lane; the gate script is out of this card's scope and was
+  not touched.
+
+---
+
+## 7. Dogfood (the card's own gate state, `dogfood/transcript.txt`)
+
+| fire | result |
+|---|---|
+| `check --task t_4242bee8 --pre-complete` from the card workspace (no repo root) | 1 enforced, **0 FAIL**, exit 0 — paths degrade to `A3_EVIDENCE_UNVERIFIED` advisories, which is the documented manual-`check` behaviour |
+| `check --task t_4242bee8 --pre-complete --repo <clone>` | 1 enforced, **0 FAIL**, exit 0 |
+| real hook dispatcher, ALLOW case (this card) | gate exits 0, `{}`; secret-guard exits 0, `{}` |
+| real hook dispatcher, **BLOCK control** (`t_c3cb6842`, a done card with no QA token) | gate exits **2** with `{"decision":"block",…}` naming `R1_QA_VERDICT_MISSING` and `R4_EVIDENCE_MISSING` |
+
+The block control is the non-vacuity proof: the allow above is a decision, not the hook being inert.
+
+---
+
+## 8. Not claimed
 
 * **No QA signature was given to SEC-001, ADR-002 or ADR-005.** A retro-verification of a card's acceptance
   criteria is not a sign-off on the artefact; SEC-001's signature needs a QA card that reviews the document in
