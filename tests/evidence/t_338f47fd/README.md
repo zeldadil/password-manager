@@ -5,6 +5,8 @@
 **Policy:** `QA_SIGN_OFF_GATE.md` §3 (author rule), §4 (`R1`, `A7`, `A8`), §5.1, §5.4, §10 item 8, §11 changelog.
 **Gate revision:** `scripts/qa/signoff-gate.mjs` sha256
 `85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814` (was `28b0b771…`, installed in all 7 profiles).
+**PR:** [#31](https://github.com/zeldadil/password-manager/pull/31), base = the PR #29 head (stacked; must land
+after #29) — **10/10 checks green** on head `704d4dd` (`pr31-checks-final.txt`).
 
 This file records no verdict token on purpose — the verdict is a comment on the Kanban card.
 
@@ -146,4 +148,5 @@ non-QA record. These surfaced gaps are routed as a follow-up card (retro-verific
 | `dogfood-before-verdict.txt`, `dogfood-after-verdict.txt`, `dogfood.sh` | the gate's verdict on **this** card before (2 violations) and after (0) the verdict comment |
 | `own-completion-live-fire.txt` | live fire of the installed hook for this card's own completion, from the worker workspace (allowed, `{}`) |
 | `verdict-comment-onboard.md` | the operative verdict comment as it reads back **from the board** (authoritative copy — the posted body may be normalised, so the board is the record) |
+| `pr31-checks-final.txt` | PR #31 CI checks on the head (10/10 green, incl. `secret-scan`, `sast`, Semgrep OSS) |
 | `reinstall-and-verify.sh` | regenerates the four install/verify/doctor/hook-fire transcripts |

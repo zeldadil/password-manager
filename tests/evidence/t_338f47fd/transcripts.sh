@@ -84,6 +84,17 @@ cp "${REPO_ROOT}/scripts/qa/signoff-gate.selftest.mjs" "$WORK/signoff-gate.selft
   git -C "$REPO_ROOT" diff "${PREFIX_REF}" HEAD -- scripts/qa/signoff-gate.mjs scripts/qa/signoff-gate.selftest.mjs QA_SIGN_OFF_GATE.md
 } > "$HERE/gate-fix.diff" 2>&1
 
+# ── PR checks ───────────────────────────────────────────────────────────────
+PR_NUMBER="${PR_NUMBER:-31}"
+{
+  echo "t_338f47fd — PR #${PR_NUMBER} checks on the current head"
+  echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo "head: $(git -C "$REPO_ROOT" rev-parse HEAD)"
+  echo "pr:   $(gh pr view "$PR_NUMBER" --json url --jq .url 2>/dev/null || echo 'gh unavailable')"
+  echo
+  gh pr checks "$PR_NUMBER" 2>&1
+} > "$HERE/pr31-checks-final.txt" 2>&1
+
 echo "wrote:"
 ls -1 "$HERE" | sed 's/^/  /'
 rm -rf "$WORK"

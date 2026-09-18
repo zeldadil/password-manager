@@ -1,11 +1,11 @@
 t_338f47fd — selftest against the FIXED gate (expected: 81/81, exit 0)
-date: 2026-09-18T21:50:39Z
+date: 2026-09-18T21:53:57Z
 gate:     scripts/qa/signoff-gate.mjs sha256 85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
 selftest: scripts/qa/signoff-gate.selftest.mjs sha256 2196f061552ea6b2835c43b631915cdd40882ecfe1cd2597adecdcc41f1e7759
 command:  node scripts/qa/signoff-gate.selftest.mjs
 
-QA sign-off gate selftest — fixture board: /tmp/signoff-gate-selftest-iTBXhl/board.db
-fixture repo: /tmp/signoff-gate-selftest-iTBXhl/repo
+QA sign-off gate selftest — fixture board: /tmp/signoff-gate-selftest-05Gas1/board.db
+fixture repo: /tmp/signoff-gate-selftest-05Gas1/repo
 
 1. Compliant cards (must produce ZERO violations — anti-vacuous control):
   ok   - Path A verdict + repo evidence
