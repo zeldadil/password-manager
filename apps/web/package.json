@@ -16,6 +16,7 @@
     "test:unit": "vitest run --exclude '**/node_modules/**' --exclude '**/dist/**' --exclude 'src/**/*.integration.test.{ts,tsx}'",
     "test:watch": "vitest",
     "test:integration": "vitest run --passWithNoTests --config vitest.integration.config.ts",
+    "test:a11y": "vitest run --config vitest.a11y.config.ts",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -33,6 +34,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^6.1.1",
+    "axe-core": "^4.13.0",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "10.1.1",
     "eslint-plugin-react-hooks": "^5.0.0",
