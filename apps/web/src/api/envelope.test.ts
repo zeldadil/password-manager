@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ApiClient } from './client'
 import { ApiError } from './errors'
-import { InMemoryTokenStore } from './tokenStore'
+import { InMemoryTokenStore, type TokenStore } from './tokenStore'
 import type { EnvelopeHeader } from './types'
 
 /**
@@ -42,7 +42,7 @@ function makeFetch(
 
 function buildClient(
   fetchImpl: typeof fetch,
-  store = new InMemoryTokenStore(),
+  store: TokenStore = new InMemoryTokenStore(),
   extra: Partial<ConstructorParameters<typeof ApiClient>[0]> = {},
 ) {
   return new ApiClient({ baseUrl: BASE_URL, tokenStore: store, fetchImpl, ...extra })
@@ -171,24 +171,68 @@ describe('ApiClient — malformed refresh', () => {
 })
 
 describe('ApiClient — secret hygiene in errors', () => {
+  /**
+   * A 401 error envelope shaped like the server's. It deliberately carries no
+   * `documentationUrl`, so a fallback that stuffs a credential into that field is
+   * observable in the thrown error.
+   */
+  function unauthorizedEnvelope(): Response {
+    return jsonResponse(
+      {
+        header: successHeader({ status: 'error', code: 401, message: 'Unauthorized' }),
+        body: { errors: [{ code: 'UNAUTHORIZED', field: '', message: 'invalid token' }] },
+      },
+      401,
+    )
+  }
+
   it('never echoes the bearer token into the thrown error', async () => {
     const store = new InMemoryTokenStore()
     store.setTokens({ accessToken: 'super-secret-jwt', refreshToken: 'refresh-1' })
 
-    const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse(
-        {
-          header: successHeader({ status: 'error', code: 401, message: 'Unauthorized' }),
-          body: { errors: [{ code: 'UNAUTHORIZED', field: '', message: 'invalid token' }] },
-        },
-        401,
-      ),
-    )
+    // A FRESH `Response` per fetch call is deliberate: a body can only be read once, so
+    // `mockResolvedValue(<one Response>)` makes the refresh call re-read an already
+    // consumed body, which degrades `parseErrorResponse` to the generic `ApiError`
+    // ('Request failed with status 401') and leaves the assertions below vacuous — the
+    // envelope-derived error (server message / action / details / documentationUrl) is
+    // then never the object under assertion.
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(unauthorizedEnvelope()))
     const client = buildClient(makeFetch(fetchMock), store)
 
     const error = await client.get('/resources').catch((e: unknown) => e)
 
+    // Fixture guard: the error under assertion must be the envelope-derived one.
+    expect(fetchMock).toHaveBeenCalledTimes(2) // request + refresh
     expect(error).toBeInstanceOf(ApiError)
+    expect((error as ApiError).message).toBe('Unauthorized')
+    expect(error).toMatchObject({ kind: 'http', httpStatus: 401, action: 'TestAction' })
+    expect((error as ApiError).details).toEqual([
+      { code: 'UNAUTHORIZED', field: '', message: 'invalid token' },
+    ])
+
+    expect(JSON.stringify(error)).not.toContain('super-secret-jwt')
+    expect((error as ApiError).message).not.toContain('super-secret-jwt')
+  })
+
+  it('never echoes the bearer token into a 401 error thrown without a refresh attempt', async () => {
+    // Access token present (the request is authenticated) but no refresh token, so
+    // `request()` rethrows the original envelope error instead of refreshing.
+    const store: TokenStore = {
+      getAccessToken: () => 'super-secret-jwt',
+      getRefreshToken: () => null,
+      setTokens: () => undefined,
+      clear: () => undefined,
+    }
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(unauthorizedEnvelope()))
+    const client = buildClient(makeFetch(fetchMock), store)
+
+    const error = await client.get('/resources').catch((e: unknown) => e)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(error).toBeInstanceOf(ApiError)
+    expect((error as ApiError).message).toBe('Unauthorized')
+    expect(error).toMatchObject({ kind: 'http', httpStatus: 401, action: 'TestAction' })
+
     expect(JSON.stringify(error)).not.toContain('super-secret-jwt')
     expect((error as ApiError).message).not.toContain('super-secret-jwt')
   })
