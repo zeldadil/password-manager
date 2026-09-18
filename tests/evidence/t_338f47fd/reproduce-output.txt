@@ -2,7 +2,7 @@
 ── 0. revisions under test
 repo gate (fixed)  85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
 selftest (fixed)   2196f061552ea6b2835c43b631915cdd40882ecfe1cd2597adecdcc41f1e7759
-prefix gate        28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  (from HEAD^)
+prefix gate        28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  (from 4c0d3ea)
 ok   prefix gate is byte-identical to the revision installed before this fix (28b0b771…)
 
 ── 1. patched selftest (expect 81/81, exit 0)
@@ -23,10 +23,10 @@ prefix suite exit=1, red cases=8
 ok   8 of the new cases fail on the pre-fix gate — the defect, reproduced by the suite
 
 ── 3. the reported fixture, replayed on a COPY of the live board
-live board at step 3   e057429f0803070d91178be582e1a632c7d2e1062d1e71e31f01d001c97f129b  /home/sap/.hermes/kanban.db
-board copy             e057429f0803070d91178be582e1a632c7d2e1062d1e71e31f01d001c97f129b  /tmp/t_338f47fd-repro.N0M3xr/board.db
+live board at step 3   42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9  /home/sap/.hermes/kanban.db
+board copy             42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9  /tmp/t_338f47fd-repro.sr4fZg/board.db
 ok   board copy is byte-identical to the live board
-A/B copy (pristine)    e057429f0803070d91178be582e1a632c7d2e1062d1e71e31f01d001c97f129b
+A/B copy (pristine)    42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9
 fixture card: t_7918f010 — BE-001f: Error Handler + Secret Scanning CI @backend status=done
 live comment count on t_7918f010 at step 3: 1
 evidence path tests/evidence/t_5fe41426/README.md is committed at 543c396d8bf4289492b80066a93e8c9f51de8c2a
@@ -110,8 +110,8 @@ ok   the fixed hook's block reason names R1 and the fixture card
 ok   live-board delta measured on the pristine copy (transcript: ab-live-audit.txt)
 
 ── 5. the live board was only ever read
-live board sha256 at step 3 : e057429f0803070d91178be582e1a632c7d2e1062d1e71e31f01d001c97f129b
-live board sha256 now       : e057429f0803070d91178be582e1a632c7d2e1062d1e71e31f01d001c97f129b
+live board sha256 at step 3 : 42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9
+live board sha256 now       : 42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9
 injected marker rows on the live board : 0
 injected marker rows on the replay copy: 1
 ok   no comment injected by this run exists on the live board (every write went to the copies)

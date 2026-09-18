@@ -1,17 +1,17 @@
 t_338f47fd — board audit under both revisions, same board copy
-date: 2026-09-18T21:49:08Z
-board copy: /tmp/t_338f47fd-ev.tOYe3n/board.db sha256 e057429f0803070d91178be582e1a632c7d2e1062d1e71e31f01d001c97f129b  (copy of /home/sap/.hermes/kanban.db, taken at the date above)
+date: 2026-09-18T21:50:51Z
+board copy: /tmp/t_338f47fd-ev.tPSO0F/board.db sha256 42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9  (copy of /home/sap/.hermes/kanban.db, taken at the date above)
 repo:       /home/sap/password-manager/.worktrees/t_338f47fd
 
 ── PREFIX gate (28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab)
 exit: 1
-QA sign-off gate — audit (db: /tmp/t_338f47fd-ev.tOYe3n/board.db, epoch: 2026-09-17T15:00:00.000Z)
+QA sign-off gate — audit (db: /tmp/t_338f47fd-ev.tPSO0F/board.db, epoch: 2026-09-17T15:00:00.000Z)
   enforced (done at/after epoch or pre-complete): 22  ·  pass: 16  ·  FAIL: 6
   FAIL t_7918f010  BE-001f: Error Handler + Secret Scanning CI @backend
 
 ── FIXED gate (85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814)
 exit: 1
-QA sign-off gate — audit (db: /tmp/t_338f47fd-ev.tOYe3n/board.db, epoch: 2026-09-17T15:00:00.000Z)
+QA sign-off gate — audit (db: /tmp/t_338f47fd-ev.tPSO0F/board.db, epoch: 2026-09-17T15:00:00.000Z)
   enforced (done at/after epoch or pre-complete): 22  ·  pass: 14  ·  FAIL: 8
   FAIL t_7918f010  BE-001f: Error Handler + Secret Scanning CI @backend
 

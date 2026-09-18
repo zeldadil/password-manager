@@ -11,9 +11,10 @@ BOARD="${HERMES_KANBAN_DB:-${HOME}/.hermes/kanban.db}"
 GATE="${REPO_ROOT}/scripts/qa/signoff-gate.mjs"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/t_338f47fd-inv.XXXXXX")"
 cp "$BOARD" "$WORK/board.db"
-# The pre-fix revision (28b0b771…, installed in all 7 profiles before this card),
+# The pre-fix revision (28b0b771…, the PR #29 head this branch was cut from),
 # read from git so the before/after inventory needs no committed copy of the old logic.
-git -C "$REPO_ROOT" show "HEAD^:scripts/qa/signoff-gate.mjs" > "$WORK/prefix-gate.mjs"
+PREFIX_REF="${PREFIX_REF:-4c0d3ea}"
+git -C "$REPO_ROOT" show "${PREFIX_REF}:scripts/qa/signoff-gate.mjs" > "$WORK/prefix-gate.mjs"
 sha() { sha256sum "$1" | cut -d' ' -f1; }
 {
   echo "t_338f47fd — every verdict source the gate sees, by author (board copy, read-only)"

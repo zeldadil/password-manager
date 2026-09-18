@@ -50,7 +50,9 @@ printf 'selftest (fixed)   %s\n' "$(sha "$SELFTEST")"
 PREFIX_GATE=""
 PREFIX_SOURCE=""
 PREFIX_EXPECTED="28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab"
-for ref in "HEAD^" "4c0d3ea" "origin/qa/t_99e408c5-r5-quoted-path" "origin/master"; do
+# 4c0d3ea (the PR #29 head) is the revision this branch was cut from, i.e. the one
+# installed before this fix; HEAD~2 is the same commit once this card is committed.
+for ref in "4c0d3ea" "origin/qa/t_99e408c5-r5-quoted-path" "HEAD~2" "HEAD^" "origin/master"; do
   if git -C "$REPO_ROOT" cat-file -e "${ref}:scripts/qa/signoff-gate.mjs" 2>/dev/null; then
     git -C "$REPO_ROOT" show "${ref}:scripts/qa/signoff-gate.mjs" > "$WORK/prefix-gate.mjs"
     PREFIX_GATE="$WORK/prefix-gate.mjs"

@@ -1,6 +1,6 @@
 t_338f47fd — whole-board A/B: violation sets before/after the §3 author rule
-date: 2026-09-18T21:49:09Z
-board copy: /tmp/t_338f47fd-ev.tOYe3n/board.db sha256 e057429f0803070d91178be582e1a632c7d2e1062d1e71e31f01d001c97f129b
+date: 2026-09-18T21:50:52Z
+board copy: /tmp/t_338f47fd-ev.tPSO0F/board.db sha256 42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9
 
 done cards evaluated: 49
   violations unchanged : 43

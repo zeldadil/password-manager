@@ -1,6 +1,7 @@
-t_338f47fd — diff of the gate fix (gate + selftest + policy doc) vs HEAD
-date: 2026-09-18T21:49:09Z
-HEAD: 4c0d3ea docs(qa): t_99e408c5 — PR #29 checks for the final head
+t_338f47fd — diff of the gate fix (gate + selftest + policy doc) vs the branch point
+date: 2026-09-18T21:50:52Z
+range: 4c0d3ea..HEAD  (HEAD: 19b7798 docs(qa): t_338f47fd - reproduction, board A/B, re-install transcripts and evidence index)
+branch point: 4c0d3ea docs(qa): t_99e408c5 — PR #29 checks for the final head
 
 diff --git a/QA_SIGN_OFF_GATE.md b/QA_SIGN_OFF_GATE.md
 index e270705..a55e1ce 100644

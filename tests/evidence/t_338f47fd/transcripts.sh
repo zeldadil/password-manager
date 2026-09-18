@@ -10,8 +10,10 @@ BOARD="${HERMES_KANBAN_DB:-${HOME}/.hermes/kanban.db}"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/t_338f47fd-ev.XXXXXX")"
 cd "$REPO_ROOT"
 
-# prefix gate = the revision installed before this fix, from git (byte-exact)
-git -C "$REPO_ROOT" show "HEAD^:scripts/qa/signoff-gate.mjs" > "$WORK/prefix-gate.mjs"
+# prefix gate = the revision installed before this fix (28b0b771…), from git
+# (byte-exact; 4c0d3ea is the PR #29 head this branch was cut from)
+PREFIX_REF="${PREFIX_REF:-4c0d3ea}"
+git -C "$REPO_ROOT" show "${PREFIX_REF}:scripts/qa/signoff-gate.mjs" > "$WORK/prefix-gate.mjs"
 cp "$BOARD" "$WORK/board.db"
 
 sha() { sha256sum "$1" | cut -d' ' -f1; }
@@ -72,13 +74,14 @@ cp "${REPO_ROOT}/scripts/qa/signoff-gate.selftest.mjs" "$WORK/signoff-gate.selft
   node "$HERE/ab-live-audit.mjs" "$WORK/prefix-gate.mjs" "$GATE" "$WORK/board.db" "$REPO_ROOT" 2>&1
 } > "$HERE/ab-live-audit.txt" 2>&1
 
-# ── diff of the change ──────────────────────────────────────────────────────
+# ── diff of the change (committed) ──────────────────────────────────────────
 {
-  echo "t_338f47fd — diff of the gate fix (gate + selftest + policy doc) vs HEAD"
+  echo "t_338f47fd — diff of the gate fix (gate + selftest + policy doc) vs the branch point"
   echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  echo "HEAD: $(git -C "$REPO_ROOT" rev-parse --short HEAD) $(git -C "$REPO_ROOT" log -1 --format=%s)"
+  echo "range: ${PREFIX_REF}..HEAD  (HEAD: $(git -C "$REPO_ROOT" rev-parse --short HEAD) $(git -C "$REPO_ROOT" log -1 --format=%s))"
+  echo "branch point: ${PREFIX_REF} $(git -C "$REPO_ROOT" log -1 --format=%s "$PREFIX_REF")"
   echo
-  git -C "$REPO_ROOT" diff -- scripts/qa/signoff-gate.mjs scripts/qa/signoff-gate.selftest.mjs QA_SIGN_OFF_GATE.md
+  git -C "$REPO_ROOT" diff "${PREFIX_REF}" HEAD -- scripts/qa/signoff-gate.mjs scripts/qa/signoff-gate.selftest.mjs QA_SIGN_OFF_GATE.md
 } > "$HERE/gate-fix.diff" 2>&1
 
 echo "wrote:"

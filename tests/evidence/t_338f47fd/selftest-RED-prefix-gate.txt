@@ -1,10 +1,10 @@
 t_338f47fd — the SAME suite against the PREFIX gate (the 8 new cases must be red)
-date: 2026-09-18T21:49:02Z
-prefix gate: /tmp/t_338f47fd-ev.tOYe3n/signoff-gate.mjs sha256 28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  (the revision installed in all 7 profiles before this fix)
+date: 2026-09-18T21:50:45Z
+prefix gate: /tmp/t_338f47fd-ev.tPSO0F/signoff-gate.mjs sha256 28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  (the revision installed in all 7 profiles before this fix)
 command:     node <tmp>/signoff-gate.selftest.mjs
 
-QA sign-off gate selftest — fixture board: /tmp/signoff-gate-selftest-uf2UJT/board.db
-fixture repo: /tmp/signoff-gate-selftest-uf2UJT/repo
+QA sign-off gate selftest — fixture board: /tmp/signoff-gate-selftest-75SDKI/board.db
+fixture repo: /tmp/signoff-gate-selftest-75SDKI/repo
 
 1. Compliant cards (must produce ZERO violations — anti-vacuous control):
   ok   - Path A verdict + repo evidence

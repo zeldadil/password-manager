@@ -1,9 +1,9 @@
 t_338f47fd — every verdict source the gate sees, by author (board copy, read-only)
-date: 2026-09-18T21:49:43Z
-board copy: /tmp/t_338f47fd-inv.kfZQ36/board.db sha256 e057429f0803070d91178be582e1a632c7d2e1062d1e71e31f01d001c97f129b  (copy of /home/sap/.hermes/kanban.db)
+date: 2026-09-18T21:50:52Z
+board copy: /tmp/t_338f47fd-inv.HLTUWl/board.db sha256 42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9  (copy of /home/sap/.hermes/kanban.db)
 
 ======================================================================
-BEFORE — prefix gate /tmp/t_338f47fd-inv.kfZQ36/prefix-gate.mjs sha256 28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab
+BEFORE — prefix gate /tmp/t_338f47fd-inv.HLTUWl/prefix-gate.mjs sha256 28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab
 (the marker path accepted ANY author, so these comment sources were verdicts)
 ======================================================================
 t_710ed14c status=done     op-source=run-metadata     author=architect    token=pass-with-conditions   valid=yes  <== NON-QA OPERATIVE
