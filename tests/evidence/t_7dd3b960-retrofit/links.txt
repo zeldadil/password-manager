@@ -1,0 +1,98 @@
+### direct children of SEC-001 (t_9840ccdd)
+child_id    title                                                                                    status
+----------  ---------------------------------------------------------------------------------------  ------
+t_16f8ad84  BE-002a: Registration + KDF + Vault Key Storage                                          todo  
+t_3ca45da2  ADR-002: Overall Architecture                                                            done  
+t_83dc1b35  BR-002a: Vault Session Sync                                                              triage
+t_93cf5611  DOC-001d: Create SECURITY.md with threat model, disclosure policy, and crypto decisions  triage
+t_fe3b76ea  BE-003a: Vault Encryption                                                                todo  
+
+### children of BE-002a (t_16f8ad84)
+child_id    title                   
+----------  ------------------------
+t_4d0c8439  BE-002b: Unlock Endpoint
+
+### children of BE-003a (t_fe3b76ea)
+child_id    title                                        
+----------  ---------------------------------------------
+t_b6f633c3  BE-003d: Folder CRUD + Tree + Permission Mask
+t_ddd8fb1e  BE-003b: Resource CRUD API + Schema          
+
+### children of BR-002a (t_83dc1b35)
+child_id    title               
+----------  --------------------
+t_e919cff1  BR-002b: Unlock Flow
+
+### parents of FE-002a (t_3b58b7ef)
+parent_id   title                  
+----------  -----------------------
+t_cdd23d35  FE-001k: a11y Tests    
+t_8d52bcc9  BE-002h: Security Tests
+
+### parents of FE-003a (t_a9d5cb1b)
+parent_id   title                  
+----------  -----------------------
+t_e4341d18  BE-003k: Security Tests
+t_a526419e  FE-002h: a11y Tests    
+
+### parents of BR-003a (t_4b263ba0)
+parent_id   title                  
+----------  -----------------------
+t_7b33595a  BR-002h: Security Tests
+t_e4341d18  BE-003k: Security Tests
+
+### every task whose title starts BE-002/BE-003/BR-002/BR-003/FE-002/FE-003 and its parents
+t_03612cd7  BE-003f: Permission Model + Enforcement Middle  t_b6f633c3                                 
+t_12f540bf  FE-002c: Lock Button + Auto-lock Banner         t_fdd2548e                                 
+t_16f8ad84  BE-002a: Registration + KDF + Vault Key Storag  t_9840ccdd t_cc570a8b                      
+t_19128fb2  FE-003g: Folder Management                      t_aca6ed13                                 
+t_33b8bbd3  BE-002d: Session Lifetime (Auto-lock, Rotation  t_bc53fc06                                 
+t_3b58b7ef  FE-002a: Login Page                             t_cdd23d35 t_8d52bcc9                      
+t_4278a1dc  BE-002e: Wrong-password Handling                t_4d0c8439                                 
+t_4b263ba0  BR-003a: Form Detection + Icon Injection + Pop  t_7b33595a t_e4341d18                      
+t_4d0c8439  BE-002b: Unlock Endpoint                        t_16f8ad84                                 
+t_516a7fcc  BE-002g: Integration Tests                      t_91964616                                 
+t_55c28180  BE-003e: Tag CRUD                               t_ddd8fb1e                                 
+t_59303b60  FE-003e: Create/Edit Resource Form              t_79831815                                 
+t_5fb75e7b  FE-002f: Unit Tests                             t_b037ed46 t_7f8643d9                      
+t_63323ce5  FE-002g: Integration Tests                      t_5fb75e7b                                 
+t_6ec9d9dd  BR-003f: Security Tests                         t_8e4c8bfa                                 
+t_70373f4b  FE-003j: Unit Tests                             t_b6251876 t_19128fb2 t_f666adb9 t_c7258993
+t_79831815  FE-003d: Resource Detail Modal                  t_a9d5cb1b                                 
+t_7b33595a  BR-002h: Security Tests                         t_979847fc                                 
+t_7f8643d9  FE-002e: Accessibility                          t_12f540bf                                 
+t_83dc1b35  BR-002a: Vault Session Sync                     t_9840ccdd t_ddb8b911                      
+t_8d52bcc9  BE-002h: Security Tests                         t_516a7fcc                                 
+t_8e4c8bfa  BR-003e: E2E Tests                              t_e4e4bb34                                 
+t_8f8fb1fb  FE-003k: Integration Tests                      t_70373f4b                                 
+t_91964616  BE-002f: Unit Tests                             t_33b8bbd3 t_4278a1dc                      
+t_974b5e77  BR-002c: Crypto Boundary + Autofill Decryption  t_e919cff1                                 
+t_979847fc  BR-002g: Integration Tests                      t_9ebd221b                                 
+t_9ebd221b  BR-002f: Unit Tests                             t_b1a8b77e                                 
+t_a526419e  FE-002h: a11y Tests                             t_5fb75e7b                                 
+t_a79d6edc  FE-003l: a11y Tests                             t_70373f4b                                 
+t_a7b64b39  BE-003i: Unit Tests                             t_d696f175                                 
+t_a9d5cb1b  FE-003a: Vault Dashboard                        t_e4341d18 t_a526419e                      
+t_aca6ed13  FE-003b: Sidebar                                t_a9d5cb1b                                 
+t_acd800fe  BR-002d: Message Validation + Rate Limiting     t_974b5e77                                 
+t_b037ed46  FE-002d: Error States + No Leakage              t_12f540bf                                 
+t_b1a8b77e  BR-002e: Vault Key Memory Lifetime              t_acd800fe                                 
+t_b51bf4b9  BE-003c: Secret Schema                          t_ddd8fb1e                                 
+t_b6251876  FE-003f: Password Generator Panel               t_59303b60                                 
+t_b6f633c3  BE-003d: Folder CRUD + Tree + Permission Mask   t_fe3b76ea                                 
+t_b7b9f3be  BR-003g: Firefox-specific CI                    t_6ec9d9dd                                 
+t_bc53fc06  BE-002c: Lock Endpoint + Session Validation     t_4d0c8439                                 
+t_bd7a460a  BR-003d: TOTP Support (stretch)                 t_c5d9ea01                                 
+t_c5d9ea01  BR-003b: Resource Selection → Decrypt → Fill o  t_4b263ba0                                 
+t_c7258993  FE-003i: Client-side Decryption + Optimistic U  t_79831815                                 
+t_d136be82  BE-003g: Folder Permission Mask Propagation     t_03612cd7                                 
+t_d696f175  BE-003h: Search Endpoint                        t_55c28180 t_d136be82                      
+t_ddd8fb1e  BE-003b: Resource CRUD API + Schema             t_fe3b76ea                                 
+t_e4341d18  BE-003k: Security Tests                         t_f4f3ec16                                 
+t_e4e4bb34  BR-003c: Save New Credential Flow               t_c5d9ea01                                 
+t_e919cff1  BR-002b: Unlock Flow                            t_83dc1b35                                 
+t_f37504f0  FE-003c: Search Bar                             t_a9d5cb1b                                 
+t_f4f3ec16  BE-003j: Integration Tests                      t_a7b64b39                                 
+t_f666adb9  FE-003h: Tag Management                         t_aca6ed13                                 
+t_fdd2548e  FE-002b: Unlock Page                            t_3b58b7ef                                 
+t_fe3b76ea  BE-003a: Vault Encryption                       t_9840ccdd t_8d52bcc9                      

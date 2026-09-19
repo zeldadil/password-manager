@@ -1,0 +1,14 @@
+
+> password-manager@0.1.0 test:unit /home/sap/.hermes/kanban/workspaces/t_cdd23d35/repo
+> pnpm -r --parallel --filter '**' run test:unit
+
+apps/web test:unit$ vitest run --exclude '**/node_modules/**' --exclude '**/dist/**' --exclude 'src/**/*.integration.test.{ts,tsx}'
+apps/web test:unit:  RUN  v5.0.1 /home/sap/.hermes/kanban/workspaces/t_cdd23d35/repo/apps/web
+apps/web test:unit:  Test Files  20 passed (20)
+apps/web test:unit:       Tests  162 passed (162)
+apps/web test:unit:    Start at  21:42:15
+apps/web test:unit:    Duration  11.27s (environment 71%, tests 17%, import 9%, transform 3%, worker 1%)
+apps/web test:unit: Environment  jsdom was created 20 times · 21.15s total, 71% of tracked time
+apps/web test:unit:              create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+apps/web test:unit:              learn more: https://vitest.dev/guide/improving-performance#test-environments
+apps/web test:unit: Done
