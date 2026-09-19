@@ -47,15 +47,25 @@ describe('Header', () => {
   it('shows the user menu with the user name, Settings, and Sign out', () => {
     renderHeader({ userName: 'Ada Lovelace' })
     fireEvent.click(screen.getByRole('button', { name: 'Ada Lovelace' }))
-    expect(screen.getByRole('menuitem', { name: 'Settings' })).toBeTruthy()
-    expect(screen.getByRole('menuitem', { name: 'Sign out' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Settings' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy()
+  })
+
+  it('exposes the user dropdown as a disclosure, not a WAI-ARIA menu', () => {
+    renderHeader({ userName: 'Ada Lovelace' })
+    const toggle = screen.getByRole('button', { name: 'Ada Lovelace' })
+    fireEvent.click(toggle)
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(screen.queryByRole('menuitem')).toBeNull()
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(toggle.getAttribute('aria-controls')).toBe('user-menu')
   })
 
   it('invokes onSignOut when Sign out is clicked', () => {
     const onSignOut = vi.fn()
     renderHeader({ userName: 'Ada Lovelace', onSignOut })
     fireEvent.click(screen.getByRole('button', { name: 'Ada Lovelace' }))
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Sign out' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }))
     expect(onSignOut).toHaveBeenCalledTimes(1)
   })
 })
