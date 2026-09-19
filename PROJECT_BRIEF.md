@@ -84,10 +84,11 @@ root task, all secret-storage/crypto/bridge work depends on it.
 Decisions ratified during the project kickoff walkthrough. Each entry records what was decided, by whom, and the rationale. These are living decisions — update this log as ADRs are written and gates close.
 
 ### Telegram status-updates channel
-- **Decision:** Telegram bot configured for all 6 agent profiles (`architect`, `backend`, `frontend`, `browser`, `qa`, `docs`) using `TELEGRAM_BOT_TOKEN=<REDACTED>`, `TELEGRAM_ALLOWED_USERS=956145756`.
+- **Decision:** Telegram bot configured for all 6 agent profiles (`architect`, `backend`, `frontend`, `browser`, `qa`, `docs`) using the bot token from `@BotFather` and `TELEGRAM_ALLOWED_USERS=956145756`.
 - **Rationale:** Standing instruction requires every Kanban task completion (done/review) or block to be reported via `hermes send --to telegram` immediately — no batching, no waiting. The channel is the team's operational heartbeat.
 - **Tested:** `hermes send --to telegram:956145756 "test"` succeeded from @backend profile. All profiles now have `.env` (token + allowed users) and `config.yaml` (target, home_channel, home_channel_name) set.
 - **Owner:** architect
+- **Credential handling:** The bot token is **never written into any repo file** — only in each profile's `.env` (which is gitignored) and in `config.yaml` (which is also gitignored via the profile's `.gitignore`). The PROJECT_BRIEF.md decision log records the *decision* and the *user ID*, never the token value. See incident report below for the one-time breach and its resolution.
 
 ### SEC-001 deliverable format
 - **Decision:** SEC-001 threat model + 9 crypto decisions live in a **single ADR: `ADR-002-security-model.md`**. Atomic gate — Architect + QA sign off together; downstream tasks need one reference.
@@ -105,11 +106,13 @@ Decisions ratified during the project kickoff walkthrough. Each entry records wh
   apps/web/                 # React frontend
   apps/browser-firefox/     # Firefox MV3 extension
   apps/services/api/        # Node/TypeScript API
-  packages/shared/          # Shared contracts (API types, extension↔web messages, crypto interfaces)
+  packages/shared/          # Shared contracts (API types, extension↔web messages)
+  packages/crypto/          # SEC-001 primitives — isolated, audited crypto wrappers at monorepo root
   ```
-  Plus `packages/shared/crypto/` for SEC-001 primitives — pure TypeScript interfaces + implementations (no runtime coupling). Runtime adapters (Web Crypto for browser, Node `crypto` for API) are thin wrappers in each app. Tests and audit trail stay clean.
-- **Rationale:** Matches PROJECT_BRIEF.md stack section. Separating crypto interfaces from runtime implementations keeps the security boundary auditable and testable in isolation — critical for a product that stores user secrets.
+  `packages/crypto/` sits at the monorepo root (not inside `packages/shared/`) so it can be reviewed as a single security boundary. No app may bypass it. Runtime adapters (Web Crypto for browser, Node `crypto` for API) are thin wrappers in each app. (ADR-002 §2.1/§2.3/§5.3 — original architectural decision.)
+- **Rationale:** Matches PROJECT_BRIEF.md stack section. Separating crypto interfaces from runtime implementations keeps the security boundary auditable and testable in isolation — critical for a product that stores user secrets. The isolated-root placement is an original decision (ADR-002 §2.3): Passbolt's PHP stack has no equivalent isolated crypto package.
 - **Owner:** architect
+- **Reconciliation note (2026-09-17):** PROJECT_BRIEF.md kickoff draft said `packages/shared/crypto/` (§9, commit fd555c1-era text). ADR-002 (§2.1, §2.3, §5.3, §9.3) records `packages/crypto/` at monorepo root as an original decision. ADR-002 wins — it is the authoritative architecture document. PROJECT_BRIEF.md text updated above to match. QA-001a's TEST_STRATEGY.md §15.1 followed the ADRs (correct); the earlier PROJECT_BRIEF.md text was the source of the contradiction.
 
 ### Security checklist for gate enforcement
 - **Decision:** Not yet codified — QA-001a owns it. Baseline (no secrets in console/logs/URLs/errors, origin/message control, minimal permissions, tamper detection, backup/restore tested, dependency scan clean) is the starting point. QA-001a expands into `SECURITY_CHECKLIST.md` with per-layer checks (API/Web/Extension), CI-enforced vs. manual-review items, mapping to SEC-001 threat vectors, and evidence requirements per check. Architect reviews and signs off before QA-001b wires it into CI.
@@ -144,4 +147,25 @@ Decisions ratified during the project kickoff walkthrough. Each entry records wh
 - **Decision:** GitHub repo `zeldadil/password-manager` created (public), `master` branch protected (PR required, 1 approving review, status checks: lint/typecheck/unit/integration/secret-scan, linear history required, force pushes/deletions blocked). Remote added as `origin`. Actual visibility: public (private repos require GitHub Pro for branch protection API).
 - **Rationale:** Private repos on free GitHub tier don't support branch protection API — switching to public unlocks it. All repo content is open-source code/docs; no sensitive data in the repo itself (secrets live only in encrypted vault at runtime, never committed).
 - **Owner:** architect
-- **Commit:** tbd (pending commit of this update)
+- **Commit:** `a503e4d` ("docs: ARC-001f — GitHub repo created + branch protection configured")
+
+### Branch protection: single-account review gate removed (2026-09-17)
+- **Decision:** `required_approving_review_count` set to `0` (disabled) on `master` branch protection. The 8 required status checks remain unchanged: `install-lockfile`, `lint-typecheck`, `unit`, `integration`, `e2e`, `dependency-audit`, `secret-scan`, `build`.
+- **Rationale:** Single GitHub account (`zeldadil`) owns the repo. There is no second human reviewer to approve PRs — the Kanban review workflow (architect + QA sign-off on task cards) is the review gate, not GitHub's PR approve mechanism. With `required_approving_review_count: 1`, every PR would be structurally blocked because no second account exists to click "Approve" — the gate would be dead weight, not rigor.
+- **This is NOT a relaxation of security rigor.** The real safeguard is the CI status checks: no PR merges unless all 8 checks pass. `install-lockfile` catches missing lockfiles, `lint-typecheck` catches type/ lint errors, `unit`/`integration`/`e2e`/`secret-scan` catch regressions and leaked secrets. A PR that passes all 8 checks has been machine-verified far more thoroughly than a human "Approve" click would guarantee. The human review happens on the Kanban card (see QA-001h sign-off gate policy) before the task is marked `done` — that's where architect + QA exercise judgment.
+- **Ownership:** architect (decision) + @user (GitHub config action)
+- **Risk acknowledged:** Without the PR approve gate, a malicious or careless commit *could* merge if it passes CI. Mitigation: the 8 checks must all pass + the committer must be the single repo owner (no third parties). For a future multi-contributor project, re-enable `required_approving_review_count: 1` and add the second account as a collaborator.
+- **Kanban cross-reference:** QA-001h (QA Sign-off Gate Policy) is the human review layer that compensates for the absent GitHub review gate. No task moves to `done` without a QA verdict + evidence attached — that's where the rigor lives.
+
+### Credential incident: Telegram bot token in PROJECT_BRIEF.md (2026-09-17)
+- **What happened:** During PROJECT_BRIEF.md §9 kickoff update (commit `a503e4d`, "docs: ARC-001f — GitHub repo created + branch protection configured"), the Telegram bot token `8615677595:...` was written verbatim into the decision log entry "Telegram status-updates channel". This was a violation of the credential discipline rule — the token belongs only in each profile's `.env` (gitignored) and `config.yaml` (gitignored), never in a tracked file.
+- **Detection:** QA-001b's CI pipeline (`secret-scan` job using gitleaks) flagged the token as a `telegram-bot-api-token` rule hit on PR #2 (FE-001a) — the scan range included `a503e4d`. Frontend verified: the token is on disk in `PROJECT_BRIEF.md` line 87, and gitleaks reported exactly one leak, in that file only. Frontend's three commits were clean.
+- **Impact:** The token is compromised by being in git history. Any fork/clone of the repo contains it. The token must be considered invalid and rotated immediately. The same token is (or was) active for all 6 agent profiles' Telegram status-ups.
+- **Remediation (in progress):**
+  1. `@user` — revoke the leaked token via @BotFather and generate a new one. The new token will replace the old one in every profile's `.env` + `config.yaml`.
+  2. Architect — scrub the token from `PROJECT_BRIEF.md` (done above: the decision log now says "using the bot token from @BotFather" with no value; the user ID `956145756` is not a secret and remains). Commit + push to master.
+  3. Architect — once the new token is issued, update all 6 profiles' `.env` + `config.yaml` with the replacement.
+  4. Verify: re-run `secret-scan` on a PR that includes the scrub commit — it must pass.
+- **Root cause prevention:** This incident is exactly the kind of error that the credential discipline rule exists to prevent. The fix is procedural, not technical: decision logs in PROJECT_BRIEF.md and ADRs must **never** contain live credentials — only the decision, the owner, and non-secret parameters (user IDs, channel names, config keys without values). This rule is now explicit. See also @frontend's `kanban-task-workflow` skill pitfall #5 (verify repo state, don't trust self-reported "done") — the leak was caught by CI, not by the author.
+- **Sign-off:** This incident is documented here for the record. Architect + QA will review the remediation before any task that depends on Telegram status-ups is marked `done` again.
+- **Owner:** architect (documentation) + @user (token rotation, the actual fix)
