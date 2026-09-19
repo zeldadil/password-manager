@@ -1,0 +1,22 @@
+1. Acceptance-criteria theme coverage:
+2. TEST_STRATEGY §6.2 A–F category coverage:
+  ok - A. Crypto (AR-3)
+  ok - B. API (auth/authz/leakage)
+3. Owning test path per case (3 unique case IDs):
+4. Synthetic-data / no-real-secret hygiene (AR-4 self-check):
+5. SEC-001 traceability:
+
+FAIL (13 check group(s) failed):
+  - Tampered ciphertext — missing §4 section
+  - Auth abuse — missing §4 section
+  - Leakage vectors — missing §4 section
+  - Permission bypass — missing §4 section
+  - Origin spoofing — missing §4 section
+  - C. Bridge — no case ID found
+  - D. Extension runtime — no case ID found
+  - E. Web UI — no case ID found
+  - F. Migration/backup — no case ID found
+  - cases missing a test path — AUTH-02
+  - forbidden pattern present — real domain github.com
+  - missing vector refs — V1, V2, V3, V4, V5, V6, V7
+  - missing rule refs — AR-1, AR-2, AR-3, AR-4, AR-5, AR-6

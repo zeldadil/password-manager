@@ -1,0 +1,15 @@
+doc-validation — Secure Password Manager
+repo root: /home/sap/password-manager/.worktrees/t_ac6a1f3f
+targets:   /tmp/qa-negative-control.md
+
+--- ../../../../../tmp/qa-negative-control.md (480 bytes, 12 lines) ---
+
+OK    [../../../../../tmp/qa-negative-control.md] references: 0 existing path(s) verified
+ERROR [../../../../../tmp/qa-negative-control.md] completeness: missing required topic(s): exploratory tests, regression tests, tools, coverage targets, negative test requirements, synthetic data policy
+ERROR [../../../../../tmp/qa-negative-control.md] references: referenced file(s) do not exist: architecture/adr/ADR-099-does-not-exist.md, scripts/qa/does-not-exist.mjs
+ERROR [../../../../../tmp/qa-negative-control.md] board-alignment: board Test Types not covered by the document's vocabulary: a11y, architecture-review, ci-validation, doc-validation, e2e, integration, manifest-validation, meta, regression, repo-structure-validation, security, security-review, setup-reproducibility, threat-model-validation, unit
+ERROR [../../../../../tmp/qa-negative-control.md] policy-hygiene: line 9: secret-shaped material (AWS access key id); line 10: non-reserved / non-allowlisted domain "realcompany.com"; line 10: non-reserved email domain "adil@realcompany.com"; line 11: non-reserved / non-allowlisted domain "mycompany-secrets.example-real.com"
+ERROR [../../../../../tmp/qa-negative-control.md] traceability: SEC-001 rule(s) not referenced: AR-1, AR-2, AR-3, AR-4, AR-5, AR-6
+
+summary: 1 ok, 0 warning(s), 5 error(s)
+RESULT: FAIL
