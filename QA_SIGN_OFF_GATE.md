@@ -49,7 +49,7 @@ and is reported as `A7_VERDICT_AUTHOR_IGNORED` on every audit (never silently dr
 | Source | How it is detected | Author rule | Accepted for |
 |---|---|---|---|
 | **Marker comment** (preferred) | body contains `QA-VERDICT: <token>` — case/spacing-insensitive, `QA verdict — <token>` also parses | **`qa` profile only.** Another author's marker is not a verdict (`A7_VERDICT_AUTHOR_IGNORED`) | any card |
-| **QA-authored comment** (loose) | comment by the `qa` profile containing `verdict … <token>` | **`qa` profile only** — unchanged: this path was always author-checked | any card |
+| **QA-authored comment** (loose) | comment by the `qa` profile containing `verdict: <token>` — **colon separator only** since `t_df8e644a` (§5.8) | **`qa` profile only** — unchanged: this path was always author-checked | any card |
 | **Structured handoff** | completed run metadata `verdict` (e.g. `_metadata_.verdict` written by `kanban_complete`) | **none — deliberately author-independent.** The one documented exception: it is the completing run's own structured record, and `--pre-complete` evaluation happens *before* the run that carries it has ended. A non-QA run that self-declares is reported as `A8_VERDICT_SELF_DECLARED` on every audit, so the residual gap is visible instead of silent | QA's own artifact cards (self-validation per §12 row 4) |
 | **Deferral** | `QA-VERDICT: deferred — t_xxxxxxxx` **from the `qa` profile**, or a linked child card assigned to `qa` **when the card records no verdict of its own** | marker: **`qa` profile only** (`A7`); the linked-child fallback is board state, not an authored record | any card whose QA review is a downstream card |
 
@@ -215,6 +215,51 @@ pointer, quote the path freely — the audit shows it as `A6_EVIDENCE_CITED`.
 
 ---
 
+### 5.8 The loose verdict path — colon separator only (`t_df8e644a`)
+
+**Policy (decided 2026-09-19, `t_df8e644a`).** A verdict a `qa` comment records in prose is read only when the
+word `verdict` is followed by a **colon**: `verdict: <token>`. The loose path now carries exactly the marker's
+separator rule and nothing else:
+
+```
+VERDICT_MARKER_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*:\s*([a-z][a-z-]*)/i;
+VERDICT_LOOSE_RE  =               /verdict\s*:\s*([a-z][a-z-]*)/i;
+```
+
+**Why.** The loose path used to accept `-` and `—` as separators, so a `qa` comment that merely *cited* a file
+name it does not record was read as a verdict record: `tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md`
+matched as `VERDICT-ROTATION` → token `rotation` → `R2_QA_VERDICT_INVALID` on the citing card. Reproduced on
+the live board — `qa` comment 49 on `t_80fc0326` — as the residual half of `t_c3cb6842`, which had already
+fixed the marker path. The gate must never read *a path it is shown* as a verdict token; this was the third
+instance of that class (the earlier two are `t_5455942d` and `t_c3cb6842`). A colon is what §5.1 records and what a file name
+never carries, so the **separator**, not the surrounding markup, is what separates a record from a path:
+plain, backticked and fenced citations are equally inert with no code-span rule needed.
+
+**What was deliberately not done.** Neither a code-span/fence exclusion nor the marker's leading boundary was
+added to this path:
+
+- the leading boundary would *break live records* — `**QA-VERDICT: pass**` is rejected by `VERDICT_MARKER_RE`
+  (the `*` of the bold markup precedes `qa`) and is read *only* through this path (`t_f49d448c`, `t_4e1b6937`,
+  `t_cdd23d35`, `t_58280940` on the live board);
+- a code-span/fence exclusion would add a place to hide a real off-vocabulary record inside a fence. That is
+  the same verdict-*detection* change §10 item 5 keeps open for the marker path; this card does not pre-empt it.
+
+**Measured on the live board (copy `7832413c…`, 2026-09-19; A/B in `tests/evidence/t_df8e644a/`).** Loose
+matches on `qa`-authored comments 14 → 12; path-shaped matches 1 → 0 (board-wide, every author: 61 → 57 loose
+matches, 3 → 0 path-shaped). `t_80fc0326` drops from three `R2` rows to two: the `"ROTATION"` row disappears,
+both genuine `"CHANGES"` rows stay, and no other card's violation set changes.
+
+One genuine prose record is *narrowed*: the em-dash form `QA-001g verdict — pass-with-conditions` on
+`t_78b46688` is no longer read. That card keeps its run-metadata `pass-with-conditions`, so its outcome and
+rule set are unchanged — and the direction of the narrowing is a block (`R1`), never a silent pass.
+Re-admitting a prose form with a path guard is recorded as §10 item 9.
+
+**Residual (an explicit non-claim).** A path that itself contains `verdict:` verbatim — a file literally named
+`verdict:pass.md` — would still match. No evidence-path convention in this repo produces that shape, and the
+measured scan finds 0 such matches on the live board. Record a new gate defect if one ever appears.
+
+---
+
 ## 6. Enforcement tooling
 
 All paths are relative to the repo root.
@@ -224,7 +269,7 @@ All paths are relative to the repo root.
 | `node scripts/qa/signoff-gate.mjs audit` | whole board; exit 1 while any enforced card fails; `--json`, `--repo DIR`, `--epoch-iso ISO`, `--strict-history` |
 | `node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx [--pre-complete]` | one card; `--pre-complete` evaluates a card that is not `done` yet (exactly what the hook does) |
 | `echo '<payload>' \| node scripts/qa/signoff-gate.mjs hook` | hook entry point: `{}` + exit 0 = allow, `{"decision":"block",…}` + exit 2 = block |
-| `node scripts/qa/signoff-gate.selftest.mjs` | 66-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d`, `t_58280940` and `t_99e408c5` regressions are covered) |
+| `node scripts/qa/signoff-gate.selftest.mjs` | 90-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d`, `t_58280940`, `t_99e408c5`, `t_338f47fd` and `t_df8e644a` — cited-file-name — regressions are covered) |
 | `scripts/qa/hooks/install-signoff-gate.sh --all [--apply]` | install / refresh the hook in every profile (dry-run by default, config backed up) |
 | `scripts/qa/hooks/verify-signoff-gate.sh --all --live --fixture-db … --fixture-noncompliant … --fixture-compliant …` | verify wiring, consent, hash, `hermes hooks doctor`, and fire both paths live |
 
@@ -393,10 +438,11 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 2 | Pre-epoch backlog (26 cards) — retrofit with verdict+evidence, or formally leave grandfathered | `architect` + `qa` |
 | 3 | `R7` security-track detection is a keyword heuristic (security Test Type + crypto/bridge keyword); confirm the classification list against ADR-002 §5.3 / ADR-005 §9.2 | `architect` |
 | 4 | Advisory-only cross-board audit: non-default boards (e.g. release-track boards) run the same hook, but the audit needs `--db` pointed at them | `qa` |
-| 5 | A comment that *quotes* the recommended `QA-VERDICT: …` line (e.g. an Architect handoff showing the exact command to paste) is parsed as a verdict. With `R5` scoped to the operative verdict the harm is contained, but if such a quote is the *newest* record it becomes operative. **Partly decided (`t_99e408c5`, 2026-09-18):** §5.7 now defines code spans/fences as documentation for **evidence extraction** (claim vs citation, `A6_EVIDENCE_CITED`), and `VERDICT_MARKER_RE`/`DEFERRAL_RE` already carry the leading-boundary guard (`t_c3cb6842`/`t_58280940`). What remains open is giving the **marker** regexes the same code-span/fence exclusion — a change to verdict *detection*, deliberately not bundled with the evidence fix | `qa` (gate lane) |
+| 5 | A comment that *quotes* the recommended `QA-VERDICT: …` line (e.g. an Architect handoff showing the exact command to paste) is parsed as a verdict. With `R5` scoped to the operative verdict the harm is contained, but if such a quote is the *newest* record it becomes operative. **Partly decided (`t_99e408c5`, 2026-09-18):** §5.7 now defines code spans/fences as documentation for **evidence extraction** (claim vs citation, `A6_EVIDENCE_CITED`), and `VERDICT_MARKER_RE`/`DEFERRAL_RE` already carry the leading-boundary guard (`t_c3cb6842`/`t_58280940`). **Half of the remaining half closed (`t_df8e644a`, 2026-09-19):** the *loose* path can no longer read a quoted **file name** as a token — it is colon-only (§5.8), so `…/QA-VERDICT-ROTATION.md` is inert in plain prose, in a code span and in a fence. What remains open is giving the **marker** regexes the code-span/fence exclusion — a change to verdict *detection*, deliberately not bundled with either fix | `qa` (gate lane) |
 | 6 | Hermes-core observation (config, not a repo defect): the hook subprocess env still carries `HERMES_DASHBOARD_BASIC_AUTH_USERNAME/PASSWORD/SECRET` — see `hook-env-probe.py`. Any hook script of any profile can read the dashboard admin credentials; consider whether hooks need them (they do not) | `architect` (owns the Hermes install/profile config) |
 | 7 | Hermes-core observation (payload, not a repo defect): the `pre_tool_call` payload's `extra.task_id` is the *session id* (`agent/inline_tool_executors.py::tool_hook_ids` → `effective_task_id`), and the kanban identity keys are scrubbed from hook subprocesses (`agent/delegation_context.py::scrub_kanban_env`). The gate now compensates from the worker's location §6.4; do **not** "fix" this by un-scrubbing the identity keys — that scrub is deliberate runtime scoping | `architect` (record only) |
 | 8 | Run-metadata `verdict` is the one author-independent verdict source, kept deliberately by `t_338f47fd` (AC 1c: "run-metadata sources keep their current behaviour"), so a non-QA run still satisfies `R1` by self-declaring; `A8_VERDICT_SELF_DECLARED` makes it visible. Decide whether `R1` should also reject a non-`qa` run's metadata — one live card depends on it today (`t_710ed14c`, an `architect` run), so the decision needs that card's QA review first | `qa` (gate lane) |
+| 9 | Prose verdict records that are **not** colon-separated are no longer read at all (§5.8, `t_df8e644a`): the live em-dash form `QA-001g verdict — pass-with-conditions` (`t_78b46688`, whose card keeps a run-metadata verdict, so no outcome changed) and any `verdict — <token>` form. Re-admit one only with a path guard (a match whose span is part of a path/file name stays inert) rather than by re-widening the separator, and only with its own regression cases. Measured cost of the narrowing: 1 live comment; the failure direction is `R1`, never a silent pass | `qa` (gate lane) |
 
 ---
 
@@ -409,3 +455,4 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 2026-09-18 | `t_58280940` — a deferral marker is operative only while it is the **newest** QA record on the card, and `DEFERRAL_RE` gained the same leading boundary as `VERDICT_MARKER_RE`, so a stale or merely *quoted* `QA-VERDICT: deferred — t_…` no longer hijacks `R8` on a card whose verdict has landed. Selftest 49 → 58 cases |
 | 2026-09-18 | `t_99e408c5` — **§5.7 claim vs citation**: `R5` resolves only the paths the operative verdict *claims* (inside an `Evidence:`/`Artifacts:` label, or outside code spans/fences when it carries no label); a path the verdict merely quotes about another card is a citation reported as `A6_EVIDENCE_CITED`, so a card can report a broken evidence pointer elsewhere without failing on it. Evidence pointers now carry `scope` (`claim`/`citation`/`history`) in the `--json` facts; a cited path that exists in the repo no longer emits `A4`. Claimed-but-missing evidence still fails `R5` in every shape. Selftest 58 → 66 cases; hook re-installed in all 7 profiles (see `tests/evidence/t_99e408c5/`) |
 | 2026-09-18 | `t_338f47fd` — **§3 author rule**: a *comment* records a verdict only when the `qa` profile wrote it. `VERDICT_MARKER_RE` was matched without any author check, so one `QA-VERDICT: <token>` comment from `architect`/`frontend`/`dashboard` satisfied `R1`/`R2`/`R3` and cleared the fail-closed completion hook (reproduced on `0af4a453` and the installed `28b0b771`). The marker path and the deferral marker now require a `qa` author; a discounted record is reported as `A7_VERDICT_AUTHOR_IGNORED` instead of being dropped, and a non-QA run-metadata verdict — still accepted, the one documented author-independent source — is reported as `A8_VERDICT_SELF_DECLARED`. Run metadata and the loose `verdict: …` path keep their behaviour (§10 item 8). Selftest 66 → 81 cases; live-board A/B, the reported fixture replay and the re-install are in `tests/evidence/t_338f47fd/` |
+| 2026-09-19 | `t_df8e644a` — **§5.8 loose path is colon-only** (the residual half of `t_c3cb6842`): `VERDICT_LOOSE_RE` accepted `-`/`—` as separators, so a `qa` comment that merely *cited* the evidence file name `tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md` was read as the token `rotation` → `R2_QA_VERDICT_INVALID` (reproduced on the live board, `qa` comment 49 on `t_80fc0326`). The loose path now uses the marker's separator and nothing else; the marker's leading boundary and any code-span/fence exclusion were deliberately **not** added (§5.8 records why — the first would break `**QA-VERDICT: pass**`, the second is §10 item 5's open detection question). Measured: loose matches on `qa` comments 14 → 12, path-shaped 1 → 0, `t_80fc0326` `R2`×3 → `R2`×2 with both genuine `"CHANGES"` rows kept and no other card's violation set changed; one em-dash prose record narrowed (§10 item 9). Selftest 81 → 90 cases (9 cases named after this card: three citation shapes, the masked-record shape, the live shape, and three anti-degradation controls). A/B, the RED/GREEN selftest pair and the re-install transcript are in `tests/evidence/t_df8e644a/` |

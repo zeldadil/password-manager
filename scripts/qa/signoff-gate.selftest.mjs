@@ -557,6 +557,99 @@ const NONQA_RUN_METADATA = card({
   ],
 });
 
+// ── t_df8e644a regression fixtures ─────────────────────────────────────────
+// `VERDICT_LOOSE_RE` accepted `-` and `—` as separators (`/verdict\s*[:\-—]+\s*/`),
+// while `VERDICT_MARKER_RE` has been colon-only since `t_c3cb6842`. So a `qa`
+// comment that merely **cites** an evidence file name it does not record —
+// `tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md` — produced the token
+// "rotation" and failed the card with `R2_QA_VERDICT_INVALID`. Reproduced on the
+// live board: `qa` comment 49 on `t_80fc0326` (the residual half of `t_c3cb6842`;
+// the gate must never read *a path it is shown* as a verdict token).
+//
+// The three cards below differ only in where the same file name is cited, so the
+// pair isolates the shape (plain prose / code span / fenced block) from the fact.
+const CITED_EVIDENCE_FILE = "tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md";
+
+const CITED_PATH_PLAIN = card({
+  title: "BE-940 a qa comment citing an evidence file name in plain prose",
+  body: "**Test Types:** unit",
+  comments: [
+    qaVerdict(
+      `Reported on t_80fc0326: the reproduction lives in ${CITED_EVIDENCE_FILE} on the review branch.`,
+    ),
+  ],
+});
+
+const CITED_PATH_CODESPAN = card({
+  title: "BE-941 a qa comment citing an evidence file name inside a code span",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict(`Reported on t_80fc0326 — full context + reproduction: \`${CITED_EVIDENCE_FILE}\` on branch \`qa/t_0af5aa3e-rotation-verdict\`.`)],
+});
+
+const CITED_PATH_FENCE = card({
+  title: "BE-942 a qa comment citing an evidence file name inside a fenced block",
+  body: "**Test Types:** unit",
+  comments: [
+    qaVerdict(
+      `Reported on t_80fc0326 — the paths involved:\n\n\`\`\`\n${CITED_EVIDENCE_FILE}\ntests/evidence/t_d20787de/loose-path-repro.txt\n\`\`\`\n\nSee the branch for the transcript.`,
+    ),
+  ],
+});
+
+// The live shape: a compliant card whose verdict *cites* another card's artifact
+// while its own verdict stays clean. Before the fix this produced a phantom R2.
+const CITED_PATH_WITH_VERDICT = card({
+  title: "QA-943 compliant verdict comment citing the same file name (no phantom R2)",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  comments: [
+    qaVerdict(
+      `QA-VERDICT: pass — the gate defect is reproduced in \`${CITED_EVIDENCE_FILE}\`.\nEvidence: tests/evidence/__ID__/README.md`,
+    ),
+  ],
+});
+fixtureFile(`tests/evidence/${CITED_PATH_WITH_VERDICT}/README.md`);
+
+// The masked-record shape: the cited file name comes *first* in the comment, and
+// `VERDICT_LOOSE_RE` only ever reports the first match — so before the fix the
+// cited path produced invalid "rotation" AND the comment's real loose verdict was
+// never read at all (R2 + R1 on one comment). After the fix the path is not a
+// match, so the first match is the verdict. Reported live shape: `t_80fc0326`
+// comment 49 (path only) sits next to comments 62/63 (real off-vocabulary records).
+const CITED_PATH_LOOSE_VERDICT = card({
+  title: "QA-946 a cited file name placed BEFORE the comment's real loose verdict",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  comments: [
+    qaVerdict(
+      `\`${CITED_EVIDENCE_FILE}\` holds the transcript.\nRound-2 review verdict: pass.\nEvidence: tests/evidence/__ID__/README.md`,
+    ),
+  ],
+});
+fixtureFile(`tests/evidence/${CITED_PATH_LOOSE_VERDICT}/README.md`);
+
+// Anti-degradation controls for the same change: the loose path is a *fallback
+// for a QA record written in prose*, not only a source of false positives.
+const LOOSE_OFFVOCAB = card({
+  title: "BE-944 qa comment whose off-vocabulary loose token IS the verdict (R2 control)",
+  body: "**Test Types:** unit",
+  comments: [
+    qaVerdict(
+      "Round-1 review of the purge (t_80fc0326) — verdict: changes requested, rework required.\nEvidence: https://github.com/zeldadil/password-manager/actions/runs/35259047666",
+    ),
+  ],
+});
+
+const LOOSE_MISSING_EVIDENCE = card({
+  title: "BE-945 qa loose verdict claiming an evidence file that does not exist (R5 control)",
+  body: "**Test Types:** unit",
+  comments: [
+    qaVerdict(
+      "Round-2 review — verdict: pass.\nEvidence: tests/evidence/t_fffffff3/does-not-exist.md",
+    ),
+  ],
+});
+
 // ── fixture git repo: evidence committed on an earlier ref (A4 case) ────────
 const gitRepo = join(root, "gitrepo");
 const refOnlyRel = `tests/evidence/${REF_ONLY}/ref-only.md`;
@@ -937,6 +1030,83 @@ console.log("\n1d. t_338f47fd regressions (VERDICT_MARKER_RE had no author check
     "(c) a qa run-metadata verdict raises no A8 (the advisory is specific to a non-QA declaration)",
     !advisoryRules(metaQa).includes("A8_VERDICT_SELF_DECLARED"),
     `adv=[${advisoryRules(metaQa).join(",")}]`,
+  );
+}
+
+console.log("\n1e. t_df8e644a regressions (a cited file name must not read as a verdict token):");
+{
+  // The defect: `VERDICT_LOOSE_RE` accepted `-`/`—` as separators, so the file
+  // name `QA-VERDICT-ROTATION.md` was parsed as the token "rotation". The three
+  // shapes below must all stop producing a token — the separator, not the
+  // surrounding markup, is what distinguishes a file name from a record.
+  for (const [shape, tid] of [
+    ["plain prose", CITED_PATH_PLAIN],
+    ["a code span", CITED_PATH_CODESPAN],
+    ["a fenced block", CITED_PATH_FENCE],
+  ]) {
+    const res = gateJson(tid);
+    check(
+      `t_df8e644a: a cited file name in ${shape} yields NO verdict token (R2 must not fire)`,
+      res.code === 1 &&
+        res.parsed !== null &&
+        res.parsed.facts.verdict === null &&
+        res.parsed.facts.invalid_verdicts.length === 0 &&
+        !violationRules(res).includes("R2_QA_VERDICT_INVALID"),
+      `exit=${res.code} verdict=${res.parsed && JSON.stringify(res.parsed.facts.verdict)} invalid=${JSON.stringify(res.parsed && res.parsed.facts.invalid_verdicts)} rules=[${violationRules(res).join(",")}]`,
+    );
+  }
+  // …and the citation-only cards are still evaluated (R1 is not vacuously absent).
+  expectRule("t_df8e644a: the citation-only card is still judged — no verdict, so R1", CITED_PATH_PLAIN, "R1_QA_VERDICT_MISSING", {
+    forbid: ["R2_QA_VERDICT_INVALID"],
+  });
+
+  const citedWithVerdict = gateJson(CITED_PATH_WITH_VERDICT);
+  check(
+    "t_df8e644a: the live shape — a compliant verdict citing the same file name stays clean (no R2, no R5)",
+    citedWithVerdict.code === 0 &&
+      citedWithVerdict.parsed !== null &&
+      citedWithVerdict.parsed.facts.verdict === "pass" &&
+      violationRules(citedWithVerdict).length === 0,
+    `exit=${citedWithVerdict.code} verdict=${citedWithVerdict.parsed && citedWithVerdict.parsed.facts.verdict} rules=[${violationRules(citedWithVerdict).join(",")}]`,
+  );
+
+  // The masked-record half: the citation precedes the comment's real verdict, and
+  // the loose path reports one match only — so before the fix this comment lost
+  // its own verdict and gained a phantom one.
+  const citedLooseVerdict = gateJson(CITED_PATH_LOOSE_VERDICT);
+  check(
+    "t_df8e644a: a cited file name before the real loose verdict no longer masks it (R1/R2 must not fire)",
+    citedLooseVerdict.code === 0 &&
+      citedLooseVerdict.parsed !== null &&
+      citedLooseVerdict.parsed.facts.verdict === "pass" &&
+      citedLooseVerdict.parsed.facts.invalid_verdicts.length === 0 &&
+      violationRules(citedLooseVerdict).length === 0,
+    `exit=${citedLooseVerdict.code} verdict=${citedLooseVerdict.parsed && citedLooseVerdict.parsed.facts.verdict} invalid=${JSON.stringify(citedLooseVerdict.parsed && citedLooseVerdict.parsed.facts.invalid_verdicts)} rules=[${violationRules(citedLooseVerdict).join(",")}]`,
+  );
+
+  // Anti-degradation: the loose path must keep reading real records. A colon is
+  // what makes a record (§5.1 `QA-VERDICT: <token>`), and the two records the
+  // fix must NOT silence are a genuine verdict and a genuine defect report.
+  const genuineLoose = gateJson(LOOSE_QA);
+  check(
+    "t_df8e644a: anti-degradation — a genuine loose `verdict: pass` is still read (non-vacuity)",
+    genuineLoose.code === 0 &&
+      genuineLoose.parsed !== null &&
+      genuineLoose.parsed.facts.verdict === "pass" &&
+      violationRules(genuineLoose).length === 0,
+    `exit=${genuineLoose.code} verdict=${genuineLoose.parsed && genuineLoose.parsed.facts.verdict} rules=[${violationRules(genuineLoose).join(",")}]`,
+  );
+  expectRule(
+    "t_df8e644a: anti-degradation — an off-vocabulary loose token that IS the verdict still fires R2",
+    LOOSE_OFFVOCAB,
+    "R2_QA_VERDICT_INVALID",
+    { forbid: ["R4_EVIDENCE_MISSING"] },
+  );
+  expectRule(
+    "t_df8e644a: anti-degradation — a loose verdict claiming a missing evidence file still fires R5",
+    LOOSE_MISSING_EVIDENCE,
+    "R5_EVIDENCE_FILE_MISSING",
+    { forbid: ["R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"] },
   );
 }
 

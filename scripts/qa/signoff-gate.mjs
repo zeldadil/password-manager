@@ -82,7 +82,19 @@ const QA_PROFILES = new Set(["qa"]);
 const ARCHITECT_PROFILES = new Set(["architect"]);
 
 const VERDICT_MARKER_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*:\s*([a-z][a-z-]*)/i;
-const VERDICT_LOOSE_RE = /verdict\s*[:\-—]+\s*([a-z][a-z-]*)/i;
+// Loose path — colon-only, mirroring the marker above (t_df8e644a, the residual
+// half of t_c3cb6842). While the separator also accepted `-` and `—`, a `qa`
+// comment that merely *cited* an evidence file name produced a verdict token:
+// `tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md` matched as "VERDICT-ROTATION"
+// → token "rotation" → R2_QA_VERDICT_INVALID on the citing card (reproduced on
+// the live board, qa comment 49 on t_80fc0326; the gate must never read a *path it
+// is shown* as a verdict token). A colon is what §5.1 records (`QA-VERDICT: <token>`);
+// a file name never carries one.
+//
+// The marker's leading boundary is deliberately NOT mirrored here: this path is the
+// fallback that still reads `**QA-VERDICT: pass**`, which the marker rejects because
+// the `*` of the bold markup precedes `qa` (live record: t_f49d448c).
+const VERDICT_LOOSE_RE = /verdict\s*:\s*([a-z][a-z-]*)/i;
 // Same leading boundary as VERDICT_MARKER_RE (t_c3cb6842): a marker that only
 // appears inside a code span — a handoff quoting the recording command, a
 // troubleshooting transcript — is documentation, not a live deferral
