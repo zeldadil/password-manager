@@ -1,0 +1,22 @@
+# CI — PR #32 (feature/t_782802ac → feature/t_cdd23d35)
+
+run 35428653609 · head ba9e0c7601d756d1898c8684b85a47add1ecf521 — 10/10 checks pass
+
+install-lockfile   pass  13s
+integration        pass  15s
+lint-typecheck     pass  19s
+sast               pass  30s
+secret-scan        pass  2m35s
+unit               pass  19s
+Semgrep OSS        pass   2s
+build              pass  14s
+dependency-audit   pass  13s
+e2e                pass  12s
+
+## unit job (105859073213) — the lane the sweep runs in, with the new specs
+
+apps/web test:unit:  ✓ src/a11y/routes.a11y.test.tsx (21 tests) 1261ms
+apps/web test:unit:  Test Files  20 passed (20)
+apps/web test:unit:       Tests  164 passed (164)
+
+Verified live with: gh pr checks 32 --watch · gh run view 35428653609 --log --job 105859073213
