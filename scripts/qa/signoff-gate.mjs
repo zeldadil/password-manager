@@ -28,6 +28,33 @@
  *                                           [--strict-history] [--json]
  *   node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx [--pre-complete] [--json]
  *   echo '<pre_tool_call payload>' | node scripts/qa/signoff-gate.mjs hook
+ *
+ * Fail-closed on genuinely unverifiable input only (t_5455942d):
+ *   - the task id is resolved from the payload (`tool_input.task_id`, then a
+ *     task-id-shaped `extra.task_id`) and, when the payload carries no usable id,
+ *     from the worker's location (`$HERMES_KANBAN_WORKSPACE`, `cwd`,
+ *     `$HERMES_KANBAN_BRANCH`) — Hermes scrubs `$HERMES_KANBAN_TASK` from hook
+ *     subprocesses, so a session id is never treated as a card;
+ *   - R5 resolves the evidence paths of the **operative (newest)** verdict only,
+ *     and accepts a path that exists on any ref of the checkout;
+ *   - the "linked QA child ⇒ deferral" heuristic is suppressed once the card
+ *     carries an explicit verdict;
+ *   - a deferral marker is operative only while it is the **newest** QA record
+ *     on the card (§3 "the newest source is the operative verdict"): a
+ *     `QA-VERDICT: deferred — t_xxxxxxxx` comment that a later verdict has
+ *     superseded is history, not a live block (t_58280940);
+ *   - R5 resolves only the evidence the operative verdict **claims**: the paths
+ *     inside an `Evidence:`/`Artifacts:` label, or — when the comment carries no
+ *     label — the paths outside code spans/fences. A path the verdict merely
+ *     *cites* about another card is reported as `A6_EVIDENCE_CITED` and never as
+ *     this card's missing evidence (t_99e408c5; QA_SIGN_OFF_GATE.md §5.7);
+ *   - a *comment* records a verdict only when a QA profile wrote it (QA_SIGN_OFF_GATE.md
+ *     §3 author rule, t_338f47fd): the marker path used to accept any author, so one
+ *     `QA-VERDICT: pass — evidence: …` comment from `architect`/`frontend`/`dashboard`
+ *     cleared R1/R2/R3 through the fail-closed completion hook. A discounted marker is
+ *     reported as `A7_VERDICT_AUTHOR_IGNORED`; a run-metadata verdict stays
+ *     author-independent by design (§3 row 3) and is reported as
+ *     `A8_VERDICT_SELF_DECLARED` when a non-QA run self-declares it.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -54,9 +81,14 @@ const QA_PROFILES = new Set(["qa"]);
 /** Profiles allowed to record the Architect half of an AR-6 sign-off. */
 const ARCHITECT_PROFILES = new Set(["architect"]);
 
-const VERDICT_MARKER_RE = /qa[\s_-]*verdict\s*[:\-—]+\s*([a-z][a-z-]*)/i;
+const VERDICT_MARKER_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*:\s*([a-z][a-z-]*)/i;
 const VERDICT_LOOSE_RE = /verdict\s*[:\-—]+\s*([a-z][a-z-]*)/i;
-const DEFERRAL_RE = /qa[\s_-]*verdict\s*[:\-—]+\s*deferred/i;
+// Same leading boundary as VERDICT_MARKER_RE (t_c3cb6842): a marker that only
+// appears inside a code span — a handoff quoting the recording command, a
+// troubleshooting transcript — is documentation, not a live deferral
+// (t_58280940: frontend's gate-defect report quoted the marker and the gate
+// then judged *that* quote as the card's live deferral target).
+const DEFERRAL_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*[:\-—]+\s*deferred/i;
 const EXCEPTION_RE = /qa[\s_-]*signoff[\s_-]*exception\s*[:\-—]+\s*(\S[^\n]*)/i;
 const ARCH_SIGNOFF_RE = /(arch[\s_-]*(verdict|sign[\s_-]*off)|approv|signed[\s_-]*off|LGTM)/i;
 const TASK_ID_RE = /\bt_[0-9a-f]{8}\b/g;
@@ -65,12 +97,100 @@ const SECURITY_TRACK_RE =
   /\b(packages\/crypto|crypto[\s-]*(primitive|implementation|boundary|module|package)|KDF|AEAD|Argon2id|vault[\s-]*key|bridge[\s-]*protocol|bridge[\s-]*message|autofill)\b/i;
 const NOTE_FOLLOWUP_RE = /\b(follow[\s-]*up|t_[0-9a-f]{8}|https:\/\/github\.com\/\S+\/(issues|pull)\/\d+)\b/i;
 
+/**
+ * A board task id (`t_5455942d`). Anything else in a hook payload — the Hermes
+ * session id (`20260917_201256_021f5e`), a run id, a tool-call id — is NOT a
+ * task id and must never be resolved as one (t_5455942d defect 1).
+ */
+export const TASK_ID_SHAPE_RE = /^t_[0-9a-z]+$/;
+
 /** Evidence pointers: CI run / PR / issue URLs, repo-relative or absolute file paths. */
 const EVIDENCE_URL_RE = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/(?:actions\/runs\/\d+|pull\/\d+|issues\/\d+)[\w#/?=&.-]*/gi;
 const EVIDENCE_MD_LINK_RE = /\]\(([^)\s]+)\)/g;
 const EVIDENCE_PATH_RE = /(?:^|[\s`("'[])((?:tests|apps|packages|scripts|docs|architecture|\.github)\/[\w./@-]+\.[a-z0-9]{1,8})(?=[\s`)"'\].,;:]|$)/gim;
 const EVIDENCE_ABS_RE = /(?:^|[\s`("'[])(\/[\w./@-]+\.[a-z0-9]{1,8})(?=[\s`)"'\].,;:]|$)/gm;
 const EVIDENCE_DIR_RE = /(?:^|[\s`("'[])((?:tests|docs|architecture)\/[\w./-]+\/)(?=[\s`)"'\].,;:]|$)/gm;
+
+/**
+ * The **evidence label** (§5.7): the recorded convention that separates the
+ * evidence a verdict claims from a path it merely cites about another card.
+ * `Evidence:` — bold (`**Evidence:**`), bulleted, or mid-sentence — plus
+ * `Artifacts:` / `Attachments:`.
+ */
+const EVIDENCE_LABEL_RE = /(?:^|[^\w])(?:evidence|artifacts?|attachments?)[ \t]*(?::|—|–)/gi;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Claimed vs cited evidence (§5.7, t_99e408c5)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Character ranges of markdown code spans (`` `…` ``) and fenced blocks in a
+ * comment body. A path inside them is documentation — a pasted command, a quoted
+ * recording template, a defect transcript — rather than evidence, by the same
+ * principle that already governs deferral markers (t_c3cb6842 / t_58280940).
+ */
+export function codeRanges(text) {
+  const ranges = [];
+  let offset = 0;
+  let fence = null;
+  for (const line of text.split("\n")) {
+    const start = offset;
+    const m = /^[ \t]{0,3}(`{3,}|~{3,})/.exec(line);
+    if (m) {
+      if (!fence) fence = { start, token: m[1][0] };
+      else if (m[1][0] === fence.token) {
+        ranges.push([fence.start, start + line.length]);
+        fence = null;
+      }
+    }
+    offset = start + line.length + 1;
+  }
+  if (fence) ranges.push([fence.start, text.length]);
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== "`" || insideRanges(i, ranges)) continue;
+    let n = 0;
+    while (text[i + n] === "`") n++;
+    const close = closingBackticks(text, i + n, n, ranges);
+    i += n - 1;
+    if (close === -1) continue;
+    ranges.push([i, close + n]);
+    i = close + n - 1;
+  }
+  return ranges.sort((a, b) => a[0] - b[0]);
+}
+
+/** Offset of the next backtick run of exactly `n` backticks, outside `ranges`. */
+function closingBackticks(text, from, n, ranges) {
+  for (let j = from; j < text.length; j++) {
+    if (text[j] !== "`" || insideRanges(j, ranges)) continue;
+    let run = 0;
+    while (text[j + run] === "`") run++;
+    if (run === n) return j;
+    j += run - 1;
+  }
+  return -1;
+}
+
+function insideRanges(index, ranges) {
+  return ranges.some(([a, b]) => index >= a && index < b);
+}
+
+/**
+ * The regions an operative verdict claims as its own evidence: from just after
+ * each evidence label to the end of that paragraph (a blank line, heading or
+ * table row closes it). A label *inside* a code span/fence is a quoted template,
+ * not a claim.
+ */
+function evidenceLabelRegions(text, ranges) {
+  const regions = [];
+  for (const m of text.matchAll(EVIDENCE_LABEL_RE)) {
+    if (insideRanges(m.index, ranges)) continue;
+    const start = m.index + m[0].length;
+    const stop = text.slice(start).search(/\n[ \t]*\n|\n#{1,6}[ \t]|\n[ \t]*\|/);
+    regions.push([start, stop === -1 ? text.length : start + stop]);
+  }
+  return regions;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Board access
@@ -122,7 +242,7 @@ export function loadBoard(dbPath) {
   const attachments = sql(dbPath, "SELECT task_id, filename, size, uploaded_by, stored_path FROM task_attachments");
   const runs = sql(
     dbPath,
-    "SELECT task_id, profile, status, outcome, summary, metadata, ended_at, started_at FROM task_runs ORDER BY started_at",
+    "SELECT id, task_id, profile, status, outcome, summary, metadata, ended_at, started_at FROM task_runs ORDER BY started_at",
   );
   const links = sql(dbPath, "SELECT parent_id, child_id FROM task_links");
   const byTask = (rows) => {
@@ -133,12 +253,17 @@ export function loadBoard(dbPath) {
     }
     return m;
   };
+  // Index the runs by their own id as well: the dispatcher can hand the hook a
+  // run id instead of a task id, and the board knows which card that run belongs
+  // to (t_5455942d defect 1 — resolve from the board, never guess).
+  const runsById = new Map(runs.filter((r) => r.id !== undefined && r.id !== null).map((r) => [String(r.id), r]));
   return {
     tasks,
     taskById: new Map(tasks.map((t) => [t.id, t])),
     commentsByTask: byTask(comments),
     attachmentsByTask: byTask(attachments),
     runsByTask: byTask(runs),
+    runsById,
     links,
     childrenOf: (id) => links.filter((l) => l.parent_id === id).map((l) => l.child_id),
   };
@@ -165,11 +290,26 @@ function normalizeVerdictToken(raw) {
  * Every verdict source on the card, oldest → newest.
  * Precedence: explicit `QA-VERDICT:` marker comment > QA-authored "verdict"
  * comment > completed-run metadata `verdict` (the structured handoff).
+ *
+ * **Author rule (§3, t_338f47fd).** A *comment* records a verdict only when a
+ * QA profile wrote it — the marker path used to accept any author, so one
+ * `QA-VERDICT: pass — evidence: …` comment written by `architect`, `frontend`,
+ * `dashboard` or any other profile satisfied R1/R2/R3 and the fail-closed
+ * completion hook. The marker a non-QA author wrote is *not* a verdict; it is
+ * reported by `collectIgnoredVerdicts` (A7_VERDICT_AUTHOR_IGNORED) so the
+ * discounting is never silent.
+ *
+ * Run metadata is deliberately the one author-independent source (§3 row 3):
+ * it is the completing run's own structured handoff, and `--pre-complete`
+ * evaluation happens before the run that carries it has ended.
  */
 export function collectVerdicts(board, task) {
   const found = [];
   for (const c of board.commentsByTask.get(task.id) || []) {
     const text = c.body || "";
+    // §3: only a QA profile records a QA verdict — both comment paths, not just
+    // the loose one.
+    if (!QA_PROFILES.has(String(c.author || "").trim())) continue;
     const marker = VERDICT_MARKER_RE.exec(text);
     if (marker) {
       found.push({
@@ -182,7 +322,7 @@ export function collectVerdicts(board, task) {
       });
       continue;
     }
-    if (QA_PROFILES.has(String(c.author || "").trim())) {
+    {
       const loose = VERDICT_LOOSE_RE.exec(text);
       if (loose) {
         found.push({
@@ -208,6 +348,7 @@ export function collectVerdicts(board, task) {
           author: r.profile,
           comment: r.summary || "",
           at: r.ended_at || r.started_at,
+          runId: r.id ?? null,
         });
       }
     }
@@ -225,49 +366,163 @@ function parseJson(text) {
 }
 
 /**
+ * Verdict-shaped records the gate **discounts** (§3, t_338f47fd) — reported so
+ * the discounting is never silent (A7/A8):
+ *
+ *   author_ignored  — a `QA-VERDICT: <token>` comment written by a non-QA
+ *                     profile. Before this rule it was accepted as the card's
+ *                     verdict, which made every R1/R2/R3 outcome (and the
+ *                     fail-closed completion hook) forgeable by any profile
+ *                     with board write access to the card.
+ *   self_declared   — the operative verdict comes from a run-metadata `verdict`
+ *                     written by a non-QA run. Still **accepted** (§3 row 3,
+ *                     the documented author-independent source), but a
+ *                     self-declared verdict must not be invisible.
+ *
+ * Returns `{ ignored: [...], selfDeclared: [...] }`.
+ */
+export function collectDiscountedVerdicts(board, task, operativeVerdict = null) {
+  const comments = board.commentsByTask.get(task.id) || [];
+  const ignored = [];
+  for (const c of comments) {
+    const author = String(c.author || "").trim();
+    if (QA_PROFILES.has(author)) continue;
+    const m = VERDICT_MARKER_RE.exec(c.body || "");
+    if (!m) continue;
+    ignored.push({ author, raw: m[1], token: normalizeVerdictToken(m[1]), at: c.created_at });
+  }
+  const selfDeclared = [];
+  if (operativeVerdict && operativeVerdict.source === "run-metadata") {
+    const author = String(operativeVerdict.author || "").trim();
+    if (!QA_PROFILES.has(author)) selfDeclared.push({ author, token: operativeVerdict.token });
+  }
+  return { ignored, selfDeclared };
+}
+
+/**
  * A QA deferral is legal only when it points at a real, QA-owned card
  * (either an explicit `QA-VERDICT: deferred — t_xxxxxxxx` comment or a linked
  * child card whose assignee is a QA profile).
+ *
+ * Only the **newest** deferral marker is operative (§3: "when several sources
+ * exist, the newest one is the operative verdict"), and a marker that a later
+ * QA verdict has superseded is history — otherwise a stale `deferred — t_...`
+ * comment blocks a card whose verdict has already landed, forever
+ * (t_58280940: R8 was evaluated on the *oldest* marker unconditionally, even
+ * when a valid verdict was recorded after it, so the card could never reach
+ * `done`).
+ *
+ * The linked-child heuristic is a *fallback for a card that records no verdict
+ * of its own*: it must never fire while the card already carries an explicit
+ * verdict in the §12 vocabulary, or every card that ever spawns unrelated
+ * `qa`-owned repair work would be re-read as an open deferral (t_5455942d
+ * defect 3). An explicit deferral marker wins over that heuristic — and only
+ * over that heuristic: it does not win over a newer verdict.
+ *
+ * **Author rule (§3, t_338f47fd).** A deferral *marker* is a QA verdict record
+ * (`QA-VERDICT: deferred — …`), so only a QA profile may record it: a
+ * non-QA-authored `deferred` marker neither satisfies R1 nor blocks a card
+ * through R8 (the live instance of the latter was t_f49d448c, where an
+ * `architect` marker blocked a card whose QA verdict had landed). The
+ * linked-child fallback is untouched — it is board state, not an authored
+ * record.
  */
 export function collectDeferral(board, task) {
-  const marker = (board.commentsByTask.get(task.id) || []).find((c) => DEFERRAL_RE.test(c.body || ""));
+  // Comments arrive in `created_at` order (loadBoard), so the last match is the
+  // newest marker — mirroring how collectVerdicts sorts its sources.
+  const markers = (board.commentsByTask.get(task.id) || []).filter(
+    (c) => QA_PROFILES.has(String(c.author || "").trim()) && DEFERRAL_RE.test(c.body || ""),
+  );
+  const marker = markers.length ? markers[markers.length - 1] : null;
+  const operativeVerdict = collectVerdicts(board, task).filter((v) => VERDICTS.has(v.token)).pop() || null;
   const linked = board
     .childrenOf(task.id)
     .map((id) => board.taskById.get(id))
     .filter((t) => t && QA_PROFILES.has(String(t.assignee || "").trim()));
-  if (!marker && linked.length === 0) return null;
+  if (!marker) {
+    if (operativeVerdict || linked.length === 0) return null;
+  } else if (operativeVerdict && Number(operativeVerdict.at || 0) >= Number(marker.created_at || 0)) {
+    // Superseded by the verdict recorded at/after it — no live deferral, and no
+    // R8 judgement of a marker that no longer governs the card.
+    return null;
+  }
   const named = ((marker ? marker.body : "").match(TASK_ID_RE) || [])[0] || (linked[0] ? linked[0].id : null);
   return { target: named, marker: Boolean(marker), linked: linked.map((t) => ({ id: t.id, status: t.status })) };
 }
 
+/**
+ * Evidence pointers. Each pointer carries a `scope`:
+ *
+ *   claim     — the operative verdict presents it as **its own** evidence
+ *               (§5.7: inside an `Evidence:` label, or, without a label,
+ *               anywhere outside a code span/fence). Only claims are resolved
+ *               by R5.
+ *   citation  — named in the operative verdict but not claimed: the verdict is
+ *               quoting a path about another card (a defect report, a
+ *               cross-check). Reported as A6, never as this card's gap
+ *               (t_99e408c5).
+ *   history   — a superseded verdict or an earlier handoff named it (t_5455942d
+ *               defect 2): reported as A5 at most.
+ *
+ * `operative` is kept as the boolean projection of `scope === "claim"` so the
+ * facts JSON stays readable.
+ */
 export function collectEvidence(board, task, repoRoot) {
   const pointers = [];
-  const push = (kind, value, origin) => {
+  const rank = { history: 1, citation: 2, claim: 3 };
+  const push = (kind, value, origin, scope = "history") => {
     const v = String(value).trim();
     if (!v) return;
-    if (pointers.some((p) => p.kind === kind && p.value === v)) return;
-    pointers.push({ kind, value: v, origin });
+    const existing = pointers.find((p) => p.kind === kind && p.value === v);
+    if (existing) {
+      if (rank[scope] > rank[existing.scope]) {
+        existing.scope = scope;
+        existing.operative = scope === "claim";
+        existing.origin = origin;
+      }
+      return;
+    }
+    pointers.push({ kind, value: v, origin, scope, operative: scope === "claim" });
   };
 
-  const verdictComments = collectVerdicts(board, task).filter((v) => v.comment);
-  for (const v of verdictComments) {
-    for (const m of v.comment.matchAll(EVIDENCE_URL_RE)) push("url", m[0], `${v.source}-comment`);
-    for (const m of v.comment.matchAll(EVIDENCE_MD_LINK_RE)) pushClassified(push, m[1], `${v.source}-comment`);
-    for (const m of v.comment.matchAll(EVIDENCE_PATH_RE)) push("path", m[1], `${v.source}-comment`);
-    for (const m of v.comment.matchAll(EVIDENCE_ABS_RE)) push("abs", m[1], `${v.source}-comment`);
-    for (const m of v.comment.matchAll(EVIDENCE_DIR_RE)) push("dir", m[1].replace(/\/$/, ""), `${v.source}-comment`);
+  const verdicts = collectVerdicts(board, task).filter((v) => v.comment);
+  const operativeVerdict = verdicts.length ? verdicts[verdicts.length - 1] : null;
+  for (const v of verdicts) {
+    const isOperative = v === operativeVerdict;
+    const text = v.comment;
+    // Claimed vs cited is only a question for the operative verdict — an older
+    // one is history whatever it named.
+    const ranges = isOperative ? codeRanges(text) : [];
+    const labelRegions = isOperative ? evidenceLabelRegions(text, ranges) : [];
+    const scopeAt = (index) => {
+      if (!isOperative) return "history";
+      if (labelRegions.length) return insideRanges(index, labelRegions) ? "claim" : "citation";
+      return insideRanges(index, ranges) ? "citation" : "claim";
+    };
+    for (const m of text.matchAll(EVIDENCE_URL_RE)) push("url", m[0], `${v.source}-comment`, scopeAt(m.index));
+    for (const m of text.matchAll(EVIDENCE_MD_LINK_RE)) pushClassified(push, m[1], `${v.source}-comment`, scopeAt(m.index + 2));
+    for (const m of text.matchAll(EVIDENCE_PATH_RE)) push("path", m[1], `${v.source}-comment`, scopeAt(m.index + m[0].length - m[1].length));
+    for (const m of text.matchAll(EVIDENCE_ABS_RE)) push("abs", m[1], `${v.source}-comment`, scopeAt(m.index + m[0].length - m[1].length));
+    for (const m of text.matchAll(EVIDENCE_DIR_RE)) {
+      push("dir", m[1].replace(/\/$/, ""), `${v.source}-comment`, scopeAt(m.index + m[0].length - m[1].length));
+    }
   }
   for (const a of board.attachmentsByTask.get(task.id) || []) {
-    push("attachment", a.filename, "attachment");
+    push("attachment", a.filename, "attachment", "claim");
     const last = pointers[pointers.length - 1];
     if (last && last.value === a.filename) last.stored_path = a.stored_path;
   }
   for (const r of board.runsByTask.get(task.id) || []) {
     const md = parseJson(r.metadata);
     if (!md) continue;
+    const op =
+      Boolean(operativeVerdict) &&
+      operativeVerdict.source === "run-metadata" &&
+      operativeVerdict.runId !== null &&
+      String(operativeVerdict.runId) === String(r.id);
     for (const key of ["artifacts", "evidence"]) {
       if (!Array.isArray(md[key])) continue;
-      for (const item of md[key]) pushClassified(push, String(item), `run-metadata.${key}`);
+      for (const item of md[key]) pushClassified(push, String(item), `run-metadata.${key}`, op ? "claim" : "history");
     }
   }
 
@@ -287,17 +542,39 @@ export function collectEvidence(board, task, repoRoot) {
   return pointers;
 }
 
-function pushClassified(push, value, origin) {
+function pushClassified(push, value, origin, scope = "history") {
   const v = String(value).trim();
   if (!v) return;
   if (/^https?:\/\//.test(v)) {
-    if (/github\.com\/[\w.-]+\/[\w.-]+\/(actions\/runs\/\d+|pull\/\d+|issues\/\d+)/.test(v)) push("url", v, origin);
+    if (/github\.com\/[\w.-]+\/[\w.-]+\/(actions\/runs\/\d+|pull\/\d+|issues\/\d+)/.test(v)) push("url", v, origin, scope);
     return;
   }
-  if (isAbsolute(v)) return push("abs", v, origin);
+  if (isAbsolute(v)) return push("abs", v, origin, scope);
   const clean = v.replace(/^\.\//, "").split("#")[0];
-  if (/\.(md|txt|json|xml|mjs|cjs|ts|tsx|js|html|sarif|log|png|jpg|svg|ya?ml|csv)$/i.test(clean)) return push("path", clean, origin);
-  if (/\/(tests|docs|architecture)\//.test(`/${clean}`)) return push("dir", clean.replace(/\/$/, ""), origin);
+  if (/\.(md|txt|json|xml|mjs|cjs|ts|tsx|js|html|sarif|log|png|jpg|svg|ya?ml|csv)$/i.test(clean)) return push("path", clean, origin, scope);
+  if (/\/(tests|docs|architecture)\//.test(`/${clean}`)) return push("dir", clean.replace(/\/$/, ""), origin, scope);
+}
+
+/**
+ * Does a repo-relative path exist on **any** ref of the checkout (not just in
+ * the worker's working tree)? A card may legitimately cite an artifact that
+ * lives on another branch; that is a "committed path" per §5.3, so it must not
+ * be reported as missing (t_5455942d defect 2). Returns the commit sha or null.
+ */
+function findOnAnyRef(repoRoot, relPath) {
+  if (!repoRoot || isAbsolute(relPath)) return null;
+  if (!existsSync(join(repoRoot, ".git"))) return null;
+  try {
+    const out = execFileSync("git", ["-C", repoRoot, "rev-list", "--max-count=1", "--all", "--", relPath], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 20000,
+      maxBuffer: 16 * 1024 * 1024,
+    }).trim();
+    return out ? out.split("\n")[0] : null;
+  } catch {
+    return null;
+  }
 }
 
 function hasArchitectSignoff(board, task) {
@@ -333,8 +610,27 @@ export function evaluateCard(board, task, opts = {}) {
   // `deferred` is a legal marker value but not a verdict — §5.4 handles it (R8).
   const invalid = verdicts.filter((v) => v.token && !VERDICTS.has(v.token) && v.token !== "deferred");
   const deferral = collectDeferral(board, task);
+  // Verdict-shaped records the gate discounts (§3 author rule, t_338f47fd):
+  // non-QA marker comments (ignored) and a non-QA run-metadata verdict (accepted
+  // as the one documented author-independent source, but reported). Both are
+  // advisories — they change visibility, never the verdict set.
+  const discounted = collectDiscountedVerdicts(board, task, valid.length ? valid[valid.length - 1] : null);
   const evidence = collectEvidence(board, task, repoRoot);
   const missingFiles = evidence.filter((p) => p.exists === false);
+  // Before the facts are rendered, try to satisfy the operative verdict's
+  // missing paths from the repo's other refs: a path committed on another
+  // branch is real evidence (§5.3), just not in this worker's checkout.
+  const offTree = [];
+  for (const p of missingFiles) {
+    if (p.kind === "attachment" || p.scope === "history") continue;
+    const ref = findOnAnyRef(repoRoot, p.value);
+    if (!ref) continue;
+    p.exists = true;
+    p.viaRef = ref;
+    // A *cited* path the repo does hold needs no advisory at all; a claimed one
+    // is the accepted off-tree case (A4).
+    if (p.scope === "claim") offTree.push(p);
+  }
 
   const facts = {
     task_id: task.id,
@@ -346,8 +642,20 @@ export function evaluateCard(board, task, opts = {}) {
     verdict: valid.length ? valid[valid.length - 1].token : null,
     invalid_verdicts: invalid.map((v) => ({ token: v.token, raw: v.raw, source: v.source })),
     deferral,
-    evidence: evidence.map((p) => ({ kind: p.kind, value: p.value, exists: p.exists ?? null, origin: p.origin })),
+    evidence: evidence.map((p) => ({
+      kind: p.kind,
+      value: p.value,
+      exists: p.exists ?? null,
+      operative: Boolean(p.operative),
+      scope: p.scope,
+      via_ref: p.viaRef || null,
+      origin: p.origin,
+    })),
     exception,
+    discounted_verdicts: {
+      ignored: discounted.ignored,
+      self_declared: discounted.selfDeclared,
+    },
   };
 
   // R2 — a verdict token outside the §12 vocabulary.
@@ -355,6 +663,21 @@ export function evaluateCard(board, task, opts = {}) {
     add(
       "R2_QA_VERDICT_INVALID",
       `verdict "${v.raw}" (${v.source}${v.author ? ` by ${v.author}` : ""}) is not one of: ${[...VERDICTS].join(", ")}`,
+    );
+  }
+
+  // A7/A8 — the §3 author rule, reported so discounting is never silent
+  // (t_338f47fd). Advisories only: neither changes which sources are accepted.
+  for (const ig of discounted.ignored) {
+    advise(
+      "A7_VERDICT_AUTHOR_IGNORED",
+      `a \`QA-VERDICT: ${ig.raw}\` comment written by "${ig.author}" is not a QA verdict (§3: only a qa-profile comment records one) — ignored`,
+    );
+  }
+  for (const sd of discounted.selfDeclared) {
+    advise(
+      "A8_VERDICT_SELF_DECLARED",
+      `the operative verdict "${sd.token}" comes from the run metadata of a "${sd.author}" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review`,
     );
   }
 
@@ -394,13 +717,41 @@ export function evaluateCard(board, task, opts = {}) {
   if (!exception && evidence.length === 0) {
     add(
       "R4_EVIDENCE_MISSING",
-      "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment",
+      "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)",
     );
   }
 
-  // R5 — a named evidence file/directory must exist.
-  for (const p of missingFiles) {
-    add("R5_EVIDENCE_FILE_MISSING", `evidence ${p.kind === "dir" ? "directory" : "file"} named in the verdict does not exist: ${p.value}${repoRoot ? ` (repo: ${repoRoot})` : ""}`);
+  // R5 — a **claimed** evidence file/directory must exist. Two scopings narrow
+  // this, both of them availability fixes rather than relaxations:
+  //  * to the **operative** (newest) verdict: a path recorded by a superseded
+  //    verdict or an earlier worker's handoff is history and must not make a
+  //    compliant card uncompletable (t_5455942d defect 2) — reported as A5;
+  //  * to the paths that verdict **claims as its own** (§5.7): a path it merely
+  //    quotes about another card — a defect report, a cross-check, a pasted
+  //    transcript — is not this card's evidence and is reported as A6
+  //    (t_99e408c5: the QA card that reported a broken pointer elsewhere became
+  //    uncompletable for naming it).
+  // A4 marks the accepted off-tree case; A3 the "cannot verify at all" case.
+  const adjudicated = missingFiles.filter((p) => p.exists === false);
+  for (const p of adjudicated) {
+    if (p.scope === "citation") {
+      advise(
+        "A6_EVIDENCE_CITED",
+        `evidence ${p.value} is only cited in the operative verdict (outside its §5.7 evidence label, or inside a code span) — not claimed as this card's evidence, report only`,
+      );
+      continue;
+    }
+    if (p.scope !== "claim") {
+      advise("A5_EVIDENCE_SUPERSEDED", `evidence ${p.value} named in a superseded verdict/handoff is absent from this checkout — report only`);
+      continue;
+    }
+    add(
+      "R5_EVIDENCE_FILE_MISSING",
+      `evidence ${p.kind === "dir" ? "directory" : "file"} claimed by the operative verdict (§5.7) does not exist: ${p.value}${repoRoot ? ` (repo: ${repoRoot}; not found on any ref)` : ""}`,
+    );
+  }
+  for (const p of offTree) {
+    advise("A4_EVIDENCE_OFF_TREE", `operative evidence ${p.value} is not in this checkout but exists in the repo at ${p.viaRef} — accepted`);
   }
   if (repoRoot === null) {
     for (const p of evidence.filter((x) => x.exists === null && x.kind !== "url" && x.kind !== "attachment")) {
@@ -603,6 +954,79 @@ function main() {
 // Hook mode — pre_tool_call: kanban_complete
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Resolve the board task id from a `pre_tool_call` payload.
+ *
+ * Explicit payload sources (first match that is a task-id shape wins):
+ *   1. `tool_input.task_id`   — the explicit argument to `kanban_complete`
+ *   2. `extra.task_id`        — only when it actually looks like a task id
+ *   3. `$HERMES_KANBAN_TASK`  — the dispatcher's identity variable
+ * Location fallbacks, used only when the payload carries no usable task id:
+ *   4. basename of `$HERMES_KANBAN_WORKSPACE`
+ *   5. basename of the hook's `cwd` (the worker's checkout)
+ *   6. last path segment of `$HERMES_KANBAN_BRANCH`
+ * Every candidate is verified against the board, so a wrong guess cannot evaluate
+ * the wrong card.
+ *
+ * Why the location fallbacks are not paranoia: Hermes scrubs the kanban identity
+ * variables (`HERMES_KANBAN_TASK`, `_RUN_ID`, `_CLAIM_LOCK`) out of *descendant*
+ * processes (`agent/delegation_context.py::scrub_kanban_env` — a hook subprocess is
+ * a descendant), and `extra.task_id` carries the Hermes **session id**, not the
+ * card id. So for the natural `kanban_complete()` call the hook sees neither: the
+ * pre-fix chain resolved the session id and `fail_closed` turned a compliant
+ * completion into a hard block (t_5455942d). Verified with `hook-env-probe.py`.
+ */
+export function resolveTaskId(payload, board, dbPath) {
+  const input = (payload && payload.tool_input) || {};
+  const extra = (payload && payload.extra) || {};
+  const str = (v) => (typeof v === "string" ? v.trim() : typeof v === "number" ? String(v) : "");
+  const base = (p) => (p ? p.replace(/\/+$/, "").split("/").filter(Boolean).pop() || "" : "");
+  const explicit = [
+    { source: "tool_input.task_id", value: str(input.task_id), strict: true },
+    { source: "extra.task_id", value: str(extra.task_id), strict: false },
+    { source: "HERMES_KANBAN_TASK", value: str(process.env.HERMES_KANBAN_TASK), strict: false },
+  ];
+  const derived = [
+    { source: "HERMES_KANBAN_WORKSPACE", value: base(str(process.env.HERMES_KANBAN_WORKSPACE)) },
+    { source: "cwd", value: base(str(payload && payload.cwd)) },
+    { source: "HERMES_KANBAN_BRANCH", value: base(str(process.env.HERMES_KANBAN_BRANCH)) },
+  ];
+
+  const tried = [];
+  for (const c of [...explicit, ...derived]) {
+    if (!c.value) {
+      tried.push(`${c.source}=<empty>`);
+      continue;
+    }
+    const shown = c.value.length > 64 ? `${c.value.slice(0, 61)}…` : c.value;
+    // Numeric id: the dispatcher can hand over a run id — the board itself knows
+    // which card that run belongs to, so resolve it from there (never guess).
+    if (/^\d+$/.test(c.value) && board.runsById.has(c.value)) {
+      const run = board.runsById.get(c.value);
+      if (run && board.taskById.has(run.task_id)) return { id: run.task_id, source: `${c.source} (run id ${c.value})` };
+    }
+    if (!TASK_ID_SHAPE_RE.test(c.value)) {
+      const looksSession = /^\d{8}_\d{6}_[0-9a-z]+$/i.test(c.value);
+      tried.push(
+        `${c.source}="${shown}" (not a task id — expected t_xxxxxxxx${looksSession ? "; this looks like a Hermes session id" : ""})`,
+      );
+      continue;
+    }
+    if (board.taskById.has(c.value)) return { id: c.value, source: c.source };
+    tried.push(`${c.source}="${shown}" (task-id shape but not on this board)`);
+    if (c.strict) {
+      return {
+        error: `signoff-gate: task ${c.value} (from ${c.source}) is not on the board at ${dbPath}. Failing closed. If the hook picked up the wrong id, re-issue kanban_complete with an explicit task_id="t_xxxxxxxx" (QA_SIGN_OFF_GATE.md §8).`,
+      };
+    }
+  }
+  return {
+    error:
+      `signoff-gate: could not resolve a board task id for this kanban_complete — tried: ${tried.join("; ")}. ` +
+      `Failing closed. Re-issue the call with an explicit task_id="t_xxxxxxxx" (QA_SIGN_OFF_GATE.md §8 troubleshooting).`,
+  };
+}
+
 function hookMode(defaultDb) {
   const allow = () => {
     process.stdout.write("{}\n");
@@ -628,14 +1052,6 @@ function hookMode(defaultDb) {
   }
   const tool = payload.tool_name || "";
   if (tool && tool !== "kanban_complete") return allow();
-  const input = payload.tool_input || {};
-  const extra = payload.extra || {};
-  const taskId = input.task_id || extra.task_id || process.env.HERMES_KANBAN_TASK || "";
-  if (!taskId) {
-    return block(
-      "signoff-gate: kanban_complete with no resolvable task id (tool_input.task_id / extra.task_id / HERMES_KANBAN_TASK all empty). Failing closed.",
-    );
-  }
   const db = process.env.HERMES_KANBAN_DB || defaultDb;
   const repo = typeof payload.cwd === "string" && existsSync(payload.cwd) ? payload.cwd : resolveRepo(null);
   let board;
@@ -644,8 +1060,11 @@ function hookMode(defaultDb) {
   } catch (e) {
     return block(`signoff-gate: board unreadable (${e.message}). Failing closed.`);
   }
+  const resolved = resolveTaskId(payload, board, db);
+  if (resolved.error) return block(resolved.error);
+  const taskId = resolved.id;
   const task = board.taskById.get(taskId);
-  if (!task) return block(`signoff-gate: task ${taskId} is not on the board at ${db}. Failing closed.`);
+  if (!task) return block(`signoff-gate: task ${taskId} (from ${resolved.source}) is not on the board at ${db}. Failing closed.`);
   let result;
   try {
     result = evaluateCard(board, task, { repo, epochMs: Date.parse(GATE_EPOCH_ISO), preComplete: true });

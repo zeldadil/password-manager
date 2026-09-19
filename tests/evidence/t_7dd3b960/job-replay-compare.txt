@@ -1,0 +1,18 @@
+A full checkout (all refs)   : {"done_cards":43,"enforced":16,"failures":6,"grandfathered":27}
+B shallow checkout (depth 1) : {"done_cards":43,"enforced":16,"failures":8,"grandfathered":27}
+repo used A: /home/sap/.hermes/kanban/workspaces/t_7dd3b960/repo
+repo used B: /home/sap/.hermes/kanban/workspaces/t_7dd3b960/shallow
+
+=== cards whose outcome differs (shallow vs full) ===
+t_ea0783c5  full=ok   shallow=R5_EVIDENCE_FILE_MISSING   :: CI-001h: wire QA sign-off gate board audit as a scheduled CI
+      shallow-only R5: evidence file named in the operative verdict does not exist: .github/workflows/qa-signoff-audit.yml (repo: /home/sap/.hermes/kanban/workspaces/t_7dd3b960/shallow; not found on any ref)
+t_80fc0326  full=R2_QA_VERDICT_INVALID+R2_QA_VERDICT_INVALID+R2_QA_VERDICT_INVALID   shallow=R2_QA_VERDICT_INVALID+R2_QA_VERDICT_INVALID+R2_QA_VERDICT_INVALID+R5_EVIDENCE_FILE_MISSING   :: P0 follow-up: complete the public-repo purge of the leaked T
+      shallow-only R5: evidence file named in the operative verdict does not exist: scripts/qa/secret-guard.selftest.mjs (repo: /home/sap/.hermes/kanban/workspaces/t_7dd3b960/shallow; not found on any ref)
+t_28951254  full=ok   shallow=R5_EVIDENCE_FILE_MISSING   :: P0 follow-up: propagate the ROTATED Telegram token to all 7 
+      shallow-only R5: evidence file named in the operative verdict does not exist: tests/evidence/t_28951254/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_7dd3b960/shallow; not found on any ref)
+t_b51a1ff3  full=R2_QA_VERDICT_INVALID+R2_QA_VERDICT_INVALID   shallow=R2_QA_VERDICT_INVALID+R2_QA_VERDICT_INVALID+R5_EVIDENCE_FILE_MISSING+R5_EVIDENCE_FILE_MISSING   :: Security process: prevent secrets in Kanban comments/evidenc
+      shallow-only R5: evidence file named in the operative verdict does not exist: scripts/qa/hooks/install-secret-guard.sh (repo: /home/sap/.hermes/kanban/workspaces/t_7dd3b960/shallow; not found on any ref)
+      shallow-only R5: evidence file named in the operative verdict does not exist: scripts/qa/secret-guard.selftest.mjs (repo: /home/sap/.hermes/kanban/workspaces/t_7dd3b960/shallow; not found on any ref)
+
+A failing cards: t_7918f010, t_527d4720, t_80fc0326, t_b51a1ff3, t_c3cb6842, t_28f60dc1
+B failing cards: t_7918f010, t_ea0783c5, t_527d4720, t_80fc0326, t_28951254, t_b51a1ff3, t_c3cb6842, t_28f60dc1

@@ -16,7 +16,13 @@
 # Usage:
 #   verify-signoff-gate.sh --all
 #   verify-signoff-gate.sh --profile qa --live --fixture-db /tmp/fixture/board.db \
-#                          --fixture-noncompliant t_b0000002 --fixture-compliant t_b0000000
+#                          --fixture-noncompliant t_b0000002 --fixture-compliant t_b0000000 \
+#                          [--fixture-repo /tmp/fixture/repo]
+#
+# --fixture-repo sets the working directory of the live fire — i.e. the checkout the gate
+# resolves repo-relative evidence paths against (the hook payload's `cwd` is the firing
+# process's cwd). Pass the fixture repo that holds the compliant card's evidence, or a
+# path-based compliant card will (correctly) block with R5.
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
@@ -28,6 +34,7 @@ LIVE=0
 FIXTURE_DB=""
 FIXTURE_BAD=""
 FIXTURE_GOOD=""
+FIXTURE_REPO=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -37,8 +44,9 @@ while [ $# -gt 0 ]; do
     --fixture-db) FIXTURE_DB="$2"; shift 2 ;;
     --fixture-noncompliant) FIXTURE_BAD="$2"; shift 2 ;;
     --fixture-compliant) FIXTURE_GOOD="$2"; shift 2 ;;
+    --fixture-repo) FIXTURE_REPO="$2"; shift 2 ;;
     --profiles-root) PROFILES_ROOT="$2"; shift 2 ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
     *) echo "verify-signoff-gate: unknown argument $1" >&2; exit 3 ;;
   esac
 done
@@ -50,8 +58,10 @@ fi
 
 pass=0
 fail=0
+warned=0
 ok()   { echo "   ok   - $1"; pass=$((pass + 1)); }
 bad()  { echo "   FAIL - $1"; fail=$((fail + 1)); }
+warn() { echo "   warn - $1"; warned=$((warned + 1)); }
 
 echo "QA sign-off gate verification — repo gate: ${GATE_SRC}"
 echo
@@ -80,7 +90,13 @@ for profile in "${PROFILES[@]}"; do
     grep -q "qa-signoff-gate.sh" "${cfg}" && ok "config.yaml carries the hook command" || bad "config.yaml has no qa-signoff-gate.sh entry"
     grep -q "fail_closed: true" "${cfg}" && ok "config.yaml sets fail_closed: true" || bad "config.yaml does not set fail_closed: true"
     grep -q "^hooks_auto_accept: true" "${cfg}" && ok "config.yaml sets hooks_auto_accept: true (non-TTY workers)" || bad "hooks_auto_accept is not true — headless workers would silently skip the hook"
-    grep -q 'matcher: "\^kanban_complete\$"' "${cfg}" && ok "matcher scoped to kanban_complete" || bad "matcher is not ^kanban_complete\$"
+    # Hermes rewrites config.yaml when it records consent and normalises the quoted
+    # matcher to a bare scalar, so accept both spellings (t_5455942d).
+    if grep -Eq 'matcher:[[:space:]]*"?\^kanban_complete\$"?' "${cfg}"; then
+      ok "matcher scoped to kanban_complete"
+    else
+      bad "matcher is not ^kanban_complete\$"
+    fi
   else
     bad "config.yaml missing: ${cfg}"
   fi
@@ -103,10 +119,23 @@ for profile in "${PROFILES[@]}"; do
     else
       bad "hermes hooks list does not show the hook"
     fi
-    if HERMES_HOME="${pd}" hermes hooks doctor >/tmp/signoff-gate-doctor-${profile}.txt 2>&1; then
-      ok "hermes hooks doctor clean (transcript: /tmp/signoff-gate-doctor-${profile}.txt)"
+    doctor_out="/tmp/signoff-gate-doctor-${profile}.txt"
+    if HERMES_HOME="${pd}" hermes hooks doctor >"${doctor_out}" 2>&1; then
+      # `hermes hooks doctor` exits 0 even when it prints "issue(s) found", so the exit
+      # code alone is not a clean bill of health — read the report (t_5455942d).
+      doctor_warns="$(grep -c '⚠' "${doctor_out}" || true)"
+      doctor_drift="$(grep -c 'script modified since approval' "${doctor_out}" || true)"
+      if grep -q "issue(s) found" "${doctor_out}"; then
+        if [ "${doctor_warns}" = "1" ] && [ "${doctor_drift}" = "1" ]; then
+          warn "hermes hooks doctor: only the expected post-install mtime drift (approval refresh is interactive-only; hooks_auto_accept: true keeps the hook live — see the live fire below)"
+        else
+          bad "hermes hooks doctor reported issues beyond the expected mtime drift (${doctor_warns} warning(s)) — see ${doctor_out}"
+        fi
+      else
+        ok "hermes hooks doctor clean (transcript: ${doctor_out})"
+      fi
     else
-      bad "hermes hooks doctor reported a problem — see /tmp/signoff-gate-doctor-${profile}.txt"
+      bad "hermes hooks doctor reported a problem — see ${doctor_out}"
     fi
   fi
 
@@ -118,16 +147,27 @@ for profile in "${PROFILES[@]}"; do
       good_payload="$(mktemp)"
       # Hermes wire shape: `tool_input` comes from the `args` kwarg, the worker's
       # task id arrives as a top-level `task_id` kwarg (landing in `extra`).
+      # `payload.cwd` is always Path.cwd() of the firing process, so the fire runs
+      # from --fixture-repo: that is the checkout the gate resolves repo-relative
+      # evidence against (a payload-file "cwd" key would land in `extra` instead).
       printf '{"args":{"task_id":"%s","summary":"verification fire"},"task_id":"%s"}\n' "${FIXTURE_BAD}" "${FIXTURE_BAD}" > "${bad_payload}"
       printf '{"args":{"task_id":"%s","summary":"verification fire"},"task_id":"%s"}\n' "${FIXTURE_GOOD}" "${FIXTURE_GOOD}" > "${good_payload}"
 
-      bad_out="$(HERMES_HOME="${pd}" HERMES_KANBAN_DB="${FIXTURE_DB}" hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file "${bad_payload}" 2>&1)"
+      fire() {
+        if [ -n "${FIXTURE_REPO}" ]; then
+          ( cd "${FIXTURE_REPO}" && HERMES_HOME="${pd}" HERMES_KANBAN_DB="${FIXTURE_DB}" hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file "$1" 2>&1 )
+        else
+          HERMES_HOME="${pd}" HERMES_KANBAN_DB="${FIXTURE_DB}" hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file "$1" 2>&1
+        fi
+      }
+
+      bad_out="$(fire "${bad_payload}")"
       if printf '%s' "${bad_out}" | grep -q '"action": "block"'; then
         ok "live fire — non-compliant card ${FIXTURE_BAD} blocked (exit 2 + action:block)"
       else
         bad "live fire did not block ${FIXTURE_BAD}: $(printf '%s' "${bad_out}" | tail -3 | tr '\n' ' ')"
       fi
-      good_out="$(HERMES_HOME="${pd}" HERMES_KANBAN_DB="${FIXTURE_DB}" hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file "${good_payload}" 2>&1)"
+      good_out="$(fire "${good_payload}")"
       if printf '%s' "${good_out}" | grep -q "exit=0" && printf '%s' "${good_out}" | grep -q "parsed: <none"; then
         ok "live fire — compliant card ${FIXTURE_GOOD} allowed (exit 0, no dispatcher contribution)"
       else
@@ -139,6 +179,6 @@ for profile in "${PROFILES[@]}"; do
   echo
 done
 
-echo "verification: ${pass} ok · ${fail} FAIL"
+echo "verification: ${pass} ok · ${warned} warn · ${fail} FAIL"
 [ "${fail}" -eq 0 ] || exit 1
 exit 0

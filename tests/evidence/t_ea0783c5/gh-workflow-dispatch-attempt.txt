@@ -1,0 +1,6 @@
+$ gh workflow run qa-signoff-audit.yml --ref feature/t_ea0783c5
+exit=0
+$ gh workflow list --repo zeldadil/password-manager
+CI	active	360493943
+QA sign-off audit	active	360634660
+exit=0
