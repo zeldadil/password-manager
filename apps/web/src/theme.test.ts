@@ -71,9 +71,14 @@ function sourceFiles(): string[] {
 
 /** Any literal color that is not a theme reference. `transparent` and
  *  `currentColor` are allowed (absence of color / inherited color), as is
- *  `var(--token)`. */
+ *  `var(--token)`.
+ *
+ *  Color keywords are matched only when they stand alone: the trailing
+ *  `(?![\w-])` keeps CSS identifiers/properties that merely start with a color
+ *  name (`white-space`, `blacklist`, …) out of the match, so the a11y baseline
+ *  rules in index.css are not false positives. */
 const HARDCODED_COLOR =
-  /#[0-9a-fA-F]{3,8}(?![0-9a-fA-F])|\b(?:rgba?|hsla?|oklch|oklab)\(|\b(?:white|black|red|blue|green|yellow|gray|grey|orange|purple|pink|brown|cyan|magenta|navy|teal|silver|maroon|olive|lime|aqua|fuchsia|gold|indigo|violet|beige|coral|crimson|khaki|lavender|plum|salmon|tan|tomato|turquoise)\b/i
+  /#[0-9a-fA-F]{3,8}(?![0-9a-fA-F])|\b(?:rgba?|hsla?|oklch|oklab)\(|\b(?:white|black|red|blue|green|yellow|gray|grey|orange|purple|pink|brown|cyan|magenta|navy|teal|silver|maroon|olive|lime|aqua|fuchsia|gold|indigo|violet|beige|coral|crimson|khaki|lavender|plum|salmon|tan|tomato|turquoise)(?![\w-])/i
 
 describe('theme system', () => {
   it('defines every token with the Hermes dark palette as the default', () => {
