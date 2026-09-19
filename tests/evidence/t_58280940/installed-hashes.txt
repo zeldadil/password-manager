@@ -1,0 +1,14 @@
+# t_58280940 — installed gate copies vs scripts/qa/signoff-gate.mjs (same checkout)
+# date: 2026-09-18T20:55:35Z
+
+repo copy: 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55  scripts/qa/signoff-gate.mjs
+installed: 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55  /home/sap/.hermes/profiles/architect/agent-hooks/signoff-gate.mjs  <= architect
+installed: 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55  /home/sap/.hermes/profiles/backend/agent-hooks/signoff-gate.mjs  <= backend
+installed: 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55  /home/sap/.hermes/profiles/browser/agent-hooks/signoff-gate.mjs  <= browser
+installed: 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55  /home/sap/.hermes/profiles/docs/agent-hooks/signoff-gate.mjs  <= docs
+installed: 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55  /home/sap/.hermes/profiles/frontend/agent-hooks/signoff-gate.mjs  <= frontend
+installed: 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55  /home/sap/.hermes/profiles/product/agent-hooks/signoff-gate.mjs  <= product
+installed: 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55  /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs  <= qa
+
+distinct installed hashes: 1
+drift vs repo copy (must be 0): 0

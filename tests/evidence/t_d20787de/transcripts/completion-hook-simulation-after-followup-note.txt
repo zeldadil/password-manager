@@ -1,0 +1,3 @@
+QA sign-off gate — check t_d20787de (pre-complete) (db: /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/board-t4.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_d20787de  P1 gate follow-up: retro-verify the 5 cards whose verdict rested on a non-QA record (t_338f47fd §3 author rule) @qa

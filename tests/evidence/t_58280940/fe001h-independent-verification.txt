@@ -1,0 +1,81 @@
+# QA independent verification of FE-001h (t_f49d448c) at c918425
+# host: Linux 6.8.0-139-generic x86_64 · node v22.23.2 · 2026-09-18T20:54:28Z
+# commit: c91842565324eae89a92d1ff53f7abc536bc790c  (= origin/feature/t_f49d448c @ c918425)
+ WARN  The "workspaces" field in package.json is not supported by pnpm. Create a "pnpm-workspace.yaml" file instead.
+# toolchain: pnpm 9.12.0 via a corepack shim on PATH (host global pnpm is v12.x and
+#            refuses a repo pinned to packageManager pnpm@9.12.0 — see the FE-001h note)
+
+$ pnpm install --frozen-lockfile
+Scope: all 2 workspace projects
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+Done in 1s
+install_exit=0
+
+$ pnpm lint
+
+> password-manager@0.1.0 lint /home/sap/.hermes/kanban/workspaces/t_58280940/pm-fe-verify
+> pnpm -r --parallel --filter '**' run lint
+
+apps/web lint$ eslint . && prettier --check .
+apps/web lint: Checking formatting...
+apps/web lint: All matched files use Prettier code style!
+apps/web lint: Done
+lint_exit=0
+
+$ pnpm typecheck
+
+> password-manager@0.1.0 typecheck /home/sap/.hermes/kanban/workspaces/t_58280940/pm-fe-verify
+> pnpm -r --parallel --filter '**' run typecheck
+
+apps/web typecheck$ tsc -b
+apps/web typecheck: Done
+typecheck_exit=0
+
+$ pnpm test
+
+> password-manager@0.1.0 test /home/sap/.hermes/kanban/workspaces/t_58280940/pm-fe-verify
+> pnpm -r --parallel --filter '**' run test
+
+apps/web test$ vitest run
+apps/web test:  RUN  v3.2.7 /home/sap/.hermes/kanban/workspaces/t_58280940/pm-fe-verify/apps/web
+apps/web test:  ✓ src/App.test.tsx (1 test) 77ms
+apps/web test:  Test Files  1 passed (1)
+apps/web test:       Tests  1 passed (1)
+apps/web test:    Start at  20:54:36
+apps/web test:    Duration  954ms (transform 43ms, setup 0ms, collect 160ms, tests 77ms, environment 434ms, prepare 80ms)
+apps/web test: Done
+test_exit=0
+
+$ pnpm test:integration
+
+> password-manager@0.1.0 test:integration /home/sap/.hermes/kanban/workspaces/t_58280940/pm-fe-verify
+> pnpm -r --parallel --filter '**' run test:integration
+
+apps/web test:integration$ vitest run --passWithNoTests 'src/**/*.integration.test.{ts,tsx}'
+apps/web test:integration:  RUN  v3.2.7 /home/sap/.hermes/kanban/workspaces/t_58280940/pm-fe-verify/apps/web
+apps/web test:integration: No test files found, exiting with code 0
+apps/web test:integration: filter: src/**/*.integration.test.{ts,tsx}
+apps/web test:integration: include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+apps/web test:integration: exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
+apps/web test:integration: Done
+test:integration_exit=0
+
+$ pnpm build
+
+> password-manager@0.1.0 build /home/sap/.hermes/kanban/workspaces/t_58280940/pm-fe-verify
+> pnpm -r --parallel --filter '**' run build
+
+apps/web build$ tsc -b && vite build
+apps/web build: vite v8.3.0 building client environment for production...
+apps/web build: transforming...
+apps/web build: ✓ 15 modules transformed.
+apps/web build: rendering chunks...
+apps/web build: computing gzip size...
+apps/web build: dist/index.html                   0.40 kB │ gzip:  0.26 kB
+apps/web build: dist/assets/index-Caiu9nj6.css    0.32 kB │ gzip:  0.22 kB
+apps/web build: dist/assets/index-Dj7VT6D7.js   140.73 kB │ gzip: 45.75 kB
+apps/web build: ✓ built in 108ms
+apps/web build: Done
+build_exit=0

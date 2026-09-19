@@ -1,0 +1,7 @@
+scan:test-data — synthetic-data enforcement (AR-4)
+repo root: /home/sap/password-manager/.worktrees/t_204ae591
+scanning:  10 test file(s)
+
+
+scanned 10 file(s), 0 finding(s)
+RESULT: PASS — no real secret, real domain, or dictionary password in test data

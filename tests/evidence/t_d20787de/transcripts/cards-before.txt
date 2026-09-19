@@ -1,0 +1,4 @@
+board: /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/board-t0.db
+dumped_at: 2026-09-19T07:15:03Z
+
+/home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/dump-cards.sh: line 21: unexpected EOF while looking for matching `''

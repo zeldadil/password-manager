@@ -1,0 +1,71 @@
+/* Base/reset styles only. Colors live in theme.css and are referenced here
+   through variables — index.css never hardcodes a color. */
+
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    sans-serif;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--foreground);
+  background-color: var(--background);
+}
+
+/* --- Accessibility baseline --- */
+
+/* WCAG 2.4.7 Focus Visible: a clear, high-contrast focus indicator for keyboard
+   navigation. Uses the accent token (≈6.8:1 against --card/--background). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The main landmark is focusable only programmatically (tabIndex -1) as the target
+   for route-change focus management and the skip link. A visible focus ring on the
+   whole content region would be noise, so suppress it. */
+#main-content:focus {
+  outline: none;
+}
+
+/* Skip link: hidden until it receives focus, then shown as the first tab stop. */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -999px;
+  z-index: 100;
+  padding: 8px 12px;
+  color: var(--background);
+  background-color: var(--foreground);
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
+/* Screen-reader-only utility for the route announcement live region. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,33 @@
+== environment ==
+run at 2026-09-17T20:22:26Z
+gate (installed, qa profile): /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs
+00807b004287985542c105f78e2a35759bc560744000e48e6f867b71e8df822f  /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs
+board: /home/sap/.hermes/kanban.db
+
+== defect 1: kanban_complete with no tool_input.task_id (extra.task_id = session id, HERMES_KANBAN_TASK set) ==
+$ HERMES_KANBAN_TASK=t_0af5aa3e HERMES_KANBAN_DB=/home/sap/.hermes/kanban.db bash /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh < payload-session-id.json
+{"decision":"block","reason":"signoff-gate: task 20260917_201256_021f5e is not on the board at /home/sap/.hermes/kanban.db. Failing closed."}
+exit=2
+
+== defect 1b: same call, explicit tool_input.task_id (the documented workaround) ==
+{}
+exit=0
+
+== defect 2/3: check --pre-complete on t_0af5aa3e against a repo root holding ONLY the operative verdict's evidence ==
+fixture repo: /home/sap/.hermes/kanban/workspaces/t_5455942d/fixture-repo-operative-only
+./tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md
+$ node /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs check --task t_0af5aa3e --pre-complete --repo /home/sap/.hermes/kanban/workspaces/t_5455942d/fixture-repo-operative-only
+QA sign-off gate — check t_0af5aa3e (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_0af5aa3e  P0: rotate + purge leaked Telegram bot token (public git history) @qa
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md (repo: /home/sap/.hermes/kanban/workspaces/t_5455942d/fixture-repo-operative-only)
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_0af5aa3e/QA-VERDICT.md (repo: /home/sap/.hermes/kanban/workspaces/t_5455942d/fixture-repo-operative-only)
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/signoff-gate.selftest.mjs (repo: /home/sap/.hermes/kanban/workspaces/t_5455942d/fixture-repo-operative-only)
+        warn A2_DEFERRAL_OPEN: QA verdict deferred to t_5455942d (qa, status=running) — audit tracks it until it lands
+exit=1
+
+== defect 3 (isolated): the same check as JSON, advisories only ==
+8:      "rule": "R5_EVIDENCE_FILE_MISSING",
+12:      "rule": "R5_EVIDENCE_FILE_MISSING",
+16:      "rule": "R5_EVIDENCE_FILE_MISSING",
+22:      "rule": "A2_DEFERRAL_OPEN",

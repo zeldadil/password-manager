@@ -1,0 +1,27 @@
+1. Determinism (fixed seed):
+  ok - mulberry32 is deterministic for a fixed seed
+  ok - seededRandom reproduces a sequence
+2. Synthetic-only (AR-4):
+  ok - master password is 36 hex chars (144-bit random)
+  ok - master password is generated fresh per run (not a constant)
+  ok - master password is not dictionary-shaped
+  ok - secret matches test-secret-<randomhex>
+  ok - secret is generated fresh per run
+  ok - synthetic key is 32 random bytes (hex)
+  ok - key material is generated fresh per run
+  ok - email is on a reserved TLD (@example.test)
+  ok - username is synthetic
+  ok - resource name is a fixed synthetic constant
+  ok - resource URI is on a reserved TLD
+  ok - resource URI has no real TLD
+  ok - resource name is deterministic by index
+  ok - resource username is synthetic
+  ok - email is deterministic and synthetic
+  ok - bulk tag list has requested length
+  ok - tag names are from the fixed vocabulary
+  ok - folder tree builds requested children
+  ok - folder children link to root parentId
+  ok - RFC 4648 base32 vector is present and cited
+  ok - RFC vector carries its citation
+
+PASS — fixtures are deterministic for structured data and synthetic-only for secrets (AR-4).

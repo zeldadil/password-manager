@@ -1,0 +1,105 @@
+=== R7 classification audit — board of 129 cards (all statuses) ===
+
+A) cards the CURRENT heuristic flags as security-track: 7
+   t_9840ccdd [done] architect :: SEC-001-Threat Model + Security Gate
+      test types: security-review, threat-model-validation
+   t_4278a1dc [todo] backend :: BE-002e: Wrong-password Handling
+      test types: security
+   t_c7258993 [todo] frontend :: FE-003i: Client-side Decryption + Optimistic Updates
+      test types: unit, security
+   t_974b5e77 [triage] browser :: BR-002c: Crypto Boundary + Autofill Decryption
+      test types: security
+   t_acd800fe [triage] browser :: BR-002d: Message Validation + Rate Limiting
+      test types: security
+   t_b1a8b77e [triage] browser :: BR-002e: Vault Key Memory Lifetime
+      test types: security
+   t_7b33595a [triage] browser :: BR-002h: Security Tests
+      test types: security
+
+B) cards whose text matches the heuristic KEYWORD but lack a `security` test type (silent R7 no-fire): 11
+   t_08b02da9 [done   ] architect testTypes="architecture-review" :: ADR-005: Extension Bridge Protocol
+   t_16f8ad84 [todo   ] backend   testTypes="unit" :: BE-002a: Registration + KDF + Vault Key Storage
+   t_4d0c8439 [todo   ] backend   testTypes="unit, integration" :: BE-002b: Unlock Endpoint
+   t_91964616 [todo   ] backend   testTypes="unit" :: BE-002f: Unit Tests
+   t_fe3b76ea [todo   ] backend   testTypes="unit" :: BE-003a: Vault Encryption
+   t_1f98942a [triage ] browser   testTypes="unit" :: BR-001d: Popup
+   t_979847fc [triage ] browser   testTypes="integration" :: BR-002g: Integration Tests
+   t_8e4c8bfa [triage ] browser   testTypes="e2e" :: BR-003e: E2E Tests
+   t_ee24fd37 [done   ] architect testTypes="" :: REPO-BLOCKER: pnpm workspace manifest uncommitted — CI install cannot re
+   t_d3074f1c [triage ] docs      testTypes="" :: Create component diagram
+   t_bc7a8dfa [triage ] docs      testTypes="" :: Create data flow diagram
+
+C) cards in the ADR-002 §5.3 / ADR-005 scope (my list), by status:
+   {"done":5,"todo":8,"triage":12}
+
+   id            status    assignee   heur  ADR-scope hits
+   t_9840ccdd  done     architect  YES   crypto-boundary:KDF/Argon2id, crypto-boundary:AEAD/AES-GCM, crypto-boundary:nonce/IV, crypto-boundary:lock/unlock-lifecycle
+   t_3ca45da2  done     architect  no    bridge-protocol
+   t_08b02da9  done     architect  no    bridge-protocol, bridge-origin-validation, bridge-autofill
+   t_5f82ac57  done     architect  no    bridge-shared-contract
+   t_16f8ad84  todo     backend    no    crypto-boundary:KDF/Argon2id, crypto-boundary:nonce/IV, crypto-boundary:key-wrapping/vault-key
+   t_4d0c8439  todo     backend    no    crypto-boundary:KDF/Argon2id, crypto-boundary:key-wrapping/vault-key
+   t_4278a1dc  todo     backend    YES   crypto-boundary:key-wrapping/vault-key
+   t_91964616  todo     backend    no    crypto-boundary:KDF/Argon2id
+   t_fe3b76ea  todo     backend    no    crypto-boundary:AEAD/AES-GCM, crypto-boundary:key-wrapping/vault-key
+   t_b51bf4b9  todo     backend    no    crypto-boundary:nonce/IV
+   t_e4341d18  todo     backend    no    crypto-boundary:nonce/IV
+   t_c7258993  todo     frontend   YES   crypto-boundary:key-wrapping/vault-key
+   t_1f98942a  triage   browser    no    bridge-autofill
+   t_e5142129  triage   browser    no    bridge-shared-contract
+   t_4f42e589  triage   browser    no    bridge-origin-validation
+   t_83dc1b35  triage   browser    no    crypto-boundary:lock/unlock-lifecycle, bridge-protocol
+   t_974b5e77  triage   browser    YES   crypto-boundary:packages/crypto, crypto-boundary:key-wrapping/vault-key, bridge-autofill
+   t_acd800fe  triage   browser    YES   bridge-autofill
+   t_b1a8b77e  triage   browser    YES   crypto-boundary:key-wrapping/vault-key
+   t_979847fc  triage   browser    no    bridge-autofill
+   t_7b33595a  triage   browser    YES   crypto-boundary:key-wrapping/vault-key
+   t_8e4c8bfa  triage   browser    no    bridge-autofill
+   t_ee24fd37  done     architect  no    crypto-boundary:packages/crypto, bridge-shared-contract
+   t_d3074f1c  triage   docs       no    crypto-boundary:packages/crypto
+   t_bc7a8dfa  triage   docs       no    bridge-autofill
+
+D) false negatives = in ADR scope, NOT flagged by the heuristic (excl. qa-assigned):
+   count: 18
+   t_3ca45da2 [done] architect :: ADR-002: Overall Architecture
+      scope: bridge-protocol | test types: "architecture-review"
+   t_08b02da9 [done] architect :: ADR-005: Extension Bridge Protocol
+      scope: bridge-protocol, bridge-origin-validation, bridge-autofill | test types: "architecture-review"
+   t_5f82ac57 [done] architect :: ARC-001e-Repo Structure + Root Config
+      scope: bridge-shared-contract | test types: "repo-structure-validation"
+   t_16f8ad84 [todo] backend :: BE-002a: Registration + KDF + Vault Key Storage
+      scope: crypto-boundary:KDF/Argon2id, crypto-boundary:nonce/IV, crypto-boundary:key-wrapping/vault-key | test types: "unit"
+   t_4d0c8439 [todo] backend :: BE-002b: Unlock Endpoint
+      scope: crypto-boundary:KDF/Argon2id, crypto-boundary:key-wrapping/vault-key | test types: "unit, integration"
+   t_91964616 [todo] backend :: BE-002f: Unit Tests
+      scope: crypto-boundary:KDF/Argon2id | test types: "unit"
+   t_fe3b76ea [todo] backend :: BE-003a: Vault Encryption
+      scope: crypto-boundary:AEAD/AES-GCM, crypto-boundary:key-wrapping/vault-key | test types: "unit"
+   t_b51bf4b9 [todo] backend :: BE-003c: Secret Schema
+      scope: crypto-boundary:nonce/IV | test types: "unit"
+   t_e4341d18 [todo] backend :: BE-003k: Security Tests
+      scope: crypto-boundary:nonce/IV | test types: "security"
+   t_1f98942a [triage] browser :: BR-001d: Popup
+      scope: bridge-autofill | test types: "unit"
+   t_e5142129 [triage] browser :: BR-001e: Message Protocol (shared package)
+      scope: bridge-shared-contract | test types: "unit"
+   t_4f42e589 [triage] browser :: BR-001f: Origin Validation
+      scope: bridge-origin-validation | test types: "security"
+   t_83dc1b35 [triage] browser :: BR-002a: Vault Session Sync
+      scope: crypto-boundary:lock/unlock-lifecycle, bridge-protocol | test types: "unit"
+   t_979847fc [triage] browser :: BR-002g: Integration Tests
+      scope: bridge-autofill | test types: "integration"
+   t_8e4c8bfa [triage] browser :: BR-003e: E2E Tests
+      scope: bridge-autofill | test types: "e2e"
+   t_ee24fd37 [done] architect :: REPO-BLOCKER: pnpm workspace manifest uncommitted — CI install canno
+      scope: crypto-boundary:packages/crypto, bridge-shared-contract | test types: ""
+   t_d3074f1c [triage] docs :: Create component diagram
+      scope: crypto-boundary:packages/crypto | test types: ""
+   t_bc7a8dfa [triage] docs :: Create data flow diagram
+      scope: bridge-autofill | test types: ""
+
+E) architect-signoff comment present (heuristic ARCH_SIGNOFF_RE, author=architect):
+   t_f49d448c FE-001h: Lint/Type Config + CI
+   t_33dcad7d QA-001h follow-ups: sign-off gate — CI wiring decision + pre-epo
+   t_28951254 P0 follow-up: propagate the ROTATED Telegram token to all 7 prof
+   t_28f60dc1 ARCH: land the QA sign-off gate tooling on master (policy + self
