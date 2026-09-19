@@ -1,0 +1,74 @@
+QA sign-off gate selftest — fixture board: /tmp/signoff-gate-selftest-vt0m2z/board.db
+fixture repo: /tmp/signoff-gate-selftest-vt0m2z/repo
+
+1. Compliant cards (must produce ZERO violations — anti-vacuous control):
+  ok   - Path A verdict + repo evidence
+  ok   - crypto card with AR-6 architect sign-off
+  ok   - evidence uploaded as attachment
+  ok   - QA-owned card with run-metadata verdict
+  ok   - deferral to a completed QA child
+  ok   - deferral to an open QA child (advisory only)
+  ok   - pass-with-conditions naming a follow-up
+  ok   - grandfathered pre-epoch card
+  ok   - recorded QA sign-off exception
+  ok   - superseded comments name missing artifacts
+  ok   - operative evidence committed on another ref
+  ok   - explicit verdict + linked qa repair child
+  ok   - stale deferral marker + newer QA verdict (t_58280940)
+  ok   - stale deferral marker to an open QA child + newer verdict
+  ok   - quoted deferral marker later in the thread + verdict (t_58280940)
+
+1b. t_5455942d regressions (fail closed only on unverifiable input):
+  ok   - superseded verdict/handoff paths are advisory (A5), never R5
+  ok   - operative evidence on another ref is accepted (A4, no R5)
+  ok   - explicit verdict + linked qa child is NOT a deferral (no A2)
+  ok   - linked qa child with NO verdict still counts as a deferral (A2 fires — heuristic intact)
+  ok   - stale deferral marker is superseded by the newer verdict — no R8, no deferral (t_58280940)
+  ok   - stale deferral marker to an open QA child is superseded too — no A2 (t_58280940)
+  ok   - a marker that only appears in a code span is not a deferral (no phantom R8)
+  ok   - a quoted marker must not hijack the newest-marker ordering over a real one (t_58280940)
+
+2. Rule coverage (every rule must fire on its own non-compliant card):
+  ok   - no verdict, no evidence → R1_QA_VERDICT_MISSING
+  ok   - no verdict, no evidence → R4_EVIDENCE_MISSING
+  ok   - verdict token outside vocabulary → R2_QA_VERDICT_INVALID
+  ok   - fail verdict on a done card → R3_VERDICT_NOT_TERMINAL
+  ok   - blocked verdict on a done card → R3_VERDICT_NOT_TERMINAL
+  ok   - verdict without evidence → R4_EVIDENCE_MISSING
+  ok   - named evidence file missing → R5_EVIDENCE_FILE_MISSING
+  ok   - operative verdict names a missing artifact (scoping is not vacuous) → R5_EVIDENCE_FILE_MISSING
+  ok   - pass-with-conditions without follow-up → R6_CONDITIONS_UNTRACKED
+  ok   - crypto card without architect sign-off → R7_SECURITY_TRACK_SIGNOFF_MISSING
+  ok   - deferral to a non-QA card → R8_DEFERRAL_TARGET_INVALID
+  ok   - deferral to a phantom card → R8_DEFERRAL_TARGET_INVALID
+  ok   - newest record is a deferral to a non-QA card (superseding is ordered, not amnesty) → R8_DEFERRAL_TARGET_INVALID
+  ok   - quoted marker is documentation, not a deferral (R8 must not fire) → R1_QA_VERDICT_MISSING
+
+3. --strict-history turns grandfathered gaps into failures:
+  ok   - pre-epoch card fails under --strict-history
+  ok   - same card is advisory-only without --strict-history
+
+4. Audit on the fixture board reports the enforced failures and exits 1:
+  ok   - audit exits 1 with enforced failures
+  ok   - audit counts the grandfathered card separately
+
+5. Hook mode (pre_tool_call: kanban_complete):
+  ok   - non-compliant card → block directive + exit 2
+  ok   - compliant card → {} + exit 0
+  ok   - task id resolved from extra.task_id
+  ok   - task id resolved from HERMES_KANBAN_TASK
+  ok   - other tool names pass through
+  ok   - unparseable payload → fail closed (block)
+  ok   - unreadable board → fail closed (block)
+  ok   - no resolvable task id → fail closed (block)
+  ok   - (a) session id in extra.task_id + HERMES_KANBAN_TASK set → allow ({} + exit 0)
+  ok   - (b) session id only → block, reason names the source and the id shape
+  ok   - (c) explicit tool_input.task_id → allow
+  ok   - (d) unknown task id → block, reason names the source of the id
+  ok   - (e) numeric run id in tool_input.task_id → resolved to its card via the board → allow
+  ok   - (f) identity vars scrubbed (no HERMES_KANBAN_TASK) + session id in extra → resolved from HERMES_KANBAN_WORKSPACE → allow
+  ok   - (g) same payload, workspace var empty → resolved from the worker's cwd basename → allow
+  ok   - (h) no id and no task-shaped location → still fails closed, listing every source tried
+  ok   - kill switch allows completion
+
+58/58 cases passed
