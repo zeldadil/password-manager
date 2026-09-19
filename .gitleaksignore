@@ -22,3 +22,25 @@
 8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:176
 8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:189
 8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:205
+
+# Same property shape, two more historical commits: PR t_df8e644a's branch
+# carries the original (pre-squash) t_338f47fd commits in its own ancestry.
+# The two properties at scripts/qa/signoff-gate.mjs lines 392/397 are the
+# same helper-call-as-value pattern as above, this time in the commit that
+# introduced them (before master's later squash merge). The other two files
+# are an evidence inventory listing and a patch file that both quote the
+# same lines verbatim (a plain-text field-value pair, and a diff context
+# line) - documentation artifacts, not credential material.
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:9
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:49
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:55
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:56
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:57
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:58
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:59
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:60
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:69
+4ca58c762b3a065322c0b7b76012495acc404950:scripts/qa/signoff-gate.mjs:generic-api-key:392
+4ca58c762b3a065322c0b7b76012495acc404950:scripts/qa/signoff-gate.mjs:generic-api-key:397
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/gate-fix.diff:generic-api-key:186
+19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/gate-fix.diff:generic-api-key:191
