@@ -14,3 +14,11 @@
 31b49b87081695c7d41dbf177518acd10c5ca18d:scripts/qa/signoff-gate.mjs:generic-api-key:176
 31b49b87081695c7d41dbf177518acd10c5ca18d:scripts/qa/signoff-gate.mjs:generic-api-key:189
 31b49b87081695c7d41dbf177518acd10c5ca18d:scripts/qa/signoff-gate.mjs:generic-api-key:205
+
+# Same three properties, same dead code, different historical commit: PR
+# #45 (feat/t_527d4720-runner) forked independently and carries its own
+# earlier copy of the original scripts/qa/signoff-gate.mjs at commit
+# 8a8b2e3 — byte-identical content to the 31b49b8 entries above.
+8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:176
+8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:189
+8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:205
