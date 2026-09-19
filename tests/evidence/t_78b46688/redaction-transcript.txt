@@ -1,0 +1,10 @@
+=== QA-001g secret-scan report redaction — evidence transcript ===
+date: 2026-09-17T13:56:00Z
+tool: trufflehog 3.97.5, `git file://. --no-update --results=verified,unknown --json --fail`
+note: exit 183 means a finding is present (the known live leaked Telegram token, P0 t_0af5aa3e)
+
+raw report: live-token occurrences = 2
+redacted report: live-token occurrences = 0
+redacted report: "Raw":"REDACTED" occurrences = 2
+finding metadata preserved: detector=TelegramBotToken  verified=true
+redacted report JSON lines = 2 (both valid JSON objects)
