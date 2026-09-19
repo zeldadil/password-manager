@@ -4,9 +4,7 @@ import { describe, expect, it } from 'vitest'
 import AppShell from './AppShell'
 import type { FolderNode, TagNode } from './types'
 
-const folders: FolderNode[] = [
-  { id: 'work', name: 'Work', parentId: null },
-]
+const folders: FolderNode[] = [{ id: 'work', name: 'Work', parentId: null }]
 
 const tags: TagNode[] = [{ id: 't1', name: 'Production' }]
 
