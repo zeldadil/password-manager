@@ -1,0 +1,4 @@
+ref:  refs/remotes/origin/master
+path: tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+distinct token-shaped values in blob: 1
+  fingerprint=DEAD (revoked)                 getMe HTTP 401 invalid/revoked

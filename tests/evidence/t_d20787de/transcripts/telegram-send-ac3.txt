@@ -1,0 +1,7 @@
+=== hermes send exit codes (real sends to the human's chat) ===
+  profile qa         exit=0
+  profile backend    exit=0
+
+=== which credential source did hermes send use? (fingerprint only) ===
+  /home/sap/.hermes/.env: token_shaped_values=1 fingerprints=['c9180856…']
+  /home/sap/.hermes/config.yaml: token_shaped_values=0 fingerprints=[]

@@ -1,0 +1,46 @@
+================================================================================
+CARD t_e348e0b7  comment_id=161  author=qa  at=2026-09-19 07:14:01
+draft bytes=3052  board bytes=3052
+cmp: IDENTICAL
+================================================================================
+CARD t_28951254  comment_id=162  author=qa  at=2026-09-19 07:14:01
+draft bytes=3329  board bytes=3329
+cmp: IDENTICAL
+================================================================================
+CARD t_2162d273  comment_id=163  author=qa  at=2026-09-19 07:14:07
+draft bytes=2272  board bytes=2275
+cmp: DIFFERS
+--- /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/drafts/t_2162d273.md	2026-09-19 07:13:26.634429407 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/readback/t_2162d273.md	2026-09-19 07:14:24.365439330 +0000
+@@ -14,7 +14,7 @@
+ 
+ ## Findings (not conditions on this card)
+ 
+-1. **Follow-through not yet visible in the repo.** `git grep` across all 40 remote branch tips finds no writer of `documentElement.dataset.theme` / `data-theme` in application code (only `theme.css` + store/test files). FE-001d is already `done` while FE-003b is still `todo`, so the decided mechanism is not yet implemented anywhere — worth a look by the FE lane before FE-003b closes.
++1. **Follow-through not yet visible in the repo.** `git grep` across all 40 remote branch tips finds no writer of `documentElement.dataset.theme` / `data-theme` in application code (only `theme.css` plus store/test files). FE-001d is already `done` while FE-003b is still `todo`, so the decided mechanism is not yet implemented anywhere — worth a look by the FE lane before FE-003b closes.
+ 2. Cosmetic: the attachment's first line is mojibake (`#<replacement>cope decision…` with literal `\n` escapes); the body is legible and unambiguous.
+ 
+ Evidence: decision.md (attachment id 48 of this card)
+================================================================================
+CARD t_527d4720  comment_id=164  author=qa  at=2026-09-19 07:14:07
+draft bytes=3413  board bytes=3395
+cmp: DIFFERS
+--- /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/drafts/t_527d4720.md	2026-09-19 07:13:26.634429407 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/readback/t_527d4720.md	2026-09-19 07:14:24.384439336 +0000
+@@ -7,7 +7,7 @@
+ 1. **A recorded decision in the same shape as the earlier follow-up doc — HOLDS.** `docs/decisions/qa-signoff-gate-followups-t_527d4720.md` (blob `145f5c1`) is committed and pushed on `feat/t_527d4720-runner` (and on `qa/t_0af5aa3e-verdict`): what / why / owner, the four options, the rejected option's rationale. Not on master — and master currently carries no `docs/` tree at all, so AC1 as written (a recorded decision) holds, while the doc's "next reader" purpose still depends on a merge that has not happened.
+ 2. **Option 1 activated with a real run against the real board — HOLDS.** CI run `35253319631` (workflow_dispatch, branch `feat/t_527d4720-runner`) is `completed/success`; its job `qa-signoff-audit` has `runner_name: hermes-host` and every step green — `Set up job`, `Checkout`, `Verify the gate script is present`, `Resolve the board database`, `Run the board audit`, `Upload the audit report`, `Write the run summary`, `Enforce the audit outcome`. A hosted runner cannot see `~/.hermes/kanban.db`, so the step sequence is the proof that the variable resolved to the host runner. Honest limit: the repository variable `QA_SIGNOFF_AUDIT_RUNNER` itself cannot be read with the token available to QA (`GET /actions/variables` → HTTP 403), so the run is the substantive evidence rather than a variable read.
+ 3. **Option 2 rejected with the privacy outcome recorded — HOLDS.** The doc's "Privacy outcome for the rejected option 2" states that no board export may leave the host (repo is public; board rows carry titles, bodies, comments, evidence paths).
+-4. **`QA_SIGN_OFF_GATE.md` §2/§10 reflect the final state — HOLDS on the card's branch.** On `feat/t_527d4720-runner` and `qa/t_0af5aa3e-verdict`, §10 item 1 reads "CLOSED by t_527d4720 (2026-09-17): the audit runs as a scheduled CI job (`.github/workflows/qa-signoff-audit.yml`)" with the self-hosted-runner transport. **Finding for the merge lane:** the newest gate-lane revision, `qa/t_338f47fd-marker-author` (PR #31), carries a `QA_SIGN_OFF_GATE.md` whose §10 item 1 is the *pre-decision* text again — merging that PR as-is would revert this closure note.
++4. **`QA_SIGN_OFF_GATE.md` §2/§10 reflect the final state — HOLDS on the card's branch.** On `feat/t_527d4720-runner` and `qa/t_0af5aa3e-verdict`, §10 item 1 reads "CLOSED by t_527d4720 (2026-09-17): the audit runs as a scheduled CI job (`qa-signoff-audit.yml`)" with the self-hosted-runner transport. **Finding for the merge lane:** the newest gate-lane revision, `qa/t_338f47fd-marker-author` (PR #31), carries a `QA_SIGN_OFF_GATE.md` whose §10 item 1 is the *pre-decision* text again — merging that PR as-is would revert this closure note.
+ 
+ ## What will stay red, and why (recorded, not repaired)
+ 
+================================================================================
+CARD t_c3cb6842  comment_id=165  author=qa  at=2026-09-19 07:14:14
+draft bytes=3739  board bytes=3739
+cmp: IDENTICAL
+================================================================================
+CARD t_80fc0326  comment_id=166  author=qa  at=2026-09-19 07:14:14
+draft bytes=2079  board bytes=2079
+cmp: IDENTICAL
