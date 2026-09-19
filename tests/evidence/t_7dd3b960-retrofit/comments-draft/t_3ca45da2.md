@@ -1,0 +1,14 @@
+QA-VERDICT: pass — retro-verified 2026-09-18 against architecture/adr/ADR-002-overall-architecture.md@d3bbf55df46bb9c6cde05357ee1de5e933ecb90a (retro-verification: re-checked after the fact, not a verdict recorded at completion time). Evidence: architecture/adr/ADR-002-overall-architecture.md
+
+**Retro-verification of ADR-002 (`t_3ca45da2`, ARC-001a, completed 2026-09-16, pre-epoch).** Recorded by `t_4242bee8` (QA-001i-fu1). Artifact re-read from `origin/master` (tip `94fb9de`); blob sha `d3bbf55df46bb9c6cde05357ee1de5e933ecb90a` confirmed both by `git ls-tree origin/master architecture/adr/ADR-002-overall-architecture.md` and by `git hash-object` on the extracted file (sha256 `0c7314f2a0a121bf68df6a1be20e7eea661d833dd31f57cc4f798fcc211a17c1`).
+
+Acceptance criteria, re-checked one by one:
+
+| # | criterion | result |
+|---|---|---|
+| 1 | monorepo layout, service boundaries, data flow, crypto boundaries, extension bridge contract documented | **met — all five, each with its own section.** Monorepo layout §2 (§2.1 directory structure, §2.2 what belongs where, §2.3 why this layout) · service boundaries §3 (§3.1 the three runtime units, §3.2 ownership/responsibilities matrix, §3.3 communication between units) · data flow §4 (§4.1 registration, §4.2 unlock/login, §4.3 vault data per session, §4.4 lock, §4.5 extension autofill, §4.6 what never flows where) · cryptographic boundaries §5 (§5.1 the boundary definition, §5.2 location in the monorepo, §5.3 what the boundary must guarantee, §5.4 library choices, §5.5 extension crypto boundary) · extension bridge contract §6 (§6.1 what the bridge is … §6.7 bridge vs. API separation). §1 explicitly maps the five acceptance items onto §2–§6 |
+| 2 | references ADR-001, explicitly flags any Passbolt-inspired vs. original decision | **met** — header `**References:** ADR-001 (functional patterns), SEC-001 …, PROJECT_BRIEF.md`; §8 "Passbolt-Inspired vs. Original Decisions" with §8.1 (9 decisions, each with *Passbolt source* + *Our adaptation* + an inspired-by/adapted/structural-change label), §8.2 (6 decisions stated as original, each with why), §8.3 (decisions explicitly rejected, cross-referencing ADR-001), and the IP-boundary rule cited from PROJECT_BRIEF §4 |
+
+Verdict **`pass`**: both stated criteria hold against the committed blob.
+
+**Notes, not conditions.** (a) Neither criterion requires a signature inside the document, so the `| QA | (pending) | | |` row in §11 and the `**Status:** Proposed` header do not affect this card — the unsigned-ADR-set observation is recorded on `t_9840ccdd` and folded into `t_816a87b5`. (b) §4.2 legitimately leaves the web client-side-decryption vs. server-side-decryption choice open and routes it to BE-002a; §10 lists the questions carried into downstream ADRs. Those are documented hand-offs from the ADR, not unmet criteria of it.

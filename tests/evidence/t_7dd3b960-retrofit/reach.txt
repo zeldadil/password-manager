@@ -1,0 +1,15 @@
+root: t_9840ccdd (SEC-001-Threat Model + Security Gate)
+reachable descendants: 112
+in-scope family cards: 54
+  gated transitively by t_9840ccdd: 54
+  NOT gated: 0
+
+per-prefix:
+  BE-002: 8/8 gated
+  BE-003: 11/11 gated
+  BR-002: 8/8 gated
+  BR-003: 7/7 gated
+  FE-002: 8/8 gated
+  FE-003: 12/12 gated
+
+root-depth-1 children of t_9840ccdd: t_3ca45da2(ADR-002: Ove), t_93cf5611(DOC-001d: Cr), t_16f8ad84(BE-002a: Reg), t_fe3b76ea(BE-003a: Vau), t_83dc1b35(BR-002a: Vau)

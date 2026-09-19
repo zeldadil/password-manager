@@ -1,0 +1,19 @@
+=== refs carrying QA_SIGN_OFF_GATE.md ===
+  refs/remotes/origin/feat/t_527d4720-runner  runner_refs=3
+      item1: |---|---|---|
+| 1 | Whether the board audit also runs as a CI job (`qa-signoff`) — **CLOSED by t_527d4720 (2026-09-17):** the audit runs as a scheduled CI job (`.github/workflows/qa-signoff-audit.yml`
+  refs/remotes/origin/feature/t_430aa9a3  runner_refs=0
+      item1: |---|---|---|
+| 1 | Whether the board audit also runs as a CI job (`qa-signoff`) — `.github/workflows/ci.yml` is currently a collision hotspot across CI cards, so this needs a decision, not a silent e
+  refs/remotes/origin/qa/t_0af5aa3e-verdict  runner_refs=3
+      item1: |---|---|---|
+| 1 | Whether the board audit also runs as a CI job (`qa-signoff`) — **CLOSED by t_527d4720 (2026-09-17):** the audit runs as a scheduled CI job (`.github/workflows/qa-signoff-audit.yml`
+  refs/remotes/origin/qa/t_338f47fd-marker-author  runner_refs=0
+      item1: |---|---|---|
+| 1 | Whether the board audit also runs as a CI job (`qa-signoff`) — `.github/workflows/ci.yml` is currently a collision hotspot across CI cards, so this needs a decision, not a silent e
+  refs/remotes/origin/qa/t_5455942d-gate-fix  runner_refs=0
+      item1: |---|---|---|
+| 1 | Whether the board audit also runs as a CI job (`qa-signoff`) — `.github/workflows/ci.yml` is currently a collision hotspot across CI cards, so this needs a decision, not a silent e
+  refs/remotes/origin/qa/t_99e408c5-r5-quoted-path  runner_refs=0
+      item1: |---|---|---|
+| 1 | Whether the board audit also runs as a CI job (`qa-signoff`) — `.github/workflows/ci.yml` is currently a collision hotspot across CI cards, so this needs a decision, not a silent e

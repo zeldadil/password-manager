@@ -2,7 +2,7 @@
   "name": "password-manager",
   "version": "0.1.0",
   "private": true,
-  "description": "Self-hosted password manager — encrypted vault, Web UI, Firefox extension",
+  "description": "Self-hosted password manager \u2014 encrypted vault, Web UI, Firefox extension",
   "scripts": {
     "dev": "pnpm -r --parallel --filter '**' run dev",
     "build": "pnpm -r --parallel --filter '**' run build",
@@ -13,6 +13,8 @@
     "test:integration": "pnpm -r --parallel --filter '**' run test:integration",
     "test:e2e": "pnpm -r --parallel --filter '**' run test:e2e",
     "test:security": "pnpm -r --parallel --filter '**' run test:security",
+    "format": "pnpm -r --parallel --filter '**' run format",
+    "format:check": "pnpm -r --parallel --filter '**' run format:check",
     "audit:prod": "pnpm audit --prod --audit-level high",
     "scan:secrets": "gitleaks detect --redact --verbose",
     "clean": "pnpm -r --parallel --filter '**' run clean 2>/dev/null || true",

@@ -1,0 +1,4 @@
+
+> @password-manager/web@0.1.0 typecheck /home/sap/.hermes/kanban/workspaces/t_782802ac/repo/apps/web
+> tsc -b
+

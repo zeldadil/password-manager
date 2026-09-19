@@ -1,0 +1,23 @@
+# QA-001h evidence — audit of the real Kanban board at activation
+# command: node scripts/qa/signoff-gate.mjs audit --db ~/.hermes/kanban.db
+# date:    2026-09-17T14:51:24Z
+# epoch:   export const GATE_EPOCH_ISO = "2026-09-17T15:00:00Z";
+
+QA sign-off gate — audit (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 0  ·  pass: 0  ·  FAIL: 0
+  grandfathered (done before epoch — advisory only): 26
+      warn t_9840ccdd  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_3ca45da2  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_258f91c8  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_ad18d4ed  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_08b02da9  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_5f82ac57  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_7ec83773  no verdict/evidence recorded
+      warn t_f8a5c949  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_f463b44f  completed before the gate epoch — no QA verdict (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING
+      warn t_415897da  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      … and 16 more (use --json for the full list)
+exit=0
+
+# pre-epoch backlog under --strict-history (retrofit view; expected to be non-zero)
+ok: False counts: {'done_cards': 26, 'enforced': 0, 'failures': 25, 'grandfathered': 26}

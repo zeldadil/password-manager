@@ -1,0 +1,19 @@
+=== regex sweep: token-shaped strings ===
+  (no file contains a token-shaped string)
+
+=== gitleaks dir scan of the bundle ===
+exit: 0
+[90m7:15AM[0m [32mINF[0m [1mscanned ~200445 bytes (200.45 KB) in 40.5ms[0m
+[90m7:15AM[0m [32mINF[0m [1mno leaks found[0m
+  findings: 0
+
+=== trufflehog filesystem scan of the bundle ===
+exit: 0
+"verified_secrets":0
+"unverified_secrets":0
+  findings: 0
+0
+
+=== bundle size / file count ===
+324K	/home/sap/password-manager-check/.worktrees/t_d20787de/tests/evidence/t_d20787de
+58
