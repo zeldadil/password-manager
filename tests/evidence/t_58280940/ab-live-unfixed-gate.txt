@@ -1,0 +1,6 @@
+QA sign-off gate — check t_f49d448c (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_f49d448c  FE-001h: Lint/Type Config + CI @frontend
+        R8_DEFERRAL_TARGET_INVALID: QA deferral target t_930fddbe is assigned to "architect", not a QA profile
+        warn X1_EXCEPTION: QA sign-off exception recorded by human: closed by human decision (Ze), bypassing gate defect R8_DEFERRAL_TARGET_INVALID (tracked separately at t_58280940 — stale architect deferral marker blocks even with a valid QA-VERDICT: pass present, c
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_f49d448c/README.md named in a superseded verdict/handoff is absent from this checkout — report only

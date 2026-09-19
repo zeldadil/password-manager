@@ -1,0 +1,15 @@
+doc-validation — Secure Password Manager
+repo root: /home/sap/password-manager/.worktrees/t_ac6a1f3f
+targets:   TEST_STRATEGY.md
+
+--- TEST_STRATEGY.md (42346 bytes, 684 lines) ---
+
+OK    [TEST_STRATEGY.md] completeness: all 10 required topics present
+OK    [TEST_STRATEGY.md] references: 12 existing path(s) verified
+OK    [TEST_STRATEGY.md] references: 6 planned/not-yet-created path(s) (ADR-002 target layout, not a failure): Nested/Subfolder, apps/browser-firefox/dist, packages/shared, tests/security/NEGATIVE_TEST_CHECKLIST.md, tests/security/crypto-property.test.ts, tests/security/vectors/README.md
+OK    [TEST_STRATEGY.md] board-alignment: all 15 board Test Types covered (a11y, architecture-review, ci-validation, doc-validation, e2e, integration, manifest-validation, meta, regression, repo-structure-validation, security, security-review, setup-reproducibility, threat-model-validation, unit)
+OK    [TEST_STRATEGY.md] policy-hygiene: no secret-shaped material, non-reserved domain, or PII found
+OK    [TEST_STRATEGY.md] traceability: all SEC-001 absolute rules AR-1, AR-2, AR-3, AR-4, AR-5, AR-6 referenced
+
+summary: 6 ok, 0 warning(s), 0 error(s)
+RESULT: PASS

@@ -38,11 +38,7 @@
  *   - R5 resolves the evidence paths of the **operative (newest)** verdict only,
  *     and accepts a path that exists on any ref of the checkout;
  *   - the "linked QA child ⇒ deferral" heuristic is suppressed once the card
- *     carries an explicit verdict;
- *   - a deferral marker is operative only while it is the **newest** QA record
- *     on the card (§3 "the newest source is the operative verdict"): a
- *     `QA-VERDICT: deferred — t_xxxxxxxx` comment that a later verdict has
- *     superseded is history, not a live block (t_58280940).
+ *     carries an explicit verdict.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -71,12 +67,7 @@ const ARCHITECT_PROFILES = new Set(["architect"]);
 
 const VERDICT_MARKER_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*:\s*([a-z][a-z-]*)/i;
 const VERDICT_LOOSE_RE = /verdict\s*[:\-—]+\s*([a-z][a-z-]*)/i;
-// Same leading boundary as VERDICT_MARKER_RE (t_c3cb6842): a marker that only
-// appears inside a code span — a handoff quoting the recording command, a
-// troubleshooting transcript — is documentation, not a live deferral
-// (t_58280940: frontend's gate-defect report quoted the marker and the gate
-// then judged *that* quote as the card's live deferral target).
-const DEFERRAL_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*[:\-—]+\s*deferred/i;
+const DEFERRAL_RE = /qa[\s_-]*verdict\s*[:\-—]+\s*deferred/i;
 const EXCEPTION_RE = /qa[\s_-]*signoff[\s_-]*exception\s*[:\-—]+\s*(\S[^\n]*)/i;
 const ARCH_SIGNOFF_RE = /(arch[\s_-]*(verdict|sign[\s_-]*off)|approv|signed[\s_-]*off|LGTM)/i;
 const TASK_ID_RE = /\bt_[0-9a-f]{8}\b/g;
@@ -262,37 +253,21 @@ function parseJson(text) {
  * (either an explicit `QA-VERDICT: deferred — t_xxxxxxxx` comment or a linked
  * child card whose assignee is a QA profile).
  *
- * Only the **newest** deferral marker is operative (§3: "when several sources
- * exist, the newest one is the operative verdict"), and a marker that a later
- * QA verdict has superseded is history — otherwise a stale `deferred — t_...`
- * comment blocks a card whose verdict has already landed, forever
- * (t_58280940: R8 was evaluated on the *oldest* marker unconditionally, even
- * when a valid verdict was recorded after it, so the card could never reach
- * `done`).
- *
  * The linked-child heuristic is a *fallback for a card that records no verdict
  * of its own*: it must never fire while the card already carries an explicit
  * verdict in the §12 vocabulary, or every card that ever spawns unrelated
  * `qa`-owned repair work would be re-read as an open deferral (t_5455942d
- * defect 3). An explicit deferral marker wins over that heuristic — and only
- * over that heuristic: it does not win over a newer verdict.
+ * defect 3). An explicit deferral marker still wins over everything.
  */
 export function collectDeferral(board, task) {
-  // Comments arrive in `created_at` order (loadBoard), so the last match is the
-  // newest marker — mirroring how collectVerdicts sorts its sources.
-  const markers = (board.commentsByTask.get(task.id) || []).filter((c) => DEFERRAL_RE.test(c.body || ""));
-  const marker = markers.length ? markers[markers.length - 1] : null;
-  const operativeVerdict = collectVerdicts(board, task).filter((v) => VERDICTS.has(v.token)).pop() || null;
+  const marker = (board.commentsByTask.get(task.id) || []).find((c) => DEFERRAL_RE.test(c.body || ""));
+  const explicitVerdict = collectVerdicts(board, task).find((v) => VERDICTS.has(v.token));
   const linked = board
     .childrenOf(task.id)
     .map((id) => board.taskById.get(id))
     .filter((t) => t && QA_PROFILES.has(String(t.assignee || "").trim()));
   if (!marker) {
-    if (operativeVerdict || linked.length === 0) return null;
-  } else if (operativeVerdict && Number(operativeVerdict.at || 0) >= Number(marker.created_at || 0)) {
-    // Superseded by the verdict recorded at/after it — no live deferral, and no
-    // R8 judgement of a marker that no longer governs the card.
-    return null;
+    if (explicitVerdict || linked.length === 0) return null;
   }
   const named = ((marker ? marker.body : "").match(TASK_ID_RE) || [])[0] || (linked[0] ? linked[0].id : null);
   return { target: named, marker: Boolean(marker), linked: linked.map((t) => ({ id: t.id, status: t.status })) };
