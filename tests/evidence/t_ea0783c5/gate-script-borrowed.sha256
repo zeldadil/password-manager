@@ -1,0 +1,4 @@
+$ sha256sum scripts/qa/signoff-gate.mjs   # borrowed for the replays only
+00807b004287985542c105f78e2a35759bc560744000e48e6f867b71e8df822f  scripts/qa/signoff-gate.mjs
+00807b004287985542c105f78e2a35759bc560744000e48e6f867b71e8df822f  /home/sap/password-manager/.worktrees/t_430aa9a3/scripts/qa/signoff-gate.mjs
+(left and right hashes must match: the replay must use the reviewed PR #16 script)

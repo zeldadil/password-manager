@@ -1,0 +1,29 @@
+$ gh run view 35238945449 --repo zeldadil/password-manager
+(the ci-001h-demo branch was deleted after capture; run records are retained)
+
+
+✓ ci-001h-demo QA sign-off audit · 35238945449
+Triggered via push about 3 minutes ago
+
+JOBS
+✓ qa-signoff-audit in 7s (ID 105262067270)
+
+ANNOTATIONS
+! Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4, pnpm/action-setup@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+qa-signoff-audit: .github#2
+
+
+ARTIFACTS
+qa-signoff-audit
+
+For more information about the job, try: gh run view --job=105262067270
+View this run on GitHub: https://github.com/zeldadil/password-manager/actions/runs/35238945449
+
+$ gh run view 35238945449 --json databaseId,headBranch,event,headSha,workflowName,conclusion,url,createdAt
+{"conclusion":"success","createdAt":"2026-09-17T15:14:40Z","databaseId":35238945449,"event":"push","headBranch":"ci-001h-demo","headSha":"7f796f74e3a568343386c4c2f125b627b15c1c0a","url":"https://github.com/zeldadil/password-manager/actions/runs/35238945449","workflowName":"QA sign-off audit"}
+
+$ gh run download 35238945449 -n qa-signoff-audit && cat qa-signoff-audit.txt
+QA sign-off gate — audit (db: /home/runner/work/password-manager/password-manager/.ci-demo/board.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_democard  CI-001h demo: synthetic compliant card @backend
+  (artifact content captured by hand; sha256 dfdc28a73241739b83c140d260d55d9bb2acd34ccc52e0ac560d9ce24fd60f88)
