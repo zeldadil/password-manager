@@ -48,3 +48,8 @@ cmp: IDENTICAL
 CARD t_d20787de  comment_id=167  author=qa  at=2026-09-19 07:16:35
 draft bytes=3180  board bytes=3180
 cmp: IDENTICAL
+================================================================================
+CARD t_d20787de  comment_id=169  author=qa  |  findings-only follow-up note (no draft: written after the verdict)
+draft: (none)  board bytes=727
+verdict-regex check: neither VERDICT_MARKER_RE nor VERDICT_LOOSE_RE matches — the note is not a verdict source,
+so the operative verdict on this card stays comment 167 (QA-VERDICT: pass).
