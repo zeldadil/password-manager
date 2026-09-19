@@ -11,7 +11,7 @@ CARD t_2162d273  comment_id=163  author=qa  at=2026-09-19 07:14:07
 draft bytes=2272  board bytes=2275
 cmp: DIFFERS
 --- /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/drafts/t_2162d273.md	2026-09-19 07:13:26.634429407 +0000
-+++ /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/readback/t_2162d273.md	2026-09-19 07:14:24.365439330 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/readback/t_2162d273.md	2026-09-19 07:16:45.666520063 +0000
 @@ -14,7 +14,7 @@
  
  ## Findings (not conditions on this card)
@@ -26,7 +26,7 @@ CARD t_527d4720  comment_id=164  author=qa  at=2026-09-19 07:14:07
 draft bytes=3413  board bytes=3395
 cmp: DIFFERS
 --- /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/drafts/t_527d4720.md	2026-09-19 07:13:26.634429407 +0000
-+++ /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/readback/t_527d4720.md	2026-09-19 07:14:24.384439336 +0000
++++ /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/readback/t_527d4720.md	2026-09-19 07:16:45.683520075 +0000
 @@ -7,7 +7,7 @@
  1. **A recorded decision in the same shape as the earlier follow-up doc — HOLDS.** `docs/decisions/qa-signoff-gate-followups-t_527d4720.md` (blob `145f5c1`) is committed and pushed on `feat/t_527d4720-runner` (and on `qa/t_0af5aa3e-verdict`): what / why / owner, the four options, the rejected option's rationale. Not on master — and master currently carries no `docs/` tree at all, so AC1 as written (a recorded decision) holds, while the doc's "next reader" purpose still depends on a merge that has not happened.
  2. **Option 1 activated with a real run against the real board — HOLDS.** CI run `35253319631` (workflow_dispatch, branch `feat/t_527d4720-runner`) is `completed/success`; its job `qa-signoff-audit` has `runner_name: hermes-host` and every step green — `Set up job`, `Checkout`, `Verify the gate script is present`, `Resolve the board database`, `Run the board audit`, `Upload the audit report`, `Write the run summary`, `Enforce the audit outcome`. A hosted runner cannot see `~/.hermes/kanban.db`, so the step sequence is the proof that the variable resolved to the host runner. Honest limit: the repository variable `QA_SIGNOFF_AUDIT_RUNNER` itself cannot be read with the token available to QA (`GET /actions/variables` → HTTP 403), so the run is the substantive evidence rather than a variable read.
@@ -43,4 +43,8 @@ cmp: IDENTICAL
 ================================================================================
 CARD t_80fc0326  comment_id=166  author=qa  at=2026-09-19 07:14:14
 draft bytes=2079  board bytes=2079
+cmp: IDENTICAL
+================================================================================
+CARD t_d20787de  comment_id=167  author=qa  at=2026-09-19 07:16:35
+draft bytes=3180  board bytes=3180
 cmp: IDENTICAL
