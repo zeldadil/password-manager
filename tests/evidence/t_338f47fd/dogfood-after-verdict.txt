@@ -1,0 +1,8 @@
+t_338f47fd — gate verdict on this card before it is completed (dogfood)
+date: 2026-09-18T21:56:20Z
+command: node scripts/qa/signoff-gate.mjs check --task t_338f47fd --pre-complete --repo /home/sap/password-manager/.worktrees/t_338f47fd
+
+QA sign-off gate — check t_338f47fd (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_338f47fd  P1 gate defect: VERDICT_MARKER_RE has no author check — any profile can record a terminal QA verdict and clear the gate (reproduced on 0af4a453 and 28b0b771, hook included) @qa
+exit: 0

@@ -33,6 +33,10 @@ test-results/
 playwright-report/
 blob-report/
 
+# SQLite databases
+dev.db
+*.db
+
 # 민감 데이터 (절대 커밋 금지)
 *.secret
 *.key

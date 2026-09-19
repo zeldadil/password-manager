@@ -1,0 +1,216 @@
+### inputs
+repo : /home/sap/qa-retrofit-clone  (94fb9de68b61b98ac745030d4178b6567c8846e7)
+gate : /home/sap/qa-retrofit-work/bin/gate-pr25.mjs
+board: /home/sap/.hermes/kanban.db  (sha256 8efe2cb4ad1d8f8c40293398d40e0f9dff7d2877e6dc55808a93f46880d55104)
+gate sha256: 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55
+expected   : 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55
+
+### after-audit (--strict-history, live board)
+before counts: {"done_cards":45,"enforced":18,"failures":30,"grandfathered":27}
+after  counts: {"done_cards":46,"enforced":19,"failures":24,"grandfathered":27}
+pre-epoch FAIL: 24 -> 18
+post-epoch FAIL: 6 -> 6
+cleared pre-epoch FAILs (6): t_08b02da9, t_3ca45da2, t_5fe41426, t_9840ccdd, t_a2cf1744, t_ac6a1f3f
+NEWLY failing pre-epoch cards (0): NONE
+subset check: after-pre-epoch-fails ⊆ before-pre-epoch-fails -> true
+cards new to the done-audit: t_710ed14c
+cards gone from the done-audit: none
+new done cards that PASS: t_710ed14c
+post-epoch FAILs unchanged: true
+post-epoch FAIL set: t_28f60dc1, t_527d4720, t_7918f010, t_80fc0326, t_b51a1ff3, t_c3cb6842
+  (reported 'cards new to the done-audit' are other workers' cards completed after the
+   capture; the block only needs 0 newly-failing pre-epoch cards)
+
+### post-epoch view (the enforced one)
+before counts: {"done_cards":45,"enforced":18,"failures":6,"grandfathered":27}
+after  counts: {"done_cards":46,"enforced":19,"failures":6,"grandfathered":27}
+pre-epoch FAIL: 0 -> 0
+post-epoch FAIL: 6 -> 6
+cleared pre-epoch FAILs (0): 
+NEWLY failing pre-epoch cards (0): NONE
+subset check: after-pre-epoch-fails ⊆ before-pre-epoch-fails -> true
+cards new to the done-audit: t_710ed14c
+cards gone from the done-audit: none
+new done cards that PASS: t_710ed14c
+post-epoch FAILs unchanged: true
+post-epoch FAIL set: t_28f60dc1, t_527d4720, t_7918f010, t_80fc0326, t_b51a1ff3, t_c3cb6842
+
+### the 6 retrofit cards (verdict + committed evidence)
+  t_258f91c8  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_ad18d4ed  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_5f82ac57  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_7ec83773  A1_HISTORY_UNGATED  post_epoch=false
+  t_f8a5c949  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_f463b44f  R1_QA_VERDICT_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_415897da  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_7c572465  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_aed3f3d1  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_53b034b7  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_767aca4b  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_e2b31691  R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_7d365ce0  R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_f82e53b6  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_d19ced15  R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_204ae591  R1_QA_VERDICT_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_11c01f92  A1_HISTORY_UNGATED  post_epoch=false
+  t_ee24fd37  R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING,A1_HISTORY_UNGATED  post_epoch=false
+  t_9840ccdd post_epoch=false status=done verdict="pass-with-conditions" deferral=null evidence=[{"kind":"path","value":"architecture/adr/SEC-001-threat-model.md","exists":true,"operative":true,"via_ref":null,"origin":"marker-comment-comment"},{"kind":"dir","value":"architecture/adr","exists":true,"operative":true,"via_ref":null,"origin":"marker-comment-comment"}] security_track=true
+  t_3ca45da2 post_epoch=false status=done verdict="pass" deferral=null evidence=[{"kind":"path","value":"architecture/adr/ADR-002-overall-architecture.md","exists":true,"operative":true,"via_ref":null,"origin":"marker-comment-comment"}] security_track=false
+  t_08b02da9 post_epoch=false status=done verdict="pass" deferral=null evidence=[{"kind":"path","value":"architecture/adr/ADR-005-extension-bridge-protocol.md","exists":true,"operative":true,"via_ref":null,"origin":"marker-comment-comment"}] security_track=false
+  t_ac6a1f3f post_epoch=false status=done verdict="pass" deferral=null evidence=[{"kind":"path","value":"scripts/qa/validate-docs.mjs","exists":true,"operative":true,"via_ref":"332caa93bc940fe9e1fb3ead198bf08d36c3f551","origin":"qa-comment-comment"},{"kind":"abs","value":"/tmp/qa-negative-control.md","exists":false,"operative":false,"via_ref":null,"origin":"qa-comment-comment"},{"kind":"dir","value":"tests/evidence/t_ac6a1f3f","exists":true,"operative":true,"via_ref":"332caa93bc940fe9e1fb3ead198bf08d36c3f551","origin":"qa-comment-comment"},{"kind":"path","value":"tests/evidence/t_ac6a1f3f/README.md","exists":true,"operative":true,"via_ref":"332caa93bc940fe9e1fb3ead198bf08d36c3f551","origin":"marker-comment-comment"},{"kind":"path","value":"scripts/qa/signoff-gate.mjs","exists":true,"operative":true,"via_ref":null,"origin":"marker-comment-comment"},{"kind":"path","value":"docs/decisions/qa-signoff-gate-s10-open-items-t_7dd3b960.md","exists":true,"operative":true,"via_ref":"8ece47882f8c2989474e7a13c4a8164617afcd5b","origin":"marker-comment-comment"},{"kind":"path","value":"tests/evidence/t_ac6a1f3f/doc-validation-negative-control.txt","exists":true,"operative":true,"via_ref":"332caa93bc940fe9e1fb3ead198bf08d36c3f551","origin":"marker-comment-comment"},{"kind":"abs","value":"/home/sap/password-manager/.worktrees/t_ac6a1f3f/TEST_STRATEGY.md","exists":true,"operative":false,"via_ref":null,"origin":"run-metadata.artifacts"},{"kind":"abs","value":"/home/sap/password-manager/.worktrees/t_ac6a1f3f/tests/evidence/t_ac6a1f3f/doc-validation-positive.txt","exists":true,"operative":false,"via_ref":null,"origin":"run-metadata.artifacts"},{"kind":"abs","value":"/home/sap/password-manager/.worktrees/t_ac6a1f3f/tests/evidence/t_ac6a1f3f/doc-validation-negative-control.txt","exists":true,"operative":false,"via_ref":null,"origin":"run-metadata.artifacts"},{"kind":"abs","value":"/home/sap/password-manager/.worktrees/t_ac6a1f3f/scripts/qa/validate-docs.mjs","exists":true,"operative":false,"via_ref":null,"origin":"run-metadata.artifacts"}] security_track=false
+  t_a2cf1744 post_epoch=false status=done verdict="pass-with-conditions" deferral=null evidence=[{"kind":"url","value":"https://github.com/zeldadil/password-manager/pull/14","exists":null,"operative":true,"via_ref":null,"origin":"marker-comment-comment"},{"kind":"path","value":"tests/evidence/t_a2cf1744/README.md","exists":true,"operative":true,"via_ref":"303caca311c9bb44a3d47e639623697e62194d68","origin":"marker-comment-comment"},{"kind":"path","value":".github/workflows/ci.yml","exists":true,"operative":true,"via_ref":null,"origin":"marker-comment-comment"},{"kind":"path","value":"scripts/qa/signoff-gate.mjs","exists":true,"operative":true,"via_ref":null,"origin":"marker-comment-comment"}] security_track=false
+  t_5fe41426 post_epoch=false status=done verdict="pass-with-conditions" deferral=null evidence=[{"kind":"url","value":"https://github.com/zeldadil/password-manager/pull/7","exists":null,"operative":true,"via_ref":null,"origin":"marker-comment-comment"},{"kind":"path","value":"tests/evidence/t_5fe41426/README.md","exists":true,"operative":true,"via_ref":null,"origin":"marker-comment-comment"},{"kind":"path","value":".github/workflows/ci.yml","exists":true,"operative":true,"via_ref":null,"origin":"marker-comment-comment"},{"kind":"path","value":"scripts/qa/signoff-gate.mjs","exists":true,"operative":true,"via_ref":null,"origin":"marker-comment-comment"},{"kind":"abs","value":"/home/sap/password-manager/.worktrees/t_5fe41426/.github/workflows/ci.yml","exists":true,"operative":false,"via_ref":null,"origin":"run-metadata.artifacts"},{"kind":"abs","value":"/home/sap/password-manager/.worktrees/t_5fe41426/tests/evidence/t_5fe41426/README.md","exists":true,"operative":false,"via_ref":null,"origin":"run-metadata.artifacts"}] security_track=false
+
+### criterion 2 — every operative evidence path resolves on a ref
+=================================================================== t_9840ccdd
+--- operative verdict line:
+QA-VERDICT: pass-with-conditions — retro-verified 2026-09-18 against architecture/adr/SEC-001-threat-model.md@3e1bc982f6ae1d36ba091116ff39ceef9ce89780 (retro-verification: re-checked after the fact, not a verdict recorded at completion time). Evidence: architecture/adr/SEC-001-threat-model.md
+--- repo-relative paths named in the operative verdict:
+  OK    architecture/adr/SEC-001-threat-model.md             ad01bb48e3a83d84e77f469b96465476b40a9ab8
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+=================================================================== t_3ca45da2
+--- operative verdict line:
+QA-VERDICT: pass — retro-verified 2026-09-18 against architecture/adr/ADR-002-overall-architecture.md@d3bbf55df46bb9c6cde05357ee1de5e933ecb90a (retro-verification: re-checked after the fact, not a verdict recorded at completion time). Evidence: architecture/adr/ADR-002-overall-architecture.md
+--- repo-relative paths named in the operative verdict:
+  OK    architecture/adr/ADR-002-overall-architecture.md     ad01bb48e3a83d84e77f469b96465476b40a9ab8
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+=================================================================== t_08b02da9
+--- operative verdict line:
+QA-VERDICT: pass — retro-verified 2026-09-18 against architecture/adr/ADR-005-extension-bridge-protocol.md@2d8e91f94144470fe3aac051f86d86b9346d47c1 (retro-verification: re-checked after the fact, not a verdict recorded at completion time). Evidence: architecture/adr/ADR-005-extension-bridge-protocol.md
+--- repo-relative paths named in the operative verdict:
+  OK    architecture/adr/ADR-005-extension-bridge-protocol.md a9972268dd824d5f8ca536a22781628ecd7ff087
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+=================================================================== t_ac6a1f3f
+--- operative verdict line:
+QA-VERDICT: pass — record repaired 2026-09-18 by QA-001i-fu1 (`t_4242bee8`). The token is the one recorded at completion (2026-09-17, comment above: "QA-001a verdict: PASS (self-validated) — complete"); this comment exists to repair the **evidence pointer** and is **not** a new verdict on the work. Evidence: tests/evidence/t_ac6a1f3f/README.md, tests/evidence/t_ac6a1f3f/, scripts/qa/validate-docs.mjs
+--- repo-relative paths named in the operative verdict:
+  OK    docs/decisions/qa-signoff-gate-s10-open-items-t_7dd3b960.md 8ece47882f8c2989474e7a13c4a8164617afcd5b
+  OK    scripts/qa/signoff-gate.mjs                          0e7a3a3d30cb5b26061ad5a27048660b37e42b29
+  OK    scripts/qa/validate-docs.mjs                         332caa93bc940fe9e1fb3ead198bf08d36c3f551
+  OK    tests/evidence/t_ac6a1f3f/doc-validation-negative-control.txt 332caa93bc940fe9e1fb3ead198bf08d36c3f551
+  OK    tests/evidence/t_ac6a1f3f/README.md                  332caa93bc940fe9e1fb3ead198bf08d36c3f551
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+=================================================================== t_a2cf1744
+--- operative verdict line:
+QA-VERDICT: pass-with-conditions — record repaired 2026-09-18 by QA-001i-fu1 (`t_4242bee8`). The token and both conditions are the ones **recorded at completion** (run 341 metadata, 2026-09-17, and §3 of the card's own evidence README); this comment supplies the **missing evidence pointer** and is **not** a new verdict on the work. Evidence: tests/evidence/t_a2cf1744/README.md, .github/workflows/ci.yml, https://github.com/zeldadil/password-manager/pull/14
+--- repo-relative paths named in the operative verdict:
+  OK    .github/workflows/ci.yml                             bf9da1ea8183a40d1b133203f56dd805e1d7b6e8
+  OK    scripts/qa/signoff-gate.mjs                          0e7a3a3d30cb5b26061ad5a27048660b37e42b29
+  OK    tests/evidence/t_a2cf1744/README.md                  303caca311c9bb44a3d47e639623697e62194d68
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+=================================================================== t_5fe41426
+--- operative verdict line:
+QA-VERDICT: pass-with-conditions — record repaired 2026-09-18 by QA-001i-fu1 (`t_4242bee8`). QA-001b's own record carried **evidence but no verdict**: the verdict was deferred to its child `t_a2cf1744`, whose landed verdict is `pass-with-conditions`. This comment records that landed outcome and the missing pointer on this card; it is **not** a fresh verification of the CI pipeline, and it changes no token recorded elsewhere. Evidence: tests/evidence/t_5fe41426/README.md, .github/workflows/ci.yml, https://github.com/zeldadil/password-manager/pull/7
+--- repo-relative paths named in the operative verdict:
+  OK    .github/workflows/ci.yml                             bf9da1ea8183a40d1b133203f56dd805e1d7b6e8
+  OK    scripts/qa/signoff-gate.mjs                          0e7a3a3d30cb5b26061ad5a27048660b37e42b29
+  OK    tests/evidence/t_5fe41426/README.md                  543c396d8bf4289492b80066a93e8c9f51de8c2a
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+
+criterion-2 check rc=0 (0 = every operative evidence path resolves on a ref, no absolute pointers)
+
+### artefact digests of the three retro-verified ADRs
+## repo: /home/sap/qa-retrofit-clone
+## origin/master tip: 94fb9de68b61b98ac745030d4178b6567c8846e7
+## materialised copies in: /tmp/tmp.EHOOoT5d72
+
+## blob shas as recorded in the tree of origin/master
+100644 blob 3e1bc982f6ae1d36ba091116ff39ceef9ce89780	architecture/adr/SEC-001-threat-model.md
+100644 blob d3bbf55df46bb9c6cde05357ee1de5e933ecb90a	architecture/adr/ADR-002-overall-architecture.md
+100644 blob 2d8e91f94144470fe3aac051f86d86b9346d47c1	architecture/adr/ADR-005-extension-bridge-protocol.md
+
+## sha256 of the materialised copies
+4a249465c70d13fe30a303ac89c8cfe1943e05dc93c6736644ef19631da64f06  /tmp/tmp.EHOOoT5d72/SEC-001.md
+0c7314f2a0a121bf68df6a1be20e7eea661d833dd31f57cc4f798fcc211a17c1  /tmp/tmp.EHOOoT5d72/ADR-002.md
+a5299a1800c3fc3d82da2ef8c2d1b5ba7f5d7696639b28a9a65e656e3944e33d  /tmp/tmp.EHOOoT5d72/ADR-005.md
+
+## git hash-object of the materialised copies (must equal the blob shas above)
+3e1bc982f6ae1d36ba091116ff39ceef9ce89780
+d3bbf55df46bb9c6cde05357ee1de5e933ecb90a
+2d8e91f94144470fe3aac051f86d86b9346d47c1
+
+## last commit touching each artefact on master
+ad01bb4 2026-09-16 chore: initial ADR set — ADR-001 (Passbolt patterns), SEC-001 (threat model), ADR-002 (overall architecture), PROJECT_BRIEF.md
+ad01bb4 2026-09-16 chore: initial ADR set — ADR-001 (Passbolt patterns), SEC-001 (threat model), ADR-002 (overall architecture), PROJECT_BRIEF.md
+a997226 2026-09-16 ADR-005: Extension Bridge Protocol — message types, origin validation, permission model, autofill flow; references ADR-001, ADR-002, SEC-001
+
+## SEC-001 §5 Sign-off row as committed (the AC-4 gap)
+## Part 5: Sign-off
+
+| Role | Name | Date | Signature |
+|---|---|---|---|
+| Architect | Architect (Solar Pro4, Upstage) | 2026-09-16 | Signed — reviewed in full, confirms no secret-storage code may proceed until QA also signs |
+| QA | (pending) | | |
+
+**Architect sign-off rationale (summary):**
+
+## does ANY ref carry a signed (non-pending) QA row for the three artefacts?
+  SEC-001-threat-model               refs carrying it:  39   with "(pending)":  39   with a real signature: 0
+  ADR-002-overall-architecture       refs carrying it:  39   with "(pending)":  39   with a real signature: 0
+  ADR-005-extension-bridge-protocol  refs carrying it:  39   with "(pending)":  39   with a real signature: 0
+  ^ a non-zero 'real signature' count would falsify the AC-4 finding; it is 0.
+
+### SEC-001 downstream-gating closure (acceptance criterion 5)
+root: t_9840ccdd (SEC-001-Threat Model + Security Gate)
+reachable descendants: 112
+in-scope family cards: 54
+  gated transitively by t_9840ccdd: 54
+  NOT gated: 0
+
+per-prefix:
+  BE-002: 8/8 gated
+  BE-003: 11/11 gated
+  BR-002: 8/8 gated
+  BR-003: 7/7 gated
+  FE-002: 8/8 gated
+  FE-003: 12/12 gated
+
+root-depth-1 children of t_9840ccdd: t_3ca45da2(ADR-002: Ove), t_93cf5611(DOC-001d: Cr), t_16f8ad84(BE-002a: Reg), t_fe3b76ea(BE-003a: Vau), t_83dc1b35(BR-002a: Vau)
+
+### artefact integrity
+./analyze2.mjs: OK
+./audit/after-default.json: OK
+./audit/after-default.txt: OK
+./audit/after-strict.json: OK
+./audit/after-strict.txt: OK
+./audit/before-default.json: OK
+./audit/before-default.txt: OK
+./audit/before-strict.json: OK
+./audit/before-strict.txt: OK
+./comment-draft-drift.txt: OK
+./comments-draft/t_08b02da9.md: OK
+./comments-draft/t_3ca45da2.md: OK
+./comments-draft/t_5fe41426.md: OK
+./comments-draft/t_9840ccdd.md: OK
+./comments-draft/t_a2cf1744.md: OK
+./comments-draft/t_ac6a1f3f.md: OK
+./comments/t_08b02da9.md: OK
+./comments/t_3ca45da2.md: OK
+./comments/t_5fe41426.md: OK
+./comments/t_9840ccdd.md: OK
+./comments/t_a2cf1744.md: OK
+./comments/t_ac6a1f3f.md: OK
+./compare-default.txt: OK
+./compare.mjs: OK
+./compare-strict.txt: OK
+./criterion2.sh: OK
+./criterion2.txt: OK
+./digests.sh: OK
+./digests.txt: OK
+./links.sh: OK
+./links.txt: OK
+./preflight.mjs: OK
+./reach.mjs: OK
+./reach.txt: OK
+./README.md: OK
+./reproduce.sh: OK
+./verify-comments.sh: OK
+./verify-comments.txt: OK
+
+reproduce.sh rc=0

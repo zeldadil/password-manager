@@ -1,0 +1,47 @@
+### 1. check --task t_4242bee8 --pre-complete (from the card workspace, no --repo)
+$ node /home/sap/qa-retrofit-work/bin/gate-pr25.mjs check --task t_4242bee8 --pre-complete --db $HOME/.hermes/kanban.db
+QA sign-off gate — check t_4242bee8 (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_4242bee8  QA-001i-fu1: pre-epoch retrofit — retro-verify 3 security/normative cards + repair 3 stale evidence records @qa
+        warn A3_EVIDENCE_UNVERIFIED: evidence path could not be verified (no repo root): tests/evidence/t_7dd3b960-retrofit/README.md
+        warn A3_EVIDENCE_UNVERIFIED: evidence path could not be verified (no repo root): tests/evidence/t_7dd3b960-retrofit
+exit=0
+
+### 2. check --task t_4242bee8 --pre-complete (from the full clone, --repo)
+$ node /home/sap/qa-retrofit-work/bin/gate-pr25.mjs check --task t_4242bee8 --pre-complete --repo /home/sap/qa-retrofit-clone
+QA sign-off gate — check t_4242bee8 (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_4242bee8  QA-001i-fu1: pre-epoch retrofit — retro-verify 3 security/normative cards + repair 3 stale evidence records @qa
+exit=0
+
+### 3. live fire through the real hook dispatcher — ALLOW case (this card)
+$ (cd /home/sap/.hermes/kanban/workspaces/t_4242bee8 && hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file payload-t_4242bee8.json)
+Firing 2 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh
+      exit=0  elapsed=0.124s
+      stdout: {}
+      parsed: <none — hook contributed nothing to the dispatcher>
+
+  → /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.sh
+      exit=0  elapsed=0.055s
+      stdout: {}
+      parsed: <none — hook contributed nothing to the dispatcher>
+
+exit=0
+
+### 4. live fire through the real hook dispatcher — BLOCK control (t_c3cb6842, done, no verdict)
+$ (cd /home/sap/.hermes/kanban/workspaces/t_4242bee8 && hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file dogfood/payload-block-control.json)
+Firing 2 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh
+      exit=2  elapsed=0.142s
+      stdout: {"decision":"block","reason":"QA sign-off gate blocked this completion of t_c3cb6842 (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card\n  - R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_at...
+      parsed (Hermes wire shape): {"action": "block", "message": "QA sign-off gate blocked this completion of t_c3cb6842 (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card \u2014 add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred \u2014 t_xxxxxxxx` pointing at a QA-owned child card\n  - R4_EVIDENCE_MISSING: no evidence artifact \u2014 attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (\u00a75.7)\nRecord the verdict on the card, then call kanban_complete again:\n  hermes kanban comment t_c3cb6842 --author qa --body \"QA-VERDICT: pass \u2014 evidence: tests/evidence/t_c3cb6842/README.md\"\nPolicy: QA_SIGN_OFF_GATE.md \u00b7 re-check: node scripts/qa/signoff-gate.mjs check --task t_c3cb6842 --pre-complete"}
+
+  → /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.sh
+      exit=0  elapsed=0.067s
+      stdout: {}
+      parsed: <none — hook contributed nothing to the dispatcher>
+
+exit=0
