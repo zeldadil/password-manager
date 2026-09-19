@@ -1,13 +1,13 @@
 /**
- * BE-001c: API server factory.
+ * API server factory.
  *
  * Creates and configures the Fastify server. Routes are registered as
  * small, single-responsibility plugins so later tasks can compose them:
  *
- *   - healthPlugin   (this task)   → GET /health
- *   - openapiPlugin  (this task)   → GET /openapi.json
- *   - envelopePlugin (BE-001d)      → envelope middleware on /api/v1
- *   - resourcePlugin (BE-003b+)    → /api/v1/resources, etc.
+ *   - healthPlugin   (BE-001c)   → GET /health
+ *   - openapiPlugin  (BE-001c)   → GET /openapi.json
+ *   - envelopePlugin (BE-001d)   → envelope middleware on /api/v1
+ *   - resourcePlugin (BE-003b+)  → /api/v1/resources, etc.
  *
  * ADR-002 Sec 5.1: the server holds no vault key, master password, or
  * ciphertext. Crypto lives in packages/crypto (gated by SEC-001); until
@@ -17,6 +17,7 @@
 import type { FastifyInstance } from 'fastify';
 import Fastify from 'fastify';
 import { config } from './config';
+import { envelopePreSerialization } from './middleware/envelope';
 import { healthPlugin } from './routes/health';
 import { openapiPlugin } from './routes/openapi';
 
@@ -35,6 +36,14 @@ export function createServer(opts?: CreateServerOptions): FastifyInstance {
   const server = Fastify({
     logger: opts?.logger ?? config.nodeEnv === 'development',
   });
+
+  // ── Envelope middleware (BE-001d) ──────────────────────────────
+  // Installed at the ROOT scope (not via register) so the preSerialization
+  // hook is inherited by every route plugin registered below — including
+  // future /api/v1 sibling plugins (e.g. resourcePlugin, BE-003b). The hook
+  // itself guards on the /api/v1 path prefix, so infra endpoints served at
+  // the root (/health, /openapi.json) are left unwrapped (ADR-002 §3.1).
+  server.addHook('preSerialization', envelopePreSerialization);
 
   server.register(healthPlugin);
   server.register(openapiPlugin);
