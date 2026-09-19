@@ -1,7 +1,3 @@
 export default function GeneratorPage() {
-  return (
-    <main>
-      <h1>Generator</h1>
-    </main>
-  )
+  return <h1>Generator</h1>
 }
