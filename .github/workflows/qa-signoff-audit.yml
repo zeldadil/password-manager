@@ -162,6 +162,8 @@ jobs:
         shell: bash
         env:
           BOARD_DB: ${{ steps.board.outputs.db }}
+          GIT_REF: ${{ github.ref }}
+          GH_EVENT_NAME: ${{ github.event_name }}
         run: |
           set -uo pipefail
           board_shown="${BOARD_DB:-none found on this runner}"
@@ -170,8 +172,8 @@ jobs:
             echo
             echo "| field | value |"
             echo "|---|---|"
-            echo "| ref | ${{ github.ref }} |"
-            echo "| event | ${{ github.event_name }} |"
+            echo "| ref | $GIT_REF |"
+            echo "| event | $GH_EVENT_NAME |"
             echo "| board | $board_shown |"
             echo
             if [ -f "$RUNNER_TEMP/qa-signoff-audit.txt" ]; then
