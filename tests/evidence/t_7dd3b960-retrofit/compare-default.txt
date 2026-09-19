@@ -1,0 +1,12 @@
+before counts: {"done_cards":45,"enforced":18,"failures":6,"grandfathered":27}
+after  counts: {"done_cards":46,"enforced":19,"failures":6,"grandfathered":27}
+pre-epoch FAIL: 0 -> 0
+post-epoch FAIL: 6 -> 6
+cleared pre-epoch FAILs (0): 
+NEWLY failing pre-epoch cards (0): NONE
+subset check: after-pre-epoch-fails ⊆ before-pre-epoch-fails -> true
+cards new to the done-audit: t_710ed14c
+cards gone from the done-audit: none
+new done cards that PASS: t_710ed14c
+post-epoch FAILs unchanged: true
+post-epoch FAIL set: t_28f60dc1, t_527d4720, t_7918f010, t_80fc0326, t_b51a1ff3, t_c3cb6842

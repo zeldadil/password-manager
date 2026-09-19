@@ -1,0 +1,4 @@
+QA sign-off gate — check t_7dd3b960 (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_7dd3b960  QA-001i — close gate-tooling §10 open items (audit CI, pre-epoch backlog, R7) @qa [running]
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the operative verdict does not exist: tests/evidence/t_28f60dc1/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_7dd3b960/repo; not found on any ref)
