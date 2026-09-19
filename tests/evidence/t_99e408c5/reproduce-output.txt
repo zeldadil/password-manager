@@ -1,0 +1,69 @@
+
+── 0. revisions under test
+repo gate    28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  /home/sap/.hermes/kanban/workspaces/t_99e408c5/scripts/qa/signoff-gate.mjs
+selftest     927704684963a76e704caac46798dd5b7f8f47368a9be664a427786b0da2e850
+gate doc     a29e0400641410bc94b25371678a7dca2c578a8e7ad94609db79d40dde6b8e51
+prefix gate  d77d8c5034dc6f5b46aa8e36cfddf6b54567eb8711d14750e9b47a119caaafe3  (origin/qa/t_58280940-r8-stale-deferral — the revision installed before this fix)
+
+── 1. selftest against the fixed gate — expect 66/66 and exit 0
+  ok   - kill switch allows completion
+
+66/66 cases passed
+ok   patched selftest 66/66
+
+── 2. A/B: the same 66 cases against the prefix gate — expect the t_99e408c5 cases to FAIL
+
+62/66 cases passed
+
+FAILED CASES:
+  - a verdict quoting another card's missing path is NOT blocked by R5 (the reported instance) — exit=1 rules=[R5_EVIDENCE_FILE_MISSING] adv=[]
+  - the quoted path is reported as A6_EVIDENCE_CITED (the audit still sees it) — adv=[] cited=[["tests/evidence/t_fffffff1/README.md",null]]
+  - the reporting card's own labelled evidence stays the claim it resolves — evidence=[["tests/evidence/t_b000001f/README.md",null,true],["tests/evidence/t_fffffff1/README.md",null,false]]
+  - no label: a quoted path in a code span is a citation (no R5, A6 fires) — exit=1 rules=[R5_EVIDENCE_FILE_MISSING] adv=[]
+ok   prefix gate fails the t_99e408c5 cases (RED, 4 total) and still passes the rest — including the three R5 controls (anti-vacuity)
+
+── 3. live-board replay of the reported instance (works on a COPY of the board)
+replayed comment #113 as the newest record on t_7dd3b960
+the quoted path exists on a ref? no — absent from every ref, exactly like the reported instance
+
+[prefix gate] exit=1
+QA sign-off gate — check t_7dd3b960 (pre-complete) (db: /tmp/tmp.SL4LHRAowq/board-replay.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_7dd3b960  QA-001i — close gate-tooling §10 open items (audit CI, pre-epoch backlog, R7) @qa
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the operative verdict does not exist: tests/evidence/t_28f60dc1/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_99e408c5; not found on any ref)
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_7dd3b960/dogfood-after-verdict.txt named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence docs/decisions named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A4_EVIDENCE_OFF_TREE: operative evidence docs/decisions/qa-signoff-gate-s10-open-items-t_7dd3b960.md is not in this checkout but exists in the repo at 8ece47882f8c2989474e7a13c4a8164617afcd5b — accepted
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_7dd3b960/README.md is not in this checkout but exists in the repo at 6e1df599dc35faae6319830604514564a9811d33 — accepted
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_7dd3b960/reproduce.sh is not in this checkout but exists in the repo at 8ece47882f8c2989474e7a13c4a8164617afcd5b — accepted
+ok   reported instance reproduced on the prefix gate (R5)
+
+[fixed gate] exit=0
+QA sign-off gate — check t_7dd3b960 (pre-complete) (db: /tmp/tmp.SL4LHRAowq/board-replay.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_7dd3b960  QA-001i — close gate-tooling §10 open items (audit CI, pre-epoch backlog, R7) @qa
+        warn A6_EVIDENCE_CITED: evidence tests/evidence/t_28f60dc1/README.md is only cited in the operative verdict (outside its §5.7 evidence label, or inside a code span) — not claimed as this card's evidence, report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_7dd3b960/dogfood-after-verdict.txt named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence docs/decisions named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_7dd3b960/README.md is not in this checkout but exists in the repo at 6e1df599dc35faae6319830604514564a9811d33 — accepted
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_7dd3b960/reproduce.sh is not in this checkout but exists in the repo at 8ece47882f8c2989474e7a13c4a8164617afcd5b — accepted
+ok   fixed gate: reporting card passes, quoted path downgraded to A6_EVIDENCE_CITED
+
+── 4. control: the card that CLAIMS a missing artifact of its own must still fail R5
+QA sign-off gate — check t_28f60dc1 (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_28f60dc1  ARCH: land the QA sign-off gate tooling on master (policy + selftest + installer/verifier) — root cause of recurring gate P1s @architect
+        R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: tests/evidence/t_28f60dc1/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_99e408c5; not found on any ref)
+ok   claimed-but-missing evidence still blocks (t_28f60dc1)
+
+── 5. installed gate copies must equal the repo copy (SHA-256)
+ok   architect: installed copy matches the repo copy
+ok   backend: installed copy matches the repo copy
+ok   browser: installed copy matches the repo copy
+ok   docs: installed copy matches the repo copy
+ok   frontend: installed copy matches the repo copy
+ok   product: installed copy matches the repo copy
+ok   qa: installed copy matches the repo copy
+
+──────────────────────────────
+reproduce: ALL EXPECTATIONS MET

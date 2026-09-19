@@ -1,0 +1,82 @@
+# t_58280940 — AC1: the INSTALLED gate copy (profile qa) on the real board
+# date: 2026-09-18T20:56:34Z  ·  node v22.23.2
+# installed: /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs sha256 0af4a45363280c13…
+# board:     /home/sap/.hermes/kanban.db
+
+$ node /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs check --task t_f49d448c --pre-complete
+QA sign-off gate — check t_f49d448c (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_f49d448c  FE-001h: Lint/Type Config + CI @frontend
+        warn X1_EXCEPTION: QA sign-off exception recorded by human: closed by human decision (Ze), bypassing gate defect R8_DEFERRAL_TARGET_INVALID (tracked separately at t_58280940 — stale architect deferral marker blocks even with a valid QA-VERDICT: pass present, c
+        warn A3_EVIDENCE_UNVERIFIED: evidence path could not be verified (no repo root): tests/evidence/t_f49d448c/README.md
+exit=0
+
+$ node /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs check --task t_f49d448c --pre-complete --repo /home/sap/.hermes/kanban/workspaces/t_58280940/pm-gate-fix   # worst case: repo root resolves
+QA sign-off gate — check t_f49d448c (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_f49d448c  FE-001h: Lint/Type Config + CI @frontend
+        warn X1_EXCEPTION: QA sign-off exception recorded by human: closed by human decision (Ze), bypassing gate defect R8_DEFERRAL_TARGET_INVALID (tracked separately at t_58280940 — stale architect deferral marker blocks even with a valid QA-VERDICT: pass present, c
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_f49d448c/README.md named in a superseded verdict/handoff is absent from this checkout — report only
+exit=0
+
+$ node /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs check --task t_f49d448c --pre-complete --json
+{
+  "mode": "check",
+  "db": "/home/sap/.hermes/kanban.db",
+  "repo": null,
+  "task_id": "t_f49d448c",
+  "violations": [],
+  "advisories": [
+    {
+      "rule": "X1_EXCEPTION",
+      "detail": "QA sign-off exception recorded by human: closed by human decision (Ze), bypassing gate defect R8_DEFERRAL_TARGET_INVALID (tracked separately at t_58280940 — stale architect deferral marker blocks even with a valid QA-VERDICT: pass present, c"
+    },
+    {
+      "rule": "A3_EVIDENCE_UNVERIFIED",
+      "detail": "evidence path could not be verified (no repo root): tests/evidence/t_f49d448c/README.md"
+    }
+  ],
+  "facts": {
+    "task_id": "t_f49d448c",
+    "title": "FE-001h: Lint/Type Config + CI",
+    "assignee": "frontend",
+    "status": "done",
+    "completed_at": 1789764746,
+    "post_epoch": true,
+    "verdict": "pass",
+    "invalid_verdicts": [],
+    "deferral": null,
+    "evidence": [
+      {
+        "kind": "path",
+        "value": "tests/evidence/t_f49d448c/README.md",
+        "exists": null,
+        "operative": false,
+        "via_ref": null,
+        "origin": "marker-comment-comment"
+      },
+      {
+        "kind": "url",
+        "value": "https://github.com/zeldadil/password-manager/actions/runs/35258653059",
+        "exists": null,
+        "operative": true,
+        "via_ref": null,
+        "origin": "qa-comment-comment"
+      },
+      {
+        "kind": "attachment",
+        "value": "README.md",
+        "exists": true,
+        "operative": true,
+        "via_ref": null,
+        "origin": "attachment"
+      }
+    ],
+    "exception": {
+      "reason": "closed by human decision (Ze), bypassing gate defect R8_DEFERRAL_TARGET_INVALID (tracked separately at t_58280940 — stale architect deferral marker blocks even with a valid QA-VERDICT: pass present, c",
+      "author": "human"
+    },
+    "security_track": false
+  }
+}
+exit=0

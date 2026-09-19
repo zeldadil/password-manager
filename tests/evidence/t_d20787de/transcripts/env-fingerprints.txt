@@ -1,0 +1,28 @@
+== AC1/AC2: per-profile .env TELEGRAM_BOT_TOKEN ==
+(value never printed; only line count + fingerprint classification)
+  architect  file=/home/sap/.hermes/profiles/architect/.env active_token_lines=1 fingerprint=['OTHER(c9180856…)']
+  backend    file=/home/sap/.hermes/profiles/backend/.env active_token_lines=1 fingerprint=['OTHER(c9180856…)']
+  browser    file=/home/sap/.hermes/profiles/browser/.env active_token_lines=1 fingerprint=['OTHER(c9180856…)']
+  docs       file=/home/sap/.hermes/profiles/docs/.env active_token_lines=1 fingerprint=['OTHER(c9180856…)']
+  frontend   file=/home/sap/.hermes/profiles/frontend/.env active_token_lines=1 fingerprint=['OTHER(c9180856…)']
+  product    file=/home/sap/.hermes/profiles/product/.env active_token_lines=1 fingerprint=['OTHER(c9180856…)']
+  qa         file=/home/sap/.hermes/profiles/qa/.env active_token_lines=1 fingerprint=['OTHER(c9180856…)']
+
+== AC2: literal token-shaped values outside .env (config.yaml etc.) ==
+  architect  config.yaml token_shaped_hits=0 
+  backend    config.yaml token_shaped_hits=0 
+  browser    config.yaml token_shaped_hits=0 
+  docs       config.yaml token_shaped_hits=0 
+  frontend   config.yaml token_shaped_hits=0 
+  product    config.yaml token_shaped_hits=0 
+  qa         config.yaml token_shaped_hits=0 
+
+== AC1: author .env (the card says all 7 profiles) ==
+
+== AC3: live probes with the qa .env value (no value printed) ==
+  getMe      HTTP 200 ok=True bot=@AASLlmHermesBot id=8615677595
+  board ref  newest dashboard comment on t_0af5aa3e contains a token-shaped value: False
+
+== summary ==
+  profiles with exactly 1 active token line matching the rotated fingerprint: 0/7
+  NOT matching: ['architect', 'backend', 'browser', 'docs', 'frontend', 'product', 'qa']

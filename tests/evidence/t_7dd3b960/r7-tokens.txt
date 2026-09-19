@@ -1,0 +1,80 @@
+Token presence in card title+body (which literal strings the R7 regex has / lacks)
+
+t_16f8ad84  BE-002a: Registration + KDF + Vault Key Storage
+      test types: "unit"
+      tokens present: vault key | KDF
+t_4d0c8439  BE-002b: Unlock Endpoint
+      test types: "unit, integration"
+      tokens present: vault key | KDF
+t_91964616  BE-002f: Unit Tests
+      test types: "unit"
+      tokens present: KDF
+t_fe3b76ea  BE-003a: Vault Encryption
+      test types: "unit"
+      tokens present: vault key | AEAD
+t_b51bf4b9  BE-003c: Secret Schema
+      test types: "unit"
+      tokens present: (none)
+t_e4341d18  BE-003k: Security Tests
+      test types: "security"
+      tokens present: nonce
+t_1f98942a  BR-001d: Popup
+      test types: "unit"
+      tokens present: autofill
+t_e5142129  BR-001e: Message Protocol (shared package)
+      test types: "unit"
+      tokens present: packages/shared | autofill
+t_4f42e589  BR-001f: Origin Validation
+      test types: "security"
+      tokens present: origin validation
+t_83dc1b35  BR-002a: Vault Session Sync
+      test types: "unit"
+      tokens present: postMessage
+t_979847fc  BR-002g: Integration Tests
+      test types: "integration"
+      tokens present: autofill
+t_8e4c8bfa  BR-003e: E2E Tests
+      test types: "e2e"
+      tokens present: autofill
+t_4278a1dc  BE-002e: Wrong-password Handling
+      test types: "security"
+      tokens present: vault key
+t_974b5e77  BR-002c: Crypto Boundary + Autofill Decryption
+      test types: "security"
+      tokens present: vault key | autofill
+t_b1a8b77e  BR-002e: Vault Key Memory Lifetime
+      test types: "security"
+      tokens present: vault key
+t_7b33595a  BR-002h: Security Tests
+      test types: "security"
+      tokens present: vault key
+t_c7258993  FE-003i: Client-side Decryption + Optimistic Updates
+      test types: "unit, security"
+      tokens present: vault key
+t_acd800fe  BR-002d: Message Validation + Rate Limiting
+      test types: "security"
+      tokens present: autofill
+t_9840ccdd  SEC-001-Threat Model + Security Gate
+      test types: "security-review, threat-model-validation"
+      tokens present: AEAD | KDF | nonce | backup
+
+=== per-card: strict-regex keyword hit, and which missing token would have caught it ===
+t_16f8ad84	strictKeyword=HIT	todo	BE-002a: Registration + KDF + Vault Key Storage
+t_4d0c8439	strictKeyword=HIT	todo	BE-002b: Unlock Endpoint
+t_91964616	strictKeyword=HIT	todo	BE-002f: Unit Tests
+t_fe3b76ea	strictKeyword=HIT	todo	BE-003a: Vault Encryption
+t_b51bf4b9	strictKeyword=miss	todo	BE-003c: Secret Schema
+t_e4341d18	strictKeyword=miss	todo	BE-003k: Security Tests
+t_1f98942a	strictKeyword=HIT	triage	BR-001d: Popup
+t_e5142129	strictKeyword=miss	triage	BR-001e: Message Protocol (shared package)
+t_4f42e589	strictKeyword=miss	triage	BR-001f: Origin Validation
+t_83dc1b35	strictKeyword=miss	triage	BR-002a: Vault Session Sync
+t_979847fc	strictKeyword=HIT	triage	BR-002g: Integration Tests
+t_8e4c8bfa	strictKeyword=HIT	triage	BR-003e: E2E Tests
+t_4278a1dc	strictKeyword=HIT	todo	BE-002e: Wrong-password Handling
+t_974b5e77	strictKeyword=HIT	triage	BR-002c: Crypto Boundary + Autofill Decryption
+t_b1a8b77e	strictKeyword=HIT	triage	BR-002e: Vault Key Memory Lifetime
+t_7b33595a	strictKeyword=HIT	triage	BR-002h: Security Tests
+t_c7258993	strictKeyword=HIT	todo	FE-003i: Client-side Decryption + Optimistic Updates
+t_acd800fe	strictKeyword=HIT	triage	BR-002d: Message Validation + Rate Limiting
+t_9840ccdd	strictKeyword=HIT	done	SEC-001-Threat Model + Security Gate

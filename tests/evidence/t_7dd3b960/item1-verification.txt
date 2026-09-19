@@ -1,0 +1,48 @@
+### profiles on this host
+
+ Profile          Model                        Gateway      Alias        Distribution
+ ───────────────    ───────────────────────────    ───────────    ───────────    ────────────────────
+  default         nvidia/nemotron-3-ultra-55   running      —            —
+  architect       upstage/solar-pro4:free      stopped      architect    —
+  backend         poolside/laguna-s-2.1:free   stopped      backend      —
+  browser         thinkingmachines/inkling-s   stopped      browser      —
+  docs            nvidia/nemotron-3.5-lightn   stopped      docs         —
+  frontend        deepseek-flash               stopped      frontend     —
+  product         nvidia/nemotron-3-super-12   stopped      product      —
+ ◆qa              deepseek-flash               stopped      qa           —
+
+⚠ Profile 'architect' shares its telegram credential with default: the bot can only belong to one profile. Give 'architect' its own bot (hermes -p architect setup, or the dashboard Messaging page) or remove the token from 'architect'; a multiplexed gateway parks the duplicate and `hermes gateway migrate --multiplex` refuses until it is gone.
+⚠ Profile 'backend' shares its telegram credential with default: the bot can only belong to one profile. Give 'backend' its own bot (hermes -p backend setup, or the dashboard Messaging page) or remove the token from 'backend'; a multiplexed gateway parks the duplicate and `hermes gateway migrate --multiplex` refuses until it is gone.
+⚠ Profile 'browser' shares its telegram credential with default: the bot can only belong to one profile. Give 'browser' its own bot (hermes -p browser setup, or the dashboard Messaging page) or remove the token from 'browser'; a multiplexed gateway parks the duplicate and `hermes gateway migrate --multiplex` refuses until it is gone.
+⚠ Profile 'docs' shares its telegram credential with default: the bot can only belong to one profile. Give 'docs' its own bot (hermes -p docs setup, or the dashboard Messaging page) or remove the token from 'docs'; a multiplexed gateway parks the duplicate and `hermes gateway migrate --multiplex` refuses until it is gone.
+⚠ Profile 'frontend' shares its telegram credential with default: the bot can only belong to one profile. Give 'frontend' its own bot (hermes -p frontend setup, or the dashboard Messaging page) or remove the token from 'frontend'; a multiplexed gateway parks the duplicate and `hermes gateway migrate --multiplex` refuses until it is gone.
+⚠ Profile 'product' shares its telegram credential with default: the bot can only belong to one profile. Give 'product' its own bot (hermes -p product setup, or the dashboard Messaging page) or remove the token from 'product'; a multiplexed gateway parks the duplicate and `hermes gateway migrate --multiplex` refuses until it is gone.
+⚠ Profile 'qa' shares its telegram credential with default: the bot can only belong to one profile. Give 'qa' its own bot (hermes -p qa setup, or the dashboard Messaging page) or remove the token from 'qa'; a multiplexed gateway parks the duplicate and `hermes gateway migrate --multiplex` refuses until it is gone.
+
+
+### actionlint — workflow as it exists on each open PR branch
+-- PR #17 (feature/t_ea0783c5) --
+-- PR #18 (feat/t_527d4720-runner) --
+
+### workflow's own gate-presence check, replayed against each branch tree
+pr17: FAIL — scripts/qa/signoff-gate.mjs ABSENT -> the job dies at 'Verify the gate script is present'
+pr18: PASS — scripts/qa/signoff-gate.mjs present on the branch
+
+### VERDICT marker regex — does it ignore markers inside code spans? (§10 item 5)
+72:const VERDICT_MARKER_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*:\s*([a-z][a-z-]*)/i;
+73-const VERDICT_LOOSE_RE = /verdict\s*[:\-—]+\s*([a-z][a-z-]*)/i;
+74-// Same leading boundary as VERDICT_MARKER_RE (t_c3cb6842): a marker that only
+75-// appears inside a code span — a handoff quoting the recording command, a
+76-// troubleshooting transcript — is documentation, not a live deferral
+77-// (t_58280940: frontend's gate-defect report quoted the marker and the gate
+78-// then judged *that* quote as the card's live deferral target).
+
+### non-default boards present on this host? (§10 item 4)
+total 20
+drwxrwxr-x  5 sap sap 4096 Sep 17 14:52 .
+drwx------ 29 sap sap 4096 Sep 18 21:16 ..
+drwxr-xr-x 13 sap sap 4096 Sep 18 21:11 attachments
+-rw-rw-r--  1 sap sap    0 Sep 14 10:20 .dispatcher.lock
+-rw-r--r--  1 sap sap    0 Sep 16 14:25 kanban.db
+drwxrwxr-x  2 sap sap 4096 Sep 18 21:15 logs
+drwxrwxr-x 41 sap sap 4096 Sep 18 21:15 workspaces

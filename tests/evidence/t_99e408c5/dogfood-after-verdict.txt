@@ -1,0 +1,10 @@
+QA-001i-fu6 (t_99e408c5) — dogfood: the gate on its own card (after the verdict comment (expect exit 0))
+date: 2026-09-18T21:35:29Z
+gate: scripts/qa/signoff-gate.mjs sha256 28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab
+board: /home/sap/.hermes/kanban.db (read-only)   repo (the worker's cwd): /home/sap/.hermes/kanban/workspaces/t_99e408c5
+command: node scripts/qa/signoff-gate.mjs check --task t_99e408c5 --pre-complete --repo "/home/sap/.hermes/kanban/workspaces/t_99e408c5"
+
+QA sign-off gate — check t_99e408c5 (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_99e408c5  QA-001i-fu6 (P1 gate defect): R5 fails a card for a path it merely quotes about another card (operative verdict, no code-span exclusion) @qa
+exit=0
