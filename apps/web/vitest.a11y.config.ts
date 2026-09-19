@@ -1,4 +1,3 @@
-import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 // Accessibility lane (FE-001k) — axe-core over every route.
@@ -15,7 +14,9 @@ import { defineConfig } from 'vitest/config'
 // architect-owned). This config is the focused entry point for local/QA runs:
 // `pnpm test:a11y`.
 export default defineConfig({
-  plugins: [react()],
+  esbuild: {
+    jsx: 'automatic',
+  },
   test: {
     environment: 'jsdom',
     globals: true,
