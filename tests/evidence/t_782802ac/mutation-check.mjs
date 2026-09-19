@@ -155,7 +155,9 @@ function apply(edits) {
 
 function runLane() {
   try {
-    const stdout = execFileSync('pnpm', ['exec', 'vitest', 'run', '--config', 'vitest.a11y.config.ts'], {
+    // The literal command the acceptance criteria name (`package.json` → `vitest run
+    // --config vitest.a11y.config.ts`), not a re-spelled equivalent.
+    const stdout = execFileSync('pnpm', ['test:a11y'], {
       cwd: WEB,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -207,7 +209,7 @@ const record = (line) => {
 }
 
 record(`# FE-001k-fu (t_782802ac) mutation checks — ${new Date().toISOString()}`)
-record('# lane: pnpm exec vitest run --config vitest.a11y.config.ts (apps/web)')
+record('# lane: pnpm test:a11y (apps/web) — the acceptance-criteria command')
 record(`# mode: ${only ? `--only=${only}` : 'all mutations'}${FULL_OUTPUT ? ' --full' : ''}`)
 const hashesBefore = targetHashes()
 record(`# files under mutation: ${MUTATED_FILES.join(', ')} (blob hashes recorded before the run)`)

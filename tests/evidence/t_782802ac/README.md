@@ -95,9 +95,10 @@ i.e. the old sensor was green under the very mutation this card is about.
 
 ## 5. Mutation log — `mutations.txt`
 
-`node tests/evidence/t_782802ac/mutation-check.mjs` (every edit reverted in a `finally` block; the harness records
-blob hashes of all four files before the run and verifies they are identical afterwards, so a leaked edit fails the
-run). `--only=<ID>` runs a single case, `--full` also dumps the raw lane output.
+`node tests/evidence/t_782802ac/mutation-check.mjs` — the harness drives `pnpm test:a11y` (the acceptance-criteria
+command) itself, reverts every edit in a `finally` block, and records blob hashes of all four files before the run
+and verifies they are identical afterwards, so a leaked edit fails the run. `--only=<ID>` runs a single case,
+`--full` also dumps the raw lane output.
 
 | # | Mutation | Expected | Observed |
 |---|---|---|---|

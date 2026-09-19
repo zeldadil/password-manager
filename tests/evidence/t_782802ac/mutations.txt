@@ -1,5 +1,5 @@
-# FE-001k-fu (t_782802ac) mutation checks — 2026-09-19T07:09:54.218Z
-# lane: pnpm exec vitest run --config vitest.a11y.config.ts (apps/web)
+# FE-001k-fu (t_782802ac) mutation checks — 2026-09-19T07:17:59.473Z
+# lane: pnpm test:a11y (apps/web) — the acceptance-criteria command
 # mode: all mutations
 # files under mutation: apps/web/src/routes.tsx, apps/web/src/a11y/routes.a11y.test.tsx, apps/web/src/a11y/A11yLayout.tsx, apps/web/src/components/layout/AppShell.tsx (blob hashes recorded before the run)
 
