@@ -1,0 +1,17 @@
+
+> @password-manager/web@0.1.0 test:unit /home/sap/.hermes/kanban/workspaces/t_782802ac/repo/apps/web
+> vitest run --exclude '**/node_modules/**' --exclude '**/dist/**' --exclude 'src/**/*.integration.test.{ts,tsx}'
+
+
+ RUN  v5.0.1 /home/sap/.hermes/kanban/workspaces/t_782802ac/repo/apps/web
+
+
+ Test Files  20 passed (20)
+      Tests  164 passed (164)
+   Start at  07:10:24
+   Duration  10.81s (environment 70%, tests 17%, import 9%, transform 3%, worker 1%)
+
+Environment  jsdom was created 20 times · 20.03s total, 70% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

@@ -1,0 +1,50 @@
+# FE-001k-fu (t_782802ac) mutation checks — 2026-09-19T07:17:59.473Z
+# lane: pnpm test:a11y (apps/web) — the acceptance-criteria command
+# mode: all mutations
+# files under mutation: apps/web/src/routes.tsx, apps/web/src/a11y/routes.a11y.test.tsx, apps/web/src/a11y/A11yLayout.tsx, apps/web/src/components/layout/AppShell.tsx (blob hashes recorded before the run)
+
+## R1 — [app] a NEW route `/audit` (no <h1>) added to the route table and NOT to the sweep — QA probe Q4
+   expected: fail
+   observed: fail (exit 1, tests 1 failed | 20 passed (21))
+   failing:  src/a11y/routes.a11y.test.tsx > route coverage — the sweep is tied to the route table > grades every screen path the route table declares
+   coverage: route table declares screen paths this sweep does not grade: /audit: expected [ '/audit' ] to deeply equal []
+   RESULT:   as expected
+
+## R2 — [lane] the sweep drops its `/generator` case while the route table still declares `/generator`
+   expected: fail
+   observed: fail (exit 1, tests 1 failed | 19 passed (20))
+   failing:  src/a11y/routes.a11y.test.tsx > route coverage — the sweep is tied to the route table > grades every screen path the route table declares
+   coverage: route table declares screen paths this sweep does not grade: /generator: expected [ '/generator' ] to deeply equal []
+   RESULT:   as expected
+
+## R3 — [app+lane] the same `/audit` route added to the route table AND to the sweep (rendering the existing, compliant VaultPage)
+   expected: pass
+   observed: pass (exit 0, tests 22 passed (22))
+   RESULT:   as expected
+
+## R4 — [control] R1 + the coverage block skipped — exactly the pre-fix lane, which had no coverage block
+   expected: pass
+   observed: pass (exit 0, tests 19 passed | 2 skipped (21))
+   RESULT:   as expected
+
+## P1 — [probe] the skip link is removed from `A11yLayout` — fails on the four pre-auth resolutions (nothing else satisfies `bypass` there), green on the six shell routes (header/landmarks satisfy it)
+   expected: fail
+   observed: fail (exit 1, tests 4 failed | 17 passed (21))
+   failing:  src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /login (Login (pre-auth)) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /unlock (Unlock (pre-auth)) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > / (root guard) …(+1)
+   required-pass failures: bypass on /login, bypass on /unlock, bypass on /, bypass on /no/such/route
+   RESULT:   as expected
+
+## P2 — [probe] the skip-link target id is dropped from `<main>` in `AppShell`
+   expected: fail
+   observed: fail (exit 1, tests 11 failed | 10 passed (21))
+   failing:  src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /vault (Vault) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /resources/res-123 (Resource detail) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /folders (Folders) …(+8)
+   rule ids named in failures: region
+   RESULT:   as expected
+
+## clean tree (control)
+   observed: pass (exit 0, tests 21 passed (21))
+   RESULT:   as expected
+
+## revert check — every mutated file back to its pre-run content
+   blob hashes identical before/after the run
+   RESULT:   as expected

@@ -1,0 +1,37 @@
+gate:      85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ref state: refs=148 master=0f75082
+t0 board:  47355a840c6188925259da614aedb82de7af01ce9c411355d1b92eb5ceb290dc  (154 comments)
+t1 board:  675811d1642e2a8487606ac0049968897cfd61ed2e4a8b7c166641368395f73d  (166 comments)
+
+=== per-card violation sets ===
+  t_e348e0b7  before=FAIL  after=ok
+  t_28951254  before=FAIL  after=ok
+  t_2162d273  before=FAIL  after=ok
+  t_527d4720  before=FAIL  after=FAIL
+  t_80fc0326  before=FAIL  after=FAIL
+  t_c3cb6842  before=FAIL  after=ok
+  t_28f60dc1  before=ok  after=ok
+  t_7918f010  before=FAIL  after=FAIL
+  t_b51a1ff3  before=FAIL  after=FAIL
+
+=== summary line, before vs after ===
+  t0   enforced (done at/after epoch or pre-complete): 24  ·  pass: 16  ·  FAIL: 8
+  t1   enforced (done at/after epoch or pre-complete): 24  ·  pass: 20  ·  FAIL: 4
+
+=== diff of FAIL sets (rule lines only) ===
+6d5
+<         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+11,17d9
+<         R8_DEFERRAL_TARGET_INVALID: QA deferral target t_c3cb6842 is done but carries no QA verdict
+<   FAIL t_e348e0b7  P0 follow-up: master secret-scan is a false negative — add full-history credential verification (truffleHog) to master CI @architect
+<         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+<         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+<   FAIL t_28951254  P0 follow-up: propagate the ROTATED Telegram token to all 7 profiles' .env (agent Telegram channel is DOWN) @architect
+<         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+<         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+21,25d12
+<   FAIL t_c3cb6842  P1 gate-defect follow-up: review + verify signoff-gate.mjs regex fix (t_5455942d) from ROTATION false-positive @qa
+<         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+<         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+<   FAIL t_2162d273  Scope decision: which FE card wires the theme toggle control / data-theme writer + sidebar collapse @architect
+<         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card

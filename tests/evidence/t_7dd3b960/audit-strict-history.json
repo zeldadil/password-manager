@@ -1,0 +1,2804 @@
+{
+  "mode": "audit",
+  "db": "/home/sap/.hermes/kanban.db",
+  "repo": "/home/sap/.hermes/kanban/workspaces/t_7dd3b960/repo",
+  "epoch": "2026-09-17T15:00:00.000Z",
+  "ok": false,
+  "counts": {
+    "done_cards": 43,
+    "enforced": 16,
+    "failures": 30,
+    "grandfathered": 27
+  },
+  "results": [
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_9840ccdd",
+        "title": "SEC-001-Threat Model + Security Gate",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789571215,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": true
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_3ca45da2",
+        "title": "ADR-002: Overall Architecture",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789572031,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_258f91c8",
+        "title": "ADR-003: Data Model",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789587352,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_ad18d4ed",
+        "title": "ADR-004: API Contract",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789588850,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_08b02da9",
+        "title": "ADR-005: Extension Bridge Protocol",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789587899,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_5f82ac57",
+        "title": "ARC-001e-Repo Structure + Root Config",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789589177,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [],
+      "facts": {
+        "task_id": "t_7ec83773",
+        "title": "ARC-001f-GitHub Setup + Worktree Strategy",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789593059,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": {
+          "target": "t_ac6a1f3f",
+          "marker": false,
+          "linked": [
+            {
+              "id": "t_ac6a1f3f",
+              "status": "done"
+            }
+          ]
+        },
+        "evidence": [
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/PROJECT_BRIEF.md",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_f8a5c949",
+        "title": "BE-001a: DB Migration System",
+        "assignee": "backend",
+        "status": "done",
+        "completed_at": 1789597981,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_f463b44f",
+        "title": "BE-001b: Core Tables Schema",
+        "assignee": "backend",
+        "status": "done",
+        "completed_at": 1789636692,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_f463b44f/apps/services/api/migrations/0000_baseline_schema.sql",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_415897da",
+        "title": "BE-001c: API Skeleton + OpenAPI + Health Endpoint",
+        "assignee": "backend",
+        "status": "done",
+        "completed_at": 1789641688,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_7c572465",
+        "title": "BE-001d: Envelope Middleware",
+        "assignee": "backend",
+        "status": "done",
+        "completed_at": 1789648076,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        }
+      ],
+      "advisories": [],
+      "facts": {
+        "task_id": "t_7918f010",
+        "title": "BE-001f: Error Handler + Secret Scanning CI",
+        "assignee": "backend",
+        "status": "done",
+        "completed_at": 1789672802,
+        "post_epoch": true,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_aed3f3d1",
+        "title": "FE-001a: Project Setup",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789646848,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_53b034b7",
+        "title": "FE-001b: Router + Routes",
+        "assignee": "frontend",
+        "status": "done",
+        "completed_at": 1789647824,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_767aca4b",
+        "title": "FE-001c: Layout Components",
+        "assignee": "frontend",
+        "status": "done",
+        "completed_at": 1789648863,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_e2b31691",
+        "title": "FE-001d: Theme System",
+        "assignee": "frontend",
+        "status": "done",
+        "completed_at": 1789652138,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_7d365ce0",
+        "title": "FE-001e: Accessibility Baseline",
+        "assignee": "frontend",
+        "status": "done",
+        "completed_at": 1789652147,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_f82e53b6",
+        "title": "FE-001f: API Client",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789648403,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_d19ced15",
+        "title": "FE-001g: State Management",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789649372,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "X1_EXCEPTION",
+          "detail": "QA sign-off exception recorded by human: closed by human decision (Ze), bypassing gate defect R8_DEFERRAL_TARGET_INVALID (tracked separately at t_58280940 — stale architect deferral marker blocks even with a valid QA-VERDICT: pass present, c"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_f49d448c/README.md named in a superseded verdict/handoff is absent from this checkout — report only"
+        }
+      ],
+      "facts": {
+        "task_id": "t_f49d448c",
+        "title": "FE-001h: Lint/Type Config + CI",
+        "assignee": "frontend",
+        "status": "done",
+        "completed_at": 1789764746,
+        "post_epoch": true,
+        "verdict": "pass",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_f49d448c/README.md",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "url",
+            "value": "https://github.com/zeldadil/password-manager/actions/runs/35258653059",
+            "exists": null,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "url",
+            "value": "https://github.com/zeldadil/password-manager/pull/25",
+            "exists": null,
+            "operative": true,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "attachment",
+            "value": "README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          }
+        ],
+        "exception": {
+          "reason": "closed by human decision (Ze), bypassing gate defect R8_DEFERRAL_TARGET_INVALID (tracked separately at t_58280940 — stale architect deferral marker blocks even with a valid QA-VERDICT: pass present, c",
+          "author": "human"
+        },
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R5_EVIDENCE_FILE_MISSING",
+          "detail": "evidence file named in the operative verdict does not exist: /tmp/qa-negative-control.md (repo: /home/sap/.hermes/kanban/workspaces/t_7dd3b960/repo; not found on any ref)"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A4_EVIDENCE_OFF_TREE",
+          "detail": "operative evidence scripts/qa/validate-docs.mjs is not in this checkout but exists in the repo at 332caa93bc940fe9e1fb3ead198bf08d36c3f551 — accepted"
+        },
+        {
+          "rule": "A4_EVIDENCE_OFF_TREE",
+          "detail": "operative evidence tests/evidence/t_ac6a1f3f is not in this checkout but exists in the repo at 332caa93bc940fe9e1fb3ead198bf08d36c3f551 — accepted"
+        }
+      ],
+      "facts": {
+        "task_id": "t_ac6a1f3f",
+        "title": "QA-001a: Test Strategy Document",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789645170,
+        "post_epoch": false,
+        "verdict": "pass",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "path",
+            "value": "scripts/qa/validate-docs.mjs",
+            "exists": true,
+            "operative": true,
+            "via_ref": "332caa93bc940fe9e1fb3ead198bf08d36c3f551",
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "abs",
+            "value": "/tmp/qa-negative-control.md",
+            "exists": false,
+            "operative": true,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "dir",
+            "value": "tests/evidence/t_ac6a1f3f",
+            "exists": true,
+            "operative": true,
+            "via_ref": "332caa93bc940fe9e1fb3ead198bf08d36c3f551",
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_ac6a1f3f/TEST_STRATEGY.md",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_ac6a1f3f/tests/evidence/t_ac6a1f3f/doc-validation-positive.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_ac6a1f3f/tests/evidence/t_ac6a1f3f/doc-validation-negative-control.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_ac6a1f3f/scripts/qa/validate-docs.mjs",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "QA deferral target t_a2cf1744 carries a verdict but no evidence"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [],
+      "facts": {
+        "task_id": "t_5fe41426",
+        "title": "QA-001b: CI Pipeline",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789647922,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": {
+          "target": "t_a2cf1744",
+          "marker": false,
+          "linked": [
+            {
+              "id": "t_a2cf1744",
+              "status": "done"
+            },
+            {
+              "id": "t_18ae13ea",
+              "status": "done"
+            },
+            {
+              "id": "t_204ae591",
+              "status": "done"
+            }
+          ]
+        },
+        "evidence": [
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_5fe41426/.github/workflows/ci.yml",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_5fe41426/tests/evidence/t_5fe41426/README.md",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "R6_CONDITIONS_UNTRACKED",
+          "detail": "pass-with-conditions verdict names no follow-up card id, issue/PR link, or follow-up item"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_a2cf1744",
+        "title": "QA-001c: Playwright MCP + Cross-Browser Config",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789649091,
+        "post_epoch": false,
+        "verdict": "pass-with-conditions",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [],
+      "facts": {
+        "task_id": "t_18ae13ea",
+        "title": "QA-001d: Security Scanning Config",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789649222,
+        "post_epoch": false,
+        "verdict": "pass-with-conditions",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_18ae13ea/.github/workflows/ci.yml",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_18ae13ea/tests/evidence/t_18ae13ea/README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_204ae591",
+        "title": "QA-001e: Synthetic Fixtures + Coverage Thresholds",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789649089,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_204ae591/tests/evidence/t_204ae591/README.md",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [],
+      "facts": {
+        "task_id": "t_11c01f92",
+        "title": "QA-001f: Negative Test Checklist",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789647138,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": {
+          "target": "t_430aa9a3",
+          "marker": false,
+          "linked": [
+            {
+              "id": "t_430aa9a3",
+              "status": "done"
+            }
+          ]
+        },
+        "evidence": [
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_11c01f92/tests/security/NEGATIVE_TEST_CHECKLIST.md",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_11c01f92/scripts/qa/validate-checklist.mjs",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_11c01f92/tests/evidence/t_11c01f92/checklist-validation-positive.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_11c01f92/tests/evidence/t_11c01f92/checklist-validation-negative-control.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_78b46688 named in a superseded verdict/handoff is absent from this checkout — report only"
+        }
+      ],
+      "facts": {
+        "task_id": "t_78b46688",
+        "title": "QA-001g: Evidence Collection",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789656031,
+        "post_epoch": false,
+        "verdict": "pass-with-conditions",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "url",
+            "value": "https://github.com/zeldadil/password-manager/pull/15",
+            "exists": null,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": ".github/workflows/ci.yml",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "dir",
+            "value": "tests/evidence/t_78b46688",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_78b46688/tests/evidence/t_78b46688/README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_78b46688/tests/evidence/t_78b46688/redaction-transcript.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence scripts/qa/hooks/qa-signoff-gate.sh named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence scripts/qa/hooks/install-signoff-gate.sh named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence scripts/qa/signoff-gate.selftest.mjs named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_430aa9a3/selftest.txt named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_430aa9a3/audit-fixture-board.txt named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_430aa9a3/audit-real-board.txt named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_430aa9a3/verify-all-live.txt named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_430aa9a3 named in a superseded verdict/handoff is absent from this checkout — report only"
+        }
+      ],
+      "facts": {
+        "task_id": "t_430aa9a3",
+        "title": "QA-001h: QA Sign-off Gate Policy",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789656822,
+        "post_epoch": false,
+        "verdict": "pass-with-conditions",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "url",
+            "value": "https://github.com/zeldadil/password-manager/pull/16",
+            "exists": null,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/signoff-gate.mjs",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/hooks/qa-signoff-gate.sh",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/hooks/install-signoff-gate.sh",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/signoff-gate.selftest.mjs",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_430aa9a3/selftest.txt",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_430aa9a3/audit-fixture-board.txt",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_430aa9a3/audit-real-board.txt",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_430aa9a3/verify-all-live.txt",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": ".github/workflows/ci.yml",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "dir",
+            "value": "tests/evidence/t_430aa9a3",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "attachment",
+            "value": "verify-all-live.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "selftest.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_430aa9a3/tests/evidence/t_430aa9a3/README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_430aa9a3/tests/evidence/t_430aa9a3/selftest.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_430aa9a3/tests/evidence/t_430aa9a3/verify-all-live.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_430aa9a3/QA_SIGN_OFF_GATE.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "--strict-history: pre-epoch card is not compliant"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no QA verdict (grandfathered)"
+        },
+        {
+          "rule": "A1_HISTORY_UNGATED",
+          "detail": "completed before the gate epoch — no evidence pointer (grandfathered)"
+        }
+      ],
+      "facts": {
+        "task_id": "t_ee24fd37",
+        "title": "REPO-BLOCKER: pnpm workspace manifest uncommitted — CI install cannot resolve workspaces",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789647263,
+        "post_epoch": false,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "X1_EXCEPTION",
+          "detail": "QA sign-off exception recorded by dashboard: closed by human decision (Ze), duplicate of already-resolved incident t_80fc0326/t_9b3bdba0/t_b51a1ff3, verified independently on all 5 AC-named branches, 0 hits.  Closing as done. This unblocks paren"
+        }
+      ],
+      "facts": {
+        "task_id": "t_930fddbe",
+        "title": "SEC: purge leaked Telegram bot token from git history (public repo)",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789763852,
+        "post_epoch": true,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": {
+          "reason": "closed by human decision (Ze), duplicate of already-resolved incident t_80fc0326/t_9b3bdba0/t_b51a1ff3, verified independently on all 5 AC-named branches, 0 hits.  Closing as done. This unblocks paren",
+          "author": "dashboard"
+        },
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_0af5aa3e/QA-VERDICT.md named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence scripts/qa/signoff-gate.selftest.mjs named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md named in a superseded verdict/handoff is absent from this checkout — report only"
+        }
+      ],
+      "facts": {
+        "task_id": "t_0af5aa3e",
+        "title": "P0: rotate + purge leaked Telegram bot token (public git history)",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789676460,
+        "post_epoch": true,
+        "verdict": "pass-with-conditions",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_0af5aa3e/QA-VERDICT.md",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/signoff-gate.selftest.mjs",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "attachment",
+            "value": "QA-VERDICT-t_0af5aa3e.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "QA-VERDICT-ROTATION-t_0af5aa3e.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "QA-VERDICT-ROTATION.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "reproduce.sh",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "transcripts-reproduce.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "gate-check-post-verdict.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "gitrepo-post-purge-state.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_0af5aa3e/QA-VERDICT-ROTATION.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_0af5aa3e/reproduce.sh",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_0af5aa3e/transcripts-reproduce.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_0af5aa3e/gate-check-post-verdict.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_0af5aa3e/gitrepo-post-purge-state.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "X1_EXCEPTION",
+          "detail": "QA sign-off exception recorded by architect: ` marker — both mechanisms exist and are audit-visible (X1_EXCEPTION on every run)."
+        }
+      ],
+      "facts": {
+        "task_id": "t_33dcad7d",
+        "title": "QA-001h follow-ups: sign-off gate — CI wiring decision + pre-epoch retrofit + R7 mapping sign-off",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789657737,
+        "post_epoch": true,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_430aa9a3/docs/decisions/qa-signoff-gate-followups-t_33dcad7d.md",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": {
+          "reason": "` marker — both mechanisms exist and are audit-visible (X1_EXCEPTION on every run).",
+          "author": "architect"
+        },
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_ea0783c5/README.md named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A4_EVIDENCE_OFF_TREE",
+          "detail": "operative evidence .github/workflows/qa-signoff-audit.yml is not in this checkout but exists in the repo at c9fd1629ba64ba108025bf5168586f044a2fdd2f — accepted"
+        }
+      ],
+      "facts": {
+        "task_id": "t_ea0783c5",
+        "title": "CI-001h: wire QA sign-off gate board audit as a scheduled CI job (qa)",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789658945,
+        "post_epoch": true,
+        "verdict": "pass",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "url",
+            "value": "https://github.com/zeldadil/password-manager/pull/17",
+            "exists": null,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "url",
+            "value": "https://github.com/zeldadil/password-manager/actions/runs/35238945449",
+            "exists": null,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": ".github/workflows/qa-signoff-audit.yml",
+            "exists": true,
+            "operative": true,
+            "via_ref": "c9fd1629ba64ba108025bf5168586f044a2fdd2f",
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_ea0783c5/README.md",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/signoff-gate.mjs",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": ".github/workflows/ci.yml",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "attachment",
+            "value": "CI-001h-evidence-README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "qa-signoff-audit.yml",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "ci.yml",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_ea0783c5/tests/evidence/t_ea0783c5/README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/password-manager/.worktrees/t_ea0783c5/.github/workflows/qa-signoff-audit.yml",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_ea0783c5/qa-signoff-audit.yml",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_ea0783c5/ci.yml",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_ea0783c5/README.md",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R2_QA_VERDICT_INVALID",
+          "detail": "verdict \"pass (comment 42)\" (run-metadata by architect) is not one of: pass, pass-with-conditions, fail, blocked"
+        }
+      ],
+      "advisories": [],
+      "facts": {
+        "task_id": "t_527d4720",
+        "title": "CI-001h follow-up: board transport for the scheduled QA sign-off audit (hosted runner cannot see ~/.hermes/kanban.db)",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789668999,
+        "post_epoch": true,
+        "verdict": "pass",
+        "invalid_verdicts": [
+          {
+            "token": "pass-comment-",
+            "raw": "pass (comment 42)",
+            "source": "run-metadata"
+          }
+        ],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "url",
+            "value": "https://github.com/zeldadil/password-manager/actions/runs/35253319631",
+            "exists": null,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "attachment",
+            "value": "ac-evidence.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "ac-evidence_1.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_527d4720/ac-evidence_1.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R2_QA_VERDICT_INVALID",
+          "detail": "verdict \"ROTATION\" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked"
+        },
+        {
+          "rule": "R2_QA_VERDICT_INVALID",
+          "detail": "verdict \"CHANGES\" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked"
+        },
+        {
+          "rule": "R2_QA_VERDICT_INVALID",
+          "detail": "verdict \"CHANGES\" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "X1_EXCEPTION",
+          "detail": "QA sign-off exception recorded by dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. This card was a P0 security incident (public credential leak); the credential was confirmed dead via provider API (Telegram getMe -"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_0af5aa3e/gitrepo-post-purge-final.md named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_0af5aa3e/gitrepo-post-purge-reverify.md named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_b51a1ff3/reproduce-review.sh named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A4_EVIDENCE_OFF_TREE",
+          "detail": "operative evidence scripts/qa/secret-guard.selftest.mjs is not in this checkout but exists in the repo at f9f38eb419740f862662be5c11477adcc5ac9e11 — accepted"
+        }
+      ],
+      "facts": {
+        "task_id": "t_80fc0326",
+        "title": "P0 follow-up: complete the public-repo purge of the leaked Telegram token (22/28 branch tips still expose it)",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789723905,
+        "post_epoch": true,
+        "verdict": "pass",
+        "invalid_verdicts": [
+          {
+            "token": "rotation",
+            "raw": "ROTATION",
+            "source": "qa-comment"
+          },
+          {
+            "token": "changes",
+            "raw": "CHANGES",
+            "source": "qa-comment"
+          },
+          {
+            "token": "changes",
+            "raw": "CHANGES",
+            "source": "qa-comment"
+          }
+        ],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_0af5aa3e/gitrepo-post-purge-final.md",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_0af5aa3e/gitrepo-post-purge-reverify.md",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/secret-guard.selftest.mjs",
+            "exists": true,
+            "operative": true,
+            "via_ref": "f9f38eb419740f862662be5c11477adcc5ac9e11",
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_b51a1ff3/reproduce-review.sh",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "attachment",
+            "value": "gitrepo-post-purge-reverify.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "QA-VERDICT-ROTATION.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "scan-final-gitleaks.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "scan-final-trufflehog.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_80fc0326/gitrepo-post-purge-reverify.md",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_80fc0326/QA-VERDICT-ROTATION.md",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_80fc0326/scan-final-gitleaks.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_80fc0326/scan-final-trufflehog.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": {
+          "reason": "closed by human decision (Ze), not by qa-profile QA-VERDICT comment. This card was a P0 security incident (public credential leak); the credential was confirmed dead via provider API (Telegram getMe -",
+          "author": "dashboard"
+        },
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [],
+      "facts": {
+        "task_id": "t_e348e0b7",
+        "title": "P0 follow-up: master secret-scan is a false negative — add full-history credential verification (truffleHog) to master CI",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789673137,
+        "post_epoch": true,
+        "verdict": "pass",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "url",
+            "value": "https://github.com/zeldadil/password-manager/actions/runs/35259047666",
+            "exists": null,
+            "operative": true,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "url",
+            "value": "https://github.com/zeldadil/password-manager/actions/runs/35261467319",
+            "exists": null,
+            "operative": true,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": ".github/workflows/ci.yml",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_e348e0b7/README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "dir",
+            "value": "tests/evidence/t_e348e0b7",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "A4_EVIDENCE_OFF_TREE",
+          "detail": "operative evidence tests/evidence/t_28951254/README.md is not in this checkout but exists in the repo at 3415bd51b4c79c00242608d9bcb1ddcd78e89df1 — accepted"
+        }
+      ],
+      "facts": {
+        "task_id": "t_28951254",
+        "title": "P0 follow-up: propagate the ROTATED Telegram token to all 7 profiles' .env (agent Telegram channel is DOWN)",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789678785,
+        "post_epoch": true,
+        "verdict": "pass",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_28951254/README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": "3415bd51b4c79c00242608d9bcb1ddcd78e89df1",
+            "origin": "marker-comment-comment"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R2_QA_VERDICT_INVALID",
+          "detail": "verdict \"changes\" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked"
+        },
+        {
+          "rule": "R2_QA_VERDICT_INVALID",
+          "detail": "verdict \"changes\" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked"
+        }
+      ],
+      "advisories": [
+        {
+          "rule": "X1_EXCEPTION",
+          "detail": "QA sign-off exception recorded by dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. Deliverable 3 (rotation decision) and the B1 guard-install claim were both independently verified by a human: sha256 of agent-hooks"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence scripts/qa/secret-guard.mjs named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A4_EVIDENCE_OFF_TREE",
+          "detail": "operative evidence scripts/qa/hooks/install-secret-guard.sh is not in this checkout but exists in the repo at 43f0d07ffb78cae3d3ace01ccfa6c2e0c742ae9f — accepted"
+        },
+        {
+          "rule": "A4_EVIDENCE_OFF_TREE",
+          "detail": "operative evidence scripts/qa/secret-guard.selftest.mjs is not in this checkout but exists in the repo at f9f38eb419740f862662be5c11477adcc5ac9e11 — accepted"
+        }
+      ],
+      "facts": {
+        "task_id": "t_b51a1ff3",
+        "title": "Security process: prevent secrets in Kanban comments/evidence (live credential was pasted on t_0af5aa3e) + rotation decision for that value",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789728224,
+        "post_epoch": true,
+        "verdict": null,
+        "invalid_verdicts": [
+          {
+            "token": "changes",
+            "raw": "changes",
+            "source": "qa-comment"
+          },
+          {
+            "token": "changes",
+            "raw": "changes",
+            "source": "qa-comment"
+          }
+        ],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "path",
+            "value": "scripts/qa/secret-guard.mjs",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/hooks/install-secret-guard.sh",
+            "exists": true,
+            "operative": true,
+            "via_ref": "43f0d07ffb78cae3d3ace01ccfa6c2e0c742ae9f",
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/secret-guard.selftest.mjs",
+            "exists": true,
+            "operative": true,
+            "via_ref": "f9f38eb419740f862662be5c11477adcc5ac9e11",
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "attachment",
+            "value": "REVIEW-t_b51a1ff3.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          }
+        ],
+        "exception": {
+          "reason": "closed by human decision (Ze), not by qa-profile QA-VERDICT comment. Deliverable 3 (rotation decision) and the B1 guard-install claim were both independently verified by a human: sha256 of agent-hooks",
+          "author": "dashboard"
+        },
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_5455942d/README.md named in a superseded verdict/handoff is absent from this checkout — report only"
+        }
+      ],
+      "facts": {
+        "task_id": "t_5455942d",
+        "title": "QA gate defect: signoff-gate hook blocks legitimate kanban_complete (resolves session id instead of task id, fails closed)",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789677292,
+        "post_epoch": true,
+        "verdict": "pass",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_5455942d/README.md",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "attachment",
+            "value": "t_5455942d-README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "t_5455942d-postfix-transcript.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "t_5455942d-verify-all-live.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "t_5455942d-hook-env-probe.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "prefix-transcript.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "postfix-transcript.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "selftest-matrix.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "verify-all-live.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "hook-env-probe.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "gate-fix.diff",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_5455942d/README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_5455942d/prefix-transcript.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_5455942d/postfix-transcript.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_5455942d/selftest-matrix.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_5455942d/verify-all-live.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_5455942d/hook-env-probe.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_5455942d/gate-fix.diff",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R1_QA_VERDICT_MISSING",
+          "detail": "no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card"
+        },
+        {
+          "rule": "R4_EVIDENCE_MISSING",
+          "detail": "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment"
+        }
+      ],
+      "advisories": [],
+      "facts": {
+        "task_id": "t_c3cb6842",
+        "title": "P1 gate-defect follow-up: review + verify signoff-gate.mjs regex fix (t_5455942d) from ROTATION false-positive",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789730863,
+        "post_epoch": true,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "X1_EXCEPTION",
+          "detail": "QA sign-off exception recorded by dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. This is the P0 child of t_80fc0326 (live rotated token in scripts/qa/secret-guard.selftest.mjs on fix/telegram-token-rotation-t_289"
+        }
+      ],
+      "facts": {
+        "task_id": "t_9b3bdba0",
+        "title": "P0 SECINCIDENT: LIVE rotated Telegram token committed in cleartext on public branch fix/telegram-token-rotation-t_28951254 (scripts/qa/secret-guard.selftest.mjs:41)",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789727502,
+        "post_epoch": true,
+        "verdict": null,
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [],
+        "exception": {
+          "reason": "closed by human decision (Ze), not by qa-profile QA-VERDICT comment. This is the P0 child of t_80fc0326 (live rotated token in scripts/qa/secret-guard.selftest.mjs on fix/telegram-token-rotation-t_289",
+          "author": "dashboard"
+        },
+        "security_track": false
+      }
+    },
+    {
+      "violations": [],
+      "advisories": [
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence scripts/qa/secret-guard.mjs named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence scripts/qa/signoff-gate.selftest.mjs named in a superseded verdict/handoff is absent from this checkout — report only"
+        },
+        {
+          "rule": "A5_EVIDENCE_SUPERSEDED",
+          "detail": "evidence tests/evidence/t_58280940 named in a superseded verdict/handoff is absent from this checkout — report only"
+        }
+      ],
+      "facts": {
+        "task_id": "t_58280940",
+        "title": "QA: gate R8 false positive blocks t_f49d448c (stale deferral marker, comment 92) + formal verdict",
+        "assignee": "qa",
+        "status": "done",
+        "completed_at": 1789765548,
+        "post_epoch": true,
+        "verdict": "pass",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "url",
+            "value": "https://github.com/zeldadil/password-manager/pull/25",
+            "exists": null,
+            "operative": true,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/signoff-gate.mjs",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/secret-guard.mjs",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "path",
+            "value": "scripts/qa/signoff-gate.selftest.mjs",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "dir",
+            "value": "tests/evidence/t_58280940",
+            "exists": false,
+            "operative": false,
+            "via_ref": null,
+            "origin": "qa-comment-comment"
+          },
+          {
+            "kind": "attachment",
+            "value": "README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "final-acceptance.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "selftest-GREEN-fixed-gate.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "selftest-RED-unfixed-gate.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "hook-ab-fixture.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "ab-live-unfixed-gate.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "ab-live-fixed-gate.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "ac1-installed-gate.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "audit-diff-prefix-vs-postfix.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "verify-all-live.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "fe001h-independent-verification.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "attachment",
+            "value": "secret-scan-evidence.txt",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/README.md",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/final-acceptance.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/selftest-GREEN-fixed-gate.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/selftest-RED-unfixed-gate.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/hook-ab-fixture.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/ab-live-unfixed-gate.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/ab-live-fixed-gate.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/ac1-installed-gate.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/audit-diff-prefix-vs-postfix.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/verify-all-live.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/fe001h-independent-verification.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          },
+          {
+            "kind": "abs",
+            "value": "/home/sap/.hermes/kanban/attachments/t_58280940/secret-scan-evidence.txt",
+            "exists": true,
+            "operative": false,
+            "via_ref": null,
+            "origin": "run-metadata.artifacts"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    },
+    {
+      "violations": [
+        {
+          "rule": "R5_EVIDENCE_FILE_MISSING",
+          "detail": "evidence file named in the operative verdict does not exist: tests/evidence/t_28f60dc1/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_7dd3b960/repo; not found on any ref)"
+        }
+      ],
+      "advisories": [],
+      "facts": {
+        "task_id": "t_28f60dc1",
+        "title": "ARCH: land the QA sign-off gate tooling on master (policy + selftest + installer/verifier) — root cause of recurring gate P1s",
+        "assignee": "architect",
+        "status": "done",
+        "completed_at": 1789765890,
+        "post_epoch": true,
+        "verdict": "pass",
+        "invalid_verdicts": [],
+        "deferral": null,
+        "evidence": [
+          {
+            "kind": "path",
+            "value": "tests/evidence/t_28f60dc1/README.md",
+            "exists": false,
+            "operative": true,
+            "via_ref": null,
+            "origin": "marker-comment-comment"
+          },
+          {
+            "kind": "attachment",
+            "value": "README.md",
+            "exists": true,
+            "operative": true,
+            "via_ref": null,
+            "origin": "attachment"
+          }
+        ],
+        "exception": null,
+        "security_track": false
+      }
+    }
+  ]
+}

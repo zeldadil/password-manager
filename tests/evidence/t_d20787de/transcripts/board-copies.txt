@@ -1,0 +1,19 @@
+=== board-t0.db (the pre-comment board copy every 'before' number comes from) ===
+-rw-r--r-- 1 sap sap 2338816 2026-09-19 07:05:45.088610473 +0000 /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/board-t0.db
+sha256: 47355a840c6188925259da614aedb82de7af01ce9c411355d1b92eb5ceb290dc
+tasks=149 comments=154 runs=600
+live board sha256 at capture time: 47355a840c6188925259da614aedb82de7af01ce9c411355d1b92eb5ceb290dc
+captured: 2026-09-19T07:05:45Z   (read-only sqlite3 .backup of /home/sap/.hermes/kanban.db)
+
+=== board-t1.db (captured after the six retro-verification comments were posted) ===
+sha256: 675811d1642e2a8487606ac0049968897cfd61ed2e4a8b7c166641368395f73d
+tasks=149 comments=166 runs=600
+delta vs t0: +12 comments
+
+=== live board mutations by this card: the six comments it was allowed to add ===
+161 | t_e348e0b7 | qa | 2026-09-19 07:14:01 | 3018 bytes
+162 | t_28951254 | qa | 2026-09-19 07:14:01 | 3288 bytes
+163 | t_2162d273 | qa | 2026-09-19 07:14:07 | 2258 bytes
+164 | t_527d4720 | qa | 2026-09-19 07:14:07 | 3361 bytes
+165 | t_c3cb6842 | qa | 2026-09-19 07:14:14 | 3715 bytes
+166 | t_80fc0326 | qa | 2026-09-19 07:14:14 | 2072 bytes

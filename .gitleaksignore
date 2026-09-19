@@ -1,16 +1,16 @@
-# .gitleaksignore — secret-scan exceptions
+# Known false positives from the repo's custom generic-api-key rule
+# (.gitleaks.toml), which matches on keyword + separator + 16+ word chars —
+# too broad to distinguish a real secret value from a property name whose
+# value happens to be a long camelCase identifier. Scoped per-fingerprint
+# (commit:file:rule:line), not a blanket regex change — see PR #16
+# merge-sweep discussion for the investigation.
 
-# DEPRECATED: The Telegram bot token that was introduced in a503e4d has been
-# purged from git history via filter-branch (P0 SEC-INCIDENT t_0af5aa3e).
-# The token value 8615677595:*** no longer exists in any commit.
-# This entry is kept for the transition period until CI is re-run post-rotation.
-# After the new token is in place and CI passes green, this file should be
-# reduced to only genuinely safe exclusions (test fixtures, etc.).
-#
-# IMPORTANT: The token must still be rotated by the repo owner (@user via @BotFather
-# /revoke + /token). History rewrite removes the old value from git, but does not
-# invalidate it on Telegram's servers. Branch protection on master blocks
-# force-push — a human admin must temporarily lift protection, push the rewritten
-# master, then re-enable it. See incident report in tests/evidence/.
-
-a503e4d:PROJECT_BRIEF.md:telegram-bot-api-token
+# scripts/qa/signoff-gate.mjs — three object literal properties (their key
+# is the word "token", their value a long camelCase helper call) in commit
+# 31b49b8 (QA-001h's original implementation). Dead code: this file was
+# already replaced by master's newer version (with the R5/author-rule
+# fixes from #29/#38) during the PR #16 merge, but gitleaks scans full
+# commit history, so the historical blob still matches.
+31b49b87081695c7d41dbf177518acd10c5ca18d:scripts/qa/signoff-gate.mjs:generic-api-key:176
+31b49b87081695c7d41dbf177518acd10c5ca18d:scripts/qa/signoff-gate.mjs:generic-api-key:189
+31b49b87081695c7d41dbf177518acd10c5ca18d:scripts/qa/signoff-gate.mjs:generic-api-key:205

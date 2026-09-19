@@ -1,0 +1,25 @@
+### (a) any commit touching that decision doc, on ANY ref
+(empty above = never committed)
+--- tests/evidence/t_33dcad7d on any ref ---
+--- grep the doc name across all commits ---
+5158381ddbcfe636436285169f3fa43abc58b658:.github/workflows/qa-signoff-audit.yml
+5158381ddbcfe636436285169f3fa43abc58b658:docs/decisions/qa-signoff-gate-followups-t_527d4720.md
+7f61f87bb85fdd03209843e127d7c61955b30675:.github/workflows/qa-signoff-audit.yml
+7f61f87bb85fdd03209843e127d7c61955b30675:docs/decisions/qa-signoff-gate-followups-t_527d4720.md
+78a057ea69f713e1feea0c6f36810661d714a3cb:.github/workflows/qa-signoff-audit.yml
+
+### (b) PROJECT_BRIEF.md on master: §9 / grandfathering text
+1:# PROJECT_BRIEF.md — Secure Password Manager
+9:## 1. Vision
+27:## 2. This project needs the `browser` agent
+32:## 3. Security sensitivity — security gate required
+38:## 4. Reference product & IP boundary
+54:## 5. Stack
+59:## 6. Roadmap (4 phases)
+71:## 7. Current backlog
+76:## 8. Open questions / TBD
+82:## 9. Decisions Log (from kickoff — 2026-09-16)
+--- lines mentioning grandfathered/pre-epoch/gate ---
+
+### (c) is the decision doc on the remote at all (name search, all refs)?
+--- docs/decisions on master ---
