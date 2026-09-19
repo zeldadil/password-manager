@@ -1,0 +1,74 @@
+# QA-001h evidence — audit of the non-vacuous fixture board
+# command: node scripts/qa/signoff-gate.mjs audit --db <fixture>/board.db --repo <fixture>/repo
+# date:    2026-09-17T14:51:24Z
+
+QA sign-off gate — audit (db: /tmp/signoff-gate-selftest-x6v6Hz/board.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 19  ·  pass: 9  ·  FAIL: 10
+  FAIL t_b000000b  BE-901 no QA verdict and no evidence @backend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+  FAIL t_b000000c  BE-902 verdict token outside the vocabulary @backend
+        R2_QA_VERDICT_INVALID: verdict "green" (marker-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/x/README.md (repo: /tmp/signoff-gate-selftest-x6v6Hz/repo)
+  FAIL t_b000000d  BE-903 fail verdict left on a done card @backend
+        R3_VERDICT_NOT_TERMINAL: card is done but its latest QA verdict is "fail"
+  FAIL t_b000000e  BE-904 blocked verdict left on a done card @backend
+        R3_VERDICT_NOT_TERMINAL: card is done but its latest QA verdict is "blocked"
+  FAIL t_b000000f  BE-905 verdict but no evidence @backend
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+  FAIL t_b0000010  BE-906 evidence file does not exist @backend
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_b0000010/does-not-exist.txt (repo: /tmp/signoff-gate-selftest-x6v6Hz/repo)
+  FAIL t_b0000011  BE-907 pass-with-conditions with no follow-up @backend
+        R6_CONDITIONS_UNTRACKED: pass-with-conditions verdict names no follow-up card id, issue/PR link, or follow-up item
+  FAIL t_b0000012  BE-908 crypto card without AR-6 sign-off @backend
+        R7_SECURITY_TRACK_SIGNOFF_MISSING: crypto/bridge/auth card carries no Architect sign-off comment (AR-6)
+  FAIL t_b0000013  BE-909 deferral points at a non-QA card @backend
+        R8_DEFERRAL_TARGET_INVALID: QA deferral target t_b0000000 is assigned to "backend", not a QA profile
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+  FAIL t_b0000014  BE-910 deferral points at a card that does not exist @backend
+        R8_DEFERRAL_TARGET_INVALID: QA deferral must name an existing card id (t_xxxxxxxx); got "t_deadbeef"
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+  ok   t_b0000000  BE-900a compliant card @backend
+  ok   t_b0000001  BE-900b crypto sign-off complete @backend
+  ok   t_b0000002  BE-900c evidence uploaded as an attachment @backend
+  ok   t_b0000003  QA-900a QA-owned artifact card (run metadata verdict) @qa
+  ok   t_b0000004  BE-900d deferral to a completed QA child @backend
+  ok   t_b0000005  QA-900b QA child card @qa
+  ok   t_b0000006  BE-900e deferral to an open QA child @backend
+        warn A2_DEFERRAL_OPEN: QA verdict deferred to t_b0000007 (qa, status=todo) — audit tracks it until it lands
+  ok   t_b0000008  BE-900f pass-with-conditions naming its follow-up @backend
+  ok   t_b000000a  BE-900h approved exception @backend
+        warn X1_EXCEPTION: QA sign-off exception recorded by qa: hotfix under incident INC-001, QA verdict waived for 24h
+  grandfathered (done before epoch — advisory only): 1
+      warn t_b0000009  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+exit=1
+
+# same board with --json (machine-readable; counts + per-card rule ids)
+exit=1
+ok: False counts: {'done_cards': 20, 'enforced': 19, 'failures': 10, 'grandfathered': 1}
+  t_b000000b  BE-901 no QA verdict and no evidence
+      R1_QA_VERDICT_MISSING
+      R4_EVIDENCE_MISSING
+  t_b000000c  BE-902 verdict token outside the vocabulary
+      R2_QA_VERDICT_INVALID
+      R1_QA_VERDICT_MISSING
+      R5_EVIDENCE_FILE_MISSING
+  t_b000000d  BE-903 fail verdict left on a done card
+      R3_VERDICT_NOT_TERMINAL
+  t_b000000e  BE-904 blocked verdict left on a done card
+      R3_VERDICT_NOT_TERMINAL
+  t_b000000f  BE-905 verdict but no evidence
+      R4_EVIDENCE_MISSING
+  t_b0000010  BE-906 evidence file does not exist
+      R5_EVIDENCE_FILE_MISSING
+  t_b0000011  BE-907 pass-with-conditions with no follow-up
+      R6_CONDITIONS_UNTRACKED
+  t_b0000012  BE-908 crypto card without AR-6 sign-off
+      R7_SECURITY_TRACK_SIGNOFF_MISSING
+  t_b0000013  BE-909 deferral points at a non-QA card
+      R8_DEFERRAL_TARGET_INVALID
+      R4_EVIDENCE_MISSING
+  t_b0000014  BE-910 deferral points at a card that does not exist
+      R8_DEFERRAL_TARGET_INVALID
+      R4_EVIDENCE_MISSING

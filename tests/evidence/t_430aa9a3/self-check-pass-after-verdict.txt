@@ -1,0 +1,8 @@
+QA sign-off gate — check t_430aa9a3 (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_430aa9a3  QA-001h: QA Sign-off Gate Policy @qa
+exit=0
+# QA-001h evidence — the gate applied to its own card (t_430aa9a3) AFTER the QA verdict comment
+# command: node scripts/qa/signoff-gate.mjs check --task t_430aa9a3 --pre-complete --db ~/.hermes/kanban.db --repo <worktree>
+# date: 2026-09-17T14:53:06Z
+# expected: exit=0 — verdict comment names committed evidence (tests/evidence/t_430aa9a3/README.md)

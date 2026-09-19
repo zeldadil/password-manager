@@ -1,0 +1,11 @@
+PR25 gate : counts = {"done_cards":43,"enforced":16,"failures":6,"grandfathered":27}
+master gate: counts = {"done_cards":43,"enforced":16,"failures":8,"grandfathered":27}
+
+=== cards whose rule outcome differs between the two gate revisions ===
+t_f49d448c  master-gate=R8_DEFERRAL_TARGET_INVALID   PR25-gate=ok
+      FE-001h: Lint/Type Config + CI
+t_58280940  master-gate=R8_DEFERRAL_TARGET_INVALID   PR25-gate=ok
+      QA: gate R8 false positive blocks t_f49d448c (stale deferral marker, comment 92) + formal verdict
+
+cards failing under master-gate only: t_f49d448c, t_58280940
+cards failing under PR25-gate only: (none)

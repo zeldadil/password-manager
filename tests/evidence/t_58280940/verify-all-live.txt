@@ -1,0 +1,112 @@
+# t_58280940 — verify-signoff-gate.sh --all --live (fixture board + fixture repo)
+# date: 2026-09-18T20:55:35Z
+
+QA sign-off gate verification — repo gate: /home/sap/.hermes/kanban/workspaces/t_58280940/pm-gate-fix/scripts/qa/signoff-gate.mjs
+
+── architect (/home/sap/.hermes/profiles/architect)
+   ok   - hook installed and executable: /home/sap/.hermes/profiles/architect/agent-hooks/qa-signoff-gate.sh
+   ok   - gate logic installed: /home/sap/.hermes/profiles/architect/agent-hooks/signoff-gate.mjs
+   ok   - installed gate matches the reviewed repo copy (sha256 0af4a4536328…)
+   ok   - config.yaml carries the hook command
+   ok   - config.yaml sets fail_closed: true
+   ok   - config.yaml sets hooks_auto_accept: true (non-TTY workers)
+   ok   - matcher scoped to kanban_complete
+   ok   - hermes config get hooks resolves the hook for this profile
+   ok   - hermes hooks list shows the hook
+   ok   - consent via hooks_auto_accept: true (headless workers do not need the interactive prompt)
+   FAIL - hermes hooks doctor reported issues beyond the expected mtime drift (2 warning(s)) — see /tmp/signoff-gate-doctor-architect.txt
+   ok   - live fire — non-compliant card t_fx000002 blocked (exit 2 + action:block)
+   ok   - live fire — compliant card t_fx000001 allowed (exit 0, no dispatcher contribution)
+
+── backend (/home/sap/.hermes/profiles/backend)
+   ok   - hook installed and executable: /home/sap/.hermes/profiles/backend/agent-hooks/qa-signoff-gate.sh
+   ok   - gate logic installed: /home/sap/.hermes/profiles/backend/agent-hooks/signoff-gate.mjs
+   ok   - installed gate matches the reviewed repo copy (sha256 0af4a4536328…)
+   ok   - config.yaml carries the hook command
+   ok   - config.yaml sets fail_closed: true
+   ok   - config.yaml sets hooks_auto_accept: true (non-TTY workers)
+   ok   - matcher scoped to kanban_complete
+   ok   - hermes config get hooks resolves the hook for this profile
+   ok   - hermes hooks list shows the hook
+   ok   - consent via hooks_auto_accept: true (headless workers do not need the interactive prompt)
+   warn - hermes hooks doctor: only the expected post-install mtime drift (approval refresh is interactive-only; hooks_auto_accept: true keeps the hook live — see the live fire below)
+   ok   - live fire — non-compliant card t_fx000002 blocked (exit 2 + action:block)
+   ok   - live fire — compliant card t_fx000001 allowed (exit 0, no dispatcher contribution)
+
+── browser (/home/sap/.hermes/profiles/browser)
+   ok   - hook installed and executable: /home/sap/.hermes/profiles/browser/agent-hooks/qa-signoff-gate.sh
+   ok   - gate logic installed: /home/sap/.hermes/profiles/browser/agent-hooks/signoff-gate.mjs
+   ok   - installed gate matches the reviewed repo copy (sha256 0af4a4536328…)
+   ok   - config.yaml carries the hook command
+   ok   - config.yaml sets fail_closed: true
+   ok   - config.yaml sets hooks_auto_accept: true (non-TTY workers)
+   ok   - matcher scoped to kanban_complete
+   ok   - hermes config get hooks resolves the hook for this profile
+   ok   - hermes hooks list shows the hook
+   ok   - consent via hooks_auto_accept: true (headless workers do not need the interactive prompt)
+   warn - hermes hooks doctor: only the expected post-install mtime drift (approval refresh is interactive-only; hooks_auto_accept: true keeps the hook live — see the live fire below)
+   ok   - live fire — non-compliant card t_fx000002 blocked (exit 2 + action:block)
+   ok   - live fire — compliant card t_fx000001 allowed (exit 0, no dispatcher contribution)
+
+── docs (/home/sap/.hermes/profiles/docs)
+   ok   - hook installed and executable: /home/sap/.hermes/profiles/docs/agent-hooks/qa-signoff-gate.sh
+   ok   - gate logic installed: /home/sap/.hermes/profiles/docs/agent-hooks/signoff-gate.mjs
+   ok   - installed gate matches the reviewed repo copy (sha256 0af4a4536328…)
+   ok   - config.yaml carries the hook command
+   ok   - config.yaml sets fail_closed: true
+   ok   - config.yaml sets hooks_auto_accept: true (non-TTY workers)
+   ok   - matcher scoped to kanban_complete
+   ok   - hermes config get hooks resolves the hook for this profile
+   ok   - hermes hooks list shows the hook
+   ok   - consent via hooks_auto_accept: true (headless workers do not need the interactive prompt)
+   FAIL - hermes hooks doctor reported issues beyond the expected mtime drift (2 warning(s)) — see /tmp/signoff-gate-doctor-docs.txt
+   ok   - live fire — non-compliant card t_fx000002 blocked (exit 2 + action:block)
+   ok   - live fire — compliant card t_fx000001 allowed (exit 0, no dispatcher contribution)
+
+── frontend (/home/sap/.hermes/profiles/frontend)
+   ok   - hook installed and executable: /home/sap/.hermes/profiles/frontend/agent-hooks/qa-signoff-gate.sh
+   ok   - gate logic installed: /home/sap/.hermes/profiles/frontend/agent-hooks/signoff-gate.mjs
+   ok   - installed gate matches the reviewed repo copy (sha256 0af4a4536328…)
+   ok   - config.yaml carries the hook command
+   ok   - config.yaml sets fail_closed: true
+   ok   - config.yaml sets hooks_auto_accept: true (non-TTY workers)
+   ok   - matcher scoped to kanban_complete
+   ok   - hermes config get hooks resolves the hook for this profile
+   ok   - hermes hooks list shows the hook
+   ok   - consent via hooks_auto_accept: true (headless workers do not need the interactive prompt)
+   warn - hermes hooks doctor: only the expected post-install mtime drift (approval refresh is interactive-only; hooks_auto_accept: true keeps the hook live — see the live fire below)
+   ok   - live fire — non-compliant card t_fx000002 blocked (exit 2 + action:block)
+   ok   - live fire — compliant card t_fx000001 allowed (exit 0, no dispatcher contribution)
+
+── product (/home/sap/.hermes/profiles/product)
+   ok   - hook installed and executable: /home/sap/.hermes/profiles/product/agent-hooks/qa-signoff-gate.sh
+   ok   - gate logic installed: /home/sap/.hermes/profiles/product/agent-hooks/signoff-gate.mjs
+   ok   - installed gate matches the reviewed repo copy (sha256 0af4a4536328…)
+   ok   - config.yaml carries the hook command
+   ok   - config.yaml sets fail_closed: true
+   ok   - config.yaml sets hooks_auto_accept: true (non-TTY workers)
+   ok   - matcher scoped to kanban_complete
+   ok   - hermes config get hooks resolves the hook for this profile
+   ok   - hermes hooks list shows the hook
+   ok   - consent via hooks_auto_accept: true (headless workers do not need the interactive prompt)
+   warn - hermes hooks doctor: only the expected post-install mtime drift (approval refresh is interactive-only; hooks_auto_accept: true keeps the hook live — see the live fire below)
+   ok   - live fire — non-compliant card t_fx000002 blocked (exit 2 + action:block)
+   ok   - live fire — compliant card t_fx000001 allowed (exit 0, no dispatcher contribution)
+
+── qa (/home/sap/.hermes/profiles/qa)
+   ok   - hook installed and executable: /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh
+   ok   - gate logic installed: /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs
+   ok   - installed gate matches the reviewed repo copy (sha256 0af4a4536328…)
+   ok   - config.yaml carries the hook command
+   ok   - config.yaml sets fail_closed: true
+   ok   - config.yaml sets hooks_auto_accept: true (non-TTY workers)
+   ok   - matcher scoped to kanban_complete
+   ok   - hermes config get hooks resolves the hook for this profile
+   ok   - hermes hooks list shows the hook
+   ok   - consent via hooks_auto_accept: true (headless workers do not need the interactive prompt)
+   FAIL - hermes hooks doctor reported issues beyond the expected mtime drift (2 warning(s)) — see /tmp/signoff-gate-doctor-qa.txt
+   ok   - live fire — non-compliant card t_fx000002 blocked (exit 2 + action:block)
+   ok   - live fire — compliant card t_fx000001 allowed (exit 0, no dispatcher contribution)
+
+verification: 84 ok · 4 warn · 3 FAIL
+exit=1

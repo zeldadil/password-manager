@@ -1,0 +1,39 @@
+# t_58280940 — hook mode A/B on the fixture board (no kanban identity vars in the env)
+# date: 2026-09-18T20:56:26Z  ·  node v22.23.2
+# fixture board: /tmp/signoff-fixture-CqzG6K/board.db
+# cards: t_fx000001 compliant · t_fx000002 non-compliant
+#        t_fx000003 stale deferral marker to a non-QA card + later QA verdict (t_58280940 shape)
+# pre-fix  gate: /tmp/gate-red/signoff-gate.mjs (sha256 44e15f95fcf1…)  == origin/master f74fb09
+# fixed    gate: /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs (sha256 0af4a4536328…)
+
+═══ pre-fix gate: /tmp/gate-red/signoff-gate.mjs
+
+--- card t_fx000001
+exit=0
+decision=allow ({})
+
+--- card t_fx000002
+exit=2
+decision=block
+resolved_task=t_fx000002R1_QA_VERDICT_MISSING R4_EVIDENCE_MISSING 
+
+--- card t_fx000003
+exit=2
+decision=block
+resolved_task=t_fx000003R8_DEFERRAL_TARGET_INVALID 
+
+═══ fixed gate: /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs
+
+--- card t_fx000001
+exit=0
+decision=allow ({})
+
+--- card t_fx000002
+exit=2
+decision=block
+resolved_task=t_fx000002R1_QA_VERDICT_MISSING R4_EVIDENCE_MISSING 
+
+--- card t_fx000003
+exit=0
+decision=allow ({})
+

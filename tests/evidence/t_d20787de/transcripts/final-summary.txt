@@ -1,0 +1,13 @@
+=== T2 (all seven comments present) ===
+  enforced (done at/after epoch or pre-complete): 24  ·  pass: 20  ·  FAIL: 4
+
+=== per-card before/after/final ===
+  t_e348e0b7  t0=FAIL  t1=ok  t2=ok
+  t_28951254  t0=FAIL  t1=ok  t2=ok
+  t_2162d273  t0=FAIL  t1=ok  t2=ok
+  t_527d4720  t0=FAIL  t1=FAIL  t2=FAIL
+  t_80fc0326  t0=FAIL  t1=FAIL  t2=FAIL
+  t_c3cb6842  t0=FAIL  t1=ok  t2=ok
+  t_d20787de  t0=(not enforced)  t1=(not enforced)  t2=(not enforced)
+  t_7918f010  t0=FAIL  t1=FAIL  t2=FAIL
+  t_b51a1ff3  t0=FAIL  t1=FAIL  t2=FAIL

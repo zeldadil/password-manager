@@ -1,0 +1,88 @@
+=== environment ===
+trufflehog: trufflehog 3.97.5
+gitleaks:   8.30.1
+clone:      /home/sap/password-manager-check (146 commits reachable)
+date:       2026-09-19T07:09:06Z
+
+=== M1a. the exact command master CI runs, on the real clone (trufflehog git file://. --results=verified,unknown --fail) ===
+exit code: 0   (183 = findings found; 0 = clean)
+verified findings:   0
+0
+unverified findings: 0
+0
+distinct files with a finding:
+--- stderr (redacted) ---
+{"level":"info-0","ts":"2026-09-19T07:09:09Z","logger":"trufflehog","msg":"running source","source_manager_worker_id":"VbJD8","with_units":true}
+{"level":"info-0","ts":"2026-09-19T07:09:09Z","logger":"trufflehog","msg":"scanning repo","source_manager_worker_id":"VbJD8","unit_kind":"dir","unit":"/tmp/trufflehog-8773-1028889603","repo":"file:///home/sap/password-manager-check"}
+{"level":"info-0","ts":"2026-09-19T07:09:09Z","logger":"trufflehog","msg":"finished scanning","chunks":1639,"bytes":5019682,"verified_secrets":0,"unverified_secrets":0,"scan_duration":"558.265623ms","trufflehog_version":"3.97.5","verification_caching":{"Hits":0,"Misses":1,"HitsWasted":0,"AttemptsSaved":0,"VerificationTimeSpentMS":203}}
+
+=== M1b. gitleaks detect over the same clone (all-refs history equivalent), redacted ===
+exit code: 1   (1 = leaks found)
+findings: 5
+
+=== M2. t_28951254 branch: gitleaks over the branch's own history (AC5 sensor) ===
+branch tip: 43f0d07  HEAD
+gitleaks exit code (branch history): 1
+findings: 4
+--- token-shaped strings on the branch tip tree (count) ---
+0
+--- evidence README present? ---
+total 16
+drwxr-xr-x 2 sap sap 4096 Sep 19 07:09 .
+drwxr-xr-x 4 sap sap 4096 Sep 19 07:09 ..
+-rw-r--r-- 1 sap sap 4972 Sep 19 07:09 README.md
+--- evidence README, redacted (first 40 lines) ---
+# Evidence — t_28951254 (Telegram token rotation propagation)
+
+**Date:** 2026-09-17T20:29:15Z UTC  
+**Task:** t_28951254 — P0 follow-up: propagate the ROTATED Telegram token to all 7 profiles' `.env`  
+**Parent:** t_0af5aa3e (QA rotation verdict, pass-with-conditions)  
+
+---
+
+## 1. Source of truth
+
+The rotated token was read programmatically from the Kanban board —
+newest `dashboard` comment on card `t_0af5aa3e` — via:
+
+```
+sqlite3 ~/.hermes/kanban.db   "select body from task_comments where task_id='t_0af5aa3e' and author='dashboard'    order by created_at desc limit 1;" | grep -oE '[0-9]{8,12}:[A-Za-z0-9_-]{35}' | head -1
+```
+
+**The token value is NOT reproduced anywhere in this file.**
+All references below are either `<TOKEN-REDACTED>` placeholders or
+sha256 hashes of the value.
+
+Rotated token length: 46 characters
+Rotated token sha256: verified per-file match against each .env (hash not published — see secret-handling statement below).  
+
+---
+
+## 2. Per-profile .env state (after update)
+
+Every profile now has exactly one uncommented `TELEGRAM_BOT_TOKEN` line
+with the rotated value.  For each profile the line as it appears in the
+file (token redacted):
+
+  architect: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  backend: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  browser: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  docs: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  frontend: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  product: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+  qa: TELEGRAM_BOT_TOKEN=<TOKEN-REDACTED>
+
+
+=== M2b. .gitleaksignore content on the branch (documented exclusion?) ---
+# .gitleaksignore — secret-scan exceptions
+
+# Commit a503e4d introduced a Telegram bot token in PROJECT_BRIEF.md §9.
+# The line has been scrubbed (commit 2e27da2), but the value persists in git history.
+# This entry suppresses that specific historical leak so PRs aren't blocked by a
+# commit that predates them. The token must still be rotated by the repo owner.
+
+a503e4d:PROJECT_BRIEF.md:telegram-bot-api-token
+# Commit 9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859 published the rotated token's
+# sha256 in evidence README (a derived artifact, not the secret itself).
+# Removed in 3415bd5. Suppress so CI secret-scan passes on this branch.
+9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859:tests/evidence/t_28951254/README.md:generic-api-key:22
