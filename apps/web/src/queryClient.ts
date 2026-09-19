@@ -14,16 +14,16 @@ import { QueryClient } from '@tanstack/react-query'
  */
 
 /** Time (ms) a server-state query is considered fresh before it refetches. */
-export const DEFAULT_STALE_TIME_MS = 30_000;
+export const DEFAULT_STALE_TIME_MS = 30_000
 
 /** Time (ms) inactive query data is retained in the cache after its last observer unmounts. */
-export const DEFAULT_GC_TIME_MS = 5 * 60_000;
+export const DEFAULT_GC_TIME_MS = 5 * 60_000
 
 /** Retry count for failed reads (transient network errors only). */
-export const DEFAULT_QUERY_RETRIES = 2;
+export const DEFAULT_QUERY_RETRIES = 2
 
 /** Retry count for failed writes — mutations are never auto-retried (idempotency risk). */
-export const DEFAULT_MUTATION_RETRIES = 0;
+export const DEFAULT_MUTATION_RETRIES = 0
 
 /**
  * Build a fresh {@link QueryClient} with the project's default options.
@@ -45,8 +45,8 @@ export function createQueryClient(): QueryClient {
         retry: DEFAULT_MUTATION_RETRIES,
       },
     },
-  });
+  })
 }
 
 /** The application-wide query client, mounted once at the app root in `main.tsx`. */
-export const queryClient = createQueryClient();
+export const queryClient = createQueryClient()
