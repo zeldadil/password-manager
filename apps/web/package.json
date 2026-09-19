@@ -2,7 +2,7 @@
   "name": "@password-manager/web",
   "version": "0.1.0",
   "private": true,
-  "description": "React 18 + TypeScript + Vite \u2014 Web UI",
+  "description": "React 18 + TypeScript + Vite — Web UI",
   "type": "module",
   "scripts": {
     "dev": "vite",
