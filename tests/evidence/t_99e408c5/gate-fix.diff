@@ -1,0 +1,609 @@
+# t_99e408c5 — delta against the revision installed before this card
+# date: 2026-09-18T21:34:23Z
+# prefix gate:  origin/qa/t_58280940-r8-stale-deferral  sha256 0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55
+# fixed gate:   working tree    sha256 28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab
+# prefix selftest: sha256 110e6f8a411a67ac171892cbd23e2221aafa43caa95e33f7d39d526b4226a8a7
+# fixed selftest:  sha256 927704684963a76e704caac46798dd5b7f8f47368a9be664a427786b0da2e850
+# (the doc is not on master at all; the prefix here is the newest doc revision in the gate lane)
+
+## scripts/qa/signoff-gate.mjs
+--- a/scripts/qa/signoff-gate.mjs (prefix)
++++ b/scripts/qa/signoff-gate.mjs (t_99e408c5)
+@@ -42,7 +42,12 @@
+  *   - a deferral marker is operative only while it is the **newest** QA record
+  *     on the card (§3 "the newest source is the operative verdict"): a
+  *     `QA-VERDICT: deferred — t_xxxxxxxx` comment that a later verdict has
+- *     superseded is history, not a live block (t_58280940).
++ *     superseded is history, not a live block (t_58280940);
++ *   - R5 resolves only the evidence the operative verdict **claims**: the paths
++ *     inside an `Evidence:`/`Artifacts:` label, or — when the comment carries no
++ *     label — the paths outside code spans/fences. A path the verdict merely
++ *     *cites* about another card is reported as `A6_EVIDENCE_CITED` and never as
++ *     this card's missing evidence (t_99e408c5; QA_SIGN_OFF_GATE.md §5.7).
+  */
+ import { execFileSync } from "node:child_process";
+ import { existsSync, readFileSync } from "node:fs";
+@@ -99,6 +104,87 @@
+ const EVIDENCE_ABS_RE = /(?:^|[\s`("'[])(\/[\w./@-]+\.[a-z0-9]{1,8})(?=[\s`)"'\].,;:]|$)/gm;
+ const EVIDENCE_DIR_RE = /(?:^|[\s`("'[])((?:tests|docs|architecture)\/[\w./-]+\/)(?=[\s`)"'\].,;:]|$)/gm;
+ 
++/**
++ * The **evidence label** (§5.7): the recorded convention that separates the
++ * evidence a verdict claims from a path it merely cites about another card.
++ * `Evidence:` — bold (`**Evidence:**`), bulleted, or mid-sentence — plus
++ * `Artifacts:` / `Attachments:`.
++ */
++const EVIDENCE_LABEL_RE = /(?:^|[^\w])(?:evidence|artifacts?|attachments?)[ \t]*(?::|—|–)/gi;
++
++// ─────────────────────────────────────────────────────────────────────────────
++// Claimed vs cited evidence (§5.7, t_99e408c5)
++// ─────────────────────────────────────────────────────────────────────────────
++
++/**
++ * Character ranges of markdown code spans (`` `…` ``) and fenced blocks in a
++ * comment body. A path inside them is documentation — a pasted command, a quoted
++ * recording template, a defect transcript — rather than evidence, by the same
++ * principle that already governs deferral markers (t_c3cb6842 / t_58280940).
++ */
++export function codeRanges(text) {
++  const ranges = [];
++  let offset = 0;
++  let fence = null;
++  for (const line of text.split("\n")) {
++    const start = offset;
++    const m = /^[ \t]{0,3}(`{3,}|~{3,})/.exec(line);
++    if (m) {
++      if (!fence) fence = { start, token: m[1][0] };
++      else if (m[1][0] === fence.token) {
++        ranges.push([fence.start, start + line.length]);
++        fence = null;
++      }
++    }
++    offset = start + line.length + 1;
++  }
++  if (fence) ranges.push([fence.start, text.length]);
++  for (let i = 0; i < text.length; i++) {
++    if (text[i] !== "`" || insideRanges(i, ranges)) continue;
++    let n = 0;
++    while (text[i + n] === "`") n++;
++    const close = closingBackticks(text, i + n, n, ranges);
++    i += n - 1;
++    if (close === -1) continue;
++    ranges.push([i, close + n]);
++    i = close + n - 1;
++  }
++  return ranges.sort((a, b) => a[0] - b[0]);
++}
++
++/** Offset of the next backtick run of exactly `n` backticks, outside `ranges`. */
++function closingBackticks(text, from, n, ranges) {
++  for (let j = from; j < text.length; j++) {
++    if (text[j] !== "`" || insideRanges(j, ranges)) continue;
++    let run = 0;
++    while (text[j + run] === "`") run++;
++    if (run === n) return j;
++    j += run - 1;
++  }
++  return -1;
++}
++
++function insideRanges(index, ranges) {
++  return ranges.some(([a, b]) => index >= a && index < b);
++}
++
++/**
++ * The regions an operative verdict claims as its own evidence: from just after
++ * each evidence label to the end of that paragraph (a blank line, heading or
++ * table row closes it). A label *inside* a code span/fence is a quoted template,
++ * not a claim.
++ */
++function evidenceLabelRegions(text, ranges) {
++  const regions = [];
++  for (const m of text.matchAll(EVIDENCE_LABEL_RE)) {
++    if (insideRanges(m.index, ranges)) continue;
++    const start = m.index + m[0].length;
++    const stop = text.slice(start).search(/\n[ \t]*\n|\n#{1,6}[ \t]|\n[ \t]*\|/);
++    regions.push([start, stop === -1 ? text.length : start + stop]);
++  }
++  return regions;
++}
++
+ // ─────────────────────────────────────────────────────────────────────────────
+ // Board access
+ // ─────────────────────────────────────────────────────────────────────────────
+@@ -299,36 +385,64 @@
+ }
+ 
+ /**
+- * Evidence pointers, tagged with whether they belong to the **operative**
+- * (newest) verdict — the only verdict whose paths R5 resolves (t_5455942d
+- * defect 2: a superseded verdict or an earlier handoff naming an artifact that
+- * lives on another branch must not make a compliant card uncompletable).
++ * Evidence pointers. Each pointer carries a `scope`:
++ *
++ *   claim     — the operative verdict presents it as **its own** evidence
++ *               (§5.7: inside an `Evidence:` label, or, without a label,
++ *               anywhere outside a code span/fence). Only claims are resolved
++ *               by R5.
++ *   citation  — named in the operative verdict but not claimed: the verdict is
++ *               quoting a path about another card (a defect report, a
++ *               cross-check). Reported as A6, never as this card's gap
++ *               (t_99e408c5).
++ *   history   — a superseded verdict or an earlier handoff named it (t_5455942d
++ *               defect 2): reported as A5 at most.
++ *
++ * `operative` is kept as the boolean projection of `scope === "claim"` so the
++ * facts JSON stays readable.
+  */
+ export function collectEvidence(board, task, repoRoot) {
+   const pointers = [];
+-  const push = (kind, value, origin, operative = false) => {
++  const rank = { history: 1, citation: 2, claim: 3 };
++  const push = (kind, value, origin, scope = "history") => {
+     const v = String(value).trim();
+     if (!v) return;
+     const existing = pointers.find((p) => p.kind === kind && p.value === v);
+     if (existing) {
+-      if (operative) existing.operative = true;
++      if (rank[scope] > rank[existing.scope]) {
++        existing.scope = scope;
++        existing.operative = scope === "claim";
++        existing.origin = origin;
++      }
+       return;
+     }
+-    pointers.push({ kind, value: v, origin, operative });
++    pointers.push({ kind, value: v, origin, scope, operative: scope === "claim" });
+   };
+ 
+   const verdicts = collectVerdicts(board, task).filter((v) => v.comment);
+   const operativeVerdict = verdicts.length ? verdicts[verdicts.length - 1] : null;
+   for (const v of verdicts) {
+-    const op = v === operativeVerdict;
+-    for (const m of v.comment.matchAll(EVIDENCE_URL_RE)) push("url", m[0], `${v.source}-comment`, op);
+-    for (const m of v.comment.matchAll(EVIDENCE_MD_LINK_RE)) pushClassified(push, m[1], `${v.source}-comment`, op);
+-    for (const m of v.comment.matchAll(EVIDENCE_PATH_RE)) push("path", m[1], `${v.source}-comment`, op);
+-    for (const m of v.comment.matchAll(EVIDENCE_ABS_RE)) push("abs", m[1], `${v.source}-comment`, op);
+-    for (const m of v.comment.matchAll(EVIDENCE_DIR_RE)) push("dir", m[1].replace(/\/$/, ""), `${v.source}-comment`, op);
++    const isOperative = v === operativeVerdict;
++    const text = v.comment;
++    // Claimed vs cited is only a question for the operative verdict — an older
++    // one is history whatever it named.
++    const ranges = isOperative ? codeRanges(text) : [];
++    const labelRegions = isOperative ? evidenceLabelRegions(text, ranges) : [];
++    const scopeAt = (index) => {
++      if (!isOperative) return "history";
++      if (labelRegions.length) return insideRanges(index, labelRegions) ? "claim" : "citation";
++      return insideRanges(index, ranges) ? "citation" : "claim";
++    };
++    for (const m of text.matchAll(EVIDENCE_URL_RE)) push("url", m[0], `${v.source}-comment`, scopeAt(m.index));
++    for (const m of text.matchAll(EVIDENCE_MD_LINK_RE)) pushClassified(push, m[1], `${v.source}-comment`, scopeAt(m.index + 2));
++    for (const m of text.matchAll(EVIDENCE_PATH_RE)) push("path", m[1], `${v.source}-comment`, scopeAt(m.index + m[0].length - m[1].length));
++    for (const m of text.matchAll(EVIDENCE_ABS_RE)) push("abs", m[1], `${v.source}-comment`, scopeAt(m.index + m[0].length - m[1].length));
++    for (const m of text.matchAll(EVIDENCE_DIR_RE)) {
++      push("dir", m[1].replace(/\/$/, ""), `${v.source}-comment`, scopeAt(m.index + m[0].length - m[1].length));
++    }
+   }
+   for (const a of board.attachmentsByTask.get(task.id) || []) {
+-    push("attachment", a.filename, "attachment", true);
++    push("attachment", a.filename, "attachment", "claim");
+     const last = pointers[pointers.length - 1];
+     if (last && last.value === a.filename) last.stored_path = a.stored_path;
+   }
+@@ -342,7 +456,7 @@
+       String(operativeVerdict.runId) === String(r.id);
+     for (const key of ["artifacts", "evidence"]) {
+       if (!Array.isArray(md[key])) continue;
+-      for (const item of md[key]) pushClassified(push, String(item), `run-metadata.${key}`, op);
++      for (const item of md[key]) pushClassified(push, String(item), `run-metadata.${key}`, op ? "claim" : "history");
+     }
+   }
+ 
+@@ -362,17 +476,17 @@
+   return pointers;
+ }
+ 
+-function pushClassified(push, value, origin, operative = false) {
++function pushClassified(push, value, origin, scope = "history") {
+   const v = String(value).trim();
+   if (!v) return;
+   if (/^https?:\/\//.test(v)) {
+-    if (/github\.com\/[\w.-]+\/[\w.-]+\/(actions\/runs\/\d+|pull\/\d+|issues\/\d+)/.test(v)) push("url", v, origin, operative);
++    if (/github\.com\/[\w.-]+\/[\w.-]+\/(actions\/runs\/\d+|pull\/\d+|issues\/\d+)/.test(v)) push("url", v, origin, scope);
+     return;
+   }
+-  if (isAbsolute(v)) return push("abs", v, origin, operative);
++  if (isAbsolute(v)) return push("abs", v, origin, scope);
+   const clean = v.replace(/^\.\//, "").split("#")[0];
+-  if (/\.(md|txt|json|xml|mjs|cjs|ts|tsx|js|html|sarif|log|png|jpg|svg|ya?ml|csv)$/i.test(clean)) return push("path", clean, origin, operative);
+-  if (/\/(tests|docs|architecture)\//.test(`/${clean}`)) return push("dir", clean.replace(/\/$/, ""), origin, operative);
++  if (/\.(md|txt|json|xml|mjs|cjs|ts|tsx|js|html|sarif|log|png|jpg|svg|ya?ml|csv)$/i.test(clean)) return push("path", clean, origin, scope);
++  if (/\/(tests|docs|architecture)\//.test(`/${clean}`)) return push("dir", clean.replace(/\/$/, ""), origin, scope);
+ }
+ 
+ /**
+@@ -437,12 +551,14 @@
+   // branch is real evidence (§5.3), just not in this worker's checkout.
+   const offTree = [];
+   for (const p of missingFiles) {
+-    if (!p.operative || p.kind === "attachment") continue;
++    if (p.kind === "attachment" || p.scope === "history") continue;
+     const ref = findOnAnyRef(repoRoot, p.value);
+     if (!ref) continue;
+     p.exists = true;
+     p.viaRef = ref;
+-    offTree.push(p);
++    // A *cited* path the repo does hold needs no advisory at all; a claimed one
++    // is the accepted off-tree case (A4).
++    if (p.scope === "claim") offTree.push(p);
+   }
+ 
+   const facts = {
+@@ -460,6 +576,7 @@
+       value: p.value,
+       exists: p.exists ?? null,
+       operative: Boolean(p.operative),
++      scope: p.scope,
+       via_ref: p.viaRef || null,
+       origin: p.origin,
+     })),
+@@ -510,24 +627,37 @@
+   if (!exception && evidence.length === 0) {
+     add(
+       "R4_EVIDENCE_MISSING",
+-      "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment",
++      "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)",
+     );
+   }
+ 
+-  // R5 — a named evidence file/directory must exist. Scoped to the **operative**
+-  // (newest) verdict: a path recorded by a superseded verdict or an earlier
+-  // worker's handoff is history and must not make a compliant card
+-  // uncompletable (t_5455942d defect 2) — it is reported as A5 instead.
++  // R5 — a **claimed** evidence file/directory must exist. Two scopings narrow
++  // this, both of them availability fixes rather than relaxations:
++  //  * to the **operative** (newest) verdict: a path recorded by a superseded
++  //    verdict or an earlier worker's handoff is history and must not make a
++  //    compliant card uncompletable (t_5455942d defect 2) — reported as A5;
++  //  * to the paths that verdict **claims as its own** (§5.7): a path it merely
++  //    quotes about another card — a defect report, a cross-check, a pasted
++  //    transcript — is not this card's evidence and is reported as A6
++  //    (t_99e408c5: the QA card that reported a broken pointer elsewhere became
++  //    uncompletable for naming it).
+   // A4 marks the accepted off-tree case; A3 the "cannot verify at all" case.
+   const adjudicated = missingFiles.filter((p) => p.exists === false);
+   for (const p of adjudicated) {
+-    if (!p.operative) {
++    if (p.scope === "citation") {
++      advise(
++        "A6_EVIDENCE_CITED",
++        `evidence ${p.value} is only cited in the operative verdict (outside its §5.7 evidence label, or inside a code span) — not claimed as this card's evidence, report only`,
++      );
++      continue;
++    }
++    if (p.scope !== "claim") {
+       advise("A5_EVIDENCE_SUPERSEDED", `evidence ${p.value} named in a superseded verdict/handoff is absent from this checkout — report only`);
+       continue;
+     }
+     add(
+       "R5_EVIDENCE_FILE_MISSING",
+-      `evidence ${p.kind === "dir" ? "directory" : "file"} named in the operative verdict does not exist: ${p.value}${repoRoot ? ` (repo: ${repoRoot}; not found on any ref)` : ""}`,
++      `evidence ${p.kind === "dir" ? "directory" : "file"} claimed by the operative verdict (§5.7) does not exist: ${p.value}${repoRoot ? ` (repo: ${repoRoot}; not found on any ref)` : ""}`,
+     );
+   }
+   for (const p of offTree) {
+
+## scripts/qa/signoff-gate.selftest.mjs
+--- a/scripts/qa/signoff-gate.selftest.mjs (prefix)
++++ b/scripts/qa/signoff-gate.selftest.mjs (t_99e408c5)
+@@ -359,6 +359,98 @@
+   completed: null,
+ });
+ 
++// ── t_99e408c5 regression fixtures ──────────────────────────────────────────
++// A verdict that *reports* a broken evidence pointer on another card names that
++// card's path while recording its own. Naming is not claiming: R5 may resolve
++// only the paths the verdict presents as its own evidence (QA_SIGN_OFF_GATE.md
++// §5.7 — `Evidence:` label, outside code spans/fences); every other path in the
++// operative verdict is a *citation* and is reported as `A6_EVIDENCE_CITED`.
++const CITED_ABSENT = "t_fffffff1"; // never committed on any ref
++const CITED_PRESENT = "t_fffffff2"; // artifact exists in the fixture checkout
++fixtureFile(`tests/evidence/${CITED_PRESENT}/README.md`);
++
++const QUOTED_PATH_REPORT = card({
++  title: "QA-920 operative verdict reports another card's missing evidence (the reported instance)",
++  body: "**Test Types:** meta",
++  assignee: "qa",
++  comments: [
++    qaVerdict(
++      [
++        "## QA-VERDICT: pass — delivered, owners named for what remains",
++        "",
++        "**Evidence:** tests/evidence/__ID__/README.md and the transcripts in that directory.",
++        "",
++        `**Also reported:** R5 finding on \`${CITED_ABSENT}\` (its verdict names \`tests/evidence/${CITED_ABSENT}/README.md\`, absent from every ref) — commented on that card for its owner.`,
++        "",
++        "```",
++        `FAIL ${CITED_ABSENT} architect :: R5_EVIDENCE_FILE_MISSING`,
++        `  evidence file named in the operative verdict does not exist: tests/evidence/${CITED_ABSENT}/README.md`,
++        "```",
++      ].join("\n"),
++    ),
++  ],
++});
++fixtureFile(`tests/evidence/${QUOTED_PATH_REPORT}/README.md`);
++
++const QUOTED_PATH_PRESENT = card({
++  title: "QA-921 operative verdict cites another card's artifact that does exist",
++  body: "**Test Types:** meta",
++  assignee: "qa",
++  comments: [
++    qaVerdict(
++      [
++        "QA-VERDICT: pass — cross-checked against the neighbouring card's record.",
++        "",
++        "**Evidence:** tests/evidence/__ID__/README.md",
++        "",
++        `Cross-checked with \`tests/evidence/${CITED_PRESENT}/README.md\` (that card's artifact).`,
++      ].join("\n"),
++    ),
++  ],
++});
++fixtureFile(`tests/evidence/${QUOTED_PATH_PRESENT}/README.md`);
++
++// Controls: a *claimed* artifact that does not exist still fails R5 — the fix
++// must not degenerate into "ignore missing evidence".
++const LABELLED_MISSING = card({
++  title: "QA-922 labelled evidence file is missing (R5 control)",
++  body: "**Test Types:** meta",
++  assignee: "qa",
++  comments: [qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/claimed-missing.md")],
++});
++
++const LABELLED_MISSING_CODESPAN = card({
++  title: "QA-923 labelled evidence file is missing, written in a code span (R5 control)",
++  body: "**Test Types:** meta",
++  assignee: "qa",
++  comments: [qaVerdict("QA-VERDICT: pass — **Evidence:** `tests/evidence/__ID__/claimed-missing-codespan.md`")],
++});
++
++// No evidence label at all: a path inside a code span is documentation (A6),
++// while a path in plain prose is still a claim (R5).
++const NOLABEL_CODESPAN_MISSING = card({
++  title: "QA-924 no label: a quoted path in a code span is a citation, not a claim",
++  body: "**Test Types:** meta",
++  assignee: "qa",
++  comments: [
++    qaVerdict(
++      [
++        "QA-VERDICT: pass — 12/12 green, transcript at tests/evidence/__ID__/README.md",
++        "",
++        `Reported on \`${CITED_ABSENT}\`: \`tests/evidence/${CITED_ABSENT}/README.md\` is absent from every ref.`,
++      ].join("\n"),
++    ),
++  ],
++});
++fixtureFile(`tests/evidence/${NOLABEL_CODESPAN_MISSING}/README.md`);
++
++const NOLABEL_PROSE_MISSING = card({
++  title: "QA-925 no label: a path in plain prose is still the card's claim (R5 control)",
++  body: "**Test Types:** meta",
++  assignee: "qa",
++  comments: [qaVerdict("QA-VERDICT: pass — see tests/evidence/__ID__/prose-missing.md for the transcript.")],
++});
++
+ // ── fixture git repo: evidence committed on an earlier ref (A4 case) ────────
+ const gitRepo = join(root, "gitrepo");
+ const refOnlyRel = `tests/evidence/${REF_ONLY}/ref-only.md`;
+@@ -589,6 +681,69 @@
+   );
+ }
+ 
++console.log("\n1c. t_99e408c5 regressions (R5 adjudicates claims, not citations):");
++{
++  const quoted = gateJson(QUOTED_PATH_REPORT);
++  const cited = quoted.parsed ? quoted.parsed.facts.evidence.filter((e) => e.value.includes(CITED_ABSENT)) : [];
++  check(
++    "a verdict quoting another card's missing path is NOT blocked by R5 (the reported instance)",
++    quoted.code === 0 &&
++      quoted.parsed !== null &&
++      !violationRules(quoted).includes("R5_EVIDENCE_FILE_MISSING") &&
++      !violationRules(quoted).includes("R4_EVIDENCE_MISSING"),
++    `exit=${quoted.code} rules=[${violationRules(quoted).join(",")}] adv=[${advisoryRules(quoted).join(",")}]`,
++  );
++  check(
++    "the quoted path is reported as A6_EVIDENCE_CITED (the audit still sees it)",
++    advisoryRules(quoted).includes("A6_EVIDENCE_CITED") && cited.length >= 1 && cited.every((e) => e.scope === "citation"),
++    `adv=[${advisoryRules(quoted).join(",")}] cited=${JSON.stringify(cited.map((e) => [e.value, e.scope]))}`,
++  );
++  check(
++    "the reporting card's own labelled evidence stays the claim it resolves",
++    quoted.parsed
++      ? quoted.parsed.facts.evidence.some((e) => e.value.includes(QUOTED_PATH_REPORT) && e.scope === "claim" && e.exists === true)
++      : false,
++    `evidence=${JSON.stringify(quoted.parsed ? quoted.parsed.facts.evidence.map((e) => [e.value, e.scope, e.exists]) : null)}`,
++  );
++
++  const present = gateJson(QUOTED_PATH_PRESENT);
++  check(
++    "citing another card's artifact that exists produces no R5 and no A6 noise",
++    present.code === 0 &&
++      !violationRules(present).includes("R5_EVIDENCE_FILE_MISSING") &&
++      !advisoryRules(present).includes("A6_EVIDENCE_CITED") &&
++      !advisoryRules(present).includes("A4_EVIDENCE_OFF_TREE"),
++    `exit=${present.code} adv=[${advisoryRules(present).join(",")}]`,
++  );
++
++  const noLabelSpan = gateJson(NOLABEL_CODESPAN_MISSING);
++  check(
++    "no label: a quoted path in a code span is a citation (no R5, A6 fires)",
++    noLabelSpan.code === 0 &&
++      !violationRules(noLabelSpan).includes("R5_EVIDENCE_FILE_MISSING") &&
++      advisoryRules(noLabelSpan).includes("A6_EVIDENCE_CITED"),
++    `exit=${noLabelSpan.code} rules=[${violationRules(noLabelSpan).join(",")}] adv=[${advisoryRules(noLabelSpan).join(",")}]`,
++  );
++
++  // Anti-degradation controls: a *claimed* path that does not exist must still
++  // fail R5, labelled or not, code span or not.
++  expectRule("labelled evidence file missing (R5 control)", LABELLED_MISSING, "R5_EVIDENCE_FILE_MISSING", {
++    forbid: ["R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"],
++  });
++  expectRule(
++    "labelled evidence file missing inside a code span is still a claim (R5 control)",
++    LABELLED_MISSING_CODESPAN,
++    "R5_EVIDENCE_FILE_MISSING",
++    { forbid: ["R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"] },
++  );
++  expectRule(
++    "no label: a missing path in plain prose is still a claim (R5 control)",
++    NOLABEL_PROSE_MISSING,
++    "R5_EVIDENCE_FILE_MISSING",
++    { forbid: ["R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"] },
++  );
++}
++
+ console.log("\n2. Rule coverage (every rule must fire on its own non-compliant card):");
+ expectRule("no verdict, no evidence", NO_VERDICT, "R1_QA_VERDICT_MISSING");
+ expectRule("no verdict, no evidence", NO_VERDICT, "R4_EVIDENCE_MISSING");
+
+## QA_SIGN_OFF_GATE.md
+--- a/QA_SIGN_OFF_GATE.md (prefix)
++++ b/QA_SIGN_OFF_GATE.md (t_99e408c5)
+@@ -60,7 +60,7 @@
+ | `R2_QA_VERDICT_INVALID` | a verdict token outside `pass · pass-with-conditions · fail · blocked` | use an exact vocabulary token |
+ | `R3_VERDICT_NOT_TERMINAL` | card is `done` while its latest verdict is `fail`/`blocked` | fix the defect and re-verdict, or move the card back to the owning agent |
+ | `R4_EVIDENCE_MISSING` | no attachment, no named artifact, no run-metadata artifact | attach the file (`kanban attach`) or name a CI run URL / committed path in the verdict comment |
+-| `R5_EVIDENCE_FILE_MISSING` | a named evidence file/directory **of the operative (newest) verdict** does not exist — in the worker's checkout or on any other ref of the repo | commit the artifact, fix the path, or name the CI run instead |
++| `R5_EVIDENCE_FILE_MISSING` | an evidence file/directory **claimed by the operative (newest) verdict** (§5.7 — inside its `Evidence:` label, or outside code spans/fences when it carries no label) does not exist — in the worker's checkout or on any other ref of the repo | commit the artifact, fix the path, or name the CI run instead |
+ | `R6_CONDITIONS_UNTRACKED` | `pass-with-conditions` with no follow-up card id / issue link / follow-up item | enumerate the conditions and the card or issue that tracks each one |
+ | `R7_SECURITY_TRACK_SIGNOFF_MISSING` | crypto/bridge/auth card (security Test Type + crypto-bridge keyword heuristic) with no Architect sign-off comment | Architect reviews and comments (any of `signed off`, `approved`, `ARCH-VERDICT: …`) |
+ | `R8_DEFERRAL_TARGET_INVALID` | deferral names a missing card, a non-QA card, or a QA card that is `done` without verdict + evidence | defer to a real `qa`-assigned card that carries its own verdict + evidence |
+@@ -69,6 +69,7 @@
+ | `A3_EVIDENCE_UNVERIFIED` | evidence path could not be checked (no repo root available) | report-only |
+ | `A4_EVIDENCE_OFF_TREE` | operative evidence exists in the repo **on another ref**, not in this worker's checkout | report-only — accepted as committed evidence (§5.3) |
+ | `A5_EVIDENCE_SUPERSEDED` | a path named in a **superseded** verdict/handoff is absent from this checkout | report-only — history must not block a compliant card |
++| `A6_EVIDENCE_CITED` | a path named in the operative verdict only as a **citation** — reporting another card's artifact, cross-checking it, quoting a defect transcript — is absent from this checkout | report-only — the card that *reports* a broken pointer elsewhere must stay completable (§5.7) |
+ | `X1_EXCEPTION` | a recorded `qa-signoff-exception:` marker (§5.6) | report-only — exceptions stay visible in every audit |
+ 
+ **Fail closed only on genuinely unverifiable input** (added 2026-09-17, `t_5455942d`). The gate blocks when it cannot
+@@ -86,7 +87,7 @@
+ hermes kanban comment <task-id> --author qa --body "QA-VERDICT: <token> — <one-line basis>. Evidence: <artifact>"
+ ```
+ 
+-The **evidence pointer must be in the same comment** (or attached via `kanban attach`) — "tests pass" alone is not evidence (TEST_STRATEGY §11).
++The **evidence pointer must be in the same comment** (or attached via `kanban attach`) — "tests pass" alone is not evidence (TEST_STRATEGY §11). Keep the `Evidence:` label: it is what the gate reads as *this card's own* evidence (§5.7), and it is what lets the same comment quote another card's path without claiming it.
+ 
+ ### 5.2 Examples
+ 
+@@ -114,12 +115,17 @@
+ | CI run / PR / issue URL | `https://github.com/zeldadil/password-manager/actions/runs/123` | format only (offline) |
+ | Committed repo path | `tests/evidence/<task-id>/README.md`, `coverage/lcov.info` | **file must exist** in the worker's checkout (`payload.cwd`) **or on any ref of that repo** (`A4_EVIDENCE_OFF_TREE`) |
+ | Directory path | `tests/evidence/<task-id>/` | directory must exist (same rule) |
++| Path **cited** about another card (not claimed) | a quote inside a defect report: ``… names `tests/evidence/t_xxxxxxxx/README.md`, absent from every ref …`` | never resolved by `R5`; reported as `A6_EVIDENCE_CITED` when absent (§5.7) |
+ | Run-metadata `artifacts` (structured handoff) | `metadata.artifacts: [...]` | same rules as above, for the run that carries the operative verdict |
+ 
+ Only the **operative (newest) verdict's** paths are resolved for existence (`R5`). Paths cited by a superseded
+ verdict, an earlier worker's handoff, or an older run are reported as `A5_EVIDENCE_SUPERSEDED` — a card that once
+ cited an artifact from another branch or another worker's checkout must stay completable.
+ 
++Within the operative verdict, `R5` resolves only the paths that verdict **claims as its own evidence**; a path it
++merely quotes about another card is a citation (`A6_EVIDENCE_CITED`). §5.7 defines the two — a verdict that reports
++a broken evidence pointer on another card stays completable, which is the whole point of being able to report it.
++
+ ### 5.4 Deferring QA to a downstream card
+ 
+ Legal **only** when the QA review genuinely happens in another card (a pre-created QA/review child, e.g. QA-002 aggregation):
+@@ -153,6 +159,36 @@
+ 
+ ---
+ 
++### 5.7 Whose evidence is it? — claimed vs cited (the label rule)
++
++**Policy (decided 2026-09-18, `t_99e408c5`).** *Naming a path is not claiming it.* A path recorded in a verdict is
++treated as **this card's evidence** only when the verdict **claims** it; the gate resolves exactly the claims for
++existence, and `R5` may only block on a claim:
++
++1. **Claimed evidence** — everything from an **evidence label** to the end of that label's paragraph (a blank line,
++   heading or table row closes it). The labels are `Evidence:`, `Artifact:`/`Artifacts:`, `Attachment:`/`Attachments:`
++   — case-insensitive, bold (`**Evidence:**`) or plain, anywhere in the comment. The `Evidence:` of §5.1 is therefore
++   **normative, not decoration**.
++2. **No label in the comment** — the whole comment is read as the claim (legacy behaviour), *except* paths inside
++   **code spans or fenced blocks**, which are documentation — a pasted command, a quoted recording template, a defect
++   transcript. This is the same principle already applied to deferral markers (`t_c3cb6842`, `t_58280940`).
++3. **Attachments** (`kanban attach`) and run-metadata `artifacts` are always claims.
++4. **Everything else** named in the operative verdict — a defect report about another card, a cross-check, a table row
++   — is a **citation**: never `R5`, and reported as `A6_EVIDENCE_CITED` when it is absent from the checkout *and* from
++   every ref of the repo.
++
++**Why.** A card whose verdict *reports* a broken evidence pointer on another card names that card's path in the
++process. Before this rule the gate failed the reporting card itself with `R5_EVIDENCE_FILE_MISSING` for the quoted
++path, so the finding could only be recorded by not naming it — the gate penalised the defect report (`t_7dd3b960`,
++reproduced on the live board: `tests/evidence/t_99e408c5/ab-replay-reported-instance.txt`). Enforcement is unchanged
++where it matters: a **claimed** artifact that does not exist still fails `R5` — written plain, in backticks, or inside
++the label (selftest cases `QA-922`/`QA-923`/`QA-925` in `scripts/qa/signoff-gate.selftest.mjs`).
++
++**How to record.** Put your own artifacts after an `Evidence:` label (§5.1). When reporting another card's broken
++pointer, quote the path freely — the audit shows it as `A6_EVIDENCE_CITED`.
++
++---
++
+ ## 6. Enforcement tooling
+ 
+ All paths are relative to the repo root.
+@@ -162,7 +198,7 @@
+ | `node scripts/qa/signoff-gate.mjs audit` | whole board; exit 1 while any enforced card fails; `--json`, `--repo DIR`, `--epoch-iso ISO`, `--strict-history` |
+ | `node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx [--pre-complete]` | one card; `--pre-complete` evaluates a card that is not `done` yet (exactly what the hook does) |
+ | `echo '<payload>' \| node scripts/qa/signoff-gate.mjs hook` | hook entry point: `{}` + exit 0 = allow, `{"decision":"block",…}` + exit 2 = block |
+-| `node scripts/qa/signoff-gate.selftest.mjs` | 49-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d` regressions are covered) |
++| `node scripts/qa/signoff-gate.selftest.mjs` | 66-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d`, `t_58280940` and `t_99e408c5` regressions are covered) |
+ | `scripts/qa/hooks/install-signoff-gate.sh --all [--apply]` | install / refresh the hook in every profile (dry-run by default, config backed up) |
+ | `scripts/qa/hooks/verify-signoff-gate.sh --all --live --fixture-db … --fixture-noncompliant … --fixture-compliant …` | verify wiring, consent, hash, `hermes hooks doctor`, and fire both paths live |
+ 
+@@ -258,10 +294,13 @@
+ Then report it to `qa`: the hook is supposed to resolve this by itself, and a recurrence means the installed copy is
+ stale (see below), not that you did something wrong.
+ 
+-**`R5_EVIDENCE_FILE_MISSING: … named in the verdict does not exist`** — check *which* verdict names the path. Only
+-the newest (operative) verdict is resolved; a path from a superseded verdict or another worker's handoff shows up as
+-`A5_EVIDENCE_SUPERSEDED` instead. If the operative verdict genuinely names a missing file, commit it, fix the path,
+-or cite the CI run URL. A path that exists only on another branch is accepted (`A4_EVIDENCE_OFF_TREE`).
++**`R5_EVIDENCE_FILE_MISSING: … does not exist`** — check *which* verdict names the path. Only the newest (operative)
++verdict is resolved; a path from a superseded verdict or another worker's handoff shows up as
++`A5_EVIDENCE_SUPERSEDED` instead, and a path the operative verdict only *quotes about another card* shows up as
++`A6_EVIDENCE_CITED` (§5.7). If the operative verdict genuinely claims a missing file, commit it, fix the path, or cite
++the CI run URL. A path that exists only on another branch is accepted (`A4_EVIDENCE_OFF_TREE`). If the message points at
++a path you never claimed, the blocked card is a gate false positive — report it to `qa` rather than deleting the
++sentence that named it.
+ 
+ **The installed copy may be stale.** The hook executes `<profile>/agent-hooks/signoff-gate.mjs`, not the repo file.
+ Any gate change must be re-installed, or you are debugging old logic:
+@@ -275,6 +314,14 @@
+ `verify-signoff-gate.sh` fails on SHA-256 drift between the repo copy and the installed copies; `hermes hooks doctor`
+ flags exec-bit/consent/mtime drift.
+ 
++**`hermes hooks doctor` after a re-install: 2 issues per profile is expected on this host, not a defect.** Every
++profile runs **two** hooks (`qa-signoff-gate.sh` and `secret-guard.sh`), and `doctor` reports `script modified since
++approval` for each one whose mtime moved — for the sign-off gate that is exactly what a re-install does. The approval
++refresh (`hermes hooks revoke` + re-approve) is interactive-only, so a headless re-install cannot clear it. The
++verifier tolerates **one** such warning and therefore reports FAIL on such a profile; read the warning text before
++treating it as drift: both entries must be `script modified since approval`, with `script exists and is executable`,
++`allowlisted` and `produced valid JSON` all green.
++
+ **Confirm what the gate would decide, without touching the kill switch:**
+ 
+ ```
+@@ -320,7 +367,7 @@
+ | 2 | Pre-epoch backlog (26 cards) — retrofit with verdict+evidence, or formally leave grandfathered | `architect` + `qa` |
+ | 3 | `R7` security-track detection is a keyword heuristic (security Test Type + crypto/bridge keyword); confirm the classification list against ADR-002 §5.3 / ADR-005 §9.2 | `architect` |
+ | 4 | Advisory-only cross-board audit: non-default boards (e.g. release-track boards) run the same hook, but the audit needs `--db` pointed at them | `qa` |
+-| 5 | A comment that *quotes* the recommended `QA-VERDICT: …` line (e.g. an Architect handoff showing the exact command to paste) is parsed as a verdict. With `R5` scoped to the operative verdict the harm is now contained, but if such a quote is the *newest* record it becomes operative. Decide whether to ignore marker lines inside code spans/fences | `qa` |
++| 5 | A comment that *quotes* the recommended `QA-VERDICT: …` line (e.g. an Architect handoff showing the exact command to paste) is parsed as a verdict. With `R5` scoped to the operative verdict the harm is contained, but if such a quote is the *newest* record it becomes operative. **Partly decided (`t_99e408c5`, 2026-09-18):** §5.7 now defines code spans/fences as documentation for **evidence extraction** (claim vs citation, `A6_EVIDENCE_CITED`), and `VERDICT_MARKER_RE`/`DEFERRAL_RE` already carry the leading-boundary guard (`t_c3cb6842`/`t_58280940`). What remains open is giving the **marker** regexes the same code-span/fence exclusion — a change to verdict *detection*, deliberately not bundled with the evidence fix | `qa` (gate lane) |
+ | 6 | Hermes-core observation (config, not a repo defect): the hook subprocess env still carries `HERMES_DASHBOARD_BASIC_AUTH_USERNAME/PASSWORD/SECRET` — see `hook-env-probe.py`. Any hook script of any profile can read the dashboard admin credentials; consider whether hooks need them (they do not) | `architect` (owns the Hermes install/profile config) |
+ | 7 | Hermes-core observation (payload, not a repo defect): the `pre_tool_call` payload's `extra.task_id` is the *session id* (`agent/inline_tool_executors.py::tool_hook_ids` → `effective_task_id`), and the kanban identity keys are scrubbed from hook subprocesses (`agent/delegation_context.py::scrub_kanban_env`). The gate now compensates from the worker's location §6.4; do **not** "fix" this by un-scrubbing the identity keys — that scrub is deliberate runtime scoping | `architect` (record only) |
+ 
+@@ -332,3 +379,5 @@
+ |---|---|
+ | 2026-09-17 | Initial gate: rules R1–R8 + advisories, blocking `kanban_complete` hook in all 7 profiles, board audit, 33-case selftest, epoch `2026-09-17T15:00:00Z`, kill switch and exception protocol |
+ | 2026-09-17 | `t_5455942d` — fail closed only on genuinely unverifiable input: (1) task-id resolution requires the `t_[0-9a-z]+` shape, so a session id in `extra.task_id` no longer blocks a compliant completion; the hook then falls back to `$HERMES_KANBAN_TASK`, the workspace basename, the checkout `cwd` and the branch name (Hermes scrubs the kanban identity vars from hook subprocesses — §6.4), and resolves a numeric run id through the board; (2) `R5` resolves the **operative (newest) verdict's** evidence only, accepts a path present on **any ref** (`A4_EVIDENCE_OFF_TREE`) and reports superseded paths as `A5_EVIDENCE_SUPERSEDED`; (3) the "linked QA child ⇒ deferral" heuristic is suppressed once the card carries an explicit verdict. Selftest 33 → 49 cases; §8.1 troubleshooting + §6.4 resolution table added; verifier fixed (matcher quoting, `--fixture-repo`); hook re-installed in all 7 profiles |
++| 2026-09-18 | `t_58280940` — a deferral marker is operative only while it is the **newest** QA record on the card, and `DEFERRAL_RE` gained the same leading boundary as `VERDICT_MARKER_RE`, so a stale or merely *quoted* `QA-VERDICT: deferred — t_…` no longer hijacks `R8` on a card whose verdict has landed. Selftest 49 → 58 cases |
++| 2026-09-18 | `t_99e408c5` — **§5.7 claim vs citation**: `R5` resolves only the paths the operative verdict *claims* (inside an `Evidence:`/`Artifacts:` label, or outside code spans/fences when it carries no label); a path the verdict merely quotes about another card is a citation reported as `A6_EVIDENCE_CITED`, so a card can report a broken evidence pointer elsewhere without failing on it. Evidence pointers now carry `scope` (`claim`/`citation`/`history`) in the `--json` facts; a cited path that exists in the repo no longer emits `A4`. Claimed-but-missing evidence still fails `R5` in every shape. Selftest 58 → 66 cases; hook re-installed in all 7 profiles (see `tests/evidence/t_99e408c5/`) |

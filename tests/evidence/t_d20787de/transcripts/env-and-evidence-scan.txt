@@ -1,0 +1,39 @@
+=== (a) full token-shaped scan of every profile .env + config.yaml + ~/.hermes/.env ===
+  /home/sap/.hermes/profiles/architect/.env            token_shaped=1 ['OTHER(c9180856)']
+  /home/sap/.hermes/profiles/architect/config.yaml     token_shaped=0 []
+  /home/sap/.hermes/profiles/backend/.env              token_shaped=1 ['OTHER(c9180856)']
+  /home/sap/.hermes/profiles/backend/config.yaml       token_shaped=0 []
+  /home/sap/.hermes/profiles/browser/.env              token_shaped=1 ['OTHER(c9180856)']
+  /home/sap/.hermes/profiles/browser/config.yaml       token_shaped=0 []
+  /home/sap/.hermes/profiles/docs/.env                 token_shaped=1 ['OTHER(c9180856)']
+  /home/sap/.hermes/profiles/docs/config.yaml          token_shaped=0 []
+  /home/sap/.hermes/profiles/frontend/.env             token_shaped=1 ['OTHER(c9180856)']
+  /home/sap/.hermes/profiles/frontend/config.yaml      token_shaped=0 []
+  /home/sap/.hermes/profiles/product/.env              token_shaped=1 ['OTHER(c9180856)']
+  /home/sap/.hermes/profiles/product/config.yaml       token_shaped=0 []
+  /home/sap/.hermes/profiles/qa/.env                   token_shaped=1 ['OTHER(c9180856)']
+  /home/sap/.hermes/profiles/qa/config.yaml            token_shaped=0 []
+  /home/sap/.hermes/.env                               token_shaped=1 ['OTHER(c9180856)']
+  /home/sap/.hermes/config.yaml                        token_shaped=0 []
+
+=== (b) trufflehog filesystem on the t_28951254 evidence directory (branch tip) ===
+  exit code: 0 (183 = findings)
+"verified_secrets":
+  findings: 0
+0
+  --- gitleaks dir-mode scan of the same dir ---
+  gitleaks exit: 0  findings: 0
+0
+[90m7:10AM[0m [32mINF[0m [1mscanned ~4972 bytes (4.97 KB) in 14.2ms[0m
+[90m7:10AM[0m [32mINF[0m [1mno leaks found[0m
+  --- token-shaped regex over the dir tip tree ---
+1
+
+=== (c) does the branch's stale .gitleaksignore still match its (rewritten) history? ===
+  branch head: 43f0d07ffb78cae3d3ace01ccfa6c2e0c742ae9f
+  suppressions listed in .gitleaksignore:
+    a503e4d:PROJECT_BRIEF.md:telegram-bot-api-token
+    9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859:tests/evidence/t_28951254/README.md:generic-api-key:22
+  do those commits exist in the branch history?
+    a503e4d ABSENT (rewritten away)
+    9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859 present

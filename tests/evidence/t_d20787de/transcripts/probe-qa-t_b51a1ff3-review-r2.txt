@@ -1,0 +1,4 @@
+ref:  refs/remotes/origin/qa/t_b51a1ff3-review-r2
+path: scripts/qa/secret-guard.selftest.mjs
+distinct token-shaped values in blob: 1
+  fingerprint=ROTATED (t_28951254 value)     getMe HTTP 401 invalid/revoked

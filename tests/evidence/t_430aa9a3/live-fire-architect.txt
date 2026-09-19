@@ -1,0 +1,21 @@
+# QA-001h evidence — live pre_tool_call fire for profile 'architect'
+# date: 2026-09-17T14:51:24Z
+
+## non-compliant card t_fx000002 (expect: blocked, exit 2, action:block)
+$ HERMES_HOME=/home/sap/.hermes/profiles/architect HERMES_KANBAN_DB=/tmp/tmp.vImgmJYgcu/board.db hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file payload-noncompliant.json
+Firing 1 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/architect/agent-hooks/qa-signoff-gate.sh
+      exit=2  elapsed=0.085s
+      stdout: {"decision":"block","reason":"QA sign-off gate blocked this completion of t_fx000002 (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card\n  - R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_at...
+      parsed (Hermes wire shape): {"action": "block", "message": "QA sign-off gate blocked this completion of t_fx000002 (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card \u2014 add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred \u2014 t_xxxxxxxx` pointing at a QA-owned child card\n  - R4_EVIDENCE_MISSING: no evidence artifact \u2014 attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment\nRecord the verdict on the card, then call kanban_complete again:\n  hermes kanban comment t_fx000002 --author qa --body \"QA-VERDICT: pass \u2014 evidence: tests/evidence/t_fx000002/README.md\"\nPolicy: QA_SIGN_OFF_GATE.md \u00b7 re-check: node scripts/qa/signoff-gate.mjs check --task t_fx000002 --pre-complete"}
+
+
+## compliant card t_fx000001 (expect: allowed, exit 0, no dispatcher contribution)
+Firing 1 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/architect/agent-hooks/qa-signoff-gate.sh
+      exit=0  elapsed=0.085s
+      stdout: {}
+      parsed: <none — hook contributed nothing to the dispatcher>
+

@@ -1,0 +1,42 @@
+# QA-001h evidence — hook wiring (dry run; the real rollout transcript is hooks-rollout.txt)
+# date: 2026-09-17T14:51:32Z
+
+QA sign-off gate installer — DRY RUN · profiles root: /home/sap/.hermes/profiles
+hook source:  /home/sap/password-manager/.worktrees/t_430aa9a3/scripts/qa/hooks/qa-signoff-gate.sh
+gate source:  /home/sap/password-manager/.worktrees/t_430aa9a3/scripts/qa/signoff-gate.mjs
+
+── qa (/home/sap/.hermes/profiles/qa)
+   would copy qa-signoff-gate.sh + signoff-gate.mjs → /home/sap/.hermes/profiles/qa/agent-hooks/
+   config already carries the hook entry (idempotent no-op)
+   verified: hermes config get hooks lists the hook
+
+Rollback: restore <profile>/config.yaml.bak.<timestamp> and delete <profile>/agent-hooks/.
+Kill switch: touch ~/.hermes/signoff-gate.disabled (allows every completion while present).
+exit=0
+
+# effective config block (profile: qa)
+hooks:
+  pre_tool_call:
+    - matcher: "^kanban_complete$"
+      command: "/home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh"
+      timeout: 30
+      fail_closed: true
+hooks_auto_accept: true
+
+# hermes hooks list (profile: qa)
+Configured shell hooks (1 total):
+
+  [pre_tool_call]
+    - /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh matcher='^kanban_complete$' (timeout=30s, ✗ not allowlisted)
+
+
+# hermes hooks doctor (profile: qa)
+Checking 1 configured shell hook(s)...
+
+  [pre_tool_call] /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh
+      ✓ script exists and is executable
+      ✗ not allowlisted — hook will NOT fire at runtime (run with --accept-hooks once, or confirm at the TTY prompt)
+      ℹ skipped JSON smoke test — not allowlisted yet. Approve the hook first (via TTY prompt or --accept-hooks), then re-run `hermes hooks doctor`.
+
+1 issue(s) found.  Fix before relying on these hooks.
+exit=0

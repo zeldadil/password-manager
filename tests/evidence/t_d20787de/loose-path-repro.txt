@@ -1,0 +1,45 @@
+=== the loose-path false positive, reproduced from the live board (read-only) ===
+date: 2026-09-19T07:15:24Z
+gate revision under which the audit numbers were produced: sha256 85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+
+-- the gate's two regexes (scripts/qa/signoff-gate.mjs):
+84:const VERDICT_MARKER_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*:\s*([a-z][a-z-]*)/i;
+85:const VERDICT_LOOSE_RE = /verdict\s*[:\-—]+\s*([a-z][a-z-]*)/i;
+
+-- applied to every qa-authored comment on t_80fc0326:
+comment 49 (author qa)
+  marker regex: no match
+  loose  regex: "VERDICT-ROTATION"  → token "rotation"
+  matched inside: …input` addressed to the human. Full context + reproduction: `tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md` on branch `qa/t_0af5aa3e-…
+comment 62 (author qa)
+  marker regex: no match
+  loose  regex: "verdict: CHANGES"  → token "changes"
+  matched inside: …## Review verdict: CHANGES REQUESTED — round 1 (lenses: …
+comment 63 (author qa)
+  marker regex: no match
+  loose  regex: "verdict: CHANGES"  → token "changes"
+  matched inside: …un 476 closed — changes requested stands.** /  / This card is back with `architect` (reviewer verdict: CHANGES REQUESTED, see the full findi…
+comment 166 (author qa)
+  marker regex: no match
+  loose  regex: no match
+
+-- the audit rows for THIS card only (identical in audit-t0.txt and audit-t1.txt):
+   t0:
+  FAIL t_80fc0326  P0 follow-up: complete the public-repo purge of the leaked Telegram token (22/28 branch tips still expose it) @architect
+        R2_QA_VERDICT_INVALID: verdict "ROTATION" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+        R2_QA_VERDICT_INVALID: verdict "CHANGES" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+        R2_QA_VERDICT_INVALID: verdict "CHANGES" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+        R8_DEFERRAL_TARGET_INVALID: QA deferral target t_c3cb6842 is done but carries no QA verdict
+   t1:
+  FAIL t_80fc0326  P0 follow-up: complete the public-repo purge of the leaked Telegram token (22/28 branch tips still expose it) @architect
+        R2_QA_VERDICT_INVALID: verdict "ROTATION" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+        R2_QA_VERDICT_INVALID: verdict "CHANGES" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+        R2_QA_VERDICT_INVALID: verdict "CHANGES" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+
+-- why 'ROTATION' is a false positive: the matched span is part of the file name
+   tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md, cited inside a code span in comment 49 — a path, not a
+   verdict token. t_c3cb6842 fixed the marker path (colon-only separator); VERDICT_LOOSE_RE still accepts
+   '-' and '.' as separators, so the same file name is still parsed as a token by the loose path.
+
+-- why 'CHANGES' ×2 is a correct report, not a false positive: comments 62/63 are real qa review records
+   with a token outside the §12 vocabulary; the gate is right to flag them and only history-editing would clear them.

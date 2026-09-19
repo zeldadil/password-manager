@@ -1,0 +1,17 @@
+QA-001i-fu6 (t_99e408c5) — PR #29 checks for head be3a61a1ee7df381f54d631c7abeac3c398c621c
+date: 2026-09-18T21:37:03Z
+note: the commits after ff9e136 touch tests/evidence/t_99e408c5/ only (transcripts + README)
+command: gh pr checks 29
+
+Semgrep OSS	pass	3s	https://github.com/zeldadil/password-manager/runs/105770004755	
+build	pass	15s	https://github.com/zeldadil/password-manager/actions/runs/35397602363/job/105769976131	
+dependency-audit	pass	11s	https://github.com/zeldadil/password-manager/actions/runs/35397602363/job/105769976106	
+e2e	pass	12s	https://github.com/zeldadil/password-manager/actions/runs/35397602363/job/105769976127	
+install-lockfile	pass	17s	https://github.com/zeldadil/password-manager/actions/runs/35397602363/job/105769889852	
+integration	pass	9s	https://github.com/zeldadil/password-manager/actions/runs/35397602363/job/105769976057	
+lint-typecheck	pass	11s	https://github.com/zeldadil/password-manager/actions/runs/35397602363/job/105769976092	
+sast	pass	32s	https://github.com/zeldadil/password-manager/actions/runs/35397602363/job/105769890144	
+secret-scan	pass	13s	https://github.com/zeldadil/password-manager/actions/runs/35397602363/job/105769890176	
+unit	pass	10s	https://github.com/zeldadil/password-manager/actions/runs/35397602363/job/105769976060	
+
+pending=0

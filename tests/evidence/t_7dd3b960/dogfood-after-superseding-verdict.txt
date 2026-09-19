@@ -1,0 +1,4 @@
+QA sign-off gate — check t_7dd3b960 (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_7dd3b960  QA-001i — close gate-tooling §10 open items (audit CI, pre-epoch backlog, R7) @qa
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_28f60dc1/README.md named in a superseded verdict/handoff is absent from this checkout — report only
