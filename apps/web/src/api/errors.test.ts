@@ -60,7 +60,7 @@ describe('apiErrorFromEnvelope', () => {
   it('maps header + error details into a typed ApiError', () => {
     const body: EnvelopeErrorBody = {
       errors: [{ code: 'VALIDATION_ERROR', field: 'name', message: 'name is required' }],
-      documentationUrl: 'https://example.com/docs',
+      documentationUrl: 'https://example.test/docs',
     }
 
     const err = apiErrorFromEnvelope(400, errorHeader, body)
@@ -71,7 +71,7 @@ describe('apiErrorFromEnvelope', () => {
     expect(err.action).toBe('CreateResource')
     expect(err.details).toEqual(body.errors)
     expect(err.code).toBe('VALIDATION_ERROR')
-    expect(err.documentationUrl).toBe('https://example.com/docs')
+    expect(err.documentationUrl).toBe('https://example.test/docs')
   })
 
   it('falls back to the first detail message when header.message is empty', () => {
