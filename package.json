@@ -2,7 +2,7 @@
   "name": "password-manager",
   "version": "0.1.0",
   "private": true,
-  "description": "Self-hosted password manager — encrypted vault, Web UI, Firefox extension",
+  "description": "Self-hosted password manager \u2014 encrypted vault, Web UI, Firefox extension",
   "scripts": {
     "dev": "pnpm -r --parallel --filter '**' run dev",
     "build": "pnpm -r --parallel --filter '**' run build",
@@ -11,15 +11,26 @@
     "test": "pnpm -r --parallel --filter '**' run test",
     "test:unit": "pnpm -r --parallel --filter '**' run test:unit",
     "test:integration": "pnpm -r --parallel --filter '**' run test:integration",
-    "test:e2e": "pnpm -r --parallel --filter '**' run test:e2e",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install --with-deps chromium firefox webkit",
+    "test:e2e:report": "playwright show-report",
     "test:security": "pnpm -r --parallel --filter '**' run test:security",
+    "format": "pnpm -r --parallel --filter '**' run format",
+    "format:check": "pnpm -r --parallel --filter '**' run format:check",
     "audit:prod": "pnpm audit --prod --audit-level high",
     "scan:secrets": "gitleaks detect --redact --verbose",
-    "clean": "pnpm -r --parallel --filter '**' run clean 2>/dev/null || true"
+    "clean": "pnpm -r --parallel --filter '**' run clean 2>/dev/null || true",
+    "scan:test-data": "node scripts/qa/scan-test-data.mjs",
+    "validate:fixtures": "node --experimental-strip-types scripts/qa/validate-fixtures.mjs",
+    "validate:coverage-thresholds": "node scripts/qa/validate-coverage-thresholds.mjs"
   },
   "packageManager": "pnpm@9.12.0",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "22.20.3"
   }
 }

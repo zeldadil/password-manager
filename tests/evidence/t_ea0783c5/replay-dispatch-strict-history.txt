@@ -1,0 +1,424 @@
+$ python3 tests/evidence/t_ea0783c5/replay-job.py .github/workflows/qa-signoff-audit.yml dispatch-strict-history
+=== replay: qa-signoff-audit.yml · scenario=dispatch-strict-history · event=workflow_dispatch ===
+    job=qa-signoff-audit  steps=9  repo=/home/sap/password-manager/.worktrees/t_ea0783c5
+    inputs={'board_db': '/home/sap/.hermes/kanban.db', 'strict_history': 'true'}  HERMES_KANBAN_DB=/home/sap/.hermes/kanban.db  HOME=/home/sap
+  SIM   Checkout (actions/checkout@v4) — repository already checked out at /home/sap/password-manager/.worktrees/t_ea0783c5
+  SIM   pnpm/action-setup@v4 (pnpm/action-setup@v4) — toolchain action, no-op on this host (node v22.23.2 is already available)
+  SIM   actions/setup-node@v4 (actions/setup-node@v4) — toolchain action, no-op on this host (node v22.23.2 is already available)
+  RUN   Verify the gate script is present
+        $ set -euo pipefail
+        | v22.23.2
+        exit=0
+  RUN   Resolve the board database
+        $ set -uo pipefail
+        | Board database: /home/sap/.hermes/kanban.db
+        exit=0
+  RUN   Run the board audit
+        $ set -uo pipefail
+        | + node scripts/qa/signoff-gate.mjs audit --repo /home/sap/password-manager/.worktrees/t_ea0783c5 --db /home/sap/.hermes/kanban.db --strict-history
+        | QA sign-off gate — audit (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+        |   enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+        |   FAIL t_9840ccdd  SEC-001-Threat Model + Security Gate @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_3ca45da2  ADR-002: Overall Architecture @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_258f91c8  ADR-003: Data Model @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_ad18d4ed  ADR-004: API Contract @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_08b02da9  ADR-005: Extension Bridge Protocol @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_5f82ac57  ARC-001e-Repo Structure + Root Config @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_7ec83773  ARC-001f-GitHub Setup + Worktree Strategy @architect
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_f8a5c949  BE-001a: DB Migration System @backend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_f463b44f  BE-001b: Core Tables Schema @backend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_415897da  BE-001c: API Skeleton + OpenAPI + Health Endpoint @backend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_7c572465  BE-001d: Envelope Middleware @backend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_aed3f3d1  FE-001a: Project Setup @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_53b034b7  FE-001b: Router + Routes @frontend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_767aca4b  FE-001c: Layout Components @frontend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_e2b31691  FE-001d: Theme System @frontend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_7d365ce0  FE-001e: Accessibility Baseline @frontend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_f82e53b6  FE-001f: API Client @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_d19ced15  FE-001g: State Management @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_ac6a1f3f  QA-001a: Test Strategy Document @qa
+        |         R8_DEFERRAL_TARGET_INVALID: QA deferral target t_5fe41426 is done but carries no QA verdict
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/validate-docs.mjs (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: /tmp/qa-negative-control.md (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence directory named in the verdict does not exist: tests/evidence/t_ac6a1f3f (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |   FAIL t_5fe41426  QA-001b: CI Pipeline @qa
+        |         R4_EVIDENCE_MISSING: QA deferral target t_a2cf1744 carries a verdict but no evidence
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_a2cf1744  QA-001c: Playwright MCP + Cross-Browser Config @qa
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         R6_CONDITIONS_UNTRACKED: pass-with-conditions verdict names no follow-up card id, issue/PR link, or follow-up item
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_204ae591  QA-001e: Synthetic Fixtures + Coverage Thresholds @qa
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_11c01f92  QA-001f: Negative Test Checklist @qa
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_78b46688  QA-001g: Evidence Collection @qa
+        |         R5_EVIDENCE_FILE_MISSING: evidence directory named in the verdict does not exist: tests/evidence/t_78b46688 (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |   FAIL t_430aa9a3  QA-001h: QA Sign-off Gate Policy @qa
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/hooks/qa-signoff-gate.sh (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/hooks/install-signoff-gate.sh (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/signoff-gate.selftest.mjs (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/selftest.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/audit-fixture-board.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/audit-real-board.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/verify-all-live.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence directory named in the verdict does not exist: tests/evidence/t_430aa9a3 (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |   FAIL t_ee24fd37  REPO-BLOCKER: pnpm workspace manifest uncommitted — CI install cannot resolve workspaces @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   ok   t_33dcad7d  QA-001h follow-ups: sign-off gate — CI wiring decision + pre-epoch retrofit + R7 mapping sign-off @architect
+        |         warn X1_EXCEPTION: QA sign-off exception recorded by architect: ` marker — both mechanisms exist and are audit-visible (X1_EXCEPTION on every run).
+        |         warn A2_DEFERRAL_OPEN: QA verdict deferred to t_ea0783c5 (qa, status=running) — audit tracks it until it lands
+        |   grandfathered (done before epoch — advisory only): 27
+        |       warn t_9840ccdd  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_3ca45da2  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_258f91c8  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_ad18d4ed  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_08b02da9  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_5f82ac57  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_7ec83773  no verdict/evidence recorded
+        |       warn t_f8a5c949  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_f463b44f  completed before the gate epoch — no QA verdict (grandfathered)
+        |       warn t_415897da  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       … and 17 more (use --json for the full list)
+        exit=1
+  SIM   Upload the audit report (actions/upload-artifact@v4) — artifact 'qa-signoff-audit': ['qa-signoff-audit.txt']
+  RUN   Write the run summary
+        $ set -uo pipefail
+        | --- summary written ---
+        | ## QA sign-off gate — board audit
+        | 
+        | | field | value |
+        | |---|---|
+        | | ref | refs/heads/feature/t_ea0783c5 |
+        | | event | workflow_dispatch |
+        | | board | /home/sap/.hermes/kanban.db |
+        | 
+        | ### Audit report (exit code 1)
+        | 
+        | ```text
+        | QA sign-off gate — audit (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+        |   enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+        |   FAIL t_9840ccdd  SEC-001-Threat Model + Security Gate @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_3ca45da2  ADR-002: Overall Architecture @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_258f91c8  ADR-003: Data Model @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_ad18d4ed  ADR-004: API Contract @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_08b02da9  ADR-005: Extension Bridge Protocol @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_5f82ac57  ARC-001e-Repo Structure + Root Config @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_7ec83773  ARC-001f-GitHub Setup + Worktree Strategy @architect
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_f8a5c949  BE-001a: DB Migration System @backend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_f463b44f  BE-001b: Core Tables Schema @backend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_415897da  BE-001c: API Skeleton + OpenAPI + Health Endpoint @backend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_7c572465  BE-001d: Envelope Middleware @backend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_aed3f3d1  FE-001a: Project Setup @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_53b034b7  FE-001b: Router + Routes @frontend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_767aca4b  FE-001c: Layout Components @frontend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_e2b31691  FE-001d: Theme System @frontend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_7d365ce0  FE-001e: Accessibility Baseline @frontend
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_f82e53b6  FE-001f: API Client @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_d19ced15  FE-001g: State Management @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_ac6a1f3f  QA-001a: Test Strategy Document @qa
+        |         R8_DEFERRAL_TARGET_INVALID: QA deferral target t_5fe41426 is done but carries no QA verdict
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/validate-docs.mjs (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: /tmp/qa-negative-control.md (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence directory named in the verdict does not exist: tests/evidence/t_ac6a1f3f (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |   FAIL t_5fe41426  QA-001b: CI Pipeline @qa
+        |         R4_EVIDENCE_MISSING: QA deferral target t_a2cf1744 carries a verdict but no evidence
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_a2cf1744  QA-001c: Playwright MCP + Cross-Browser Config @qa
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         R6_CONDITIONS_UNTRACKED: pass-with-conditions verdict names no follow-up card id, issue/PR link, or follow-up item
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_204ae591  QA-001e: Synthetic Fixtures + Coverage Thresholds @qa
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_11c01f92  QA-001f: Negative Test Checklist @qa
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   FAIL t_78b46688  QA-001g: Evidence Collection @qa
+        |         R5_EVIDENCE_FILE_MISSING: evidence directory named in the verdict does not exist: tests/evidence/t_78b46688 (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |   FAIL t_430aa9a3  QA-001h: QA Sign-off Gate Policy @qa
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/hooks/qa-signoff-gate.sh (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/hooks/install-signoff-gate.sh (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/signoff-gate.selftest.mjs (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/selftest.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/audit-fixture-board.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/audit-real-board.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/verify-all-live.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |         R5_EVIDENCE_FILE_MISSING: evidence directory named in the verdict does not exist: tests/evidence/t_430aa9a3 (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        |   FAIL t_ee24fd37  REPO-BLOCKER: pnpm workspace manifest uncommitted — CI install cannot resolve workspaces @architect
+        |         R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        |         R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        |         A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+        |   ok   t_33dcad7d  QA-001h follow-ups: sign-off gate — CI wiring decision + pre-epoch retrofit + R7 mapping sign-off @architect
+        |         warn X1_EXCEPTION: QA sign-off exception recorded by architect: ` marker — both mechanisms exist and are audit-visible (X1_EXCEPTION on every run).
+        |         warn A2_DEFERRAL_OPEN: QA verdict deferred to t_ea0783c5 (qa, status=running) — audit tracks it until it lands
+        |   grandfathered (done before epoch — advisory only): 27
+        |       warn t_9840ccdd  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_3ca45da2  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_258f91c8  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_ad18d4ed  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_08b02da9  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_5f82ac57  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_7ec83773  no verdict/evidence recorded
+        |       warn t_f8a5c949  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       warn t_f463b44f  completed before the gate epoch — no QA verdict (grandfathered)
+        |       warn t_415897da  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+        |       … and 17 more (use --json for the full list)
+        | ```
+        | 
+        | ---
+        | _Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._
+        exit=0
+  RUN   Enforce the audit outcome
+        $ set -uo pipefail
+        | Board audit exit code: 1
+        exit=1
+
+=== run summary (GITHUB_STEP_SUMMARY) ===
+## QA sign-off gate — board audit
+
+| field | value |
+|---|---|
+| ref | refs/heads/feature/t_ea0783c5 |
+| event | workflow_dispatch |
+| board | /home/sap/.hermes/kanban.db |
+
+### Audit report (exit code 1)
+
+```text
+QA sign-off gate — audit (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  FAIL t_9840ccdd  SEC-001-Threat Model + Security Gate @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_3ca45da2  ADR-002: Overall Architecture @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_258f91c8  ADR-003: Data Model @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_ad18d4ed  ADR-004: API Contract @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_08b02da9  ADR-005: Extension Bridge Protocol @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_5f82ac57  ARC-001e-Repo Structure + Root Config @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_7ec83773  ARC-001f-GitHub Setup + Worktree Strategy @architect
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_f8a5c949  BE-001a: DB Migration System @backend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_f463b44f  BE-001b: Core Tables Schema @backend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_415897da  BE-001c: API Skeleton + OpenAPI + Health Endpoint @backend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_7c572465  BE-001d: Envelope Middleware @backend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_aed3f3d1  FE-001a: Project Setup @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_53b034b7  FE-001b: Router + Routes @frontend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_767aca4b  FE-001c: Layout Components @frontend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_e2b31691  FE-001d: Theme System @frontend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_7d365ce0  FE-001e: Accessibility Baseline @frontend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_f82e53b6  FE-001f: API Client @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_d19ced15  FE-001g: State Management @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_ac6a1f3f  QA-001a: Test Strategy Document @qa
+        R8_DEFERRAL_TARGET_INVALID: QA deferral target t_5fe41426 is done but carries no QA verdict
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/validate-docs.mjs (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: /tmp/qa-negative-control.md (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        R5_EVIDENCE_FILE_MISSING: evidence directory named in the verdict does not exist: tests/evidence/t_ac6a1f3f (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+  FAIL t_5fe41426  QA-001b: CI Pipeline @qa
+        R4_EVIDENCE_MISSING: QA deferral target t_a2cf1744 carries a verdict but no evidence
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_a2cf1744  QA-001c: Playwright MCP + Cross-Browser Config @qa
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        R6_CONDITIONS_UNTRACKED: pass-with-conditions verdict names no follow-up card id, issue/PR link, or follow-up item
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_204ae591  QA-001e: Synthetic Fixtures + Coverage Thresholds @qa
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_11c01f92  QA-001f: Negative Test Checklist @qa
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  FAIL t_78b46688  QA-001g: Evidence Collection @qa
+        R5_EVIDENCE_FILE_MISSING: evidence directory named in the verdict does not exist: tests/evidence/t_78b46688 (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+  FAIL t_430aa9a3  QA-001h: QA Sign-off Gate Policy @qa
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/hooks/qa-signoff-gate.sh (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/hooks/install-signoff-gate.sh (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: scripts/qa/signoff-gate.selftest.mjs (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/selftest.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/audit-fixture-board.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/audit-real-board.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the verdict does not exist: tests/evidence/t_430aa9a3/verify-all-live.txt (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+        R5_EVIDENCE_FILE_MISSING: evidence directory named in the verdict does not exist: tests/evidence/t_430aa9a3 (repo: /home/sap/password-manager/.worktrees/t_ea0783c5)
+  FAIL t_ee24fd37  REPO-BLOCKER: pnpm workspace manifest uncommitted — CI install cannot resolve workspaces @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment
+        A1_HISTORY_UNGATED: --strict-history: pre-epoch card is not compliant
+  ok   t_33dcad7d  QA-001h follow-ups: sign-off gate — CI wiring decision + pre-epoch retrofit + R7 mapping sign-off @architect
+        warn X1_EXCEPTION: QA sign-off exception recorded by architect: ` marker — both mechanisms exist and are audit-visible (X1_EXCEPTION on every run).
+        warn A2_DEFERRAL_OPEN: QA verdict deferred to t_ea0783c5 (qa, status=running) — audit tracks it until it lands
+  grandfathered (done before epoch — advisory only): 27
+      warn t_9840ccdd  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+      warn t_3ca45da2  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+      warn t_258f91c8  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+      warn t_ad18d4ed  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+      warn t_08b02da9  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+      warn t_5f82ac57  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+      warn t_7ec83773  no verdict/evidence recorded
+      warn t_f8a5c949  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+      warn t_f463b44f  completed before the gate epoch — no QA verdict (grandfathered)
+      warn t_415897da  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered)
+      … and 17 more (use --json for the full list)
+```
+
+---
+_Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._
+
+=== artifact dir ===
+    qa-signoff-audit
+    qa-signoff-audit/qa-signoff-audit.txt
+
+=== job result: FAILURE ===
+    failing step: Run the board audit (exit 1)
+    failing step: Enforce the audit outcome (exit 1)
+    scratch: /tmp/qa-signoff-replay-b4rkhm4x
+replay-exit=0

@@ -1,0 +1,214 @@
+name: QA sign-off audit
+
+# ──────────────────────────────────────────────────────────────────────────────
+# CI-001h (t_ea0783c5) — scheduled, board-wide audit of the QA sign-off gate.
+#
+# Policy: QA_SIGN_OFF_GATE.md §2 "Detection (board audit)" + §6 (enforcement
+# tooling); TEST_STRATEGY §11/§12; architect decision t_33dcad7d
+# (docs/decisions/qa-signoff-gate-followups-t_33dcad7d.md → "CI wiring for the
+# board audit").
+#
+# Why this is its own workflow file and not a 9th job in ci.yml:
+#   * The audit is a board-wide policy/retro report, NOT a per-PR code-quality
+#     gate. It must never block a merge.
+#   * ci.yml is an active collision hotspot across the QA-001 CI cards
+#     (b / c / d / g each edit it). A separate file adds no hunk to it. The
+#     per-PR job graph in ci.yml (install-lockfile → lint-typecheck → unit →
+#     integration → e2e → dependency-audit → secret-scan → build) is not
+#     touched by CI-001h, and this workflow has no `pull_request`/`push`
+#     trigger.
+#
+# Triggers: weekly `schedule` + `workflow_dispatch` only. `qa-signoff-audit`
+# must NOT be added to the required status checks on `master` (CI-001h AC3/AC4)
+# — branch protection is unchanged. It reports; it does not gate.
+#
+# Board transport — read this before "fixing" a red run:
+#   The gate reads a SQLite board through `sqlite3`. The canonical board lives
+#   at ~/.hermes/kanban.db on the trusted host; a GitHub-hosted runner cannot
+#   see it. Board resolution order is:
+#     1. workflow_dispatch input `board_db`  (explicit path on the runner)
+#     2. $HERMES_KANBAN_DB
+#     3. $HOME/.hermes/kanban.db
+#   When none of them exists the audit cannot run: the job ends RED with
+#   "AUDIT NOT RUN" in the run summary. It never reports a green audit that did
+#   not happen, because a green scheduled compliance job that audits nothing is
+#   worse than no job at all.
+#   Pointing the job at a self-hosted runner that has the board mounted is a
+#   repository-variable change, no file edit:
+#     * `vars.QA_SIGNOFF_AUDIT_RUNNER` = the self-hosted runner label.
+#       Unset → `ubuntu-latest` (where the audit cannot run — see above).
+#   The transport decision itself (self-hosted runner vs. a published board
+#   snapshot) is an architect follow-up raised by the CI-001h card.
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  schedule:
+    # Mondays 06:17 UTC — off the hour, so the run does not queue behind the
+    # top-of-the-hour cron crowd.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      board_db:
+        description: "Path to the board SQLite file on the runner (empty = auto-resolve)"
+        required: false
+        type: string
+      strict_history:
+        description: "Retro mode: also fail on pre-epoch (grandfathered) cards with no verdict/evidence"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "9.12.0"
+
+concurrency:
+  # Never cancel an in-flight audit — the report it writes is the evidence.
+  group: qa-signoff-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  qa-signoff-audit:
+    name: qa-signoff-audit
+    runs-on: ${{ vars.QA_SIGNOFF_AUDIT_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Same toolchain pinning as ci.yml (NODE_VERSION / PNPM_VERSION) so the
+      # audit runs in the environment the rest of the pipeline uses.
+      # There is deliberately no `pnpm install`: the gate script has zero npm
+      # dependencies (QA_SIGN_OFF_GATE.md §6), so neither a lockfile drift nor a
+      # network hiccup must be able to block — or fake-green — a board audit.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Verify the gate script is present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f scripts/qa/signoff-gate.mjs ]; then
+            echo "::error title=Gate script missing::scripts/qa/signoff-gate.mjs is not on this ref — the board audit cannot run. The script ships with the QA-001h gate card (PR #16)."
+            exit 1
+          fi
+          node --version
+
+      - name: Resolve the board database
+        id: board
+        shell: bash
+        env:
+          BOARD_INPUT: ${{ inputs.board_db }}
+        run: |
+          set -uo pipefail
+          db=""
+          for candidate in "$BOARD_INPUT" "${HERMES_KANBAN_DB:-}" "$HOME/.hermes/kanban.db"; do
+            if [ -n "$candidate" ] && [ -f "$candidate" ]; then
+              db="$candidate"
+              break
+            fi
+          done
+          if [ -n "$db" ]; then
+            printf 'available=true\n' >> "$GITHUB_OUTPUT"
+            printf 'db=%s\n' "$db" >> "$GITHUB_OUTPUT"
+            echo "Board database: $db"
+          else
+            printf 'available=false\n' >> "$GITHUB_OUTPUT"
+            printf 'db=\n' >> "$GITHUB_OUTPUT"
+            echo "::warning title=QA sign-off audit not run::no board database found on this runner (board_db input, HERMES_KANBAN_DB, HOME/.hermes/kanban.db). The audit did NOT run — this run does not certify board compliance."
+          fi
+
+      - name: Run the board audit
+        id: audit
+        if: steps.board.outputs.available == 'true'
+        shell: bash
+        env:
+          BOARD_DB: ${{ steps.board.outputs.db }}
+          STRICT_HISTORY: ${{ inputs.strict_history }}
+        run: |
+          set -uo pipefail
+          args=(audit --repo "$GITHUB_WORKSPACE" --db "$BOARD_DB")
+          if [ "$STRICT_HISTORY" = "true" ]; then
+            args+=(--strict-history)
+          fi
+          echo "+ node scripts/qa/signoff-gate.mjs ${args[*]}"
+          set +e
+          node scripts/qa/signoff-gate.mjs "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/qa-signoff-audit.txt"
+          code="${PIPESTATUS[0]}"
+          set -e
+          printf '%s\n' "$code" > "$RUNNER_TEMP/qa-signoff-audit.exit"
+          printf 'exit=%s\n' "$code" >> "$GITHUB_OUTPUT"
+          exit "$code"
+
+      - name: Upload the audit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qa-signoff-audit
+          path: ${{ runner.temp }}/qa-signoff-audit.txt
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Write the run summary
+        if: always()
+        shell: bash
+        env:
+          BOARD_DB: ${{ steps.board.outputs.db }}
+          GIT_REF: ${{ github.ref }}
+          GH_EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -uo pipefail
+          board_shown="${BOARD_DB:-none found on this runner}"
+          {
+            echo "## QA sign-off gate — board audit"
+            echo
+            echo "| field | value |"
+            echo "|---|---|"
+            echo "| ref | $GIT_REF |"
+            echo "| event | $GH_EVENT_NAME |"
+            echo "| board | $board_shown |"
+            echo
+            if [ -f "$RUNNER_TEMP/qa-signoff-audit.txt" ]; then
+              audit_exit="$(cat "$RUNNER_TEMP/qa-signoff-audit.exit" 2>/dev/null || echo '?')"
+              echo "### Audit report (exit code $audit_exit)"
+              echo
+              echo '```text'
+              cat "$RUNNER_TEMP/qa-signoff-audit.txt"
+              echo '```'
+            else
+              echo "### AUDIT NOT RUN"
+              echo
+              echo "No board database was found on this runner, so the board audit did not run."
+              echo "**This run does not certify board compliance** — it is not evidence that the"
+              echo "board passes. Fix the board transport before reading any colour from this"
+              echo "workflow: set the repository variable \`QA_SIGNOFF_AUDIT_RUNNER\` to a"
+              echo "self-hosted runner that has the board mounted, or pass the \`board_db\`"
+              echo "dispatch input."
+            fi
+            echo
+            echo "---"
+            echo "_Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "--- summary written ---"
+          cat "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce the audit outcome
+        if: always()
+        shell: bash
+        run: |
+          set -uo pipefail
+          if [ "${{ steps.board.outputs.available }}" != "true" ]; then
+            echo "::error title=QA sign-off audit not run::no board database on this runner — refusing to finish green for an audit that did not happen."
+            exit 1
+          fi
+          code="$(cat "$RUNNER_TEMP/qa-signoff-audit.exit" 2>/dev/null || echo 3)"
+          echo "Board audit exit code: $code"
+          exit "$code"

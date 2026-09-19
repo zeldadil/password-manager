@@ -1,0 +1,62 @@
+title = "password-manager secret scanning (Gitleaks v8)"
+
+# Paths that legitimately hold generated artifacts / vendored code and must
+# never be reported as secret leaks.
+[allowlist]
+paths = [
+  "node_modules/",
+  ".git/",
+  "dist/",
+  "build/",
+  "coverage/",
+  ".worktrees/",
+]
+
+# Generic API-key / credential assignment (key/secret/token/password = value).
+[[rules]]
+id = "generic-api-key"
+description = "Generic API key / secret / token / password assignment"
+regex = '''(?i)(?:api[_-]?key|secret|token|password|passwd|pwd|client[_-]?secret)\s*[=:]\s*['"]?[A-Za-z0-9_./=+\-]{16,}['"]?'''
+tags = ["key"]
+
+# Telegram bot tokens / colon-separated API keys (e.g. 123456789:AA...).
+[[rules]]
+id = "telegram-token"
+description = "Telegram bot token / colon-separated API key"
+regex = '''\d{6,}:[A-Za-z0-9_=-]{20,}'''
+tags = ["key"]
+
+# Bearer / OAuth bearer tokens in Authorization headers.
+[[rules]]
+id = "bearer-token"
+description = "Bearer / OAuth bearer token value"
+regex = '''(?i)bearer\s+[A-Za-z0-9._-]{20,}'''
+tags = ["key"]
+
+# GitHub Personal Access Tokens (classic + fine-grained).
+[[rules]]
+id = "github-token"
+description = "GitHub Personal Access Token / fine-grained PAT"
+regex = '''(ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{82})'''
+tags = ["key"]
+
+# Slack API / bot tokens.
+[[rules]]
+id = "slack-token"
+description = "Slack API / bot token"
+regex = '''xox[baprs]-[A-Za-z0-9-]{10,}'''
+tags = ["key"]
+
+# AWS Access Key ID.
+[[rules]]
+id = "aws-access-key-id"
+description = "AWS Access Key ID"
+regex = '''AKIA[0-9A-Z]{16}'''
+tags = ["key"]
+
+# AWS Secret Access Key.
+[[rules]]
+id = "aws-secret-access-key"
+description = "AWS Secret Access Key"
+regex = '''(?i)aws(.{0,20})?['"][0-9a-zA-Z/+]{40}['"]'''
+tags = ["key"]

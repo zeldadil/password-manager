@@ -1,0 +1,24 @@
+# Known false positives from the repo's custom generic-api-key rule
+# (.gitleaks.toml), which matches on keyword + separator + 16+ word chars —
+# too broad to distinguish a real secret value from a property name whose
+# value happens to be a long camelCase identifier. Scoped per-fingerprint
+# (commit:file:rule:line), not a blanket regex change — see PR #16
+# merge-sweep discussion for the investigation.
+
+# scripts/qa/signoff-gate.mjs — three object literal properties (their key
+# is the word "token", their value a long camelCase helper call) in commit
+# 31b49b8 (QA-001h's original implementation). Dead code: this file was
+# already replaced by master's newer version (with the R5/author-rule
+# fixes from #29/#38) during the PR #16 merge, but gitleaks scans full
+# commit history, so the historical blob still matches.
+31b49b87081695c7d41dbf177518acd10c5ca18d:scripts/qa/signoff-gate.mjs:generic-api-key:176
+31b49b87081695c7d41dbf177518acd10c5ca18d:scripts/qa/signoff-gate.mjs:generic-api-key:189
+31b49b87081695c7d41dbf177518acd10c5ca18d:scripts/qa/signoff-gate.mjs:generic-api-key:205
+
+# Same three properties, same dead code, different historical commit: PR
+# #45 (feat/t_527d4720-runner) forked independently and carries its own
+# earlier copy of the original scripts/qa/signoff-gate.mjs at commit
+# 8a8b2e3 — byte-identical content to the 31b49b8 entries above.
+8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:176
+8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:189
+8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:205

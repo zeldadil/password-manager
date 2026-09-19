@@ -1,0 +1,41 @@
+# CI — PR #32 (feature/t_782802ac → feature/t_cdd23d35)
+
+Two runs recorded, both green; both heads are code/evidence commits.
+
+## run 35428653609 · head ba9e0c76 — 10/10 checks pass
+
+install-lockfile   pass  13s
+integration        pass  15s
+lint-typecheck     pass  19s
+sast               pass  30s
+secret-scan        pass  2m35s
+unit               pass  19s
+Semgrep OSS        pass   2s
+build              pass  14s
+dependency-audit   pass  13s
+e2e                pass  12s
+
+## run 35428811212 · head 904fab0e (the first evidence commit) — 10/10 checks pass
+
+build              pass
+dependency-audit   pass
+e2e                pass
+install-lockfile   pass
+integration        pass
+lint-typecheck     pass
+sast               pass
+secret-scan        pass
+Semgrep OSS        pass
+unit               pass
+
+`gh pr view 32 --json headRefOid,mergeStateStatus` → `headRefOid 904fab0e…`, `mergeStateStatus CLEAN`.
+Commits after `904fab0e` are evidence-text only (they touch no code or test file); the checks for the final head
+are readable live with `gh pr checks 32`.
+
+## unit job (105859073213, run 35428653609) — the lane the sweep runs in, with the new specs
+
+apps/web test:unit:  ✓ src/a11y/routes.a11y.test.tsx (21 tests) 1261ms
+apps/web test:unit:  Test Files  20 passed (20)
+apps/web test:unit:       Tests  164 passed (164)
+
+Verified live with: gh pr checks 32 --watch · gh run view 35428653609 --log --job 105859073213
