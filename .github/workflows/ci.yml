@@ -11,14 +11,15 @@ name: CI
 # run in parallel after a green install so that every gate reports its own
 # pass/fail verdict (a skipped job would hide a real result).
 #
-# QA-001d (this card) added the `sast` job (Semgrep) and the truffleHog step
-# in `secret-scan`. Both security scans run INDEPENDENT of `install-lockfile`:
+# QA-001d added the `sast` job (Semgrep) and the truffleHog step in
+# `secret-scan`. Both security scans run INDEPENDENT of `install-lockfile`:
 # they inspect source + git history and do not need installed dependencies, so
 # a secret or source-level vulnerability must be flagged even when the lockfile
 # is out of sync (a skipped security gate is a false sense of safety).
 #
+# QA-001c added Playwright browser install/cache to the `e2e` job (below).
+#
 # Deferred to later QA cards (kept out of scope here):
-#   - Playwright cross-browser install + full E2E matrix ....... QA-001c
 #   - Unit coverage thresholds (Tier A 80/70/90) ............... QA-001e
 #
 # NOTE: the root `pnpm -r --parallel --filter '**' run <script>` delegation
@@ -133,6 +134,16 @@ jobs:
           cache: pnpm
       - name: Install dependencies (frozen lockfile)
         run: pnpm install --frozen-lockfile
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package.json', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+      - name: Install Playwright browsers (Chromium, Firefox, WebKit)
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
       - name: E2E tests
         run: pnpm test:e2e
 

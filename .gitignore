@@ -28,6 +28,11 @@ Thumbs.db
 *.d.ts
 *.js
 
+# Playwright artifacts (uploaded by QA-001g, never committed)
+test-results/
+playwright-report/
+blob-report/
+
 # SQLite databases
 dev.db
 *.db

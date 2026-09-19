@@ -11,7 +11,9 @@
     "test": "pnpm -r --parallel --filter '**' run test",
     "test:unit": "pnpm -r --parallel --filter '**' run test:unit",
     "test:integration": "pnpm -r --parallel --filter '**' run test:integration",
-    "test:e2e": "pnpm -r --parallel --filter '**' run test:e2e",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install --with-deps chromium firefox webkit",
+    "test:e2e:report": "playwright show-report",
     "test:security": "pnpm -r --parallel --filter '**' run test:security",
     "format": "pnpm -r --parallel --filter '**' run format",
     "format:check": "pnpm -r --parallel --filter '**' run format:check",
@@ -26,5 +28,9 @@
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "22.20.3"
   }
 }
