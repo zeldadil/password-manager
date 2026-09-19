@@ -1,0 +1,137 @@
+=== A. master tree, key artifacts ===
+scripts/qa/signoff-gate.mjs
+tests/evidence/t_e348e0b7/README.md
+tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+
+=== B. t_e348e0b7 — master .github/workflows/ci.yml: secret-scan + trufflehog + sast ===
+32:  push:
+37:  contents: read
+44:  group: ci-${{ github.workflow }}-${{ github.ref }}
+45:  cancel-in-progress: true
+48:  install-lockfile:
+63:  lint-typecheck:
+83:  unit:
+103:  integration:
+139:  dependency-audit:
+157:  secret-scan:
+167:      - name: gitleaks secret scan
+168:        uses: gitleaks/gitleaks-action@v2
+175:          curl -sSfL -o trufflehog.tar.gz \
+176:            "https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/trufflehog_${TRUFFLEHOG_VERSION}_linux_amd64.tar.gz"
+177:          tar -xzf trufflehog.tar.gz trufflehog
+178:          ./trufflehog git file://. --no-update --results=verified,unknown --fail
+180:  sast:
+190:      image: semgrep/semgrep
+195:          semgrep scan \
+198:            --sarif --output semgrep.sarif \
+204:          sarif_file: semgrep.sarif
+209:          name: semgrep-sarif
+210:          path: semgrep.sarif
+213:  build:
+
+  --- secret-scan job body (master) ---
+  secret-scan:
+    name: secret-scan
+    # QA-001d: removed `needs: [install-lockfile]` — secret scanning must run
+    # even when dependencies are not installed (a secret leaked while the
+    # lockfile is out of sync must still be caught).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so committed secrets are detected too
+      - name: gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: truffleHog secret scan (entropy + verified)
+        env:
+          TRUFFLEHOG_VERSION: "3.97.5"
+        run: |
+          curl -sSfL -o trufflehog.tar.gz \
+            "https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/trufflehog_${TRUFFLEHOG_VERSION}_linux_amd64.tar.gz"
+          tar -xzf trufflehog.tar.gz trufflehog
+          ./trufflehog git file://. --no-update --results=verified,unknown --fail
+
+
+=== C. t_e348e0b7 — master allowlist files present? ===
+  absent on master: .gitleaksignore
+  absent on master: .trufflehogignore
+  absent on master: .gitleaks.toml
+
+=== D. t_e348e0b7 — evidence on master + token-shaped strings in it (count only) ===
+  present on master: tests/evidence/t_e348e0b7/README.md  token_shaped_lines=0  bytes=8240
+  present on master: tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt  token_shaped_lines=3  bytes=2376
+
+=== E. t_c3cb6842 — master scripts/qa/signoff-gate.mjs: the tightened regex ===
+68:const VERDICT_MARKER_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*:\s*([a-z][a-z-]*)/i;
+70:const DEFERRAL_RE = /qa[\s_-]*verdict\s*[:\-—]+\s*deferred/i;
+71:const EXCEPTION_RE = /qa[\s_-]*signoff[\s_-]*exception\s*[:\-—]+\s*(\S[^\n]*)/i;
+196:    const marker = VERDICT_MARKER_RE.exec(text);
+263:  const marker = (board.commentsByTask.get(task.id) || []).find((c) => DEFERRAL_RE.test(c.body || ""));
+382:  const c = (board.commentsByTask.get(task.id) || []).find((x) => EXCEPTION_RE.test(x.body || ""));
+384:  const m = EXCEPTION_RE.exec(c.body || "");
+  master blob: 4c856bd3b6f2968773bf8d9fc6fd86410b151bc1  sha256=44e15f95fcf133367d14f633ab1d2d812ccbe8f1b7666d78d762b65a73bc604b
+  installed   : 85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+  reviewed    : 85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814  (branch qa/t_d20787de-retro-verify head e833356)
+
+=== F. t_527d4720 — decision doc on any ref? ===
+c9fd162 arch: CI-001h follow-up (t_527d4720) — self-hosted runner decision + board transport
+  refs carrying docs/decisions/qa-signoff-gate-followups-t_527d4720.md:
+1
+  remotes/origin/feat/t_527d4720-runner
+  remotes/origin/qa/t_0af5aa3e-verdict
+  blob 145f5c1 exists? blob
+  docs/decision files across all refs:
+8ece47882f8c2989474e7a13c4a8164617afcd5b
+c9fd1629ba64ba108025bf5168586f044a2fdd2f
+8830baa44b52825fec3c9807c4936a70751e2ca0 
+002991546ef3ea7b1698a6941efd785cc44befc8 docs
+033b9fc85805d2651300d9b04fccbf1a96071543 docs/decisions
+e347155950f522a9a76363fe0fdd5ddd1f9dde9d docs/decisions/qa-signoff-gate-s10-open-items-t_7dd3b960.md
+1a9bf470cd60e29d69b8fdcca9f8549008083c69 
+4d9f7578c3e0afb56baaa9ebe482fb17a3a06878 docs
+fdb274bdb020a55bffbc4f6b3f34cd623b2958cb docs/decisions
+145f5c1fd4a3342a27c182ee0ac099987e361656 docs/decisions/qa-signoff-gate-followups-t_527d4720.md
+
+=== G. QA_SIGN_OFF_GATE.md / hooks: which refs carry them ===
+  --- origin/master
+  --- qa/t_338f47fd-marker-author
+QA_SIGN_OFF_GATE.md
+scripts/qa/hooks/install-signoff-gate.sh
+scripts/qa/hooks/patch-config.py
+scripts/qa/hooks/qa-signoff-gate.sh
+scripts/qa/hooks/verify-signoff-gate.sh
+  --- qa/t_58280940-r8-stale-deferral
+
+=== H. t_80fc0326 — remote branch tips carrying a token-shaped string (count only) ===
+  DIRTY refs/remotes/origin/feature/t_4e1b6937 : 1 file(s)
+      refs/remotes/origin/feature/t_4e1b6937:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  DIRTY refs/remotes/origin/feature/t_cdd23d35 : 1 file(s)
+      refs/remotes/origin/feature/t_cdd23d35:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  DIRTY refs/remotes/origin/master : 1 file(s)
+      refs/remotes/origin/master:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  DIRTY refs/remotes/origin/qa/t_0af5aa3e-rotation-verdict : 1 file(s)
+      refs/remotes/origin/qa/t_0af5aa3e-rotation-verdict:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  DIRTY refs/remotes/origin/qa/t_338f47fd-marker-author : 1 file(s)
+      refs/remotes/origin/qa/t_338f47fd-marker-author:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  DIRTY refs/remotes/origin/qa/t_4242bee8-pre-epoch-retrofit : 1 file(s)
+      refs/remotes/origin/qa/t_4242bee8-pre-epoch-retrofit:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  DIRTY refs/remotes/origin/qa/t_4e1b6937-review : 1 file(s)
+      refs/remotes/origin/qa/t_4e1b6937-review:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  DIRTY refs/remotes/origin/qa/t_58280940-r8-stale-deferral : 1 file(s)
+      refs/remotes/origin/qa/t_58280940-r8-stale-deferral:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  DIRTY refs/remotes/origin/qa/t_7dd3b960-s10-open-items : 1 file(s)
+      refs/remotes/origin/qa/t_7dd3b960-s10-open-items:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  DIRTY refs/remotes/origin/qa/t_99e408c5-r5-quoted-path : 1 file(s)
+      refs/remotes/origin/qa/t_99e408c5-r5-quoted-path:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  DIRTY refs/remotes/origin/qa/t_b51a1ff3-review : 1 file(s)
+      refs/remotes/origin/qa/t_b51a1ff3-review:tests/evidence/t_b51a1ff3/reproduce-review.sh
+  DIRTY refs/remotes/origin/qa/t_b51a1ff3-review-r2 : 1 file(s)
+      refs/remotes/origin/qa/t_b51a1ff3-review-r2:scripts/qa/secret-guard.selftest.mjs
+  DIRTY refs/remotes/origin/qa/t_cdd23d35-review : 1 file(s)
+      refs/remotes/origin/qa/t_cdd23d35-review:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  remote-tracking branch tips scanned: 40  dirty: 13
+
+=== I. GitHub's own branch tips (authoritative, ls-remote) ===
+40

@@ -1,0 +1,27 @@
+### revisions under test
+0af4a45363280c134b19662840d04e43d6214b98fca278ec75efe2f824cc8d55  /home/sap/qa-retrofit-work/bin/gate-pr25.mjs
+28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  /home/sap/qa-retrofit-work/bin/gate-installed.mjs
+44e15f95fcf133367d14f633ab1d2d812ccbe8f1b7666d78d762b65a73bc604b  /home/sap/qa-retrofit-clone/scripts/qa/signoff-gate.mjs
+
+### is the installed revision on any ref of the clone?
+  installed sha256 28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab -> refs carrying it: NONE
+
+############ gate-pr25
+before counts: {"done_cards":45,"enforced":18,"failures":30,"grandfathered":27}
+after  counts: {"done_cards":47,"enforced":20,"failures":24,"grandfathered":27}
+pre-epoch FAIL: 24 -> 18
+post-epoch FAIL: 6 -> 6
+cleared pre-epoch FAILs (6): t_08b02da9, t_3ca45da2, t_5fe41426, t_9840ccdd, t_a2cf1744, t_ac6a1f3f
+NEWLY failing pre-epoch cards (0): NONE
+subset check: after-pre-epoch-fails ⊆ before-pre-epoch-fails -> true
+cards new to the done-audit: t_4e1b6937, t_710ed14c
+
+############ gate-installed
+before counts: {"done_cards":45,"enforced":18,"failures":30,"grandfathered":27}
+after  counts: {"done_cards":47,"enforced":20,"failures":24,"grandfathered":27}
+pre-epoch FAIL: 24 -> 18
+post-epoch FAIL: 6 -> 6
+cleared pre-epoch FAILs (6): t_08b02da9, t_3ca45da2, t_5fe41426, t_9840ccdd, t_a2cf1744, t_ac6a1f3f
+NEWLY failing pre-epoch cards (0): NONE
+subset check: after-pre-epoch-fails ⊆ before-pre-epoch-fails -> true
+cards new to the done-audit: t_4e1b6937, t_710ed14c

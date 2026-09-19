@@ -1,0 +1,44 @@
+QA-001i-fu6 (t_99e408c5) — replay of the reported instance on a COPY of the live board
+date: 2026-09-18T21:31:43Z
+The instance: t_7dd3b960's operative verdict (real comment #113) reports a broken
+evidence pointer on t_28f60dc1 and *quotes* that card's path. On the live board a
+newer verdict (#114) already supersedes #113, so the replay re-inserts a byte-identical
+copy of #113 with the newest created_at into a scratch copy of the board — no live data
+is modified. Command:
+  cp <live board> /tmp/board-99e408c5-replay.db
+  sqlite3 /tmp/board-99e408c5-replay.db "INSERT INTO task_comments (task_id,author,body,created_at) SELECT task_id,author,body,(SELECT MAX(created_at)+1 FROM task_comments) FROM task_comments WHERE id=113;"
+
+newest comment on t_7dd3b960 (id, author, created_at):
+136|qa|1789767092
+does the quoted path exist on any ref of the checkout?
+  (empty above = absent from every ref)
+
+=== old gate (0af4a453…, installed) — the reported failure
+QA sign-off gate — check t_7dd3b960 (pre-complete) (db: /tmp/board-99e408c5-replay.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_7dd3b960  QA-001i — close gate-tooling §10 open items (audit CI, pre-epoch backlog, R7) @qa
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the operative verdict does not exist: tests/evidence/t_28f60dc1/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_99e408c5; not found on any ref)
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_7dd3b960/dogfood-after-verdict.txt named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence docs/decisions named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A4_EVIDENCE_OFF_TREE: operative evidence docs/decisions/qa-signoff-gate-s10-open-items-t_7dd3b960.md is not in this checkout but exists in the repo at 8ece47882f8c2989474e7a13c4a8164617afcd5b — accepted
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_7dd3b960/README.md is not in this checkout but exists in the repo at 6e1df599dc35faae6319830604514564a9811d33 — accepted
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_7dd3b960/reproduce.sh is not in this checkout but exists in the repo at 8ece47882f8c2989474e7a13c4a8164617afcd5b — accepted
+exit=1
+
+=== new gate (t_99e408c5 revision) — same card, same board, same repo
+QA sign-off gate — check t_7dd3b960 (pre-complete) (db: /tmp/board-99e408c5-replay.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_7dd3b960  QA-001i — close gate-tooling §10 open items (audit CI, pre-epoch backlog, R7) @qa
+        warn A6_EVIDENCE_CITED: evidence tests/evidence/t_28f60dc1/README.md is only cited in the operative verdict (outside its §5.7 evidence label, or inside a code span) — not claimed as this card's evidence, report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_7dd3b960/dogfood-after-verdict.txt named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence docs/decisions named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_7dd3b960/README.md is not in this checkout but exists in the repo at 6e1df599dc35faae6319830604514564a9811d33 — accepted
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_7dd3b960/reproduce.sh is not in this checkout but exists in the repo at 8ece47882f8c2989474e7a13c4a8164617afcd5b — accepted
+exit=0
+
+=== control: the card that *claims* a missing artifact of its own (t_28f60dc1) must still fail R5
+QA sign-off gate — check t_28f60dc1 (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_28f60dc1  ARCH: land the QA sign-off gate tooling on master (policy + selftest + installer/verifier) — root cause of recurring gate P1s @architect
+        R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: tests/evidence/t_28f60dc1/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_99e408c5; not found on any ref)
+exit=1

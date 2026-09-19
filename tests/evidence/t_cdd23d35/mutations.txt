@@ -1,0 +1,35 @@
+# FE-001k mutation checks — 2026-09-18T21:42:59.681Z
+# lane: pnpm exec vitest run --config vitest.a11y.config.ts (apps/web)
+
+## M1 — harness: jsdom hit-test stub disabled (page-level rules get skipped)
+   expected: fail
+   observed: fail (exit 1, tests 13 failed | 6 passed (19))
+   failing:  src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /login (Login (pre-auth)) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /unlock (Unlock (pre-auth)) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /vault (Vault) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /resources/res-123 (Resource detail) …(+9)
+   RESULT:   as expected
+
+## M2 — app: the /vault screen has no <h1>
+   expected: fail
+   observed: fail (exit 1, tests 6 failed | 13 passed (19))
+   failing:  src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /vault (Vault) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > grades the shell with the user disclosure open as well | src/a11y/routes.a11y.test.tsx > axe-core harness — the sweep can actually fail > reports missing <h1> as page-has-heading-one | src/a11y/routes.a11y.test.tsx > axe-core harness — the sweep can actually fail > reports no <main> landmark as landmark-one-main …(+2)
+   RESULT:   as expected
+
+## M3 — app: the skip link points at a landmark that has no id
+   expected: fail
+   observed: fail (exit 1, tests 11 failed | 8 passed (19))
+   failing:  src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /vault (Vault) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /resources/res-123 (Resource detail) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /folders (Folders) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /tags (Tags) …(+7)
+   RESULT:   as expected
+
+## M4 — app: the sidebar's two <nav> landmarks get the same accessible name
+   expected: fail
+   observed: fail (exit 1, tests 11 failed | 8 passed (19))
+   failing:  src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /vault (Vault) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /resources/res-123 (Resource detail) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /folders (Folders) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /tags (Tags) …(+7)
+   RESULT:   as expected
+
+## M5 — M1 + sweep reduced to a violations-only check (no `incomplete` assertion, no vacuity guard, sensitivity block skipped) — vacuous-green control
+   expected: pass
+   observed: pass (exit 0, tests 15 passed | 4 skipped (19))
+   RESULT:   as expected
+
+## clean tree (control)
+   observed: pass (exit 0, tests 19 passed (19))
+   RESULT:   as expected
