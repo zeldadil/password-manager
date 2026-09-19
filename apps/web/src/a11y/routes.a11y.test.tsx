@@ -1,6 +1,6 @@
 import axe from 'axe-core'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { createMemoryRouter, RouterProvider } from 'react-router-dom'
+import { createMemoryRouter, RouterProvider, matchPath, type RouteObject } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { routes } from '../routes'
 import { HTML_LANG, INDEX_HTML, JSDOM_UNAVAILABLE_RULES, formatViolations, runAxe } from './axe'
@@ -16,6 +16,12 @@ import { HTML_LANG, INDEX_HTML, JSDOM_UNAVAILABLE_RULES, formatViolations, runAx
  *   graded by axe-core with axe's default rule set (WCAG + best practice). The eight
  *   screens are covered, plus the two fail-closed guards (`/` and the `*` catch-all)
  *   so the redirect targets are graded as they actually resolve.
+ * - `route coverage` ties that list to `src/routes.tsx` instead of trusting it: the
+ *   screen paths are *derived* from the exported route table and matched against the
+ *   swept set, in both directions (no declared path unswept, no swept path
+ *   undeclared). The route table — not this file — is therefore the source of truth
+ *   for what "all routes" means: a route added to the table without a swept case
+ *   fails this lane instead of being graded by nobody.
  * - A route passes on `violations.length === 0` **and** `incomplete.length === 0`.
  *   `incomplete` is axe saying "I could not decide" — counting it as a pass is how a
  *   "zero violations" claim turns vacuous (see the `landmark-one-main` note in
@@ -44,6 +50,16 @@ interface RouteCase {
   resolved: string
 }
 
+/**
+ * Cases the sweep grades. This list is not the source of truth for which paths
+ * exist — the exported route table (`../routes`) is, and the `route coverage` specs
+ * below fail if a path the table declares has no case here (and vice versa).
+ *
+ * Cases are concrete paths: a parameterised route is swept at a real instance of
+ * itself (`/resources/:id` → `/resources/res-123`), and `resolved` records where the
+ * router actually lands so the two fail-closed guards are graded at their redirect
+ * target rather than at the path that was requested.
+ */
 const ROUTES: readonly RouteCase[] = [
   { path: '/login', screen: 'Login (pre-auth)', resolved: '/login' },
   { path: '/unlock', screen: 'Unlock (pre-auth)', resolved: '/unlock' },
@@ -58,10 +74,61 @@ const ROUTES: readonly RouteCase[] = [
 ]
 
 /**
+ * Screen paths declared by the exported route table (`../routes`), in declaration
+ * order, nesting included.
+ *
+ * A pathless route (an `element`/layout route with children — `A11yLayout` and
+ * `AppShell` here) is not a screen: it contributes no path of its own, while its
+ * children's paths are still collected. An index route resolves to its parent's path.
+ */
+function declaredScreenPaths(routeList: readonly RouteObject[], parentPath = ''): string[] {
+  const paths: string[] = []
+  for (const route of routeList) {
+    const path = route.index === true ? parentPath || '/' : joinRoutePath(parentPath, route.path)
+    if (path !== undefined) paths.push(path)
+    if (route.children) paths.push(...declaredScreenPaths(route.children, path ?? parentPath))
+  }
+  return paths
+}
+
+/** Resolves a child route path against its parent, as react-router nests them. */
+function joinRoutePath(parentPath: string, childPath: string | undefined): string | undefined {
+  if (childPath === undefined) return undefined
+  if (childPath.startsWith('/')) return childPath
+  const base = parentPath.endsWith('/') ? parentPath.slice(0, -1) : parentPath
+  return `${base}/${childPath}`
+}
+
+/** Is `pathname` an instance of the route pattern `pattern`? */
+function routeMatches(pattern: string, pathname: string): boolean {
+  return matchPath({ path: pattern, end: true }, pathname) !== null
+}
+
+/**
  * Rules that must be in `passes` on every route. Each one is a rule this app is
  * expected to satisfy by construction: a titled document, a declared language, one
- * `<main>` landmark per page, one `<h1>` per page, all content inside a landmark,
- * a bare HTML shell that cannot be scrolled into a trap, and a skip link.
+ * `<main>` landmark per page, one `<h1>` per page, all content inside a landmark
+ * (`region`), and no duplicate/nested main landmarks.
+ *
+ * `bypass` is in the list, but it is not a synonym for "has a skip link": axe grades
+ * `bypass` as `any: [internal-link-present, header-present, landmark]`, so the header
+ * and sidebar landmarks alone satisfy it on the shell routes. What this lane does and
+ * does not catch about the skip link is measured, not assumed
+ * (`tests/evidence/t_782802ac/mutations.txt`, probes P1/P2 — both re-runnable):
+ *
+ * - **P1 — skip link removed from `A11yLayout`**: the six shell routes still pass
+ *   (their header/landmarks satisfy `bypass`), but `bypass` drops out of `passes` on the
+ *   four pre-auth resolutions (`/login`, `/unlock`, and the two guards that land on
+ *   `/login`) — there the skip link is the only bypass mechanism — and the lane fails
+ *   there. A missing skip link *is* caught, on the screens that have nothing else to
+ *   bypass with.
+ * - **P2 — the skip link's target (`<main id>`) dropped**: `bypass` still passes; the
+ *   failure is `region`, on the shell routes. The target loss is not this rule's
+ *   business.
+ *
+ * The skip link's own contract (it exists, precedes the header, targets a focusable
+ * `<main>`) is asserted directly in the unit lane (`a11y.test.tsx`), where it does not
+ * depend on which rule happens to fire.
  */
 const REQUIRED_PASSES: readonly string[] = [
   'document-title',
@@ -130,6 +197,40 @@ describe('axe-core — zero violations on every route', () => {
 
     expect(formatViolations(results)).toBe('')
     expect(results.incomplete.map((result) => result.id)).toEqual([])
+  })
+})
+
+describe('route coverage — the sweep is tied to the route table', () => {
+  // The sweep above grades `ROUTES`; the route table in `../routes` decides which
+  // routes exist. These two specs are the link between them, so "axe-core on all
+  // routes" cannot quietly become "on the routes someone remembered to list".
+  const declared = declaredScreenPaths(routes)
+  const swept = ROUTES.map((route) => route.path)
+
+  it('grades every screen path the route table declares', () => {
+    // Without this, adding `{ path: '/audit', element: <div>audit log</div> }` to the
+    // table left this lane 19/19 green (QA probe Q4) — the new route was graded by
+    // nobody, and would have violated `page-has-heading-one` had it been swept.
+    const unswept = declared.filter((pattern) => !swept.some((path) => routeMatches(pattern, path)))
+
+    expect(
+      unswept,
+      `route table declares screen paths this sweep does not grade: ${unswept.join(', ')}`,
+    ).toEqual([])
+  })
+
+  it('grades no path the route table does not declare', () => {
+    // The converse, so a stale case cannot masquerade as coverage: a swept path that
+    // matches no declared route (route renamed or removed, and — worse — a path that
+    // only resolves through the `*` catch-all) is not grading a screen.
+    const undeclared = swept.filter(
+      (path) => !declared.some((pattern) => routeMatches(pattern, path)),
+    )
+
+    expect(
+      undeclared,
+      `swept paths the route table does not declare: ${undeclared.join(', ')}`,
+    ).toEqual([])
   })
 })
 
@@ -208,9 +309,11 @@ describe('axe-core harness — document and rule-set integrity', () => {
     expect(document.documentElement.getAttribute('lang')).toBe(HTML_LANG)
   })
 
-  it('declares no non-empty <title> in the source document that the app must override', () => {
+  it('ships a non-empty <title> fallback in index.html that the app overrides per route', () => {
     // `document-title` is graded against the title the app sets per route
-    // (RouteFocusManager), so index.html carries only the app-name fallback.
+    // (RouteFocusManager), so index.html carries only the app-name fallback — but it
+    // must carry one: an empty `<title>` in the shipped document is a real
+    // `document-title` failure for any route the app has not titled yet.
     expect(INDEX_HTML).toMatch(/<title>\s*\S[\s\S]*?<\/title>/)
   })
 

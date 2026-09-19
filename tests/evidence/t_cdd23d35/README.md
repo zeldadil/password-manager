@@ -118,9 +118,19 @@ M2–M4 show the sweep fails for real app regressions, not only for harness tamp
 - **Stylesheets are not loaded** by the test environment, so the sweep grades structure, landmarks, names,
   roles and states — not rendered appearance (focus ring visibility, spacing, overlap).
 - **States beyond the disclosure menu** (error banners, dialogs, the lock/auto-lock banner) do not exist yet;
-  FE-002e/FE-002h and FE-003l extend this lane as those screens land. `REQUIRED_PASSES` is deliberately a
-  named list, so adding a route means adding it to `ROUTES` — a new route that is not swept will not be
-  silently covered.
+  FE-002e/FE-002h and FE-003l extend this lane as those screens land. `REQUIRED_PASSES` is deliberately a named
+  list.
+- **Route coverage is checked against the route table** (this replaces the earlier wording here, which claimed
+  "a new route that is not swept will not be silently covered" while nothing enforced it — measured the
+  opposite: a new `<h1>`-less route left the lane 19/19 green, `t_cdd23d35` QA probe Q4). Since `t_782802ac` the
+  sweep derives the screen paths from the exported route table (`src/routes.tsx`) and fails when a declared path
+  has no swept case (and when a swept case matches no declared route), so adding a route and not sweeping it is
+  a lane failure. See `tests/evidence/t_782802ac/README.md`; the mutation that proves it is re-runnable
+  (`node tests/evidence/t_782802ac/mutation-check.mjs`, case R1).
+- **What the lane catches about the skip link** is narrower than "`bypass` is in `REQUIRED_PASSES`" suggests:
+  removing the skip link fails the lane only on the four pre-auth resolutions (`bypass` has nothing else to
+  satisfy it there) and stays green on the six shell routes; dropping its target is caught by `region`, not
+  `bypass`. Measured, probes P1/P2 in the same log.
 - Contrast/geometry verification stays with the browser-level runs (dogfood/QA).
 
 ## 6. CI wiring decision
