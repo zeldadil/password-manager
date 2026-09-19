@@ -1,0 +1,7 @@
+t_9840ccdd   comment_id=128  author=qa     at=2026-09-18 21:30:10  body=DIFFERS  head="QA-VERDICT: pass-with-conditions — retro-verified 2026-09-"
+t_3ca45da2   comment_id=129  author=qa     at=2026-09-18 21:30:10  body=IDENTICAL  head="QA-VERDICT: pass — retro-verified 2026-09-18 against archi"
+t_08b02da9   comment_id=130  author=qa     at=2026-09-18 21:30:10  body=IDENTICAL  head="QA-VERDICT: pass — retro-verified 2026-09-18 against archi"
+t_ac6a1f3f   comment_id=131  author=qa     at=2026-09-18 21:30:19  body=DIFFERS  head="QA-VERDICT: pass — record repaired 2026-09-18 by QA-001i-f"
+t_a2cf1744   comment_id=132  author=qa     at=2026-09-18 21:30:19  body=DIFFERS  head="QA-VERDICT: pass-with-conditions — record repaired 2026-09"
+t_5fe41426   comment_id=133  author=qa     at=2026-09-18 21:30:19  body=DIFFERS  head="QA-VERDICT: pass-with-conditions — record repaired 2026-09"
+verification rc=1 (0 = all identical + authored by qa)
