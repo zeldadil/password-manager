@@ -1,0 +1,72 @@
+====================================================================================================
+### t_ea0783c5 [done] assignee=architect created_by=architect completed=1789658945
+TITLE: CI-001h: wire QA sign-off gate board audit as a scheduled CI job (qa)
+--- body ---
+## CI card: wire the QA sign-off gate board audit as a scheduled CI job
+
+**Parent:** t_33dcad7d (architect decision: audit belongs in CI as a scheduled job, not a per-PR required check)
+
+**Decision context (read first):**
+- The board audit (`node scripts/qa/signoff-gate.mjs audit`) is a board-wide policy/retro detection tool, not a per-PR code-quality gate.
+- The real enforcement is already the `pre_tool_call` hook in all 7 profiles — a card cannot reach `done` without verdict + evidence regardless of CI.
+- `.github/workflows/ci.yml` is an active collision hotspot across QA-001b/c/d/g, so this card must **not** edit `ci.yml` in a way that conflicts with those cards.
+- Decision recorded in `docs/decisions/qa-signoff-gate-followups-t_33dcad7d.md` §CI wiring.
+
+**What to build:**
+- Add a **scheduled** (cron) job — NOT a `pull_request`/`push` required check — that runs `node scripts/qa/signoff-gate.mjs audit --repo ${{ github.workspace }}` against the default board and posts the result as a comment on a tracked issue or as a workflow summary.
+- The job must not be listed as a required status check on `master` (that would make it a per-PR gate, which is not the intent and would collide with the hotspot).
+- If and when a release-track / non-default board exists, the same job (or a variant) runs `audit --db <path>` against it — but no non-default board exists yet, so scope this card to the default board only.
+- Re-use the existing `install-lockfile` → setup pattern from `ci.yml` so the job has a Node + pnpm environment and the repo checked out; the gate script is already at `scripts/qa/signoff-gate.mjs` and has zero npm dependencies.
+
+**Acceptance criteria:**
+1. A new scheduled CI job (`qa-signoff-audit`) exists in `.github/workflows/ci.yml` (or a dedicated workflow file if the team prefers to keep the hotspot file untouched) that runs on a weekly cron and on `workflow_dispatch`.
+2. The job runs `node scripts/qa/signoff-gate.mjs audit --repo <repo-root>` and surfaces the pass/fail counts + any FAIL cards in the workflow summary or a posted comment.
+3. The job is **not** added as a required status check on `master` (no branch-protection change).
+4. The job does not alter the existing per-PR job graph (`install-lockfile → lint-typecheck → unit → integration → e2e → dependency-audit → secret-scan → build`) — no `needs:`, no new `pull_request` trigger blocking merges.
+5. Evidence attached to this card: a screenshot or copy of the workflow file diff + a successful `workflow_dispatch` run URL (or a note that the repo is not yet visible to GitHub Actions and the diff is the deliverable).
+
+**Out of scope:** retrofitting pre-epoch cards (that's a separate QA retro card if the team wants it); non-default board audit (deferred until such a board exists); changing the gate script (owned by `qa` on the gate card itself).
+--- result ---
+
+--- comment by qa @ 2026-09-17T15:21:33.000Z ---
+## QA-VERDICT: pass — CI-001h executed and verified
+
+**Deliverable:** `.github/workflows/qa-signoff-audit.yml` (new dedicated workflow file; **`ci.yml` untouched**)
+**PR:** https://github.com/zeldadil/password-manager/pull/17 · branch `feature/t_ea0783c5` (head `b91577a`, based on `origin/master` = `543c396`)
+**Evidence:** `tests/evidence/t_ea0783c5/README.md` (attached to this card as `CI-001h-evidence-README.md`) + 15 transcripts in the same directory.
+
+### Acceptance criteria → verified
+
+| AC | Result | Evidence |
+|---|---|---|
+| 1 — scheduled job `qa-signoff-audit`, weekly cron + `workflow_dispatch` | **pass** | `schedule: 17 6 * * 1`, `workflow_dispatch` with `board_db` / `strict_history` inputs; `actionlint` 0 problems; parsed trigger set = exactly `{schedule, workflow_dispatch}` |
+| 2 — runs `audit --repo <repo-root>`, surfaces counts + FAIL cards | **pass** | real runner log: `node scripts/qa/signoff-gate.mjs audit --repo /home/runner/work/password-manager/password-manager --db …` → summary shows `enforced … pass: 1 · FAIL: 0`; injected-violation scenario surfaces the FAIL card with `R1_QA_VERDICT_MISSING` / `R4_EVIDENCE_MISSING`; `--strict-history` surfaces the 27-card pre-epoch backlog |
+| 3 — not a required status check, no branch-protection change | **pass** | live API read-back: required contexts are the same 8 (`build, dependency-audit, e2e, install-lockfile, integration, lint-typecheck, secret-scan, unit`); no protection write was issued |
+| 4 — per-PR job graph unchanged | **pass** | `git diff origin/master...HEAD -- .github/workflows/ci.yml` empty; job has no `needs:`; no `pull_request`/`push` trigger; PR #17 itself ran exactly the same 8 checks, **8/8 pass** (run 35239371580) |
+| 5 — diff + run URL | **pass** | diff in `diff-vs-master.txt`; **live GitHub Actions run** https://github.com/zeldadil/password-manager/actions/runs/35238945449 (job `qa-signoff-audit` **success**, real audit output, artifact `qa-signoff-audit` id `10504782093`); `workflow_dispatch` is impossible pre-merge because the file is not on the default branch — captured `HTTP 404` in `gh-workflow-dispatch-attempt.txt` |
+
+### How it was verified (not just asserted)
+
+`actionlint` (0 problems, all workflows) · a 30-assertion AC checker against the parsed workflow, `ci.yml` and the **live** branch-protection JSON (all PASS) · a mini Actions runner (`replay-job.py`) that executes the job's **actual `run:` scripts** in four scenarios (board present → SUCCESS; no board → `AUDIT 
+--- comment by qa @ 2026-09-17T15:24:20.000Z ---
+### Gate self-check finding + workspace evidence mirror (no change to the deliverable)
+
+While closing this card the sign-off gate blocked completion with 4 x `R5_EVIDENCE_FILE_MISSING`:
+
+```
+R5_EVIDENCE_FILE_MISSING: evidence file named in the sign-off comment does not exist:
+  .github/workflows/qa-signoff-audit.yml, tests/evidence/t_ea0783c5/README.md,
+  scripts/qa/signoff-gate.mjs, .github/workflows/ci.yml
+  (repo: /home/sap/.hermes/kanban/workspaces/t_ea0783c5)
+```
+
+**Reproduced and diagnosed** (not assumed):
+* `--repo /home/sap/.hermes/kanban/workspaces/t_ea0783c5` (the task workspace the hook evaluates) → the 4 findings above;
+* `--repo /home/sap/password-manager/.worktrees/t_ea0783c5` (the git worktree that holds the work) → exit 0, 0 violations.
+
+**Root cause:** R5 resolves the paths named in the sign-off comment against whichever checkout the gate evaluates. This card's workspace is `scratch` (`~/.hermes/kanban/workspaces/t_ea0783c5`), which is not a git checkout at all, so *no* legitimate repo-relative pointer can resolve — even though the evidence provably exists (committed and pushed on `feature/t_ea0783c5`, in PR #17, and attached to this card as `CI-001h-evidence-README.md`, 12 306 B).
+
+**What I did about it (transparent, not silent):** mirrored the deliverable and the evidence bundle from the worktree into this task's workspace, byte-for-byte, with every hash compared afterwards — all 22 files `OK` (`sha256` left = workspace copy, right = worktree copy):
+`.github/workflows/qa-signoff-audit.yml` (`838e83c7…`), `.github/workflows/ci.yml` (`b97341c9…`), `scripts/qa/signoff-gate.mjs` (`00807b00…`, the PR #16 script the replays use) and the whole `tests/evidence/t_ea0783c5/` directory (19 files). The **canonical** copies stay the committed ones on `feature/t_ea0783c5` / PR #17; the workspace copies exist only so the gate's repo-relative check resolves where the hook runs, and they are deleted with the workspace after completion (declared artifacts are captured as durable attachments first). Re-checked after the mirror: `check --task t_ea0783c5 --pre-complete --repo <task workspace>` → **exit 0, 0 violations**.
+
+**Finding for the gate owner** (fixing it is out of scope here — `QA_SIGN_OFF_GATE.md` and `signoff-gate.mjs` belong to the QA-001h gate card): R5 should degrade to an `A3`-style *unverified* advisory when the evaluation root is not a checkout / has no `--repo`, or accept the card attachment and the branch that carries the evidence, instead

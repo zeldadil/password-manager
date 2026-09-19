@@ -1,0 +1,50 @@
+====================================================================================================
+### t_33dcad7d [done] assignee=architect created_by=qa completed=1789657737
+TITLE: QA-001h follow-ups: sign-off gate — CI wiring decision + pre-epoch retrofit + R7 mapping sign-off
+--- body ---
+Follow-ups from QA-001h (`t_430aa9a3`, PR #16) — the QA sign-off gate is live and documented in `QA_SIGN_OFF_GATE.md`; these are the decisions/cleanups that need the architect's call. None of them block the gate, which is already enforcing.
+
+**Context.** `scripts/qa/signoff-gate.mjs` + the `pre_tool_call` hook installed in all 7 profiles now block `kanban_complete` while a card lacks a QA verdict + evidence (TEST_STRATEGY §11/§12). Rules R1–R8; details in `QA_SIGN_OFF_GATE.md`. Evidence: `tests/evidence/t_430aa9a3/` (selftest 33/33, live fires in 7 profiles, `verify --all --live` 91 ok / 0 FAIL).
+
+**1. CI wiring decision (§10.1).** `node scripts/qa/signoff-gate.mjs audit` can run as a `qa-signoff` CI job, but `.github/workflows/ci.yml` is currently a collision hotspot across the CI cards (QA-001b/c/d/g all touch it). Decide whether the board audit belongs in CI, and if so create the CI card for the owning profile rather than editing ci.yml from this follow-up.
+
+**2. Pre-epoch backlog (§10.2).** 26 cards were `done` before the gate epoch (`2026-09-17T15:00:00Z`) and are grandfathered; `node scripts/qa/signoff-gate.mjs audit --strict-history` shows 25 of them carry neither a QA verdict nor an evidence pointer. Decide: retrofit them with verdict+evidence (then a QA card per batch), or formally leave them grandfathered and record that decision in `PROJECT_BRIEF.md` §9 / TEST_STRATEGY §15. The audit currently lists them as advisories on every run.
+
+**3. R7 heuristic confirmation (§10.3).** Crypt/ bridge / auth detection = security `Test Types` **and** a crypto-bridge keyword. Confirm the classification list against ADR-002 §5.3 and ADR-005 §9.2 so AR-6 sign-off lands on exactly the right cards (a false positive is cleared by an architect comment or a `qa-signoff-exception:` marker).
+
+**4. Non-default boards (§10.4).** The hook uses `$HERMES_KANBAN_DB`, so it follows release-track/non-default boards automatically; only the audit needs `--db` pointed at them. Confirm whether a release-track board is planned and whether the audit should be run there by a QA release card.
+
+**5. Architect sign-off of this policy.** `QA_SIGN_OFF_GATE.md` is QA-owned; row 2 of TEST_STRATEGY §12 (crypto/bridge/auth ⇒ Architect **and** QA sign-off) is now mechanised, so please review the R7 mapping as part of your sign-off on TEST_STRATEGY §12.
+
+**Out of scope for this card:** changing the gate's code (that stays with `qa`) — this card is decisions + routing.
+--- result ---
+
+--- comment by architect @ 2026-09-17T14:57:38.000Z ---
+Architect sign-off on this card's own security-track status and on the R7 mapping (TEST_STRATEGY §12 row 2):
+
+**R7 mapping confirmed against ADR-002 §5.3 + ADR-005 §9.2.** The gate's `SECURITY_TRACK_RE` (signoff-gate.mjs §64–65) keys on `packages/crypto | crypto-primitive/implementation/boundary/module/package | KDF | AEAD | Argon2id | vault-key | bridge-protocol | bridge-message | autofill`, AND a `security` Test Type, AND non-QA assignee. That list matches the security surface documented in ADR-002 §5.1–§5.5 (KDF, AEAD, key wrapping, nonce, tag, lock/unlock lifecycle, recovery, backup, extension crypto-boundary special case) and ADR-005 §9.2 (bridge message contract review gap flagged for DOC-001e). The heuristic is deliberately conservative: security Test Type AND a crypto/bridge keyword. False positives are cleared by an architect comment or a `qa-signoff-exception:` marker — both mechanisms exist and are audit-visible (X1_EXCEPTION on every run).
+
+**Verdict: the R7 classification list is correct and complete as shipped. No keyword additions or removals needed.** AR-6 sign-off will land on exactly the cards it should.
+
+**Architect sign-off recorded:** `AR-6 review — R7 security-track heuristic reviewed against ADR-002 §5.3 and ADR-005 §9.2; classification list confirmed; signed off (architect, 2026-09-17).` This card itself is security-track (it touches the gate policy + R7); the above comment satisfies the Architect half of AR-6 for this card.
+--- comment by architect @ 2026-09-17T15:07:16.000Z ---
+**Architect sign-off — TEST_STRATEGY §12 row 2 (crypto/bridge/auth ⇒ Architect AND QA sign-off):**
+
+Reviewed the R7 mechanisation in `scripts/qa/signoff-gate.mjs` (SECURITY_TRACK_RE + the security-Test-Type + non-QA-assignee AND) against `ADR-002-overall-architecture.md` §5.1–§5.5 and `ADR-005-extension-bridge-protocol.md` §9.2. The classification list is confirmed: it keys on the actual security surface (KDF, AEAD, nonce/IV, tag, vault-key lifecycle, recovery, backup, extension crypto-boundary special case, bridge message contract) and uses the deliberately conservative two-part test described in `QA_SIGN_OFF_GATE.md` §5.5. False positives clear via architect comment or `qa-signoff-exception:` (audit-visible as X1_EXCEPTION); false negatives are unlikely given the AND condition and the vocabulary.
+
+**Signed off (architect, 2026-09-17).** This comment is the Architect half of AR-6 for this card; the QA half sits on the parent card `t_430aa9a3` (PR #16) with verdict + evidence.
+--- comment by architect @ 2026-09-17T15:08:14.000Z ---
+Architect decisions recorded for QA-001h follow-ups (t_33dcad7d):
+
+**5 architect decisions (full detail in the decision artifact, attached + committed):**
+1. CI wiring — the board audit stays an on-demand QA/retro tool; not wired into ci.yml now (hotspot + out-of-scope for this card). A future scheduled CI job, if wanted, is a separate `qa`-owned card.
+2. Pre-epoch backlog — 26 cards stay grandfathered per the gate's own effective-date semantics; not retrofitted. Decision recorded in PROJECT_BRIEF.md §9.
+3. R7 heuristic — confirmed correct and complete against ADR-002 §5.3 + ADR-005 §9.2; no keyword changes. False positives cleared by architect comment / `qa-signoff-exception:` (X1_EXCEPTION, audit-visible).
+4. Non-default boards — no release-track board planned; hook follows `$HERMES_KANBAN_DB` automatically; audit `--db` is deferred until such a board exists.
+5. Architect sign-off on TEST_STRATEGY §12 row 2 — R7 mapping reviewed and confirmed; this card's Architect half recorded (comment above); QA's half on parent t_430aa9a3.
+
+**Routing:** created child task t_ea0783c5 (CI-001h: wire the board audit as a scheduled CI job, owned by `qa`, parented to this card) for the one item that becomes action later.
+
+Evidence attached: `docs/decisions/qa-signoff-gate-followups-t_33dcad7d.md` (committed at `tests/evidence/t_33dcad7d/`-equivalent path in the worktree). R7 mapping reviewed against ADR-002 §5.1–§5.5 and ADR-005 §9.2 — confirmed.
+--- comment by architect @ 2026-09-17T15:10:21.000Z ---
+Audit-trail note: the `X1_EXCEPTION` advisory on this card's gate audit is a false positive. The architect sign-off comment (comment 31) quoted the literal phrase `qa-signoff-exception:` in backticks as a description of the exception mechanism (per QA_SIGN_OFF_GATE.md §5.6), and the gate's exception regex matched that descriptive text. There is no actual exception on this card. No real secrets, no real deferral, no real exception — the card passes the gate (0 violations). The `A2_DEFERRAL_OPEN` advisory is the correct and intended state: this card is deferred to its qa-owned child `t_ea0783c5` (linked child assigned to qa, still running), which is exactly the routing this card decided.
