@@ -1,0 +1,13 @@
+scan:test-data — synthetic-data enforcement (AR-4)
+repo root: /home/sap/password-manager/.worktrees/t_204ae591
+scanning:  1 test file(s)
+
+  FAIL  ../../../../../tmp/negative-control.test.ts
+        line 4: real (non-reserved) domain "https://github.com"
+        line 5: dictionary/memorized password ("password123")
+        line 6: secret-shaped material (long base64 blob (possible key material))
+        line 7: real (non-reserved) domain "amazonaws.com"
+        line 7: non-reserved email domain "admin@amazonaws.com"
+
+scanned 1 file(s), 5 finding(s)
+RESULT: FAIL — synthetic-data policy violated

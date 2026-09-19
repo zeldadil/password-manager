@@ -1,0 +1,8 @@
+Checking 1 configured shell hook(s)...
+
+  [pre_tool_call] /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh
+      ✓ script exists and is executable
+      ✗ not allowlisted — hook will NOT fire at runtime (run with --accept-hooks once, or confirm at the TTY prompt)
+      ℹ skipped JSON smoke test — not allowlisted yet. Approve the hook first (via TTY prompt or --accept-hooks), then re-run `hermes hooks doctor`.
+
+1 issue(s) found.  Fix before relying on these hooks.

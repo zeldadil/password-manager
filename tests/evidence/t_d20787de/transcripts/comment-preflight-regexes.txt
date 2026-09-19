@@ -1,0 +1,68 @@
+
+===== t_2162d273.md =====
+  marker: "pass" (VALID token)
+  loose : "VERDICT: pass" (VALID)
+  deferral marker: false   exception marker: false
+  verdict record the gate will read: "pass"
+  evidence pointers (0):
+  claimed non-url pointers: 0  unverifiable: 0
+
+===== t_28951254.md =====
+  marker: "pass-with-conditions" (VALID token)
+  loose : "VERDICT: pass-with-conditions" (VALID)
+  deferral marker: false   exception marker: false
+  verdict record the gate will read: "pass-with-conditions"
+  evidence pointers (1):
+    [path] citation on-ref 3415bd5               tests/evidence/t_28951254/README.md
+  claimed non-url pointers: 0  unverifiable: 0
+
+===== t_527d4720.md =====
+  marker: "pass" (VALID token)
+  loose : "VERDICT: pass" (VALID)
+  deferral marker: false   exception marker: false
+  verdict record the gate will read: "pass"
+  evidence pointers (3):
+    [url ]; https://github.com/zeldadil/password-manager/actions/runs/35253319631
+    [path] citation on-ref c9fd162               docs/decisions/qa-signoff-gate-followups-t_527d4720.md
+    [path] citation on-ref c9fd162               .github/workflows/qa-signoff-audit.yml
+  claimed non-url pointers: 0  unverifiable: 0
+
+===== t_80fc0326.md =====
+  marker: -
+  loose : -
+  deferral marker: false   exception marker: false
+  verdict record the gate will read: none
+  evidence pointers (0):
+  claimed non-url pointers: 0  unverifiable: 0
+
+===== t_c3cb6842.md =====
+  marker: "pass-with-conditions" (VALID token)
+  loose : "VERDICT: pass-with-conditions" (VALID)
+  deferral marker: false   exception marker: false
+  verdict record the gate will read: "pass-with-conditions"
+  evidence pointers (2):
+    [url ]; https://github.com/zeldadil/password-manager/pull/24
+    [path] citation in-checkout                  scripts/qa/signoff-gate.selftest.mjs
+  claimed non-url pointers: 0  unverifiable: 0
+
+===== t_d20787de.md =====
+  marker: "pass" (VALID token)
+  loose : "VERDICT: pass" (VALID)
+  deferral marker: false   exception marker: false
+  verdict record the gate will read: "pass"
+  evidence pointers (1):
+    [path] claim    MISSING (would fail R5 if claimed) tests/evidence/t_d20787de/comment-readback-diff.txt
+  claimed non-url pointers: 1  unverifiable: 1
+
+===== t_e348e0b7.md =====
+  marker: "pass" (VALID token)
+  loose : "VERDICT: pass" (VALID)
+  deferral marker: false   exception marker: false
+  verdict record the gate will read: "pass"
+  evidence pointers (3):
+    [url ]; https://github.com/zeldadil/password-manager/actions/runs/35259047666
+    [url ]; https://github.com/zeldadil/password-manager/actions/runs/35261467319
+    [path] citation in-checkout                  tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  claimed non-url pointers: 0  unverifiable: 0
+
+(done)

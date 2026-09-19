@@ -1,0 +1,25 @@
+current profile .env value fingerprint classification: CURRENT-LIVE(.env today)
+live probe of the current .env value: getMe HTTP 200
+
+scanning 40 remote-tracking branch tips
+
+distinct token-shaped values on tips: 3
+  value len=46 fingerprint=DEAD                         occurrences=11
+      refs/remotes/origin/feature/t_4e1b6937:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+      refs/remotes/origin/feature/t_cdd23d35:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+      refs/remotes/origin/master:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+      refs/remotes/origin/qa/t_0af5aa3e-rotation-verdict:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+      refs/remotes/origin/qa/t_338f47fd-marker-author:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+      refs/remotes/origin/qa/t_4242bee8-pre-epoch-retrofit:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+      refs/remotes/origin/qa/t_4e1b6937-review:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+      refs/remotes/origin/qa/t_58280940-r8-stale-deferral:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+      refs/remotes/origin/qa/t_7dd3b960-s10-open-items:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+      refs/remotes/origin/qa/t_99e408c5-r5-quoted-path:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+      refs/remotes/origin/qa/t_cdd23d35-review:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt
+  value len=46 fingerprint=OTHER(18753b5b…)             occurrences=1
+      refs/remotes/origin/qa/t_b51a1ff3-review:tests/evidence/t_b51a1ff3/reproduce-review.sh
+      live probe: getMe HTTP 401
+  value len=46 fingerprint=ROTATED-LIVE(t_28951254)     occurrences=1
+      refs/remotes/origin/qa/t_b51a1ff3-review-r2:scripts/qa/secret-guard.selftest.mjs
+
+NOTE: no token value is printed anywhere in this transcript.

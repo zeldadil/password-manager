@@ -1,0 +1,44 @@
+t_338f47fd — live fire: the §3 author rule through the real hook path
+date: 2026-09-18T21:47:29Z
+fixture board: /tmp/signoff-verify-338f47fd.nyxC2P/board.db
+fixture repo:  /tmp/signoff-verify-338f47fd.nyxC2P/repo
+
+t_cccccccc  marker written by architect  → must BLOCK with R1_QA_VERDICT_MISSING
+t_dddddddd  the same marker written by qa → must ALLOW ({} , exit 0)
+
+── qa (/home/sap/.hermes/profiles/qa)
+   ok   architect-authored marker → block + R1
+   ok   qa-authored marker → allow (no dispatcher contribution)
+        block reason: QA sign-off gate blocked this completion of t_cccccccc (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <p
+
+── architect (/home/sap/.hermes/profiles/architect)
+   ok   architect-authored marker → block + R1
+   ok   qa-authored marker → allow (no dispatcher contribution)
+        block reason: QA sign-off gate blocked this completion of t_cccccccc (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <p
+
+── backend (/home/sap/.hermes/profiles/backend)
+   ok   architect-authored marker → block + R1
+   ok   qa-authored marker → allow (no dispatcher contribution)
+        block reason: QA sign-off gate blocked this completion of t_cccccccc (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <p
+
+── frontend (/home/sap/.hermes/profiles/frontend)
+   ok   architect-authored marker → block + R1
+   ok   qa-authored marker → allow (no dispatcher contribution)
+        block reason: QA sign-off gate blocked this completion of t_cccccccc (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <p
+
+── docs (/home/sap/.hermes/profiles/docs)
+   ok   architect-authored marker → block + R1
+   ok   qa-authored marker → allow (no dispatcher contribution)
+        block reason: QA sign-off gate blocked this completion of t_cccccccc (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <p
+
+── product (/home/sap/.hermes/profiles/product)
+   ok   architect-authored marker → block + R1
+   ok   qa-authored marker → allow (no dispatcher contribution)
+        block reason: QA sign-off gate blocked this completion of t_cccccccc (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <p
+
+── browser (/home/sap/.hermes/profiles/browser)
+   ok   architect-authored marker → block + R1
+   ok   qa-authored marker → allow (no dispatcher contribution)
+        block reason: QA sign-off gate blocked this completion of t_cccccccc (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <p
+
+result: 7/7 profiles blocked the non-QA marker, 7/7 allowed the qa marker

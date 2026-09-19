@@ -1,0 +1,47 @@
+# t_58280940 — re-install the QA sign-off gate in every profile
+# command: scripts/qa/hooks/install-signoff-gate.sh --all --apply
+# date:    2026-09-18T20:55:31Z  ·  node v22.23.2
+
+QA sign-off gate installer — APPLY · profiles root: /home/sap/.hermes/profiles
+hook source:  /home/sap/.hermes/kanban/workspaces/t_58280940/pm-gate-fix/scripts/qa/hooks/qa-signoff-gate.sh
+gate source:  /home/sap/.hermes/kanban/workspaces/t_58280940/pm-gate-fix/scripts/qa/signoff-gate.mjs
+
+── architect (/home/sap/.hermes/profiles/architect)
+   copied qa-signoff-gate.sh + signoff-gate.mjs → /home/sap/.hermes/profiles/architect/agent-hooks/
+   config already carries the hook entry (idempotent no-op)
+   verified: hermes config get hooks lists the hook
+
+── backend (/home/sap/.hermes/profiles/backend)
+   copied qa-signoff-gate.sh + signoff-gate.mjs → /home/sap/.hermes/profiles/backend/agent-hooks/
+   config already carries the hook entry (idempotent no-op)
+   verified: hermes config get hooks lists the hook
+
+── browser (/home/sap/.hermes/profiles/browser)
+   copied qa-signoff-gate.sh + signoff-gate.mjs → /home/sap/.hermes/profiles/browser/agent-hooks/
+   config already carries the hook entry (idempotent no-op)
+   verified: hermes config get hooks lists the hook
+
+── docs (/home/sap/.hermes/profiles/docs)
+   copied qa-signoff-gate.sh + signoff-gate.mjs → /home/sap/.hermes/profiles/docs/agent-hooks/
+   config already carries the hook entry (idempotent no-op)
+   verified: hermes config get hooks lists the hook
+
+── frontend (/home/sap/.hermes/profiles/frontend)
+   copied qa-signoff-gate.sh + signoff-gate.mjs → /home/sap/.hermes/profiles/frontend/agent-hooks/
+   config already carries the hook entry (idempotent no-op)
+   verified: hermes config get hooks lists the hook
+
+── product (/home/sap/.hermes/profiles/product)
+   copied qa-signoff-gate.sh + signoff-gate.mjs → /home/sap/.hermes/profiles/product/agent-hooks/
+   config already carries the hook entry (idempotent no-op)
+   verified: hermes config get hooks lists the hook
+
+── qa (/home/sap/.hermes/profiles/qa)
+   copied qa-signoff-gate.sh + signoff-gate.mjs → /home/sap/.hermes/profiles/qa/agent-hooks/
+   config already carries the hook entry (idempotent no-op)
+   verified: hermes config get hooks lists the hook
+
+Rollback: restore <profile>/config.yaml.bak.<timestamp> and delete <profile>/agent-hooks/.
+Kill switch: touch ~/.hermes/signoff-gate.disabled (allows every completion while present).
+Next: scripts/qa/hooks/verify-signoff-gate.sh --all --live
+exit=0

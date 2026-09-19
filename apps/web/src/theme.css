@@ -1,0 +1,44 @@
+/*
+ * Theme system — FE-001d.
+ *
+ * Single source of truth for the Web UI palette. Every color used anywhere in
+ * `src/` must reference one of these variables; hardcoding hex/rgb/hsl values in
+ * components or stylesheets is forbidden (enforced by `theme.test.ts`).
+ *
+ * The token names and values map to the Hermes desktop theme. Dark mode is the
+ * default — no class or attribute is required. The light variant activates on
+ * `<html data-theme="light">`.
+ *
+ * Mapping to the Hermes desktop theme ("Nous" identity — GitHub chrome carrying
+ * the Nous blue accent; see apps/desktop/src/themes and
+ * apps/shared/src/theme-presets.ts in the Hermes agent repo):
+ *
+ *   --foreground         #e6edf3   ← --ui-text-primary    (desktop foreground)
+ *   --muted-foreground   #7d8590   ← --ui-text-tertiary   (desktop mutedForeground)
+ *   --accent             #4a84fe   ← --ui-accent          (desktop midground / brand)
+ *   --border             #30363d   ← --ui-stroke-tertiary (desktop border)
+ *   --card               #161b22   ← --ui-bg-editor       (desktop elevated surface)
+ *   --background         #0d1117   ← --ui-bg-chrome       (desktop page background)
+ */
+
+:root {
+  color-scheme: dark;
+
+  --foreground: #e6edf3;
+  --muted-foreground: #7d8590;
+  --accent: #4a84fe;
+  --border: #30363d;
+  --card: #161b22;
+  --background: #0d1117;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --foreground: #1f2328;
+  --muted-foreground: #656d76;
+  --accent: #0053fd;
+  --border: #d0d7de;
+  --card: #f6f8fa;
+  --background: #ffffff;
+}

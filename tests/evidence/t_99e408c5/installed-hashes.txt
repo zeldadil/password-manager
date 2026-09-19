@@ -1,0 +1,20 @@
+QA-001i-fu6 (t_99e408c5) — installed gate vs repo gate (SHA-256 equality, 7 profiles)
+date: 2026-09-18T21:32:52Z
+repo copy: scripts/qa/signoff-gate.mjs sha256 28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab
+
+architect  28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  MATCH  /home/sap/.hermes/profiles/architect/agent-hooks/signoff-gate.mjs
+backend    28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  MATCH  /home/sap/.hermes/profiles/backend/agent-hooks/signoff-gate.mjs
+browser    28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  MATCH  /home/sap/.hermes/profiles/browser/agent-hooks/signoff-gate.mjs
+docs       28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  MATCH  /home/sap/.hermes/profiles/docs/agent-hooks/signoff-gate.mjs
+frontend   28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  MATCH  /home/sap/.hermes/profiles/frontend/agent-hooks/signoff-gate.mjs
+product    28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  MATCH  /home/sap/.hermes/profiles/product/agent-hooks/signoff-gate.mjs
+qa         28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  MATCH  /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs
+
+hook entry points (unchanged by this change):
+architect  4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de
+backend    4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de
+browser    4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de
+docs       4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de
+frontend   4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de
+product    4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de
+qa         4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de
