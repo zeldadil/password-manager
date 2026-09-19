@@ -1,0 +1,131 @@
+
+── 0. revisions under test
+repo gate (fixed)  85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+selftest (fixed)   2196f061552ea6b2835c43b631915cdd40882ecfe1cd2597adecdcc41f1e7759
+prefix gate        28b0b771c136413aa495d3fe33d5eb5ece2c52b53ff3d03ae0d0f1956b13c7ab  (from 4c0d3ea)
+ok   prefix gate is byte-identical to the revision installed before this fix (28b0b771…)
+
+── 1. patched selftest (expect 81/81, exit 0)
+81/81 cases passed
+ok   selftest: 81/81 (was 66/66 before this card's cases)
+
+── 2. the same suite against the PREFIX gate (the new cases must be red)
+prefix suite exit=1, red cases=8
+    FAIL - (a) the marker comment authored by architect does NOT satisfy R1 — exit=0 rules=[]
+    FAIL - (a) no verdict is collected from it at all — R2/R3 cannot fire off it either — verdict="pass"
+    FAIL - (a) the discounted marker is reported as A7_VERDICT_AUTHOR_IGNORED, never dropped silently — adv=[] discounted=undefined
+    FAIL - a non-QA `blocked` marker cannot create R3 on a done card — exit=1 rules=[R3_VERDICT_NOT_TERMINAL]
+    FAIL - a non-QA `deferred` marker is not a deferral: R1 fires, R8 must not — exit=1 deferral={"target":"t_b0000005","marker":true,"linked":[]} rules=[R4_EVIDENCE_MISSING]
+    FAIL - live thread shape (architect deferral + dashboard verdict marker) records no verdict — exit=0 rules=[] adv=[]
+    FAIL - (c) run metadata unchanged: a non-QA run-metadata verdict is still accepted (A8 reports it) — exit=0 verdict=pass adv=[]
+    FAIL - a non-QA marker comment does NOT clear the fail-closed hook (block + exit 2, reason names R1) — exit=0 out={} 
+  - a non-QA marker comment does NOT clear the fail-closed hook (block + exit 2, reason names R1) — exit=0 out={} 
+ok   8 of the new cases fail on the pre-fix gate — the defect, reproduced by the suite
+
+── 3. the reported fixture, replayed on a COPY of the live board
+live board at step 3   42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9  /home/sap/.hermes/kanban.db
+board copy             42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9  /tmp/t_338f47fd-repro.sr4fZg/board.db
+ok   board copy is byte-identical to the live board
+A/B copy (pristine)    42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9
+fixture card: t_7918f010 — BE-001f: Error Handler + Secret Scanning CI @backend status=done
+live comment count on t_7918f010 at step 3: 1
+evidence path tests/evidence/t_5fe41426/README.md is committed at 543c396d8bf4289492b80066a93e8c9f51de8c2a
+row (comment state on the COPY)                comment author    prefix gate 28b0b771 (installed)               fixed gate
+live state: the card's single handoff comment  author=LIVE       prefix: check=1 hook=[2 {"decision":"block","rea] new: check=1 hook=[2 {"decision":"block","rea]
+comments cleared (baseline)                    author=NONE       prefix: check=1 hook=[2 {"decision":"block","rea] new: check=1 hook=[2 {"decision":"block","rea]
+one marker comment added                       author=architect  prefix: check=0 hook=[0 {}] new: check=1 hook=[2 {"decision":"block","rea]
+same marker comment, qa author                 author=qa         prefix: check=0 hook=[0 {}] new: check=0 hook=[0 {}]
+control: comment stripped again                author=NONE       prefix: check=1 hook=[2 {"decision":"block","rea] new: check=1 hook=[2 {"decision":"block","rea]
+
+  live-state reading (both revisions): 1,1,2
+ok   architect-authored marker: prefix ALLOWED (exit 0) → fixed blocks (exit 1 + hook exit 2)
+ok   qa-authored marker (identical text): both revisions allow (control, non-vacuity)
+ok   no comment: both revisions fail (baseline)
+ok   control after stripping: back to red on both revisions
+ok   the fixed hook's block reason names R1 and the fixture card
+
+  fixed-gate hook block directive (architect-authored marker):
+    2 {"decision":"block","reason":"QA sign-off gate blocked this completion of t_7918f010 (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card\n  - R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)\nRecord the verdict on the card, then call kanban_complete again:\n  hermes kanban comment t_7918f010 --author qa --body \"QA-VERDICT: pass — evidence: tests/evidence/t_7918f010/README.md\"\nPolicy: QA_SIGN_OFF_GATE.md · re-check: node scripts/qa/signoff-gate.mjs check --task t_7918f010 --pre-complete"}
+
+── 4. whole-board A/B on a PRISTINE board copy (which cards change, and why)
+  done cards evaluated: 49
+    violations unchanged : 43
+    newly failing        : 3
+    cleared              : 1
+    changed both ways    : 2
+  
+  NEWLY FAILING:
+    t_e348e0b7   @architect  verdict pass → null
+        old: -
+        new: R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING
+        discounted non-QA marker comments: architect×1
+    t_28951254   @architect  verdict pass → null
+        old: -
+        new: R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING
+        discounted non-QA marker comments: architect×1
+    t_2162d273   @architect  verdict pass → null
+        old: -
+        new: R1_QA_VERDICT_MISSING
+        discounted non-QA marker comments: architect×1
+  
+  CLEARED:
+    t_28f60dc1   @architect  verdict pass → null
+        old: R5_EVIDENCE_FILE_MISSING
+        new: -
+        discounted non-QA marker comments: architect×1
+  
+  CHANGED:
+    t_527d4720   @architect  verdict pass → null
+        old: R2_QA_VERDICT_INVALID
+        new: R1_QA_VERDICT_MISSING,R2_QA_VERDICT_INVALID
+        discounted non-QA marker comments: architect×1
+    t_80fc0326   @architect  verdict pass → null
+        old: R2_QA_VERDICT_INVALID,R2_QA_VERDICT_INVALID,R2_QA_VERDICT_INVALID
+        new: R2_QA_VERDICT_INVALID,R2_QA_VERDICT_INVALID,R2_QA_VERDICT_INVALID,R8_DEFERRAL_TARGET_INVALID
+        discounted non-QA marker comments: architect×3
+  
+  advisories changed on 8 card(s):
+    t_f49d448c   +A7_VERDICT_AUTHOR_IGNORED,A7_VERDICT_AUTHOR_IGNORED,A7_VERDICT_AUTHOR_IGNORED -A5_EVIDENCE_SUPERSEDED
+    t_527d4720   +A7_VERDICT_AUTHOR_IGNORED --
+    t_80fc0326   +A7_VERDICT_AUTHOR_IGNORED,A7_VERDICT_AUTHOR_IGNORED,A7_VERDICT_AUTHOR_IGNORED --
+    t_e348e0b7   +A7_VERDICT_AUTHOR_IGNORED --
+    t_28951254   +A7_VERDICT_AUTHOR_IGNORED -A4_EVIDENCE_OFF_TREE
+    t_28f60dc1   +A7_VERDICT_AUTHOR_IGNORED --
+    t_2162d273   +A7_VERDICT_AUTHOR_IGNORED --
+    t_710ed14c   +A7_VERDICT_AUTHOR_IGNORED,A8_VERDICT_SELF_DECLARED -A5_EVIDENCE_SUPERSEDED
+  
+  A7_VERDICT_AUTHOR_IGNORED on 8 card(s) — the §3 discounting is visible on every audit:
+    t_f49d448c   3 non-QA marker comment(s) by architect, dashboard, human
+    t_527d4720   1 non-QA marker comment(s) by architect
+    t_80fc0326   3 non-QA marker comment(s) by architect
+    t_e348e0b7   1 non-QA marker comment(s) by architect
+    t_28951254   1 non-QA marker comment(s) by architect
+    t_28f60dc1   1 non-QA marker comment(s) by architect
+    t_2162d273   1 non-QA marker comment(s) by architect
+    t_710ed14c   1 non-QA marker comment(s) by architect
+  A8_VERDICT_SELF_DECLARED on 1 card(s):
+    t_710ed14c   architect→"pass-with-conditions"
+  
+  control: 43/49 cards keep an identical violation set.
+ok   live-board delta measured on the pristine copy (transcript: ab-live-audit.txt)
+
+── 5. the live board was only ever read
+live board sha256 at step 3 : 42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9
+live board sha256 now       : 42fa9f96a011de182b37c081cf05655e1046fe23b5b2412a7e50960f95afa2c9
+injected marker rows on the live board : 0
+injected marker rows on the replay copy: 1
+ok   no comment injected by this run exists on the live board (every write went to the copies)
+ok   the A/B copy is pristine (never written to)
+
+── 6. installed copies (all 7 profiles) vs the repo gate
+ok   qa         85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   architect  85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   backend    85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   frontend   85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   docs       85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   product    85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   browser    85dbc127b6262eb91133ddaf6c70b96cfdb9407bd26784717558f8452eafd814
+ok   installed gate == repo copy in all 7 profiles
+
+── result
+ALL EXPECTATIONS MET
