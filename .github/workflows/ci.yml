@@ -205,14 +205,22 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Audit production dependencies (JSON report)
         run: |
-          # Preserve the audit exit code (high/critical MUST fail the gate) while
-          # still writing the machine-readable report. `set +e` keeps `bash -e`
-          # from aborting before the report is flushed.
+          # `pnpm audit --json` does NOT respect --audit-level for its own exit
+          # code, unlike plain-text mode: it exits 1 on ANY finding regardless
+          # of severity (confirmed during PR #15 merge-sweep verification —
+          # identical command, only --json added, flips a correct exit 0 for
+          # 2 moderate-only findings into exit 1). So don't trust pnpm's exit
+          # code here: parse the report's own severity counts and gate on
+          # high+critical ourselves, which is what --audit-level high is
+          # actually supposed to mean.
           set +e
           pnpm audit --prod --audit-level high --json > audit-report.json
-          STATUS=$?
           set -e
-          exit $STATUS
+          HIGH_CRITICAL=$(jq '(.metadata.vulnerabilities.high // 0) + (.metadata.vulnerabilities.critical // 0)' audit-report.json)
+          echo "high+critical vulnerabilities: $HIGH_CRITICAL"
+          if [ "$HIGH_CRITICAL" -gt 0 ]; then
+            exit 1
+          fi
       - name: Upload dependency audit JSON report
         uses: actions/upload-artifact@v4
         if: always()
