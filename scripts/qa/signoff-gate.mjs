@@ -42,7 +42,12 @@
  *   - a deferral marker is operative only while it is the **newest** QA record
  *     on the card (§3 "the newest source is the operative verdict"): a
  *     `QA-VERDICT: deferred — t_xxxxxxxx` comment that a later verdict has
- *     superseded is history, not a live block (t_58280940).
+ *     superseded is history, not a live block (t_58280940);
+ *   - R5 resolves only the evidence the operative verdict **claims**: the paths
+ *     inside an `Evidence:`/`Artifacts:` label, or — when the comment carries no
+ *     label — the paths outside code spans/fences. A path the verdict merely
+ *     *cites* about another card is reported as `A6_EVIDENCE_CITED` and never as
+ *     this card's missing evidence (t_99e408c5; QA_SIGN_OFF_GATE.md §5.7).
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -98,6 +103,87 @@ const EVIDENCE_MD_LINK_RE = /\]\(([^)\s]+)\)/g;
 const EVIDENCE_PATH_RE = /(?:^|[\s`("'[])((?:tests|apps|packages|scripts|docs|architecture|\.github)\/[\w./@-]+\.[a-z0-9]{1,8})(?=[\s`)"'\].,;:]|$)/gim;
 const EVIDENCE_ABS_RE = /(?:^|[\s`("'[])(\/[\w./@-]+\.[a-z0-9]{1,8})(?=[\s`)"'\].,;:]|$)/gm;
 const EVIDENCE_DIR_RE = /(?:^|[\s`("'[])((?:tests|docs|architecture)\/[\w./-]+\/)(?=[\s`)"'\].,;:]|$)/gm;
+
+/**
+ * The **evidence label** (§5.7): the recorded convention that separates the
+ * evidence a verdict claims from a path it merely cites about another card.
+ * `Evidence:` — bold (`**Evidence:**`), bulleted, or mid-sentence — plus
+ * `Artifacts:` / `Attachments:`.
+ */
+const EVIDENCE_LABEL_RE = /(?:^|[^\w])(?:evidence|artifacts?|attachments?)[ \t]*(?::|—|–)/gi;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Claimed vs cited evidence (§5.7, t_99e408c5)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Character ranges of markdown code spans (`` `…` ``) and fenced blocks in a
+ * comment body. A path inside them is documentation — a pasted command, a quoted
+ * recording template, a defect transcript — rather than evidence, by the same
+ * principle that already governs deferral markers (t_c3cb6842 / t_58280940).
+ */
+export function codeRanges(text) {
+  const ranges = [];
+  let offset = 0;
+  let fence = null;
+  for (const line of text.split("\n")) {
+    const start = offset;
+    const m = /^[ \t]{0,3}(`{3,}|~{3,})/.exec(line);
+    if (m) {
+      if (!fence) fence = { start, token: m[1][0] };
+      else if (m[1][0] === fence.token) {
+        ranges.push([fence.start, start + line.length]);
+        fence = null;
+      }
+    }
+    offset = start + line.length + 1;
+  }
+  if (fence) ranges.push([fence.start, text.length]);
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== "`" || insideRanges(i, ranges)) continue;
+    let n = 0;
+    while (text[i + n] === "`") n++;
+    const close = closingBackticks(text, i + n, n, ranges);
+    i += n - 1;
+    if (close === -1) continue;
+    ranges.push([i, close + n]);
+    i = close + n - 1;
+  }
+  return ranges.sort((a, b) => a[0] - b[0]);
+}
+
+/** Offset of the next backtick run of exactly `n` backticks, outside `ranges`. */
+function closingBackticks(text, from, n, ranges) {
+  for (let j = from; j < text.length; j++) {
+    if (text[j] !== "`" || insideRanges(j, ranges)) continue;
+    let run = 0;
+    while (text[j + run] === "`") run++;
+    if (run === n) return j;
+    j += run - 1;
+  }
+  return -1;
+}
+
+function insideRanges(index, ranges) {
+  return ranges.some(([a, b]) => index >= a && index < b);
+}
+
+/**
+ * The regions an operative verdict claims as its own evidence: from just after
+ * each evidence label to the end of that paragraph (a blank line, heading or
+ * table row closes it). A label *inside* a code span/fence is a quoted template,
+ * not a claim.
+ */
+function evidenceLabelRegions(text, ranges) {
+  const regions = [];
+  for (const m of text.matchAll(EVIDENCE_LABEL_RE)) {
+    if (insideRanges(m.index, ranges)) continue;
+    const start = m.index + m[0].length;
+    const stop = text.slice(start).search(/\n[ \t]*\n|\n#{1,6}[ \t]|\n[ \t]*\|/);
+    regions.push([start, stop === -1 ? text.length : start + stop]);
+  }
+  return regions;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Board access
@@ -299,36 +385,64 @@ export function collectDeferral(board, task) {
 }
 
 /**
- * Evidence pointers, tagged with whether they belong to the **operative**
- * (newest) verdict — the only verdict whose paths R5 resolves (t_5455942d
- * defect 2: a superseded verdict or an earlier handoff naming an artifact that
- * lives on another branch must not make a compliant card uncompletable).
+ * Evidence pointers. Each pointer carries a `scope`:
+ *
+ *   claim     — the operative verdict presents it as **its own** evidence
+ *               (§5.7: inside an `Evidence:` label, or, without a label,
+ *               anywhere outside a code span/fence). Only claims are resolved
+ *               by R5.
+ *   citation  — named in the operative verdict but not claimed: the verdict is
+ *               quoting a path about another card (a defect report, a
+ *               cross-check). Reported as A6, never as this card's gap
+ *               (t_99e408c5).
+ *   history   — a superseded verdict or an earlier handoff named it (t_5455942d
+ *               defect 2): reported as A5 at most.
+ *
+ * `operative` is kept as the boolean projection of `scope === "claim"` so the
+ * facts JSON stays readable.
  */
 export function collectEvidence(board, task, repoRoot) {
   const pointers = [];
-  const push = (kind, value, origin, operative = false) => {
+  const rank = { history: 1, citation: 2, claim: 3 };
+  const push = (kind, value, origin, scope = "history") => {
     const v = String(value).trim();
     if (!v) return;
     const existing = pointers.find((p) => p.kind === kind && p.value === v);
     if (existing) {
-      if (operative) existing.operative = true;
+      if (rank[scope] > rank[existing.scope]) {
+        existing.scope = scope;
+        existing.operative = scope === "claim";
+        existing.origin = origin;
+      }
       return;
     }
-    pointers.push({ kind, value: v, origin, operative });
+    pointers.push({ kind, value: v, origin, scope, operative: scope === "claim" });
   };
 
   const verdicts = collectVerdicts(board, task).filter((v) => v.comment);
   const operativeVerdict = verdicts.length ? verdicts[verdicts.length - 1] : null;
   for (const v of verdicts) {
-    const op = v === operativeVerdict;
-    for (const m of v.comment.matchAll(EVIDENCE_URL_RE)) push("url", m[0], `${v.source}-comment`, op);
-    for (const m of v.comment.matchAll(EVIDENCE_MD_LINK_RE)) pushClassified(push, m[1], `${v.source}-comment`, op);
-    for (const m of v.comment.matchAll(EVIDENCE_PATH_RE)) push("path", m[1], `${v.source}-comment`, op);
-    for (const m of v.comment.matchAll(EVIDENCE_ABS_RE)) push("abs", m[1], `${v.source}-comment`, op);
-    for (const m of v.comment.matchAll(EVIDENCE_DIR_RE)) push("dir", m[1].replace(/\/$/, ""), `${v.source}-comment`, op);
+    const isOperative = v === operativeVerdict;
+    const text = v.comment;
+    // Claimed vs cited is only a question for the operative verdict — an older
+    // one is history whatever it named.
+    const ranges = isOperative ? codeRanges(text) : [];
+    const labelRegions = isOperative ? evidenceLabelRegions(text, ranges) : [];
+    const scopeAt = (index) => {
+      if (!isOperative) return "history";
+      if (labelRegions.length) return insideRanges(index, labelRegions) ? "claim" : "citation";
+      return insideRanges(index, ranges) ? "citation" : "claim";
+    };
+    for (const m of text.matchAll(EVIDENCE_URL_RE)) push("url", m[0], `${v.source}-comment`, scopeAt(m.index));
+    for (const m of text.matchAll(EVIDENCE_MD_LINK_RE)) pushClassified(push, m[1], `${v.source}-comment`, scopeAt(m.index + 2));
+    for (const m of text.matchAll(EVIDENCE_PATH_RE)) push("path", m[1], `${v.source}-comment`, scopeAt(m.index + m[0].length - m[1].length));
+    for (const m of text.matchAll(EVIDENCE_ABS_RE)) push("abs", m[1], `${v.source}-comment`, scopeAt(m.index + m[0].length - m[1].length));
+    for (const m of text.matchAll(EVIDENCE_DIR_RE)) {
+      push("dir", m[1].replace(/\/$/, ""), `${v.source}-comment`, scopeAt(m.index + m[0].length - m[1].length));
+    }
   }
   for (const a of board.attachmentsByTask.get(task.id) || []) {
-    push("attachment", a.filename, "attachment", true);
+    push("attachment", a.filename, "attachment", "claim");
     const last = pointers[pointers.length - 1];
     if (last && last.value === a.filename) last.stored_path = a.stored_path;
   }
@@ -342,7 +456,7 @@ export function collectEvidence(board, task, repoRoot) {
       String(operativeVerdict.runId) === String(r.id);
     for (const key of ["artifacts", "evidence"]) {
       if (!Array.isArray(md[key])) continue;
-      for (const item of md[key]) pushClassified(push, String(item), `run-metadata.${key}`, op);
+      for (const item of md[key]) pushClassified(push, String(item), `run-metadata.${key}`, op ? "claim" : "history");
     }
   }
 
@@ -362,17 +476,17 @@ export function collectEvidence(board, task, repoRoot) {
   return pointers;
 }
 
-function pushClassified(push, value, origin, operative = false) {
+function pushClassified(push, value, origin, scope = "history") {
   const v = String(value).trim();
   if (!v) return;
   if (/^https?:\/\//.test(v)) {
-    if (/github\.com\/[\w.-]+\/[\w.-]+\/(actions\/runs\/\d+|pull\/\d+|issues\/\d+)/.test(v)) push("url", v, origin, operative);
+    if (/github\.com\/[\w.-]+\/[\w.-]+\/(actions\/runs\/\d+|pull\/\d+|issues\/\d+)/.test(v)) push("url", v, origin, scope);
     return;
   }
-  if (isAbsolute(v)) return push("abs", v, origin, operative);
+  if (isAbsolute(v)) return push("abs", v, origin, scope);
   const clean = v.replace(/^\.\//, "").split("#")[0];
-  if (/\.(md|txt|json|xml|mjs|cjs|ts|tsx|js|html|sarif|log|png|jpg|svg|ya?ml|csv)$/i.test(clean)) return push("path", clean, origin, operative);
-  if (/\/(tests|docs|architecture)\//.test(`/${clean}`)) return push("dir", clean.replace(/\/$/, ""), origin, operative);
+  if (/\.(md|txt|json|xml|mjs|cjs|ts|tsx|js|html|sarif|log|png|jpg|svg|ya?ml|csv)$/i.test(clean)) return push("path", clean, origin, scope);
+  if (/\/(tests|docs|architecture)\//.test(`/${clean}`)) return push("dir", clean.replace(/\/$/, ""), origin, scope);
 }
 
 /**
@@ -437,12 +551,14 @@ export function evaluateCard(board, task, opts = {}) {
   // branch is real evidence (§5.3), just not in this worker's checkout.
   const offTree = [];
   for (const p of missingFiles) {
-    if (!p.operative || p.kind === "attachment") continue;
+    if (p.kind === "attachment" || p.scope === "history") continue;
     const ref = findOnAnyRef(repoRoot, p.value);
     if (!ref) continue;
     p.exists = true;
     p.viaRef = ref;
-    offTree.push(p);
+    // A *cited* path the repo does hold needs no advisory at all; a claimed one
+    // is the accepted off-tree case (A4).
+    if (p.scope === "claim") offTree.push(p);
   }
 
   const facts = {
@@ -460,6 +576,7 @@ export function evaluateCard(board, task, opts = {}) {
       value: p.value,
       exists: p.exists ?? null,
       operative: Boolean(p.operative),
+      scope: p.scope,
       via_ref: p.viaRef || null,
       origin: p.origin,
     })),
@@ -510,24 +627,37 @@ export function evaluateCard(board, task, opts = {}) {
   if (!exception && evidence.length === 0) {
     add(
       "R4_EVIDENCE_MISSING",
-      "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment",
+      "no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)",
     );
   }
 
-  // R5 — a named evidence file/directory must exist. Scoped to the **operative**
-  // (newest) verdict: a path recorded by a superseded verdict or an earlier
-  // worker's handoff is history and must not make a compliant card
-  // uncompletable (t_5455942d defect 2) — it is reported as A5 instead.
+  // R5 — a **claimed** evidence file/directory must exist. Two scopings narrow
+  // this, both of them availability fixes rather than relaxations:
+  //  * to the **operative** (newest) verdict: a path recorded by a superseded
+  //    verdict or an earlier worker's handoff is history and must not make a
+  //    compliant card uncompletable (t_5455942d defect 2) — reported as A5;
+  //  * to the paths that verdict **claims as its own** (§5.7): a path it merely
+  //    quotes about another card — a defect report, a cross-check, a pasted
+  //    transcript — is not this card's evidence and is reported as A6
+  //    (t_99e408c5: the QA card that reported a broken pointer elsewhere became
+  //    uncompletable for naming it).
   // A4 marks the accepted off-tree case; A3 the "cannot verify at all" case.
   const adjudicated = missingFiles.filter((p) => p.exists === false);
   for (const p of adjudicated) {
-    if (!p.operative) {
+    if (p.scope === "citation") {
+      advise(
+        "A6_EVIDENCE_CITED",
+        `evidence ${p.value} is only cited in the operative verdict (outside its §5.7 evidence label, or inside a code span) — not claimed as this card's evidence, report only`,
+      );
+      continue;
+    }
+    if (p.scope !== "claim") {
       advise("A5_EVIDENCE_SUPERSEDED", `evidence ${p.value} named in a superseded verdict/handoff is absent from this checkout — report only`);
       continue;
     }
     add(
       "R5_EVIDENCE_FILE_MISSING",
-      `evidence ${p.kind === "dir" ? "directory" : "file"} named in the operative verdict does not exist: ${p.value}${repoRoot ? ` (repo: ${repoRoot}; not found on any ref)` : ""}`,
+      `evidence ${p.kind === "dir" ? "directory" : "file"} claimed by the operative verdict (§5.7) does not exist: ${p.value}${repoRoot ? ` (repo: ${repoRoot}; not found on any ref)` : ""}`,
     );
   }
   for (const p of offTree) {

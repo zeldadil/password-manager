@@ -1,0 +1,1055 @@
+diff --git a/QA_SIGN_OFF_GATE.md b/QA_SIGN_OFF_GATE.md
+index 642bc0d..c391c56 100644
+--- a/QA_SIGN_OFF_GATE.md
++++ b/QA_SIGN_OFF_GATE.md
+@@ -44,7 +44,7 @@ The board database and the profile configs live on the trusted host, and the hoo
+ | **Marker comment** (preferred) | body contains `QA-VERDICT: <token>` — case/spacing-insensitive, `QA verdict — <token>` also parses | any card |
+ | **QA-authored comment** | comment by the `qa` profile containing `verdict … <token>` | any card |
+ | **Structured handoff** | completed run metadata `verdict` (e.g. `_metadata_.verdict` written by `kanban_complete`) | QA's own artifact cards (self-validation per §12 row 4) |
+-| **Deferral** | `QA-VERDICT: deferred — t_xxxxxxxx`, or a linked child card assigned to `qa` | any card whose QA review is a downstream card |
++| **Deferral** | `QA-VERDICT: deferred — t_xxxxxxxx`, or a linked child card assigned to `qa` **when the card records no verdict of its own** | any card whose QA review is a downstream card |
+ 
+ When several sources exist, the **newest** one is the operative verdict.
+ 
+@@ -60,15 +60,22 @@ When several sources exist, the **newest** one is the operative verdict.
+ | `R2_QA_VERDICT_INVALID` | a verdict token outside `pass · pass-with-conditions · fail · blocked` | use an exact vocabulary token |
+ | `R3_VERDICT_NOT_TERMINAL` | card is `done` while its latest verdict is `fail`/`blocked` | fix the defect and re-verdict, or move the card back to the owning agent |
+ | `R4_EVIDENCE_MISSING` | no attachment, no named artifact, no run-metadata artifact | attach the file (`kanban attach`) or name a CI run URL / committed path in the verdict comment |
+-| `R5_EVIDENCE_FILE_MISSING` | a named evidence file/directory does not exist | commit the artifact, fix the path, or name the CI run instead |
++| `R5_EVIDENCE_FILE_MISSING` | a named evidence file/directory **of the operative (newest) verdict** does not exist — in the worker's checkout or on any other ref of the repo | commit the artifact, fix the path, or name the CI run instead |
+ | `R6_CONDITIONS_UNTRACKED` | `pass-with-conditions` with no follow-up card id / issue link / follow-up item | enumerate the conditions and the card or issue that tracks each one |
+ | `R7_SECURITY_TRACK_SIGNOFF_MISSING` | crypto/bridge/auth card (security Test Type + crypto-bridge keyword heuristic) with no Architect sign-off comment | Architect reviews and comments (any of `signed off`, `approved`, `ARCH-VERDICT: …`) |
+ | `R8_DEFERRAL_TARGET_INVALID` | deferral names a missing card, a non-QA card, or a QA card that is `done` without verdict + evidence | defer to a real `qa`-assigned card that carries its own verdict + evidence |
+ | `A1_HISTORY_UNGATED` | card completed **before** the gate epoch (grandfathered) | advisory only; `--strict-history` turns it into a failure for retrofit audits |
+ | `A2_DEFERRAL_OPEN` | deferral target still open | audit tracks it until the QA card lands |
+ | `A3_EVIDENCE_UNVERIFIED` | evidence path could not be checked (no repo root available) | report-only |
++| `A4_EVIDENCE_OFF_TREE` | operative evidence exists in the repo **on another ref**, not in this worker's checkout | report-only — accepted as committed evidence (§5.3) |
++| `A5_EVIDENCE_SUPERSEDED` | a path named in a **superseded** verdict/handoff is absent from this checkout | report-only — history must not block a compliant card |
+ | `X1_EXCEPTION` | a recorded `qa-signoff-exception:` marker (§5.6) | report-only — exceptions stay visible in every audit |
+ 
++**Fail closed only on genuinely unverifiable input** (added 2026-09-17, `t_5455942d`). The gate blocks when it cannot
++establish the facts it needs (no resolvable task id, unreadable board, unparseable payload, a violation it *can*
++prove) — not when a resolvable question was resolved to the wrong object. Concretely: `R5` and the deferral
++heuristic are scoped to the operative verdict, and a task id must have the shape `t_[0-9a-z]+`.
++
+ ---
+ 
+ ## 5. Recording a verdict
+@@ -105,9 +112,13 @@ Defect card: t_1234abcd. Evidence: tests/security/NEGATIVE_TEST_CHECKLIST.md
+ |---|---|---|
+ | Task attachment | `kanban attach <task-id> report.json` | stored path exists |
+ | CI run / PR / issue URL | `https://github.com/zeldadil/password-manager/actions/runs/123` | format only (offline) |
+-| Committed repo path | `tests/evidence/<task-id>/README.md`, `coverage/lcov.info` | **file must exist** in the worker's checkout (`payload.cwd`) |
+-| Directory path | `tests/evidence/<task-id>/` | directory must exist |
+-| Run-metadata `artifacts` (structured handoff) | `metadata.artifacts: [...]` | same rules as above |
++| Committed repo path | `tests/evidence/<task-id>/README.md`, `coverage/lcov.info` | **file must exist** in the worker's checkout (`payload.cwd`) **or on any ref of that repo** (`A4_EVIDENCE_OFF_TREE`) |
++| Directory path | `tests/evidence/<task-id>/` | directory must exist (same rule) |
++| Run-metadata `artifacts` (structured handoff) | `metadata.artifacts: [...]` | same rules as above, for the run that carries the operative verdict |
++
++Only the **operative (newest) verdict's** paths are resolved for existence (`R5`). Paths cited by a superseded
++verdict, an earlier worker's handoff, or an older run are reported as `A5_EVIDENCE_SUPERSEDED` — a card that once
++cited an artifact from another branch or another worker's checkout must stay completable.
+ 
+ ### 5.4 Deferring QA to a downstream card
+ 
+@@ -119,6 +130,13 @@ hermes kanban comment <task-id> --author qa --body "QA-VERDICT: deferred — t_x
+ 
+ The named card must exist and be assigned to a QA profile. The gate then requires **that** card to carry the verdict + evidence; while it is open the audit reports `A2_DEFERRAL_OPEN`. A deferral is not a way to skip QA — it is a way to move the verdict to the card that actually performs it.
+ 
++**Linked-child heuristic (narrowed 2026-09-17, `t_5455942d`).** A card that records **no verdict of its own** and has a
++`qa`-assigned child card is read as a deferral to that child (convenience for pre-created review children). That
++heuristic is **suppressed as soon as the card carries an explicit verdict** in the §12 vocabulary: creating unrelated
++`qa`-owned repair work under a card must not re-read the card as a verdict deferral (it used to raise a false
++`A2_DEFERRAL_OPEN`, and would have judged the repair card's verdict). An explicit `QA-VERDICT: deferred — t_...`
++marker always wins.
++
+ ### 5.5 Architect sign-off (crypto / bridge / auth)
+ 
+ AR-6 requires Architect **and** QA sign-off on anything touching the crypto boundary. The Architect records it as a comment on the same card, e.g.
+@@ -144,7 +162,7 @@ All paths are relative to the repo root.
+ | `node scripts/qa/signoff-gate.mjs audit` | whole board; exit 1 while any enforced card fails; `--json`, `--repo DIR`, `--epoch-iso ISO`, `--strict-history` |
+ | `node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx [--pre-complete]` | one card; `--pre-complete` evaluates a card that is not `done` yet (exactly what the hook does) |
+ | `echo '<payload>' \| node scripts/qa/signoff-gate.mjs hook` | hook entry point: `{}` + exit 0 = allow, `{"decision":"block",…}` + exit 2 = block |
+-| `node scripts/qa/signoff-gate.selftest.mjs` | 33-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes) |
++| `node scripts/qa/signoff-gate.selftest.mjs` | 49-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d` regressions are covered) |
+ | `scripts/qa/hooks/install-signoff-gate.sh --all [--apply]` | install / refresh the hook in every profile (dry-run by default, config backed up) |
+ | `scripts/qa/hooks/verify-signoff-gate.sh --all --live --fixture-db … --fixture-noncompliant … --fixture-compliant …` | verify wiring, consent, hash, `hermes hooks doctor`, and fire both paths live |
+ 
+@@ -181,6 +199,30 @@ cp <profile>/config.yaml.bak.<timestamp> <profile>/config.yaml   # per profile
+ rm -rf <profile>/agent-hooks
+ ```
+ 
++### 6.4 How the hook finds the card (task-id resolution)
++
++`kanban_complete` may be called without `task_id` (it defaults to `$HERMES_KANBAN_TASK` inside the tool), so the hook
++payload does not always name the card. The hook resolves it in this order, and **verifies every candidate against
++the board** before evaluating it:
++
++| # | Source | Notes |
++|---|---|---|
++| 1 | `tool_input.task_id` | explicit argument; if it has task-id shape but is not on the board, the gate **blocks and names the source** |
++| 2 | `extra.task_id` | the Hermes kwarg `task_id` — carried as the **session id** for dispatcher workers, accepted only in `t_[0-9a-z]+` shape |
++| 3 | `$HERMES_KANBAN_TASK` | the dispatcher's identity variable |
++| 4 | basename of `$HERMES_KANBAN_WORKSPACE` | the worker's workspace is `<root>/workspaces/<task-id>` |
++| 5 | basename of the hook's `cwd` | the worker's checkout (`<repo>/.worktrees/<task-id>`) |
++| 6 | last segment of `$HERMES_KANBAN_BRANCH` | `wt/<task-id>`, `<project>/<task-id>` |
++
++A numeric candidate is resolved through the board's own `task_runs` index (run id → card), never guessed. If nothing
++resolves, the block reason lists every source and what it carried.
++
++Sources 4–6 exist because **Hermes deliberately scrubs the kanban identity variables out of descendant processes**:
++`agent/delegation_context.py` defines `KANBAN_ENV_KEYS = (HERMES_KANBAN_TASK, _RUN_ID, _CLAIM_LOCK, _GOAL_MODE,
++_GOAL_MAX_TURNS)` and `scrub_kanban_env()` removes them, so a hook subprocess (a descendant) never sees
++`HERMES_KANBAN_TASK` — confirmed empirically in `tests/evidence/t_5455942d/` (`hook-env-probe.py`). That scrub is a
++deliberate runtime-scoping behaviour and must not be undone for the gate's convenience.
++
+ ---
+ 
+ ## 7. Effective date and grandfathering
+@@ -200,6 +242,45 @@ Grandfathering is not an amnesty: `node scripts/qa/signoff-gate.mjs audit --stri
+ 
+ Repeated blocking for the same non-compliance is not an infrastructure failure; it is the gate doing its job. The default fix is to record what you actually verified — not to lower the bar.
+ 
++### 8.1 Troubleshooting the hook itself
++
++**`signoff-gate: task 20260917_201256_021f5e is not on the board …`** — the id in the message is the Hermes
++**session id**, not a card id. This was a gate defect: a `kanban_complete` call that omits `task_id` carries the
++session id in the payload's `extra.task_id`, and the resolver used to trust it. It is fixed — a task id must match
++`t_[0-9a-z]+`, and when the payload names nothing usable the hook resolves the card from the worker's location
++(`$HERMES_KANBAN_WORKSPACE`, the checkout `cwd`, `$HERMES_KANBAN_BRANCH`), see §6.4. **If you still see it**, the
++workaround is one argument:
++
++```
++kanban_complete(task_id="t_xxxxxxxx", summary=..., metadata=...)
++```
++
++Then report it to `qa`: the hook is supposed to resolve this by itself, and a recurrence means the installed copy is
++stale (see below), not that you did something wrong.
++
++**`R5_EVIDENCE_FILE_MISSING: … named in the verdict does not exist`** — check *which* verdict names the path. Only
++the newest (operative) verdict is resolved; a path from a superseded verdict or another worker's handoff shows up as
++`A5_EVIDENCE_SUPERSEDED` instead. If the operative verdict genuinely names a missing file, commit it, fix the path,
++or cite the CI run URL. A path that exists only on another branch is accepted (`A4_EVIDENCE_OFF_TREE`).
++
++**The installed copy may be stale.** The hook executes `<profile>/agent-hooks/signoff-gate.mjs`, not the repo file.
++Any gate change must be re-installed, or you are debugging old logic:
++
++```
++scripts/qa/hooks/install-signoff-gate.sh --all --apply
++scripts/qa/hooks/verify-signoff-gate.sh --all --live
++hermes hooks doctor
++```
++
++`verify-signoff-gate.sh` fails on SHA-256 drift between the repo copy and the installed copies; `hermes hooks doctor`
++flags exec-bit/consent/mtime drift.
++
++**Confirm what the gate would decide, without touching the kill switch:**
++
++```
++node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx --pre-complete --repo "$PWD"
++```
++
+ ---
+ 
+ ## 9. Rollout status (2026-09-17)
+@@ -216,6 +297,19 @@ Repeated blocking for the same non-compliance is not an infrastructure failure;
+ 
+ Verified by `scripts/qa/hooks/verify-signoff-gate.sh --all --live` → **91 checks, 0 failures** (transcript in `tests/evidence/t_430aa9a3/`). Config backups: `<profile>/config.yaml.bak.20260917*`.
+ 
++**Re-installed 2026-09-17 (post `t_5455942d`)** with the fixed gate + hook in all 7 profiles
++(`install-signoff-gate.sh --all --apply`), followed by `verify-signoff-gate.sh --all --live` and
++`hermes hooks doctor`; all installed copies match the repo copy by SHA-256 (transcript in
++`tests/evidence/t_5455942d/`). One profile (`architect`) had carried a local, uncommitted hand-patch of the gate
++(resolving *run* ids ad hoc); it was overwritten by the reviewed repo copy — that local edit is what the
++re-install + hash check exists to catch.
++
++The verifier itself needed two fixes to report the truth (same card): it demanded the *quoted* YAML spelling of the
++matcher, which Hermes rewrites to a bare scalar when it records hook consent (5 false `matcher is not
++^kanban_complete$` failures), and its `--live` allow-case could not pass for a compliant fixture card whose evidence
++is a repo path, because the live payload's `cwd` was the verifier's own checkout. `--fixture-repo DIR` now sets the
++`cwd` of the live payload; pass the fixture repo that holds the compliant card's evidence.
++
+ ---
+ 
+ ## 10. Open items
+@@ -226,6 +320,9 @@ Verified by `scripts/qa/hooks/verify-signoff-gate.sh --all --live` → **91 chec
+ | 2 | Pre-epoch backlog (26 cards) — retrofit with verdict+evidence, or formally leave grandfathered | `architect` + `qa` |
+ | 3 | `R7` security-track detection is a keyword heuristic (security Test Type + crypto/bridge keyword); confirm the classification list against ADR-002 §5.3 / ADR-005 §9.2 | `architect` |
+ | 4 | Advisory-only cross-board audit: non-default boards (e.g. release-track boards) run the same hook, but the audit needs `--db` pointed at them | `qa` |
++| 5 | A comment that *quotes* the recommended `QA-VERDICT: …` line (e.g. an Architect handoff showing the exact command to paste) is parsed as a verdict. With `R5` scoped to the operative verdict the harm is now contained, but if such a quote is the *newest* record it becomes operative. Decide whether to ignore marker lines inside code spans/fences | `qa` |
++| 6 | Hermes-core observation (config, not a repo defect): the hook subprocess env still carries `HERMES_DASHBOARD_BASIC_AUTH_USERNAME/PASSWORD/SECRET` — see `hook-env-probe.py`. Any hook script of any profile can read the dashboard admin credentials; consider whether hooks need them (they do not) | `architect` (owns the Hermes install/profile config) |
++| 7 | Hermes-core observation (payload, not a repo defect): the `pre_tool_call` payload's `extra.task_id` is the *session id* (`agent/inline_tool_executors.py::tool_hook_ids` → `effective_task_id`), and the kanban identity keys are scrubbed from hook subprocesses (`agent/delegation_context.py::scrub_kanban_env`). The gate now compensates from the worker's location §6.4; do **not** "fix" this by un-scrubbing the identity keys — that scrub is deliberate runtime scoping | `architect` (record only) |
+ 
+ ---
+ 
+@@ -234,3 +331,4 @@ Verified by `scripts/qa/hooks/verify-signoff-gate.sh --all --live` → **91 chec
+ | Date | Change |
+ |---|---|
+ | 2026-09-17 | Initial gate: rules R1–R8 + advisories, blocking `kanban_complete` hook in all 7 profiles, board audit, 33-case selftest, epoch `2026-09-17T15:00:00Z`, kill switch and exception protocol |
++| 2026-09-17 | `t_5455942d` — fail closed only on genuinely unverifiable input: (1) task-id resolution requires the `t_[0-9a-z]+` shape, so a session id in `extra.task_id` no longer blocks a compliant completion; the hook then falls back to `$HERMES_KANBAN_TASK`, the workspace basename, the checkout `cwd` and the branch name (Hermes scrubs the kanban identity vars from hook subprocesses — §6.4), and resolves a numeric run id through the board; (2) `R5` resolves the **operative (newest) verdict's** evidence only, accepts a path present on **any ref** (`A4_EVIDENCE_OFF_TREE`) and reports superseded paths as `A5_EVIDENCE_SUPERSEDED`; (3) the "linked QA child ⇒ deferral" heuristic is suppressed once the card carries an explicit verdict. Selftest 33 → 49 cases; §8.1 troubleshooting + §6.4 resolution table added; verifier fixed (matcher quoting, `--fixture-repo`); hook re-installed in all 7 profiles |
+diff --git a/scripts/qa/hooks/verify-signoff-gate.sh b/scripts/qa/hooks/verify-signoff-gate.sh
+index 5a58198..bb78286 100755
+--- a/scripts/qa/hooks/verify-signoff-gate.sh
++++ b/scripts/qa/hooks/verify-signoff-gate.sh
+@@ -16,7 +16,13 @@
+ # Usage:
+ #   verify-signoff-gate.sh --all
+ #   verify-signoff-gate.sh --profile qa --live --fixture-db /tmp/fixture/board.db \
+-#                          --fixture-noncompliant t_b0000002 --fixture-compliant t_b0000000
++#                          --fixture-noncompliant t_b0000002 --fixture-compliant t_b0000000 \
++#                          [--fixture-repo /tmp/fixture/repo]
++#
++# --fixture-repo sets the working directory of the live fire — i.e. the checkout the gate
++# resolves repo-relative evidence paths against (the hook payload's `cwd` is the firing
++# process's cwd). Pass the fixture repo that holds the compliant card's evidence, or a
++# path-based compliant card will (correctly) block with R5.
+ set -uo pipefail
+ 
+ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+@@ -28,6 +34,7 @@ LIVE=0
+ FIXTURE_DB=""
+ FIXTURE_BAD=""
+ FIXTURE_GOOD=""
++FIXTURE_REPO=""
+ 
+ while [ $# -gt 0 ]; do
+   case "$1" in
+@@ -37,8 +44,9 @@ while [ $# -gt 0 ]; do
+     --fixture-db) FIXTURE_DB="$2"; shift 2 ;;
+     --fixture-noncompliant) FIXTURE_BAD="$2"; shift 2 ;;
+     --fixture-compliant) FIXTURE_GOOD="$2"; shift 2 ;;
++    --fixture-repo) FIXTURE_REPO="$2"; shift 2 ;;
+     --profiles-root) PROFILES_ROOT="$2"; shift 2 ;;
+-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
++    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+     *) echo "verify-signoff-gate: unknown argument $1" >&2; exit 3 ;;
+   esac
+ done
+@@ -50,8 +58,10 @@ fi
+ 
+ pass=0
+ fail=0
++warned=0
+ ok()   { echo "   ok   - $1"; pass=$((pass + 1)); }
+ bad()  { echo "   FAIL - $1"; fail=$((fail + 1)); }
++warn() { echo "   warn - $1"; warned=$((warned + 1)); }
+ 
+ echo "QA sign-off gate verification — repo gate: ${GATE_SRC}"
+ echo
+@@ -80,7 +90,13 @@ for profile in "${PROFILES[@]}"; do
+     grep -q "qa-signoff-gate.sh" "${cfg}" && ok "config.yaml carries the hook command" || bad "config.yaml has no qa-signoff-gate.sh entry"
+     grep -q "fail_closed: true" "${cfg}" && ok "config.yaml sets fail_closed: true" || bad "config.yaml does not set fail_closed: true"
+     grep -q "^hooks_auto_accept: true" "${cfg}" && ok "config.yaml sets hooks_auto_accept: true (non-TTY workers)" || bad "hooks_auto_accept is not true — headless workers would silently skip the hook"
+-    grep -q 'matcher: "\^kanban_complete\$"' "${cfg}" && ok "matcher scoped to kanban_complete" || bad "matcher is not ^kanban_complete\$"
++    # Hermes rewrites config.yaml when it records consent and normalises the quoted
++    # matcher to a bare scalar, so accept both spellings (t_5455942d).
++    if grep -Eq 'matcher:[[:space:]]*"?\^kanban_complete\$"?' "${cfg}"; then
++      ok "matcher scoped to kanban_complete"
++    else
++      bad "matcher is not ^kanban_complete\$"
++    fi
+   else
+     bad "config.yaml missing: ${cfg}"
+   fi
+@@ -103,10 +119,23 @@ for profile in "${PROFILES[@]}"; do
+     else
+       bad "hermes hooks list does not show the hook"
+     fi
+-    if HERMES_HOME="${pd}" hermes hooks doctor >/tmp/signoff-gate-doctor-${profile}.txt 2>&1; then
+-      ok "hermes hooks doctor clean (transcript: /tmp/signoff-gate-doctor-${profile}.txt)"
++    doctor_out="/tmp/signoff-gate-doctor-${profile}.txt"
++    if HERMES_HOME="${pd}" hermes hooks doctor >"${doctor_out}" 2>&1; then
++      # `hermes hooks doctor` exits 0 even when it prints "issue(s) found", so the exit
++      # code alone is not a clean bill of health — read the report (t_5455942d).
++      doctor_warns="$(grep -c '⚠' "${doctor_out}" || true)"
++      doctor_drift="$(grep -c 'script modified since approval' "${doctor_out}" || true)"
++      if grep -q "issue(s) found" "${doctor_out}"; then
++        if [ "${doctor_warns}" = "1" ] && [ "${doctor_drift}" = "1" ]; then
++          warn "hermes hooks doctor: only the expected post-install mtime drift (approval refresh is interactive-only; hooks_auto_accept: true keeps the hook live — see the live fire below)"
++        else
++          bad "hermes hooks doctor reported issues beyond the expected mtime drift (${doctor_warns} warning(s)) — see ${doctor_out}"
++        fi
++      else
++        ok "hermes hooks doctor clean (transcript: ${doctor_out})"
++      fi
+     else
+-      bad "hermes hooks doctor reported a problem — see /tmp/signoff-gate-doctor-${profile}.txt"
++      bad "hermes hooks doctor reported a problem — see ${doctor_out}"
+     fi
+   fi
+ 
+@@ -118,16 +147,27 @@ for profile in "${PROFILES[@]}"; do
+       good_payload="$(mktemp)"
+       # Hermes wire shape: `tool_input` comes from the `args` kwarg, the worker's
+       # task id arrives as a top-level `task_id` kwarg (landing in `extra`).
++      # `payload.cwd` is always Path.cwd() of the firing process, so the fire runs
++      # from --fixture-repo: that is the checkout the gate resolves repo-relative
++      # evidence against (a payload-file "cwd" key would land in `extra` instead).
+       printf '{"args":{"task_id":"%s","summary":"verification fire"},"task_id":"%s"}\n' "${FIXTURE_BAD}" "${FIXTURE_BAD}" > "${bad_payload}"
+       printf '{"args":{"task_id":"%s","summary":"verification fire"},"task_id":"%s"}\n' "${FIXTURE_GOOD}" "${FIXTURE_GOOD}" > "${good_payload}"
+ 
+-      bad_out="$(HERMES_HOME="${pd}" HERMES_KANBAN_DB="${FIXTURE_DB}" hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file "${bad_payload}" 2>&1)"
++      fire() {
++        if [ -n "${FIXTURE_REPO}" ]; then
++          ( cd "${FIXTURE_REPO}" && HERMES_HOME="${pd}" HERMES_KANBAN_DB="${FIXTURE_DB}" hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file "$1" 2>&1 )
++        else
++          HERMES_HOME="${pd}" HERMES_KANBAN_DB="${FIXTURE_DB}" hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file "$1" 2>&1
++        fi
++      }
++
++      bad_out="$(fire "${bad_payload}")"
+       if printf '%s' "${bad_out}" | grep -q '"action": "block"'; then
+         ok "live fire — non-compliant card ${FIXTURE_BAD} blocked (exit 2 + action:block)"
+       else
+         bad "live fire did not block ${FIXTURE_BAD}: $(printf '%s' "${bad_out}" | tail -3 | tr '\n' ' ')"
+       fi
+-      good_out="$(HERMES_HOME="${pd}" HERMES_KANBAN_DB="${FIXTURE_DB}" hermes hooks test pre_tool_call --for-tool kanban_complete --payload-file "${good_payload}" 2>&1)"
++      good_out="$(fire "${good_payload}")"
+       if printf '%s' "${good_out}" | grep -q "exit=0" && printf '%s' "${good_out}" | grep -q "parsed: <none"; then
+         ok "live fire — compliant card ${FIXTURE_GOOD} allowed (exit 0, no dispatcher contribution)"
+       else
+@@ -139,6 +179,6 @@ for profile in "${PROFILES[@]}"; do
+   echo
+ done
+ 
+-echo "verification: ${pass} ok · ${fail} FAIL"
++echo "verification: ${pass} ok · ${warned} warn · ${fail} FAIL"
+ [ "${fail}" -eq 0 ] || exit 1
+ exit 0
+diff --git a/scripts/qa/signoff-gate.mjs b/scripts/qa/signoff-gate.mjs
+index 12b3912..659f1af 100755
+--- a/scripts/qa/signoff-gate.mjs
++++ b/scripts/qa/signoff-gate.mjs
+@@ -28,6 +28,17 @@
+  *                                           [--strict-history] [--json]
+  *   node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx [--pre-complete] [--json]
+  *   echo '<pre_tool_call payload>' | node scripts/qa/signoff-gate.mjs hook
++ *
++ * Fail-closed on genuinely unverifiable input only (t_5455942d):
++ *   - the task id is resolved from the payload (`tool_input.task_id`, then a
++ *     task-id-shaped `extra.task_id`) and, when the payload carries no usable id,
++ *     from the worker's location (`$HERMES_KANBAN_WORKSPACE`, `cwd`,
++ *     `$HERMES_KANBAN_BRANCH`) — Hermes scrubs `$HERMES_KANBAN_TASK` from hook
++ *     subprocesses, so a session id is never treated as a card;
++ *   - R5 resolves the evidence paths of the **operative (newest)** verdict only,
++ *     and accepts a path that exists on any ref of the checkout;
++ *   - the "linked QA child ⇒ deferral" heuristic is suppressed once the card
++ *     carries an explicit verdict.
+  */
+ import { execFileSync } from "node:child_process";
+ import { existsSync, readFileSync } from "node:fs";
+@@ -65,6 +76,13 @@ const SECURITY_TRACK_RE =
+   /\b(packages\/crypto|crypto[\s-]*(primitive|implementation|boundary|module|package)|KDF|AEAD|Argon2id|vault[\s-]*key|bridge[\s-]*protocol|bridge[\s-]*message|autofill)\b/i;
+ const NOTE_FOLLOWUP_RE = /\b(follow[\s-]*up|t_[0-9a-f]{8}|https:\/\/github\.com\/\S+\/(issues|pull)\/\d+)\b/i;
+ 
++/**
++ * A board task id (`t_5455942d`). Anything else in a hook payload — the Hermes
++ * session id (`20260917_201256_021f5e`), a run id, a tool-call id — is NOT a
++ * task id and must never be resolved as one (t_5455942d defect 1).
++ */
++export const TASK_ID_SHAPE_RE = /^t_[0-9a-z]+$/;
++
+ /** Evidence pointers: CI run / PR / issue URLs, repo-relative or absolute file paths. */
+ const EVIDENCE_URL_RE = /https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/(?:actions\/runs\/\d+|pull\/\d+|issues\/\d+)[\w#/?=&.-]*/gi;
+ const EVIDENCE_MD_LINK_RE = /\]\(([^)\s]+)\)/g;
+@@ -122,7 +140,7 @@ export function loadBoard(dbPath) {
+   const attachments = sql(dbPath, "SELECT task_id, filename, size, uploaded_by, stored_path FROM task_attachments");
+   const runs = sql(
+     dbPath,
+-    "SELECT task_id, profile, status, outcome, summary, metadata, ended_at, started_at FROM task_runs ORDER BY started_at",
++    "SELECT id, task_id, profile, status, outcome, summary, metadata, ended_at, started_at FROM task_runs ORDER BY started_at",
+   );
+   const links = sql(dbPath, "SELECT parent_id, child_id FROM task_links");
+   const byTask = (rows) => {
+@@ -133,12 +151,17 @@ export function loadBoard(dbPath) {
+     }
+     return m;
+   };
++  // Index the runs by their own id as well: the dispatcher can hand the hook a
++  // run id instead of a task id, and the board knows which card that run belongs
++  // to (t_5455942d defect 1 — resolve from the board, never guess).
++  const runsById = new Map(runs.filter((r) => r.id !== undefined && r.id !== null).map((r) => [String(r.id), r]));
+   return {
+     tasks,
+     taskById: new Map(tasks.map((t) => [t.id, t])),
+     commentsByTask: byTask(comments),
+     attachmentsByTask: byTask(attachments),
+     runsByTask: byTask(runs),
++    runsById,
+     links,
+     childrenOf: (id) => links.filter((l) => l.parent_id === id).map((l) => l.child_id),
+   };
+@@ -208,6 +231,7 @@ export function collectVerdicts(board, task) {
+           author: r.profile,
+           comment: r.summary || "",
+           at: r.ended_at || r.started_at,
++          runId: r.id ?? null,
+         });
+       }
+     }
+@@ -228,46 +252,72 @@ function parseJson(text) {
+  * A QA deferral is legal only when it points at a real, QA-owned card
+  * (either an explicit `QA-VERDICT: deferred — t_xxxxxxxx` comment or a linked
+  * child card whose assignee is a QA profile).
++ *
++ * The linked-child heuristic is a *fallback for a card that records no verdict
++ * of its own*: it must never fire while the card already carries an explicit
++ * verdict in the §12 vocabulary, or every card that ever spawns unrelated
++ * `qa`-owned repair work would be re-read as an open deferral (t_5455942d
++ * defect 3). An explicit deferral marker still wins over everything.
+  */
+ export function collectDeferral(board, task) {
+   const marker = (board.commentsByTask.get(task.id) || []).find((c) => DEFERRAL_RE.test(c.body || ""));
++  const explicitVerdict = collectVerdicts(board, task).find((v) => VERDICTS.has(v.token));
+   const linked = board
+     .childrenOf(task.id)
+     .map((id) => board.taskById.get(id))
+     .filter((t) => t && QA_PROFILES.has(String(t.assignee || "").trim()));
+-  if (!marker && linked.length === 0) return null;
++  if (!marker) {
++    if (explicitVerdict || linked.length === 0) return null;
++  }
+   const named = ((marker ? marker.body : "").match(TASK_ID_RE) || [])[0] || (linked[0] ? linked[0].id : null);
+   return { target: named, marker: Boolean(marker), linked: linked.map((t) => ({ id: t.id, status: t.status })) };
+ }
+ 
++/**
++ * Evidence pointers, tagged with whether they belong to the **operative**
++ * (newest) verdict — the only verdict whose paths R5 resolves (t_5455942d
++ * defect 2: a superseded verdict or an earlier handoff naming an artifact that
++ * lives on another branch must not make a compliant card uncompletable).
++ */
+ export function collectEvidence(board, task, repoRoot) {
+   const pointers = [];
+-  const push = (kind, value, origin) => {
++  const push = (kind, value, origin, operative = false) => {
+     const v = String(value).trim();
+     if (!v) return;
+-    if (pointers.some((p) => p.kind === kind && p.value === v)) return;
+-    pointers.push({ kind, value: v, origin });
++    const existing = pointers.find((p) => p.kind === kind && p.value === v);
++    if (existing) {
++      if (operative) existing.operative = true;
++      return;
++    }
++    pointers.push({ kind, value: v, origin, operative });
+   };
+ 
+-  const verdictComments = collectVerdicts(board, task).filter((v) => v.comment);
+-  for (const v of verdictComments) {
+-    for (const m of v.comment.matchAll(EVIDENCE_URL_RE)) push("url", m[0], `${v.source}-comment`);
+-    for (const m of v.comment.matchAll(EVIDENCE_MD_LINK_RE)) pushClassified(push, m[1], `${v.source}-comment`);
+-    for (const m of v.comment.matchAll(EVIDENCE_PATH_RE)) push("path", m[1], `${v.source}-comment`);
+-    for (const m of v.comment.matchAll(EVIDENCE_ABS_RE)) push("abs", m[1], `${v.source}-comment`);
+-    for (const m of v.comment.matchAll(EVIDENCE_DIR_RE)) push("dir", m[1].replace(/\/$/, ""), `${v.source}-comment`);
++  const verdicts = collectVerdicts(board, task).filter((v) => v.comment);
++  const operativeVerdict = verdicts.length ? verdicts[verdicts.length - 1] : null;
++  for (const v of verdicts) {
++    const op = v === operativeVerdict;
++    for (const m of v.comment.matchAll(EVIDENCE_URL_RE)) push("url", m[0], `${v.source}-comment`, op);
++    for (const m of v.comment.matchAll(EVIDENCE_MD_LINK_RE)) pushClassified(push, m[1], `${v.source}-comment`, op);
++    for (const m of v.comment.matchAll(EVIDENCE_PATH_RE)) push("path", m[1], `${v.source}-comment`, op);
++    for (const m of v.comment.matchAll(EVIDENCE_ABS_RE)) push("abs", m[1], `${v.source}-comment`, op);
++    for (const m of v.comment.matchAll(EVIDENCE_DIR_RE)) push("dir", m[1].replace(/\/$/, ""), `${v.source}-comment`, op);
+   }
+   for (const a of board.attachmentsByTask.get(task.id) || []) {
+-    push("attachment", a.filename, "attachment");
++    push("attachment", a.filename, "attachment", true);
+     const last = pointers[pointers.length - 1];
+     if (last && last.value === a.filename) last.stored_path = a.stored_path;
+   }
+   for (const r of board.runsByTask.get(task.id) || []) {
+     const md = parseJson(r.metadata);
+     if (!md) continue;
++    const op =
++      Boolean(operativeVerdict) &&
++      operativeVerdict.source === "run-metadata" &&
++      operativeVerdict.runId !== null &&
++      String(operativeVerdict.runId) === String(r.id);
+     for (const key of ["artifacts", "evidence"]) {
+       if (!Array.isArray(md[key])) continue;
+-      for (const item of md[key]) pushClassified(push, String(item), `run-metadata.${key}`);
++      for (const item of md[key]) pushClassified(push, String(item), `run-metadata.${key}`, op);
+     }
+   }
+ 
+@@ -287,17 +337,39 @@ export function collectEvidence(board, task, repoRoot) {
+   return pointers;
+ }
+ 
+-function pushClassified(push, value, origin) {
++function pushClassified(push, value, origin, operative = false) {
+   const v = String(value).trim();
+   if (!v) return;
+   if (/^https?:\/\//.test(v)) {
+-    if (/github\.com\/[\w.-]+\/[\w.-]+\/(actions\/runs\/\d+|pull\/\d+|issues\/\d+)/.test(v)) push("url", v, origin);
++    if (/github\.com\/[\w.-]+\/[\w.-]+\/(actions\/runs\/\d+|pull\/\d+|issues\/\d+)/.test(v)) push("url", v, origin, operative);
+     return;
+   }
+-  if (isAbsolute(v)) return push("abs", v, origin);
++  if (isAbsolute(v)) return push("abs", v, origin, operative);
+   const clean = v.replace(/^\.\//, "").split("#")[0];
+-  if (/\.(md|txt|json|xml|mjs|cjs|ts|tsx|js|html|sarif|log|png|jpg|svg|ya?ml|csv)$/i.test(clean)) return push("path", clean, origin);
+-  if (/\/(tests|docs|architecture)\//.test(`/${clean}`)) return push("dir", clean.replace(/\/$/, ""), origin);
++  if (/\.(md|txt|json|xml|mjs|cjs|ts|tsx|js|html|sarif|log|png|jpg|svg|ya?ml|csv)$/i.test(clean)) return push("path", clean, origin, operative);
++  if (/\/(tests|docs|architecture)\//.test(`/${clean}`)) return push("dir", clean.replace(/\/$/, ""), origin, operative);
++}
++
++/**
++ * Does a repo-relative path exist on **any** ref of the checkout (not just in
++ * the worker's working tree)? A card may legitimately cite an artifact that
++ * lives on another branch; that is a "committed path" per §5.3, so it must not
++ * be reported as missing (t_5455942d defect 2). Returns the commit sha or null.
++ */
++function findOnAnyRef(repoRoot, relPath) {
++  if (!repoRoot || isAbsolute(relPath)) return null;
++  if (!existsSync(join(repoRoot, ".git"))) return null;
++  try {
++    const out = execFileSync("git", ["-C", repoRoot, "rev-list", "--max-count=1", "--all", "--", relPath], {
++      encoding: "utf8",
++      stdio: ["ignore", "pipe", "pipe"],
++      timeout: 20000,
++      maxBuffer: 16 * 1024 * 1024,
++    }).trim();
++    return out ? out.split("\n")[0] : null;
++  } catch {
++    return null;
++  }
+ }
+ 
+ function hasArchitectSignoff(board, task) {
+@@ -335,6 +407,18 @@ export function evaluateCard(board, task, opts = {}) {
+   const deferral = collectDeferral(board, task);
+   const evidence = collectEvidence(board, task, repoRoot);
+   const missingFiles = evidence.filter((p) => p.exists === false);
++  // Before the facts are rendered, try to satisfy the operative verdict's
++  // missing paths from the repo's other refs: a path committed on another
++  // branch is real evidence (§5.3), just not in this worker's checkout.
++  const offTree = [];
++  for (const p of missingFiles) {
++    if (!p.operative || p.kind === "attachment") continue;
++    const ref = findOnAnyRef(repoRoot, p.value);
++    if (!ref) continue;
++    p.exists = true;
++    p.viaRef = ref;
++    offTree.push(p);
++  }
+ 
+   const facts = {
+     task_id: task.id,
+@@ -346,7 +430,14 @@ export function evaluateCard(board, task, opts = {}) {
+     verdict: valid.length ? valid[valid.length - 1].token : null,
+     invalid_verdicts: invalid.map((v) => ({ token: v.token, raw: v.raw, source: v.source })),
+     deferral,
+-    evidence: evidence.map((p) => ({ kind: p.kind, value: p.value, exists: p.exists ?? null, origin: p.origin })),
++    evidence: evidence.map((p) => ({
++      kind: p.kind,
++      value: p.value,
++      exists: p.exists ?? null,
++      operative: Boolean(p.operative),
++      via_ref: p.viaRef || null,
++      origin: p.origin,
++    })),
+     exception,
+   };
+ 
+@@ -398,9 +489,24 @@ export function evaluateCard(board, task, opts = {}) {
+     );
+   }
+ 
+-  // R5 — a named evidence file/directory must exist.
+-  for (const p of missingFiles) {
+-    add("R5_EVIDENCE_FILE_MISSING", `evidence ${p.kind === "dir" ? "directory" : "file"} named in the verdict does not exist: ${p.value}${repoRoot ? ` (repo: ${repoRoot})` : ""}`);
++  // R5 — a named evidence file/directory must exist. Scoped to the **operative**
++  // (newest) verdict: a path recorded by a superseded verdict or an earlier
++  // worker's handoff is history and must not make a compliant card
++  // uncompletable (t_5455942d defect 2) — it is reported as A5 instead.
++  // A4 marks the accepted off-tree case; A3 the "cannot verify at all" case.
++  const adjudicated = missingFiles.filter((p) => p.exists === false);
++  for (const p of adjudicated) {
++    if (!p.operative) {
++      advise("A5_EVIDENCE_SUPERSEDED", `evidence ${p.value} named in a superseded verdict/handoff is absent from this checkout — report only`);
++      continue;
++    }
++    add(
++      "R5_EVIDENCE_FILE_MISSING",
++      `evidence ${p.kind === "dir" ? "directory" : "file"} named in the operative verdict does not exist: ${p.value}${repoRoot ? ` (repo: ${repoRoot}; not found on any ref)` : ""}`,
++    );
++  }
++  for (const p of offTree) {
++    advise("A4_EVIDENCE_OFF_TREE", `operative evidence ${p.value} is not in this checkout but exists in the repo at ${p.viaRef} — accepted`);
+   }
+   if (repoRoot === null) {
+     for (const p of evidence.filter((x) => x.exists === null && x.kind !== "url" && x.kind !== "attachment")) {
+@@ -603,6 +709,79 @@ function main() {
+ // Hook mode — pre_tool_call: kanban_complete
+ // ─────────────────────────────────────────────────────────────────────────────
+ 
++/**
++ * Resolve the board task id from a `pre_tool_call` payload.
++ *
++ * Explicit payload sources (first match that is a task-id shape wins):
++ *   1. `tool_input.task_id`   — the explicit argument to `kanban_complete`
++ *   2. `extra.task_id`        — only when it actually looks like a task id
++ *   3. `$HERMES_KANBAN_TASK`  — the dispatcher's identity variable
++ * Location fallbacks, used only when the payload carries no usable task id:
++ *   4. basename of `$HERMES_KANBAN_WORKSPACE`
++ *   5. basename of the hook's `cwd` (the worker's checkout)
++ *   6. last path segment of `$HERMES_KANBAN_BRANCH`
++ * Every candidate is verified against the board, so a wrong guess cannot evaluate
++ * the wrong card.
++ *
++ * Why the location fallbacks are not paranoia: Hermes scrubs the kanban identity
++ * variables (`HERMES_KANBAN_TASK`, `_RUN_ID`, `_CLAIM_LOCK`) out of *descendant*
++ * processes (`agent/delegation_context.py::scrub_kanban_env` — a hook subprocess is
++ * a descendant), and `extra.task_id` carries the Hermes **session id**, not the
++ * card id. So for the natural `kanban_complete()` call the hook sees neither: the
++ * pre-fix chain resolved the session id and `fail_closed` turned a compliant
++ * completion into a hard block (t_5455942d). Verified with `hook-env-probe.py`.
++ */
++export function resolveTaskId(payload, board, dbPath) {
++  const input = (payload && payload.tool_input) || {};
++  const extra = (payload && payload.extra) || {};
++  const str = (v) => (typeof v === "string" ? v.trim() : typeof v === "number" ? String(v) : "");
++  const base = (p) => (p ? p.replace(/\/+$/, "").split("/").filter(Boolean).pop() || "" : "");
++  const explicit = [
++    { source: "tool_input.task_id", value: str(input.task_id), strict: true },
++    { source: "extra.task_id", value: str(extra.task_id), strict: false },
++    { source: "HERMES_KANBAN_TASK", value: str(process.env.HERMES_KANBAN_TASK), strict: false },
++  ];
++  const derived = [
++    { source: "HERMES_KANBAN_WORKSPACE", value: base(str(process.env.HERMES_KANBAN_WORKSPACE)) },
++    { source: "cwd", value: base(str(payload && payload.cwd)) },
++    { source: "HERMES_KANBAN_BRANCH", value: base(str(process.env.HERMES_KANBAN_BRANCH)) },
++  ];
++
++  const tried = [];
++  for (const c of [...explicit, ...derived]) {
++    if (!c.value) {
++      tried.push(`${c.source}=<empty>`);
++      continue;
++    }
++    const shown = c.value.length > 64 ? `${c.value.slice(0, 61)}…` : c.value;
++    // Numeric id: the dispatcher can hand over a run id — the board itself knows
++    // which card that run belongs to, so resolve it from there (never guess).
++    if (/^\d+$/.test(c.value) && board.runsById.has(c.value)) {
++      const run = board.runsById.get(c.value);
++      if (run && board.taskById.has(run.task_id)) return { id: run.task_id, source: `${c.source} (run id ${c.value})` };
++    }
++    if (!TASK_ID_SHAPE_RE.test(c.value)) {
++      const looksSession = /^\d{8}_\d{6}_[0-9a-z]+$/i.test(c.value);
++      tried.push(
++        `${c.source}="${shown}" (not a task id — expected t_xxxxxxxx${looksSession ? "; this looks like a Hermes session id" : ""})`,
++      );
++      continue;
++    }
++    if (board.taskById.has(c.value)) return { id: c.value, source: c.source };
++    tried.push(`${c.source}="${shown}" (task-id shape but not on this board)`);
++    if (c.strict) {
++      return {
++        error: `signoff-gate: task ${c.value} (from ${c.source}) is not on the board at ${dbPath}. Failing closed. If the hook picked up the wrong id, re-issue kanban_complete with an explicit task_id="t_xxxxxxxx" (QA_SIGN_OFF_GATE.md §8).`,
++      };
++    }
++  }
++  return {
++    error:
++      `signoff-gate: could not resolve a board task id for this kanban_complete — tried: ${tried.join("; ")}. ` +
++      `Failing closed. Re-issue the call with an explicit task_id="t_xxxxxxxx" (QA_SIGN_OFF_GATE.md §8 troubleshooting).`,
++  };
++}
++
+ function hookMode(defaultDb) {
+   const allow = () => {
+     process.stdout.write("{}\n");
+@@ -628,14 +807,6 @@ function hookMode(defaultDb) {
+   }
+   const tool = payload.tool_name || "";
+   if (tool && tool !== "kanban_complete") return allow();
+-  const input = payload.tool_input || {};
+-  const extra = payload.extra || {};
+-  const taskId = input.task_id || extra.task_id || process.env.HERMES_KANBAN_TASK || "";
+-  if (!taskId) {
+-    return block(
+-      "signoff-gate: kanban_complete with no resolvable task id (tool_input.task_id / extra.task_id / HERMES_KANBAN_TASK all empty). Failing closed.",
+-    );
+-  }
+   const db = process.env.HERMES_KANBAN_DB || defaultDb;
+   const repo = typeof payload.cwd === "string" && existsSync(payload.cwd) ? payload.cwd : resolveRepo(null);
+   let board;
+@@ -644,8 +815,11 @@ function hookMode(defaultDb) {
+   } catch (e) {
+     return block(`signoff-gate: board unreadable (${e.message}). Failing closed.`);
+   }
++  const resolved = resolveTaskId(payload, board, db);
++  if (resolved.error) return block(resolved.error);
++  const taskId = resolved.id;
+   const task = board.taskById.get(taskId);
+-  if (!task) return block(`signoff-gate: task ${taskId} is not on the board at ${db}. Failing closed.`);
++  if (!task) return block(`signoff-gate: task ${taskId} (from ${resolved.source}) is not on the board at ${db}. Failing closed.`);
+   let result;
+   try {
+     result = evaluateCard(board, task, { repo, epochMs: Date.parse(GATE_EPOCH_ISO), preComplete: true });
+diff --git a/scripts/qa/signoff-gate.selftest.mjs b/scripts/qa/signoff-gate.selftest.mjs
+index 4c22f7a..5a9c727 100755
+--- a/scripts/qa/signoff-gate.selftest.mjs
++++ b/scripts/qa/signoff-gate.selftest.mjs
+@@ -238,6 +238,76 @@ const DEFER_PHANTOM = card({
+   comments: [qaVerdict("QA-VERDICT: deferred — t_deadbeef")],
+ });
+ 
++// ── t_5455942d regression fixtures ──────────────────────────────────────────
++// The operative (newest) verdict is the only one whose evidence paths R5
++// resolves; superseded verdicts/handoffs must not block a compliant card.
++const SUPERSEDED_MISSING = card({
++  title: "BE-911 operative verdict fine, superseded comments name missing artifacts",
++  body: "**Test Types:** unit",
++  comments: [
++    {
++      author: "architect",
++      body: "Handoff — record it as\n`QA-VERDICT: pass — evidence: tests/evidence/__ID__/gone-architect.md` and complete the card.",
++    },
++    qaVerdict("QA-VERDICT: fail — evidence: tests/evidence/__ID__/gone-old-verdict.md\nSuperseded by the verdict recorded below."),
++    qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md"),
++  ],
++});
++fixtureFile(`tests/evidence/${SUPERSEDED_MISSING}/README.md`);
++
++const OPERATIVE_MISSING = card({
++  title: "BE-912 operative verdict names a missing artifact (R5 must still fire)",
++  body: "**Test Types:** unit",
++  comments: [
++    qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md"),
++    qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/retracted-file.md"),
++  ],
++});
++fixtureFile(`tests/evidence/${OPERATIVE_MISSING}/README.md`);
++
++const REF_ONLY = card({
++  title: "BE-913 operative evidence exists on another ref of the repo only",
++  body: "**Test Types:** unit",
++  comments: [qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/ref-only.md")],
++});
++
++const DEFER_SUPPRESSED = card({
++  title: "BE-914 explicit verdict + linked qa child is NOT a deferral",
++  body: "**Test Types:** unit",
++  comments: [
++    qaVerdict(
++      "QA-VERDICT: pass-with-conditions — evidence: tests/evidence/__ID__/README.md\nFollow-up: t_0000000a tracks the residual item.",
++    ),
++  ],
++});
++fixtureFile(`tests/evidence/${DEFER_SUPPRESSED}/README.md`);
++const DEFER_SUPPRESSED_CHILD = card({
++  title: "QA-914b qa-owned repair child (unrelated to a verdict)",
++  body: "**Test Types:** meta",
++  assignee: "qa",
++  status: "todo",
++  completed: null,
++});
++
++// ── fixture git repo: evidence committed on an earlier ref (A4 case) ────────
++const gitRepo = join(root, "gitrepo");
++const refOnlyRel = `tests/evidence/${REF_ONLY}/ref-only.md`;
++function gitFixture(args) {
++  execFileSync("git", ["-C", gitRepo, ...args], { stdio: ["ignore", "pipe", "pipe"] });
++}
++mkdirSync(gitRepo, { recursive: true });
++gitFixture(["init", "-q", "-b", "main"]);
++gitFixture(["config", "user.email", "fixture@example.invalid"]);
++gitFixture(["config", "user.name", "gate fixture"]);
++writeFileSync(join(gitRepo, "README.md"), "fixture repo\n");
++mkdirSync(dirname(join(gitRepo, refOnlyRel)), { recursive: true });
++writeFileSync(join(gitRepo, refOnlyRel), "evidence committed on the branch (not in the tip)\n");
++gitFixture(["add", "-A"]);
++gitFixture(["commit", "-qm", "add the evidence artifact"]);
++rmSync(join(gitRepo, refOnlyRel));
++gitFixture(["add", "-A"]);
++gitFixture(["commit", "-qm", "remove it from the working tip — still reachable on the branch history"]);
++
+ function taskRowSQL(c) {
+   const esc = (s) => String(s).replace(/'/g, "''");
+   const rows = [
+@@ -269,6 +339,7 @@ function buildBoard() {
+     ...CARDS.map(taskRowSQL),
+     `INSERT INTO task_links (parent_id,child_id) VALUES ('${DEFERRED_DONE}','${DEFERRED_CHILD_DONE}');`,
+     `INSERT INTO task_links (parent_id,child_id) VALUES ('${DEFERRED_OPEN}','${DEFERRED_CHILD_OPEN}');`,
++    `INSERT INTO task_links (parent_id,child_id) VALUES ('${DEFER_SUPPRESSED}','${DEFER_SUPPRESSED_CHILD}');`,
+   ].join("\n");
+   execFileSync("sqlite3", [db], { input: sql });
+ }
+@@ -282,7 +353,15 @@ function runGate(args, input, env = {}) {
+     const out = execFileSync("node", [GATE, ...args], {
+       encoding: "utf8",
+       input: input ?? "",
+-      env: { ...process.env, ...env },
++      // Hermetic: never let the ambient kanban identity/location variables of the
++      // host running the selftest leak into a case (t_5455942d).
++      env: {
++        ...process.env,
++        HERMES_KANBAN_TASK: "",
++        HERMES_KANBAN_WORKSPACE: "",
++        HERMES_KANBAN_BRANCH: "",
++        ...env,
++      },
+       stdio: ["pipe", "pipe", "pipe"],
+     });
+     return { code: 0, out };
+@@ -301,6 +380,26 @@ function check(name, condition, detail = "") {
+   }
+ }
+ 
++/** `check ... --json` through the gate, parsed. */
++function gateJson(taskId, repoOverride = repo) {
++  const r = runGate(["check", "--task", taskId, "--db", db, "--repo", repoOverride, "--json"]);
++  let parsed = null;
++  try {
++    parsed = JSON.parse(r.out);
++  } catch {
++    parsed = null;
++  }
++  return { code: r.code, out: r.out, parsed };
++}
++
++function advisoryRules(res) {
++  return res.parsed ? res.parsed.advisories.map((a) => a.rule) : [];
++}
++
++function violationRules(res) {
++  return res.parsed ? res.parsed.violations.map((v) => v.rule) : [];
++}
++
+ function expectRule(label, taskId, rule, { preComplete = false, forbid = [] } = {}) {
+   const args = ["check", "--task", taskId, "--db", db, "--repo", repo, "--json"];
+   if (preComplete) args.push("--pre-complete");
+@@ -325,7 +424,7 @@ console.log(`fixture repo: ${repo}`);
+ buildBoard();
+ 
+ console.log("\n1. Compliant cards (must produce ZERO violations — anti-vacuous control):");
+-for (const [label, tid] of [
++for (const [label, tid, repoOverride] of [
+   ["Path A verdict + repo evidence", OK],
+   ["crypto card with AR-6 architect sign-off", ARCH_SIGNED],
+   ["evidence uploaded as attachment", ATTACHED],
+@@ -335,16 +434,48 @@ for (const [label, tid] of [
+   ["pass-with-conditions naming a follow-up", CONDITIONAL_TRACKED],
+   ["grandfathered pre-epoch card", PRE_EPOCH],
+   ["recorded QA sign-off exception", EXCEPTION],
++  ["superseded comments name missing artifacts", SUPERSEDED_MISSING],
++  ["operative evidence committed on another ref", REF_ONLY, gitRepo],
++  ["explicit verdict + linked qa repair child", DEFER_SUPPRESSED],
+ ]) {
+-  const r = runGate(["check", "--task", tid, "--db", db, "--repo", repo, "--json"]);
+-  let parsed = null;
+-  try {
+-    parsed = JSON.parse(r.out);
+-  } catch {
+-    parsed = null;
+-  }
+-  const rules = parsed ? parsed.violations.map((v) => v.rule) : [];
+-  check(label, r.code === 0 && parsed !== null && rules.length === 0, `exit=${r.code} rules=[${rules.join(",")}] out=${r.out.slice(0, 160).replace(/\n/g, " ")}`);
++  const res = gateJson(tid, repoOverride || repo);
++  check(
++    label,
++    res.code === 0 && res.parsed !== null && violationRules(res).length === 0,
++    `exit=${res.code} rules=[${violationRules(res).join(",")}] out=${res.out.slice(0, 160).replace(/\n/g, " ")}`,
++  );
++}
++
++console.log("\n1b. t_5455942d regressions (fail closed only on unverifiable input):");
++{
++  const sup = gateJson(SUPERSEDED_MISSING);
++  check(
++    "superseded verdict/handoff paths are advisory (A5), never R5",
++    sup.code === 0 && advisoryRules(sup).includes("A5_EVIDENCE_SUPERSEDED") && !advisoryRules(sup).includes("A4_EVIDENCE_OFF_TREE"),
++    `exit=${sup.code} adv=[${advisoryRules(sup).join(",")}]`,
++  );
++
++  const ref = gateJson(REF_ONLY, gitRepo);
++  const viaRef = ref.parsed ? ref.parsed.facts.evidence.filter((e) => e.via_ref).map((e) => e.value) : [];
++  check(
++    "operative evidence on another ref is accepted (A4, no R5)",
++    ref.code === 0 && advisoryRules(ref).includes("A4_EVIDENCE_OFF_TREE") && viaRef.length === 1,
++    `exit=${ref.code} adv=[${advisoryRules(ref).join(",")}] via_ref=[${viaRef.join(",")}] out=${ref.out.slice(0, 160).replace(/\n/g, " ")}`,
++  );
++
++  const def = gateJson(DEFER_SUPPRESSED);
++  check(
++    "explicit verdict + linked qa child is NOT a deferral (no A2)",
++    def.code === 0 && def.parsed !== null && def.parsed.facts.deferral === null && !advisoryRules(def).includes("A2_DEFERRAL_OPEN"),
++    `exit=${def.code} deferral=${JSON.stringify(def.parsed && def.parsed.facts.deferral)} adv=[${advisoryRules(def).join(",")}]`,
++  );
++
++  const legacy = gateJson(DEFERRED_OPEN);
++  check(
++    "linked qa child with NO verdict still counts as a deferral (A2 fires — heuristic intact)",
++    legacy.code === 0 && legacy.parsed !== null && legacy.parsed.facts.deferral !== null && advisoryRules(legacy).includes("A2_DEFERRAL_OPEN"),
++    `exit=${legacy.code} deferral=${JSON.stringify(legacy.parsed && legacy.parsed.facts.deferral)} adv=[${advisoryRules(legacy).join(",")}]`,
++  );
+ }
+ 
+ console.log("\n2. Rule coverage (every rule must fire on its own non-compliant card):");
+@@ -355,6 +486,9 @@ expectRule("fail verdict on a done card", FAIL_ON_DONE, "R3_VERDICT_NOT_TERMINAL
+ expectRule("blocked verdict on a done card", BLOCKED_ON_DONE, "R3_VERDICT_NOT_TERMINAL");
+ expectRule("verdict without evidence", NO_EVIDENCE, "R4_EVIDENCE_MISSING", { forbid: ["R1_QA_VERDICT_MISSING"] });
+ expectRule("named evidence file missing", MISSING_FILE, "R5_EVIDENCE_FILE_MISSING");
++expectRule("operative verdict names a missing artifact (scoping is not vacuous)", OPERATIVE_MISSING, "R5_EVIDENCE_FILE_MISSING", {
++  forbid: ["R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"],
++});
+ expectRule("pass-with-conditions without follow-up", UNTRACKED_CONDITIONS, "R6_CONDITIONS_UNTRACKED");
+ expectRule("crypto card without architect sign-off", SEC_NO_ARCH, "R7_SECURITY_TRACK_SIGNOFF_MISSING");
+ expectRule("deferral to a non-QA card", DEFER_NON_QA, "R8_DEFERRAL_TARGET_INVALID", { forbid: ["R2_QA_VERDICT_INVALID"] });
+@@ -444,6 +578,153 @@ console.log("\n5. Hook mode (pre_tool_call: kanban_complete):");
+   const noTask = runGate(["hook", "--db", db], JSON.stringify({ tool_name: "kanban_complete", tool_input: {} }), { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: "" });
+   check("no resolvable task id → fail closed (block)", noTask.code === 2, `exit=${noTask.code}`);
+ 
++  // ── t_5455942d: resolving the session id instead of the task id ───────────
++  const sessionShape = "20260917_201256_021f5e";
++  const sessionPayload = JSON.stringify({
++    hook_event_name: "pre_tool_call",
++    tool_name: "kanban_complete",
++    tool_input: { summary: "no explicit task_id (tool default)" },
++    session_id: sessionShape,
++    cwd: repo,
++    profile: "qa",
++    extra: { task_id: sessionShape, tool_call_id: "tc_1" },
++  });
++
++  const sessionEnv = runGate(["hook", "--db", db], sessionPayload, { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: OK });
++  check(
++    "(a) session id in extra.task_id + HERMES_KANBAN_TASK set → allow ({} + exit 0)",
++    sessionEnv.code === 0 && sessionEnv.out.trim() === "{}",
++    `exit=${sessionEnv.code} out=${sessionEnv.out.trim().slice(0, 220)}`,
++  );
++
++  const sessionOnly = runGate(["hook", "--db", db], sessionPayload, { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: "" });
++  let sessionDirective = null;
++  try {
++    sessionDirective = JSON.parse(sessionOnly.out.split("\n")[0]);
++  } catch {
++    sessionDirective = null;
++  }
++  check(
++    "(b) session id only → block, reason names the source and the id shape",
++    sessionOnly.code === 2 &&
++      sessionDirective &&
++      /extra\.task_id/.test(sessionDirective.reason) &&
++      /not a task id/.test(sessionDirective.reason) &&
++      /Hermes session id/.test(sessionDirective.reason),
++    `exit=${sessionOnly.code} out=${sessionOnly.out.slice(0, 260).replace(/\n/g, " ")}`,
++  );
++
++  const explicitId = runGate(["hook", "--db", db], payload(OK), { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: "" });
++  check("(c) explicit tool_input.task_id → allow", explicitId.code === 0 && explicitId.out.trim() === "{}", `exit=${explicitId.code}`);
++
++  const unknownId = runGate(["hook", "--db", db], payload("t_deadbeef"), { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: OK });
++  let unknownDirective = null;
++  try {
++    unknownDirective = JSON.parse(unknownId.out.split("\n")[0]);
++  } catch {
++    unknownDirective = null;
++  }
++  check(
++    "(d) unknown task id → block, reason names the source of the id",
++    unknownId.code === 2 &&
++      unknownDirective &&
++      /t_deadbeef/.test(unknownDirective.reason) &&
++      /tool_input\.task_id/.test(unknownDirective.reason),
++    `exit=${unknownId.code} out=${unknownId.out.slice(0, 260).replace(/\n/g, " ")}`,
++  );
++
++  // A run id (numeric) is resolved through the board, never treated as a card id.
++  const runRow = execFileSync("sqlite3", ["-json", "--", db, `SELECT id FROM task_runs WHERE task_id='${QA_OWN}' LIMIT 1`], {
++    encoding: "utf8",
++  }).trim();
++  const runId = runRow ? JSON.parse(runRow)[0].id : null;
++  const runPayload = JSON.stringify({
++    hook_event_name: "pre_tool_call",
++    tool_name: "kanban_complete",
++    tool_input: { task_id: runId, summary: "dispatcher passed a run id" },
++    session_id: sessionShape,
++    cwd: repo,
++    profile: "qa",
++    extra: { tool_call_id: "tc_2" },
++  });
++  const viaRunId = runGate(["hook", "--db", db], runPayload, { HERMES_KANBAN_DB: db, HERMES_KANBAN_TASK: "" });
++  check(
++    "(e) numeric run id in tool_input.task_id → resolved to its card via the board → allow",
++    runId !== null && viaRunId.code === 0 && viaRunId.out.trim() === "{}",
++    `run=${runId} exit=${viaRunId.code} out=${viaRunId.out.trim().slice(0, 220)}`,
++  );
++
++  // The real dispatcher-worker shape: Hermes scrubs the kanban identity variables
++  // out of the hook's env (agent/delegation_context.py::scrub_kanban_env), so the
++  // hook must fall back to the worker's location. Evidence: hook-env-probe.py.
++  // The worker's cwd holds its own evidence, exactly like a real workspace.
++  const workerCwd = join(root, "workspaces", OK);
++  mkdirSync(dirname(join(workerCwd, "tests/evidence", OK, "README.md")), { recursive: true });
++  writeFileSync(join(workerCwd, "tests/evidence", OK, "README.md"), "synthetic evidence fixture (worker workspace)\n");
++  const workerPayload = JSON.stringify({
++    hook_event_name: "pre_tool_call",
++    tool_name: "kanban_complete",
++    tool_input: { summary: "natural call — task_id defaulted by the tool" },
++    session_id: sessionShape,
++    cwd: workerCwd,
++    profile: "backend",
++    extra: { task_id: sessionShape, tool_call_id: "tc_3" },
++  });
++
++  const viaWorkspace = runGate(["hook", "--db", db], workerPayload, {
++    HERMES_KANBAN_DB: db,
++    HERMES_KANBAN_TASK: "",
++    HERMES_KANBAN_WORKSPACE: workerCwd,
++  });
++  check(
++    "(f) identity vars scrubbed (no HERMES_KANBAN_TASK) + session id in extra → resolved from HERMES_KANBAN_WORKSPACE → allow",
++    viaWorkspace.code === 0 && viaWorkspace.out.trim() === "{}",
++    `exit=${viaWorkspace.code} out=${viaWorkspace.out.trim().slice(0, 260)}`,
++  );
++
++  const viaCwd = runGate(["hook", "--db", db], workerPayload, {
++    HERMES_KANBAN_DB: db,
++    HERMES_KANBAN_TASK: "",
++    HERMES_KANBAN_WORKSPACE: "",
++    HERMES_KANBAN_BRANCH: "",
++  });
++  check(
++    "(g) same payload, workspace var empty → resolved from the worker's cwd basename → allow",
++    viaCwd.code === 0 && viaCwd.out.trim() === "{}",
++    `exit=${viaCwd.code} out=${viaCwd.out.trim().slice(0, 260)}`,
++  );
++
++  const noLocation = JSON.stringify({
++    hook_event_name: "pre_tool_call",
++    tool_name: "kanban_complete",
++    tool_input: { summary: "no id, no location" },
++    session_id: sessionShape,
++    cwd: repo,
++    profile: "backend",
++    extra: { task_id: sessionShape },
++  });
++  const unresolvable = runGate(["hook", "--db", db], noLocation, {
++    HERMES_KANBAN_DB: db,
++    HERMES_KANBAN_TASK: "",
++    HERMES_KANBAN_WORKSPACE: "",
++    HERMES_KANBAN_BRANCH: "",
++  });
++  let unresolvableDirective = null;
++  try {
++    unresolvableDirective = JSON.parse(unresolvable.out.split("\n")[0]);
++  } catch {
++    unresolvableDirective = null;
++  }
++  check(
++    "(h) no id and no task-shaped location → still fails closed, listing every source tried",
++    unresolvable.code === 2 &&
++      unresolvableDirective &&
++      /tool_input\.task_id=<empty>/.test(unresolvableDirective.reason) &&
++      /extra\.task_id/.test(unresolvableDirective.reason) &&
++      /cwd=/.test(unresolvableDirective.reason),
++    `exit=${unresolvable.code} out=${unresolvable.out.slice(0, 300).replace(/\n/g, " ")}`,
++  );
++
+   // kill switch
+   const kill = join(root, "signoff-gate.disabled");
+   writeFileSync(kill, "temporarily disabled by operator\n");

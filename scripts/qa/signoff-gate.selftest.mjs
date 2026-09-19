@@ -359,6 +359,98 @@ const DEFER_SUPPRESSED_CHILD = card({
   completed: null,
 });
 
+// ── t_99e408c5 regression fixtures ──────────────────────────────────────────
+// A verdict that *reports* a broken evidence pointer on another card names that
+// card's path while recording its own. Naming is not claiming: R5 may resolve
+// only the paths the verdict presents as its own evidence (QA_SIGN_OFF_GATE.md
+// §5.7 — `Evidence:` label, outside code spans/fences); every other path in the
+// operative verdict is a *citation* and is reported as `A6_EVIDENCE_CITED`.
+const CITED_ABSENT = "t_fffffff1"; // never committed on any ref
+const CITED_PRESENT = "t_fffffff2"; // artifact exists in the fixture checkout
+fixtureFile(`tests/evidence/${CITED_PRESENT}/README.md`);
+
+const QUOTED_PATH_REPORT = card({
+  title: "QA-920 operative verdict reports another card's missing evidence (the reported instance)",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  comments: [
+    qaVerdict(
+      [
+        "## QA-VERDICT: pass — delivered, owners named for what remains",
+        "",
+        "**Evidence:** tests/evidence/__ID__/README.md and the transcripts in that directory.",
+        "",
+        `**Also reported:** R5 finding on \`${CITED_ABSENT}\` (its verdict names \`tests/evidence/${CITED_ABSENT}/README.md\`, absent from every ref) — commented on that card for its owner.`,
+        "",
+        "```",
+        `FAIL ${CITED_ABSENT} architect :: R5_EVIDENCE_FILE_MISSING`,
+        `  evidence file named in the operative verdict does not exist: tests/evidence/${CITED_ABSENT}/README.md`,
+        "```",
+      ].join("\n"),
+    ),
+  ],
+});
+fixtureFile(`tests/evidence/${QUOTED_PATH_REPORT}/README.md`);
+
+const QUOTED_PATH_PRESENT = card({
+  title: "QA-921 operative verdict cites another card's artifact that does exist",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  comments: [
+    qaVerdict(
+      [
+        "QA-VERDICT: pass — cross-checked against the neighbouring card's record.",
+        "",
+        "**Evidence:** tests/evidence/__ID__/README.md",
+        "",
+        `Cross-checked with \`tests/evidence/${CITED_PRESENT}/README.md\` (that card's artifact).`,
+      ].join("\n"),
+    ),
+  ],
+});
+fixtureFile(`tests/evidence/${QUOTED_PATH_PRESENT}/README.md`);
+
+// Controls: a *claimed* artifact that does not exist still fails R5 — the fix
+// must not degenerate into "ignore missing evidence".
+const LABELLED_MISSING = card({
+  title: "QA-922 labelled evidence file is missing (R5 control)",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  comments: [qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/claimed-missing.md")],
+});
+
+const LABELLED_MISSING_CODESPAN = card({
+  title: "QA-923 labelled evidence file is missing, written in a code span (R5 control)",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  comments: [qaVerdict("QA-VERDICT: pass — **Evidence:** `tests/evidence/__ID__/claimed-missing-codespan.md`")],
+});
+
+// No evidence label at all: a path inside a code span is documentation (A6),
+// while a path in plain prose is still a claim (R5).
+const NOLABEL_CODESPAN_MISSING = card({
+  title: "QA-924 no label: a quoted path in a code span is a citation, not a claim",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  comments: [
+    qaVerdict(
+      [
+        "QA-VERDICT: pass — 12/12 green, transcript at tests/evidence/__ID__/README.md",
+        "",
+        `Reported on \`${CITED_ABSENT}\`: \`tests/evidence/${CITED_ABSENT}/README.md\` is absent from every ref.`,
+      ].join("\n"),
+    ),
+  ],
+});
+fixtureFile(`tests/evidence/${NOLABEL_CODESPAN_MISSING}/README.md`);
+
+const NOLABEL_PROSE_MISSING = card({
+  title: "QA-925 no label: a path in plain prose is still the card's claim (R5 control)",
+  body: "**Test Types:** meta",
+  assignee: "qa",
+  comments: [qaVerdict("QA-VERDICT: pass — see tests/evidence/__ID__/prose-missing.md for the transcript.")],
+});
+
 // ── fixture git repo: evidence committed on an earlier ref (A4 case) ────────
 const gitRepo = join(root, "gitrepo");
 const refOnlyRel = `tests/evidence/${REF_ONLY}/ref-only.md`;
@@ -586,6 +678,69 @@ console.log("\n1b. t_5455942d regressions (fail closed only on unverifiable inpu
       staleQuoted.parsed.facts.deferral === null &&
       violationRules(staleQuoted).length === 0,
     `exit=${staleQuoted.code} deferral=${JSON.stringify(staleQuoted.parsed && staleQuoted.parsed.facts.deferral)} rules=[${violationRules(staleQuoted).join(",")}]`,
+  );
+}
+
+console.log("\n1c. t_99e408c5 regressions (R5 adjudicates claims, not citations):");
+{
+  const quoted = gateJson(QUOTED_PATH_REPORT);
+  const cited = quoted.parsed ? quoted.parsed.facts.evidence.filter((e) => e.value.includes(CITED_ABSENT)) : [];
+  check(
+    "a verdict quoting another card's missing path is NOT blocked by R5 (the reported instance)",
+    quoted.code === 0 &&
+      quoted.parsed !== null &&
+      !violationRules(quoted).includes("R5_EVIDENCE_FILE_MISSING") &&
+      !violationRules(quoted).includes("R4_EVIDENCE_MISSING"),
+    `exit=${quoted.code} rules=[${violationRules(quoted).join(",")}] adv=[${advisoryRules(quoted).join(",")}]`,
+  );
+  check(
+    "the quoted path is reported as A6_EVIDENCE_CITED (the audit still sees it)",
+    advisoryRules(quoted).includes("A6_EVIDENCE_CITED") && cited.length >= 1 && cited.every((e) => e.scope === "citation"),
+    `adv=[${advisoryRules(quoted).join(",")}] cited=${JSON.stringify(cited.map((e) => [e.value, e.scope]))}`,
+  );
+  check(
+    "the reporting card's own labelled evidence stays the claim it resolves",
+    quoted.parsed
+      ? quoted.parsed.facts.evidence.some((e) => e.value.includes(QUOTED_PATH_REPORT) && e.scope === "claim" && e.exists === true)
+      : false,
+    `evidence=${JSON.stringify(quoted.parsed ? quoted.parsed.facts.evidence.map((e) => [e.value, e.scope, e.exists]) : null)}`,
+  );
+
+  const present = gateJson(QUOTED_PATH_PRESENT);
+  check(
+    "citing another card's artifact that exists produces no R5 and no A6 noise",
+    present.code === 0 &&
+      !violationRules(present).includes("R5_EVIDENCE_FILE_MISSING") &&
+      !advisoryRules(present).includes("A6_EVIDENCE_CITED") &&
+      !advisoryRules(present).includes("A4_EVIDENCE_OFF_TREE"),
+    `exit=${present.code} adv=[${advisoryRules(present).join(",")}]`,
+  );
+
+  const noLabelSpan = gateJson(NOLABEL_CODESPAN_MISSING);
+  check(
+    "no label: a quoted path in a code span is a citation (no R5, A6 fires)",
+    noLabelSpan.code === 0 &&
+      !violationRules(noLabelSpan).includes("R5_EVIDENCE_FILE_MISSING") &&
+      advisoryRules(noLabelSpan).includes("A6_EVIDENCE_CITED"),
+    `exit=${noLabelSpan.code} rules=[${violationRules(noLabelSpan).join(",")}] adv=[${advisoryRules(noLabelSpan).join(",")}]`,
+  );
+
+  // Anti-degradation controls: a *claimed* path that does not exist must still
+  // fail R5, labelled or not, code span or not.
+  expectRule("labelled evidence file missing (R5 control)", LABELLED_MISSING, "R5_EVIDENCE_FILE_MISSING", {
+    forbid: ["R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"],
+  });
+  expectRule(
+    "labelled evidence file missing inside a code span is still a claim (R5 control)",
+    LABELLED_MISSING_CODESPAN,
+    "R5_EVIDENCE_FILE_MISSING",
+    { forbid: ["R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"] },
+  );
+  expectRule(
+    "no label: a missing path in plain prose is still a claim (R5 control)",
+    NOLABEL_PROSE_MISSING,
+    "R5_EVIDENCE_FILE_MISSING",
+    { forbid: ["R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"] },
   );
 }
 
