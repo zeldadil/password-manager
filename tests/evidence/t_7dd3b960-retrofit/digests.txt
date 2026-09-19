@@ -1,0 +1,39 @@
+## repo: /home/sap/qa-retrofit-clone
+## origin/master tip: 94fb9de68b61b98ac745030d4178b6567c8846e7
+## materialised copies in: /tmp/tmp.TRUDkU8fYB
+
+## blob shas as recorded in the tree of origin/master
+100644 blob 3e1bc982f6ae1d36ba091116ff39ceef9ce89780	architecture/adr/SEC-001-threat-model.md
+100644 blob d3bbf55df46bb9c6cde05357ee1de5e933ecb90a	architecture/adr/ADR-002-overall-architecture.md
+100644 blob 2d8e91f94144470fe3aac051f86d86b9346d47c1	architecture/adr/ADR-005-extension-bridge-protocol.md
+
+## sha256 of the materialised copies
+4a249465c70d13fe30a303ac89c8cfe1943e05dc93c6736644ef19631da64f06  /tmp/tmp.TRUDkU8fYB/SEC-001.md
+0c7314f2a0a121bf68df6a1be20e7eea661d833dd31f57cc4f798fcc211a17c1  /tmp/tmp.TRUDkU8fYB/ADR-002.md
+a5299a1800c3fc3d82da2ef8c2d1b5ba7f5d7696639b28a9a65e656e3944e33d  /tmp/tmp.TRUDkU8fYB/ADR-005.md
+
+## git hash-object of the materialised copies (must equal the blob shas above)
+3e1bc982f6ae1d36ba091116ff39ceef9ce89780
+d3bbf55df46bb9c6cde05357ee1de5e933ecb90a
+2d8e91f94144470fe3aac051f86d86b9346d47c1
+
+## last commit touching each artefact on master
+ad01bb4 2026-09-16 chore: initial ADR set — ADR-001 (Passbolt patterns), SEC-001 (threat model), ADR-002 (overall architecture), PROJECT_BRIEF.md
+ad01bb4 2026-09-16 chore: initial ADR set — ADR-001 (Passbolt patterns), SEC-001 (threat model), ADR-002 (overall architecture), PROJECT_BRIEF.md
+a997226 2026-09-16 ADR-005: Extension Bridge Protocol — message types, origin validation, permission model, autofill flow; references ADR-001, ADR-002, SEC-001
+
+## SEC-001 §5 Sign-off row as committed (the AC-4 gap)
+## Part 5: Sign-off
+
+| Role | Name | Date | Signature |
+|---|---|---|---|
+| Architect | Architect (Solar Pro4, Upstage) | 2026-09-16 | Signed — reviewed in full, confirms no secret-storage code may proceed until QA also signs |
+| QA | (pending) | | |
+
+**Architect sign-off rationale (summary):**
+
+## does ANY ref carry a signed (non-pending) QA row for the three artefacts?
+  SEC-001-threat-model               refs carrying it:  39   with "(pending)":  39   with a real signature: 0
+  ADR-002-overall-architecture       refs carrying it:  39   with "(pending)":  39   with a real signature: 0
+  ADR-005-extension-bridge-protocol  refs carrying it:  39   with "(pending)":  39   with a real signature: 0
+  ^ a non-zero 'real signature' count would falsify the AC-4 finding; it is 0.

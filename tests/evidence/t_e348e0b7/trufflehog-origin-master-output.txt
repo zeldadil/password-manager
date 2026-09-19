@@ -1,0 +1,47 @@
+🐷🔑🐷  TruffleHog. Unearth your secrets. 🐷🔑🐷
+
+2026-09-17T17:42:46Z	info-0	trufflehog	running source	{"source_manager_worker_id": "iatlR", "with_units": true}
+2026-09-17T17:42:46Z	info-0	trufflehog	scanning repo	{"source_manager_worker_id": "iatlR", "unit_kind": "dir", "unit": "/tmp/trufflehog-98194-1191665168", "repo": "file:///home/sap/.hermes/kanban/workspaces/t_e348e0b7/pm-fresh"}
+✅ Found verified result 🐷🔑
+Detector Type: TelegramBotToken
+Decoder Type: PLAIN
+Raw result: 8615677595:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s
+Username: AASLlmHermesBot
+Commit: 258ca92b8234d6dc7d41f55b39fdeb00a00c335c
+Email: Architect (Hermes) <architect@password-manager.dev>
+File: tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md
+Line: 14
+Repository: file:///home/sap/.hermes/kanban/workspaces/t_e348e0b7/pm-fresh
+Repository_local_path: /tmp/trufflehog-98194-1191665168
+Timestamp: 2026-09-17 16:43:11 +0000
+Analyze: Run `trufflehog analyze` to analyze this key's permissions
+
+✅ Found verified result 🐷🔑
+Detector Type: TelegramBotToken
+Decoder Type: PLAIN
+Raw result: 8615677595:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s
+Username: AASLlmHermesBot
+Commit: a503e4d3601762619fa751138a4b360ea65621f6
+Email: Adil <adil@example.com>
+File: PROJECT_BRIEF.md
+Line: 87
+Repository: file:///home/sap/.hermes/kanban/workspaces/t_e348e0b7/pm-fresh
+Repository_local_path: /tmp/trufflehog-98194-1191665168
+Timestamp: 2026-09-16 21:06:09 +0000
+Analyze: Run `trufflehog analyze` to analyze this key's permissions
+
+✅ Found verified result 🐷🔑
+Detector Type: TelegramBotToken
+Decoder Type: PLAIN
+Raw result: 8615677595:AAG_UdhIrhfNGKjsuYSbTKaX5mzQg2eBd5s
+Username: AASLlmHermesBot
+Commit: 543c396d8bf4289492b80066a93e8c9f51de8c2a
+Email: zeldadil <78734810+zeldadil@users.noreply.github.com>
+File: PROJECT_BRIEF.md
+Line: 87
+Repository: file:///home/sap/.hermes/kanban/workspaces/t_e348e0b7/pm-fresh
+Repository_local_path: /tmp/trufflehog-98194-1191665168
+Timestamp: 2026-09-17 13:32:33 +0000
+Analyze: Run `trufflehog analyze` to analyze this key's permissions
+
+2026-09-17T17:42:46Z	info-0	trufflehog	finished scanning	{"chunks": 644, "bytes": 1833636, "verified_secrets": 3, "unverified_secrets": 0, "scan_duration": "462.033365ms", "trufflehog_version": "3.97.5", "verification_caching": {"Hits":0,"Misses":4,"HitsWasted":0,"AttemptsSaved":0,"VerificationTimeSpentMS":1113}}

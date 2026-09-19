@@ -1,0 +1,5 @@
+QA sign-off gate — check t_f49d448c (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_f49d448c  FE-001h: Lint/Type Config + CI @frontend [todo]
+        R8_DEFERRAL_TARGET_INVALID: QA deferral target t_f49d448c is assigned to "frontend", not a QA profile
+        R5_EVIDENCE_FILE_MISSING: evidence file named in the operative verdict does not exist: tests/evidence/t_f49d448c/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_58280940/pm-gate-fix; not found on any ref)

@@ -1,0 +1,52 @@
+=================================================================== t_9840ccdd
+--- operative verdict line:
+QA-VERDICT: pass-with-conditions — retro-verified 2026-09-18 against architecture/adr/SEC-001-threat-model.md@3e1bc982f6ae1d36ba091116ff39ceef9ce89780 (retro-verification: re-checked after the fact, not a verdict recorded at completion time). Evidence: architecture/adr/SEC-001-threat-model.md
+--- repo-relative paths named in the operative verdict:
+  OK    architecture/adr/SEC-001-threat-model.md             ad01bb48e3a83d84e77f469b96465476b40a9ab8
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+=================================================================== t_3ca45da2
+--- operative verdict line:
+QA-VERDICT: pass — retro-verified 2026-09-18 against architecture/adr/ADR-002-overall-architecture.md@d3bbf55df46bb9c6cde05357ee1de5e933ecb90a (retro-verification: re-checked after the fact, not a verdict recorded at completion time). Evidence: architecture/adr/ADR-002-overall-architecture.md
+--- repo-relative paths named in the operative verdict:
+  OK    architecture/adr/ADR-002-overall-architecture.md     ad01bb48e3a83d84e77f469b96465476b40a9ab8
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+=================================================================== t_08b02da9
+--- operative verdict line:
+QA-VERDICT: pass — retro-verified 2026-09-18 against architecture/adr/ADR-005-extension-bridge-protocol.md@2d8e91f94144470fe3aac051f86d86b9346d47c1 (retro-verification: re-checked after the fact, not a verdict recorded at completion time). Evidence: architecture/adr/ADR-005-extension-bridge-protocol.md
+--- repo-relative paths named in the operative verdict:
+  OK    architecture/adr/ADR-005-extension-bridge-protocol.md a9972268dd824d5f8ca536a22781628ecd7ff087
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+=================================================================== t_ac6a1f3f
+--- operative verdict line:
+QA-VERDICT: pass — record repaired 2026-09-18 by QA-001i-fu1 (`t_4242bee8`). The token is the one recorded at completion (2026-09-17, comment above: "QA-001a verdict: PASS (self-validated) — complete"); this comment exists to repair the **evidence pointer** and is **not** a new verdict on the work. Evidence: tests/evidence/t_ac6a1f3f/README.md, tests/evidence/t_ac6a1f3f/, scripts/qa/validate-docs.mjs
+--- repo-relative paths named in the operative verdict:
+  OK    docs/decisions/qa-signoff-gate-s10-open-items-t_7dd3b960.md 8ece47882f8c2989474e7a13c4a8164617afcd5b
+  OK    scripts/qa/signoff-gate.mjs                          0e7a3a3d30cb5b26061ad5a27048660b37e42b29
+  OK    scripts/qa/validate-docs.mjs                         332caa93bc940fe9e1fb3ead198bf08d36c3f551
+  OK    tests/evidence/t_ac6a1f3f/doc-validation-negative-control.txt 332caa93bc940fe9e1fb3ead198bf08d36c3f551
+  OK    tests/evidence/t_ac6a1f3f/README.md                  332caa93bc940fe9e1fb3ead198bf08d36c3f551
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+=================================================================== t_a2cf1744
+--- operative verdict line:
+QA-VERDICT: pass-with-conditions — record repaired 2026-09-18 by QA-001i-fu1 (`t_4242bee8`). The token and both conditions are the ones **recorded at completion** (run 341 metadata, 2026-09-17, and §3 of the card's own evidence README); this comment supplies the **missing evidence pointer** and is **not** a new verdict on the work. Evidence: tests/evidence/t_a2cf1744/README.md, .github/workflows/ci.yml, https://github.com/zeldadil/password-manager/pull/14
+--- repo-relative paths named in the operative verdict:
+  OK    .github/workflows/ci.yml                             bf9da1ea8183a40d1b133203f56dd805e1d7b6e8
+  OK    scripts/qa/signoff-gate.mjs                          0e7a3a3d30cb5b26061ad5a27048660b37e42b29
+  OK    tests/evidence/t_a2cf1744/README.md                  303caca311c9bb44a3d47e639623697e62194d68
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+=================================================================== t_5fe41426
+--- operative verdict line:
+QA-VERDICT: pass-with-conditions — record repaired 2026-09-18 by QA-001i-fu1 (`t_4242bee8`). QA-001b's own record carried **evidence but no verdict**: the verdict was deferred to its child `t_a2cf1744`, whose landed verdict is `pass-with-conditions`. This comment records that landed outcome and the missing pointer on this card; it is **not** a fresh verification of the CI pipeline, and it changes no token recorded elsewhere. Evidence: tests/evidence/t_5fe41426/README.md, .github/workflows/ci.yml, https://github.com/zeldadil/password-manager/pull/7
+--- repo-relative paths named in the operative verdict:
+  OK    .github/workflows/ci.yml                             bf9da1ea8183a40d1b133203f56dd805e1d7b6e8
+  OK    scripts/qa/signoff-gate.mjs                          0e7a3a3d30cb5b26061ad5a27048660b37e42b29
+  OK    tests/evidence/t_5fe41426/README.md                  543c396d8bf4289492b80066a93e8c9f51de8c2a
+--- absolute-path pointers in the operative verdict (must be none):
+  none
+
+criterion-2 check rc=0 (0 = every operative evidence path resolves on a ref, no absolute pointers)

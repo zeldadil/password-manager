@@ -1,0 +1,19 @@
+v1 (shipped): keyword AND security-Test-Type, non-QA
+    cards flagged: 7   newly flagged vs shipped: 0   dropped: 0
+
+v2a (option A): keyword AND security-Test-Type, non-QA  [no change]
+    cards flagged: 7   newly flagged vs shipped: 0   dropped: 0
+
+v2b (option B): keyword OR security-Test-Type, non-QA
+    cards flagged: 26   newly flagged vs shipped: 19   dropped: 0
+    newly flagged: t_08b02da9(done) t_7918f010(done) t_16f8ad84(todo) t_4d0c8439(todo) t_91964616(todo) t_8d52bcc9(todo) t_fe3b76ea(todo) t_03612cd7(todo) t_e4341d18(todo) t_b037ed46(todo) t_1f98942a(triage) t_4f42e589(triage) t_979847fc(triage) t_c5d9ea01(triage) t_8e4c8bfa(triage) t_6ec9d9dd(triage) t_ee24fd37(done) t_d3074f1c(triage) t_bc7a8dfa(triage)
+
+v2c (option C): scope-v2 regex alone, non-QA
+    cards flagged: 24   newly flagged vs shipped: 17   dropped: 0
+    newly flagged: t_08b02da9(done) t_5f82ac57(done) t_16f8ad84(todo) t_4d0c8439(todo) t_91964616(todo) t_fe3b76ea(todo) t_b51bf4b9(todo) t_e4341d18(todo) t_1f98942a(triage) t_e5142129(triage) t_4f42e589(triage) t_83dc1b35(triage) t_979847fc(triage) t_8e4c8bfa(triage) t_ee24fd37(done) t_d3074f1c(triage) t_bc7a8dfa(triage)
+
+v2d (option D): scope-v2 AND security-Test-Type, non-QA
+    cards flagged: 9   newly flagged vs shipped: 2   dropped: 0
+    newly flagged: t_e4341d18(todo) t_4f42e589(triage)
+
+=== who is exempt today (qa-assigned cards matching the keyword) ===

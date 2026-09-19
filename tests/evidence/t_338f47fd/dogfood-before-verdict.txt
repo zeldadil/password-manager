@@ -1,0 +1,5 @@
+QA sign-off gate — check t_338f47fd (pre-complete) (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_338f47fd  P1 gate defect: VERDICT_MARKER_RE has no author check — any profile can record a terminal QA verdict and clear the gate (reproduced on 0af4a453 and 28b0b771, hook included) @qa [running]
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)

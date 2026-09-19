@@ -1,0 +1,63 @@
+t_338f47fd — whole-board A/B: violation sets before/after the §3 author rule
+date: 2026-09-18T21:54:10Z
+board copy: /tmp/t_338f47fd-ev.WtBvDV/board.db sha256 64cd74018adf3245c31830e4b4fa726695c3a01734a476efb4740f10e1ada5f6
+
+done cards evaluated: 49
+  violations unchanged : 43
+  newly failing        : 3
+  cleared              : 1
+  changed both ways    : 2
+
+NEWLY FAILING:
+  t_e348e0b7   @architect  verdict pass → null
+      old: -
+      new: R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING
+      discounted non-QA marker comments: architect×1
+  t_28951254   @architect  verdict pass → null
+      old: -
+      new: R1_QA_VERDICT_MISSING,R4_EVIDENCE_MISSING
+      discounted non-QA marker comments: architect×1
+  t_2162d273   @architect  verdict pass → null
+      old: -
+      new: R1_QA_VERDICT_MISSING
+      discounted non-QA marker comments: architect×1
+
+CLEARED:
+  t_28f60dc1   @architect  verdict pass → null
+      old: R5_EVIDENCE_FILE_MISSING
+      new: -
+      discounted non-QA marker comments: architect×1
+
+CHANGED:
+  t_527d4720   @architect  verdict pass → null
+      old: R2_QA_VERDICT_INVALID
+      new: R1_QA_VERDICT_MISSING,R2_QA_VERDICT_INVALID
+      discounted non-QA marker comments: architect×1
+  t_80fc0326   @architect  verdict pass → null
+      old: R2_QA_VERDICT_INVALID,R2_QA_VERDICT_INVALID,R2_QA_VERDICT_INVALID
+      new: R2_QA_VERDICT_INVALID,R2_QA_VERDICT_INVALID,R2_QA_VERDICT_INVALID,R8_DEFERRAL_TARGET_INVALID
+      discounted non-QA marker comments: architect×3
+
+advisories changed on 8 card(s):
+  t_f49d448c   +A7_VERDICT_AUTHOR_IGNORED,A7_VERDICT_AUTHOR_IGNORED,A7_VERDICT_AUTHOR_IGNORED -A5_EVIDENCE_SUPERSEDED
+  t_527d4720   +A7_VERDICT_AUTHOR_IGNORED --
+  t_80fc0326   +A7_VERDICT_AUTHOR_IGNORED,A7_VERDICT_AUTHOR_IGNORED,A7_VERDICT_AUTHOR_IGNORED --
+  t_e348e0b7   +A7_VERDICT_AUTHOR_IGNORED --
+  t_28951254   +A7_VERDICT_AUTHOR_IGNORED -A4_EVIDENCE_OFF_TREE
+  t_28f60dc1   +A7_VERDICT_AUTHOR_IGNORED --
+  t_2162d273   +A7_VERDICT_AUTHOR_IGNORED --
+  t_710ed14c   +A7_VERDICT_AUTHOR_IGNORED,A8_VERDICT_SELF_DECLARED -A5_EVIDENCE_SUPERSEDED
+
+A7_VERDICT_AUTHOR_IGNORED on 8 card(s) — the §3 discounting is visible on every audit:
+  t_f49d448c   3 non-QA marker comment(s) by architect, dashboard, human
+  t_527d4720   1 non-QA marker comment(s) by architect
+  t_80fc0326   3 non-QA marker comment(s) by architect
+  t_e348e0b7   1 non-QA marker comment(s) by architect
+  t_28951254   1 non-QA marker comment(s) by architect
+  t_28f60dc1   1 non-QA marker comment(s) by architect
+  t_2162d273   1 non-QA marker comment(s) by architect
+  t_710ed14c   1 non-QA marker comment(s) by architect
+A8_VERDICT_SELF_DECLARED on 1 card(s):
+  t_710ed14c   architect→"pass-with-conditions"
+
+control: 43/49 cards keep an identical violation set.

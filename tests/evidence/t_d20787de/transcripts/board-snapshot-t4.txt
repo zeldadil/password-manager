@@ -1,0 +1,5 @@
+live board: /home/sap/.hermes/kanban.db
+copy:       /home/sap/.hermes/kanban/workspaces/t_d20787de/scratch/board-t4.db
+sha256:     dff4604e9b3d7cceb72906d50d3c54014b65a01291ba7cd86b1be11a35aded83
+taken_at:   2026-09-19T07:18:09Z
+rows: tasks=150 comments=169 runs=605
