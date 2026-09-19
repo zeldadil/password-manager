@@ -1,0 +1,74 @@
+=== task rows: t0 copy vs live now (t3) ===
+  tasks t0=149 t3=149  added=[]  removed=[]
+  rows changed between t0 and t3: 9
+    t_18a945c2
+      t0: ('t_18a945c2', 'Draft Threat Model Summary section', 'docs', 'running', None, 0, 1789801494)
+      t3: ('t_18a945c2', 'Draft Threat Model Summary section', 'docs', 'ready', None, 0, 1789801494)
+    t_1f98942a
+      t0: ('t_1f98942a', 'BR-001d: Popup', 'browser', 'triage', None, 0, 1789473079)
+      t3: ('t_1f98942a', 'BR-001d: Implement browser extension popup with search, resource list, autofill, and lock status', 'browser', 'todo', None, 0, 1789473079)
+    t_2154551e
+      t0: ('t_2154551e', 'BR-001g: Build + CI Validation', 'browser', 'triage', None, 0, 1789473082)
+      t3: ('t_2154551e', 'BR-001g: Configure web-ext build and CI validation pipeline', 'browser', 'todo', None, 0, 1789473082)
+    t_4f42e589
+      t0: ('t_4f42e589', 'BR-001f: Origin Validation', 'browser', 'triage', None, 0, 1789473081)
+      t3: ('t_4f42e589', 'BR-001f: Implement background origin validation for moz-extension and API domain', 'browser', 'todo', None, 0, 1789473081)
+    t_5b4429c9
+      t0: ('t_5b4429c9', 'Generate Architecture Diagram using architecture-diagram skill', 'architect', 'running', None, 0, 1789801383)
+      t3: ('t_5b4429c9', 'Generate Architecture Diagram using architecture-diagram skill', 'architect', 'blocked', None, 0, 1789801383)
+    t_65c5a636
+      t0: ('t_65c5a636', 'Write Project Overview, Prerequisites, and Quick Start content', 'docs', 'running', None, 0, 1789801383)
+      t3: ('t_65c5a636', 'Write Project Overview, Prerequisites, and Quick Start content', 'docs', 'ready', None, 0, 1789801383)
+    t_aac0f0c2
+      t0: ('t_aac0f0c2', 'BR-001c: Content Script', 'browser', 'triage', None, 0, 1789473079)
+      t3: ('t_aac0f0c2', 'BR-001c: Implement content.ts with form detection, icon injection, and background messaging', 'browser', 'todo', None, 0, 1789473079)
+    t_e5142129
+      t0: ('t_e5142129', 'BR-001e: Message Protocol (shared package)', 'browser', 'triage', None, 0, 1789473080)
+      t3: ('t_e5142129', 'BR-001e: Define shared message protocol types (AUTOFILL_REQUEST, AUTOFILL_RESPONSE, LOCK_STATUS, VAULT_SEARCH, CREATE_RESOURCE)', 'browser', 'todo', None, 0, 1789473080)
+    t_fe0be554
+      t0: ('t_fe0be554', 'Draft Crypto Decisions Summary section', 'docs', 'running', None, 0, 1789801494)
+      t3: ('t_fe0be554', 'Draft Crypto Decisions Summary section', 'docs', 'ready', None, 0, 1789801494)
+  six in-scope cards still identical (assignee/status/completed_at untouched):
+    t_e348e0b7: UNCHANGED  (assignee=architect, status=done)
+    t_28951254: UNCHANGED  (assignee=architect, status=done)
+    t_2162d273: UNCHANGED  (assignee=architect, status=done)
+    t_527d4720: UNCHANGED  (assignee=architect, status=done)
+    t_80fc0326: UNCHANGED  (assignee=architect, status=done)
+    t_c3cb6842: UNCHANGED  (assignee=qa, status=done)
+
+=== comment delta: which comments exist in t3 but not in t0 ===
+added  155 | t_aac0f0c2 | auto-decomposer | 53
+added  156 | t_1f98942a | auto-decomposer | 53
+added  157 | t_e5142129 | auto-decomposer | 53
+added  158 | t_4f42e589 | auto-decomposer | 53
+added  159 | t_65c5a636 | docs | 98
+added  160 | t_2154551e | auto-decomposer | 53
+added  161 | t_e348e0b7 | qa | 3018
+added  162 | t_28951254 | qa | 3288
+added  163 | t_2162d273 | qa | 2258
+added  164 | t_527d4720 | qa | 3361
+added  165 | t_c3cb6842 | qa | 3715
+added  166 | t_80fc0326 | qa | 2072
+added  167 | t_d20787de | qa | 3146
+  (no 'removed' rows = no comment was deleted)
+
+=== pushed branch: does it carry every path the verdict comment claims? ===
+  ok  8090 bytes  tests/evidence/t_d20787de/README.md
+  ok  16353 bytes  tests/evidence/t_d20787de/audit-t0.txt
+  ok  14651 bytes  tests/evidence/t_d20787de/audit-t1.txt
+  ok  14651 bytes  tests/evidence/t_d20787de/audit-t2.txt
+  ok  3624 bytes  tests/evidence/t_d20787de/audit-diff.txt
+  ok  5689 bytes  tests/evidence/t_d20787de/comment-readback-diff.txt
+  branch tip: fb65ca29a6e99c2733ddc17980b3679c9ee059ae
+
+=== workspace mirror still in place (completion-hook root) ===
+audit-diff.txt
+audit-t0-baseline-2026-09-18.txt
+audit-t0.txt
+audit-t1.txt
+audit-t2.txt
+comment-readback-diff.txt
+drafts
+loose-path-repro.txt
+readback
+README.md

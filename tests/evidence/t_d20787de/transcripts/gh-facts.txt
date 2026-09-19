@@ -1,0 +1,34 @@
+=== gh auth ===
+github.com
+  ✓ Logged in to github.com account zeldadil (/home/sap/.config/gh/hosts.yml)
+  - Active account: true
+  - Git operations protocol: https
+
+=== t_e348e0b7: negative-control red-case runs ===
+--- run 35259047666
+  id=35259047666 status=completed conclusion=failure branch=ci-t_e348e0b7-wiring-v2 event=pull_request title=ci: QA-001d — wire SAST (Semgrep), truffleHog; make secret-scan standa
+  job secret-scan: failure
+--- run 35261467319
+  id=35261467319 status=completed conclusion=failure branch=master event=push title=ci: QA-001d — wire SAST (Semgrep), truffleHog; make secret-scan stand…
+  job secret-scan: failure
+--- run 35262427071
+  id=35262427071 status=completed conclusion=success branch=master event=push title=docs: t_e348e0b7 evidence — master secret-scan false-negative fix (re…
+  job secret-scan: success
+
+=== t_28951254: branch CI run ===
+failed to get run: HTTP 404: Not Found (https://api.github.com/repos/zeldadil/password-manager/actions/runs/35265374451?exclude_pull_requests=true)
+failed to get run: HTTP 404: Not Found (https://api.github.com/repos/zeldadil/password-manager/actions/runs/35265374451?exclude_pull_requests=true)
+
+=== t_527d4720: dispatch run that audited the real board ===
+  id=35253319631 status=completed conclusion=success branch=feat/t_527d4720-runner event=workflow_dispatch created=2026-09-17T17:32:01Z title=QA sign-off audit
+  job qa-signoff-audit runner=null conclusion=success
+
+=== t_527d4720 / t_ea0783c5: repo variable QA_SIGNOFF_AUDIT_RUNNER ===
+{"message":"Resource not accessible by personal access token","documentation_url":"https://docs.github.com/rest/actions/variables#list-repository-variables","status":"403"}gh: Resource not accessible by personal access token (HTTP 403)
+
+=== t_c3cb6842: PR #24 ===
+{"checks":["install-lockfile:SUCCESS","secret-scan:SUCCESS","sast:SUCCESS","lint-typecheck:SUCCESS","unit:SUCCESS","integration:SUCCESS","e2e:SUCCESS","dependency-audit:SUCCESS","build:SUCCESS","Semgrep OSS:SUCCESS"],"head":"fix/verdict-marker-regex","merge":"f74fb094edc6d02807cd8c7ad6b9fd1d5c8f2e7f","mergedAt":"2026-09-18T11:06:11Z","number":24,"state":"MERGED","title":"fix: tighten VERDICT_MARKER_RE (t_c3cb6842)"}
+
+=== master: does it carry the gate fix + the truffleHog wiring? ===
+  scripts/qa/signoff-gate.mjs on master: blob 4c856bd3b6f2968773bf8d9fc6fd86410b151bc1
+  .github/workflows/ci.yml on master: blob 06a0ee405aecad05bb84c7a5e76cc6b63171067d
