@@ -7,44 +7,44 @@
  * adapted to this project's own naming and shape.
  */
 
-export type EnvelopeStatus = 'success' | 'error' | 'warning';
+export type EnvelopeStatus = 'success' | 'error' | 'warning'
 
 export interface EnvelopeHeader {
   /** Unique response ID (UUID v4) — used for tracing. */
-  id: string;
+  id: string
   /** Human-readable status: success | error | warning. */
-  status: EnvelopeStatus;
+  status: EnvelopeStatus
   /** Server timestamp (UTC) when the response was generated. */
-  servertime: string;
+  servertime: string
   /** Operation that produced this response (e.g. ListResources). */
-  action: string;
+  action: string
   /** Human-readable message. Empty on success; descriptive on error. */
-  message?: string;
+  message?: string
   /** Optional related URL. */
-  url?: string;
+  url?: string
   /** Machine-readable status code; mirrors the HTTP status line. */
-  code: number;
+  code: number
 }
 
 /** Success envelope — `body` carries the typed payload. */
 export interface ApiEnvelope<T = unknown> {
-  header: EnvelopeHeader;
-  body: T;
+  header: EnvelopeHeader
+  body: T
 }
 
 export interface ErrorDetail {
   /** Machine-readable error code (VALIDATION_ERROR, NOT_FOUND, FORBIDDEN, UNAUTHORIZED…). */
-  code: string;
+  code: string
   /** Field/parameter that caused the error. */
-  field: string;
+  field: string
   /** Human-readable description. */
-  message: string;
+  message: string
 }
 
 /** Error envelope body — `errors` array + optional documentation link. */
 export interface EnvelopeErrorBody {
-  errors?: ErrorDetail[];
-  documentationUrl?: string;
+  errors?: ErrorDetail[]
+  documentationUrl?: string
 }
 
 /**
@@ -55,18 +55,18 @@ export interface EnvelopeErrorBody {
  * each use (ADR-004 /auth/refresh; SEC-001).
  */
 export interface AuthResponse {
-  jwt: string;
-  refreshToken: string;
+  jwt: string
+  refreshToken: string
 }
 
 /** Login request body (ADR-004 /auth/login). */
 export interface LoginRequest {
-  email: string;
-  vaultKeyProof: string;
-  mfaCode?: string;
+  email: string
+  vaultKeyProof: string
+  mfaCode?: string
 }
 
 /** Refresh request body (ADR-004 /auth/refresh). */
 export interface RefreshRequest {
-  refreshToken: string;
+  refreshToken: string
 }

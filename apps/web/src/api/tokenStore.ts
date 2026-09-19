@@ -1,9 +1,9 @@
-import type { AuthResponse } from './types';
+import type { AuthResponse } from './types'
 
 /** In-memory access + refresh token pair. */
 export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
+  accessToken: string
+  refreshToken: string
 }
 
 /**
@@ -12,15 +12,15 @@ export interface AuthTokens {
  * without the client knowing where tokens live.
  */
 export interface TokenStore {
-  getAccessToken(): string | null;
-  getRefreshToken(): string | null;
-  setTokens(tokens: AuthTokens): void;
-  clear(): void;
+  getAccessToken(): string | null
+  getRefreshToken(): string | null
+  setTokens(tokens: AuthTokens): void
+  clear(): void
 }
 
 /** Map the wire auth response (`jwt` field) to the internal token pair. */
 export function tokensFromAuthResponse(res: AuthResponse): AuthTokens {
-  return { accessToken: res.jwt, refreshToken: res.refreshToken };
+  return { accessToken: res.jwt, refreshToken: res.refreshToken }
 }
 
 /**
@@ -33,24 +33,24 @@ export function tokensFromAuthResponse(res: AuthResponse): AuthTokens {
  * on lock/navigation.
  */
 export class InMemoryTokenStore implements TokenStore {
-  private accessToken: string | null = null;
-  private refreshToken: string | null = null;
+  private accessToken: string | null = null
+  private refreshToken: string | null = null
 
   getAccessToken(): string | null {
-    return this.accessToken;
+    return this.accessToken
   }
 
   getRefreshToken(): string | null {
-    return this.refreshToken;
+    return this.refreshToken
   }
 
   setTokens(tokens: AuthTokens): void {
-    this.accessToken = tokens.accessToken;
-    this.refreshToken = tokens.refreshToken;
+    this.accessToken = tokens.accessToken
+    this.refreshToken = tokens.refreshToken
   }
 
   clear(): void {
-    this.accessToken = null;
-    this.refreshToken = null;
+    this.accessToken = null
+    this.refreshToken = null
   }
 }
