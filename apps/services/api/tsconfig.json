@@ -20,15 +20,8 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "skipLibCheck": true,
-    "composite": true,
-    "paths": {
-      "@shared/*": ["../../../packages/shared/src/*"]
-    }
+    "skipLibCheck": true
   },
-  "references": [
-    { "path": "../../../packages/shared" }
-  ],
   "include": ["src/", "tests/", "drizzle.config.ts"],
   "exclude": ["node_modules", "dist", "build"]
 }
