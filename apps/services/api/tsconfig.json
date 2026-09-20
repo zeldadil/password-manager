@@ -21,10 +21,12 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "paths": {
-      "@shared/*": ["../../../packages/shared/src/*"]
-    }
+    "composite": true,
+    "paths": {}
   },
+  "references": [
+    { "path": "../../../packages/shared" }
+  ],
   "include": ["src/", "tests/", "drizzle.config.ts"],
   "exclude": ["node_modules", "dist", "build"]
 }
