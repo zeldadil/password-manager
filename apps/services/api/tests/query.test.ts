@@ -451,7 +451,7 @@ describe('parseQuery', () => {
       per_page: '10',
       sort: 'name',           // unknown — should be ignored
       fields: 'id,name',      // unknown — should be ignored
-    });
+    } as Parameters<typeof parseQuery>[0]);
     expect(result.includes.relations.has('tags')).toBe(true);
     expect(result.filters.clauses).toHaveLength(1);
     expect(result.pagination.perPage).toBe(10);

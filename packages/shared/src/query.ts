@@ -31,7 +31,7 @@ export type IncludeRelation =
 export interface ParsedIncludes {
   /** The requested relations, de-duplicated and validated. Empty when
    *  no `include` / `include[]` was supplied or every value was invalid. */
-  relations: ReadonlySet<IncludeRelation>;
+  relations: ReadonlySet<string>;
 }
 
 // ─── Filter ───────────────────────────────────────────────────────────────
