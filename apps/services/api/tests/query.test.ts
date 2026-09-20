@@ -279,7 +279,7 @@ describe('parseFilters', () => {
 
   it('returns clauses in the order they were supplied', () => {
     const result = parseFilters(['c:eq:3', 'a:eq:1', 'b:eq:2']);
-    expect(result.clauses.map((c) => c.field)).toEqual(['c', 'a', 'b']);
+    expect(result.clauses.map((c: FilterClause) => c.field)).toEqual(['c', 'a', 'b']);
   });
 
   it('trims whitespace from each clause component', () => {

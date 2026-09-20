@@ -22,7 +22,10 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "composite": true,
-    "paths": {}
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["../../packages/shared/src/*"]
+    }
   },
   "references": [
     { "path": "../../../packages/shared" }
