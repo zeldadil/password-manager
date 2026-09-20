@@ -12,6 +12,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import type { FilterClause } from '@shared/query';
 import {
   parseIncludes,
   parseFilters,
