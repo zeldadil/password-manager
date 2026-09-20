@@ -8,3 +8,5 @@
  */
 
 export type * from './envelope';
+export type * from './query';
+export * from './query';
