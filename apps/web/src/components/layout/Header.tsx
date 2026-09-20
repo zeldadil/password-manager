@@ -1,5 +1,6 @@
 import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useThemeStore } from '../../stores/themeStore'
 
 export interface HeaderProps {
   appName?: string
@@ -19,6 +20,7 @@ export default function Header({
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleRef = useRef<HTMLButtonElement>(null)
+  const { theme, toggleTheme } = useThemeStore()
 
   const handleLock = () => {
     if (onLock) onLock()
@@ -56,6 +58,17 @@ export default function Header({
           title="Lock vault"
         >
           Lock
+        </button>
+
+        <button
+          type="button"
+          className="app-header__theme-toggle"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          aria-pressed={theme === 'dark'}
+        >
+          {theme === 'dark' ? 'Light' : 'Dark'}
         </button>
 
         <div className="app-header__user">

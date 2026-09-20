@@ -13,9 +13,10 @@ import { useThemeStore, type ThemeMode } from './themeStore'
  * can hold must be a mode the stylesheet knows how to render — plus the SEC-001
  * rule that the preference is in-memory only.
  *
- * There is no theme toggle *control* in the UI yet (the theme is applied by
- * mounting the CSS; nothing writes `data-theme` from React). That wiring is a
- * finding in the FE-001i handoff, not something these tests fake.
+ * The theme-toggle control (the button + the AppShell useEffect that writes
+ * `data-theme` / `meta[name=color-scheme]` from `useThemeStore.theme`) is wired
+ * in FE-001l (AppShell.tsx + Header.tsx); these tests cover the store contract
+ * only and do not fake the DOM wiring.
  */
 
 const srcDir = dirname(fileURLToPath(import.meta.url))
