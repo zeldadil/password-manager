@@ -102,7 +102,7 @@ describe('BE-001h: integration', () => {
   // ──────────────────────────────────────────────────────────────────────────
 
   describe('GET /openapi.json (AC2)', () => {
-    let doc: Record<string, unknown>;
+    let doc: any;
 
     beforeAll(async () => {
       const res = await server.inject({ method: 'GET', url: '/openapi.json' });
@@ -132,16 +132,16 @@ describe('BE-001h: integration', () => {
     });
 
     it('declares the JWT BearerAuth security scheme (ADR-004)', () => {
-      const schemes = doc.components?.securitySchemes as Record<string, unknown> | undefined;
+      const schemes = (doc.components?.securitySchemes as Record<string, unknown> | undefined);
       expect(schemes).toBeDefined();
       expect(schemes?.BearerAuth).toBeDefined();
-      expect(schemes?.BearerAuth?.type).toBe('http');
-      expect(schemes?.BearerAuth?.scheme).toBe('bearer');
-      expect(schemes?.BearerAuth?.bearerFormat).toBe('JWT');
+      expect((schemes?.BearerAuth as any)?.type).toBe('http');
+      expect((schemes?.BearerAuth as any)?.scheme).toBe('bearer');
+      expect((schemes?.BearerAuth as any)?.bearerFormat).toBe('JWT');
     });
 
     it('carries the ADR-004 envelope components', () => {
-      const schemas = doc.components?.schemas as Record<string, unknown> | undefined;
+      const schemas = (doc.components?.schemas as Record<string, unknown> | undefined);
       expect(schemas).toBeDefined();
       expect(schemas?.EnvelopeHeader).toBeDefined();
       expect(schemas?.EnvelopeSuccess).toBeDefined();
