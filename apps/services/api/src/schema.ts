@@ -83,7 +83,7 @@ export const users = sqliteTable('users', {
 
   // Rate limiting — BE-002e: wrong-password handling
   // Consecutive failed unlock attempts (reset on success or lockout expiry).
-  failedAttempts: integer('failed_attempts', { mode: 'integer' }).notNull().default(0),
+  failedAttempts: integer('failed_attempts', { mode: 'number' }).notNull().default(0),
   // Lockout expiry — when set, unlock attempts return 401 until this time.
   lockedUntil: integer('locked_until', { mode: 'timestamp' }),
 

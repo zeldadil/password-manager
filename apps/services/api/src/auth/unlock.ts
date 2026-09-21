@@ -168,9 +168,9 @@ export function unlockPlugin(server: FastifyInstance): void {
         userRow = await db.query.users.findFirst({
           where: eq(users.email, email.toLowerCase()),
         });
-      } else {
+  } else {
         userRow = await db.query.users.findFirst({
-          where: eq(users.username, username.toLowerCase()),
+          where: eq(users.username, username!.toLowerCase()),
         });
       }
 
