@@ -16,10 +16,10 @@ import { eq } from 'drizzle-orm';
 import {
   registerMasterPassword,
   type KdfRegistrationRecord,
-} from '@crypto/index';
+} from '../../../../packages/crypto/src/index';
 import { randomUUID } from 'node:crypto';
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface RegisterBody {
   masterPassword: string;
@@ -40,9 +40,9 @@ export interface RegisterResponse {
   };
 }
 
-// ─── Plugin ────────────────────────────────────────────────────────────────────
+// ─── Plugin ─────────────────────────────────────────────────────────────────
 
-export function registerPlugin(server: FastifyInstance): void {
+export function authPlugin(server: FastifyInstance): void {
   server.post<{ Path: '/auth/register'; Schema: { Body: RegisterBody }; Reply: RegisterResponse }>(
     '/auth/register',
     {

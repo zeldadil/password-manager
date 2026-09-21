@@ -6,7 +6,3 @@
 # commit that predates them. The token must still be rotated by the repo owner.
 
 a503e4d:PROJECT_BRIEF.md:telegram-bot-api-token
-# Commit 9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859 published the rotated token's
-# sha256 in evidence README (a derived artifact, not the secret itself).
-# Removed in 3415bd5. Suppress so CI secret-scan passes on this branch.
-9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859:tests/evidence/t_28951254/README.md:generic-api-key:22
