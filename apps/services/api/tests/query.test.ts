@@ -12,13 +12,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { FilterClause } from '@shared/query';
+import type { FilterClause, IncludeRelation } from '../src/middleware/query-parse';
 import {
   parseIncludes,
   parseFilters,
   parsePagination,
   parseQuery,
-} from '@shared/query';
+} from '../src/middleware/query-parse';
 
 /* ═══════════════════════════════════════════════════════════════════════
  *  parseIncludes — eager-loading relation parser
@@ -90,8 +90,8 @@ describe('parseIncludes', () => {
     const result = parseIncludes('permissions,unknownvalue,tags,nope');
     expect(result.relations.has('permissions')).toBe(true);
     expect(result.relations.has('tags')).toBe(true);
-    expect(result.relations.has('unknownvalue')).toBe(false);
-    expect(result.relations.has('nope')).toBe(false);
+    expect(result.relations.has('unknownvalue' as IncludeRelation)).toBe(false);
+    expect(result.relations.has('nope' as IncludeRelation)).toBe(false);
     expect(result.relations.size).toBe(2);
   });
 
@@ -128,7 +128,7 @@ describe('parseIncludes', () => {
     // Values are case-sensitive: "Permissions" != "permissions".
     const result = parseIncludes('Permissions,tags');
     expect(result.relations.has('tags')).toBe(true);
-    expect(result.relations.has('Permissions')).toBe(false);
+    expect(result.relations.has('Permissions' as IncludeRelation)).toBe(false);
     expect(result.relations.size).toBe(1);
   });
 });
@@ -445,14 +445,17 @@ describe('parseQuery', () => {
   });
 
   it('gracefully ignores unknown top-level params', () => {
-    const result = parseQuery({
+    // parseQuery only reads include/filter/page/per_page; extra keys are
+    // ignored by design (the function destructures what it needs).
+    const params: Record<string, unknown> = {
       include: 'tags',
       filter: 'type:eq:server',
       page: '1',
       per_page: '10',
       sort: 'name',           // unknown — should be ignored
       fields: 'id,name',      // unknown — should be ignored
-    } as Parameters<typeof parseQuery>[0]);
+    };
+    const result = parseQuery(params);
     expect(result.includes.relations.has('tags')).toBe(true);
     expect(result.filters.clauses).toHaveLength(1);
     expect(result.pagination.perPage).toBe(10);

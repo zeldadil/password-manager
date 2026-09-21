@@ -26,11 +26,19 @@
  * Security (SEC-001 AR-2): parsing produces no secrets. Filter values are
  * strings; the route layer is responsible for parameterized query building
  * so that no filter value is ever interpolated into SQL/ORM calls.
+ *
+ * NOTE: The pure parsing functions (parseIncludes, parseFilters,
+ * parsePagination, parseQuery) and their types live in
+ * apps/services/api/src/middleware/query-parse.ts — a local mirror of
+ * packages/shared/src/query.ts. Import from the local mirror, not from
+ * @shared/query, to avoid a rootDir violation (the api tsconfig's paths
+ * alias points outside rootDir). Keep the two in sync until packages/shared
+ * is set up as a built workspace package.
  */
 
-import { parseIncludes, parseFilters, parsePagination, parseQuery } from '@shared/query';
+import { parseIncludes, parseFilters, parsePagination, parseQuery } from './query-parse';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-import type { ParsedQuery, QueryParsed } from '@shared/query';
+import type { ParsedQuery, QueryParsed } from './query-parse';
 
 /** Register a `preHandler` hook on the given Fastify instance that parses
  *  the query string and decorates each `request` with `queryParsed`.
