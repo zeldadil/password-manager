@@ -22,6 +22,7 @@ import { createErrorHandler, notFoundHandler } from './middleware/error-handler'
 import { healthPlugin } from './routes/health';
 import { openapiPlugin } from './routes/openapi';
 import { authPlugin } from './auth/register';
+import { unlockPlugin } from './auth/unlock';
 
 export interface CreateServerOptions {
   /** Override the logger (tests pass { logger: false } for clean output). */
@@ -66,6 +67,7 @@ export function createServer(opts?: CreateServerOptions): FastifyInstance {
   server.register(healthPlugin);
   server.register(openapiPlugin);
   server.register(authPlugin);
+  server.register(unlockPlugin);
 
   return server;
 }
