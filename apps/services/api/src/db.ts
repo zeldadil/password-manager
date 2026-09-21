@@ -31,4 +31,10 @@ export type Db = ReturnType<typeof createDb>;
  * Default singleton for production/runtime use.
  * Tests should call `createDb(':memory:')` for isolation.
  */
-export const db = createDb();
+export let db = createDb();
+/**
+ * Override the exported db singleton for testing.
+ */
+export function setTestDbOverride(value: Db): void {
+  db = value;
+}
