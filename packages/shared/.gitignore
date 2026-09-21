@@ -1,0 +1,11 @@
+${workspaceFolder}/**/*.ts
+${workspaceFolder}/**/*.js
+${workspaceFolder}/**/*.d.ts
+${workspaceFolder}/**/*.js.map
+node_modules
+dist
+build
+dev.db
+*.db
+coverage
+.nyc_output
