@@ -21,6 +21,7 @@
     "migrate:generate": "drizzle-kit generate"
   },
   "dependencies": {
+    "@password-manager/crypto": "workspace:*",
     "better-sqlite3": "^9.6.0",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.0.2",

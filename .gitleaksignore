@@ -44,3 +44,30 @@
 4ca58c762b3a065322c0b7b76012495acc404950:scripts/qa/signoff-gate.mjs:generic-api-key:397
 19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/gate-fix.diff:generic-api-key:186
 19b7798e28a957a5c095b559038c9178601931c5:tests/evidence/t_338f47fd/gate-fix.diff:generic-api-key:191
+
+# BE-002a/BE-002b (commit c0b4e45, feat/be002ab-auth-clean): same
+# keyword:value false-positive shape.
+# - apps/services/api/src/auth/unlock.ts:149 — `const secret =
+#   process.env.JWT_SECRET`, a variable holding the *env var name* it
+#   reads from, not a literal secret value.
+# - apps/services/api/src/auth/unlock.ts:172-173 — two response object
+#   properties (access token, refresh token) whose value is a variable
+#   reference read off a result object, not a literal.
+# - tests/auth/{register,unlock}.test.ts — every hit is a `masterPassword:
+#   '<synthetic-value>'` test fixture (e.g. 'my-secure-test-password-123',
+#   'rotation-password-789'); all values are synthetic per AR-4 and none
+#   is a real credential.
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/src/auth/unlock.ts:generic-api-key:149
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/src/auth/unlock.ts:generic-api-key:172
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/src/auth/unlock.ts:generic-api-key:173
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:85
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:130
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:139
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:172
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:261
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:304
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.test.ts:generic-api-key:63
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.test.ts:generic-api-key:89
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.test.ts:generic-api-key:158
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.test.ts:generic-api-key:187
+c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.test.ts:generic-api-key:215

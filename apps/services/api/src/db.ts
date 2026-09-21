@@ -31,4 +31,12 @@ export type Db = ReturnType<typeof createDb>;
  * Default singleton for production/runtime use.
  * Tests should call `createDb(':memory:')` for isolation.
  */
-export const db = createDb();
+export let db = createDb();
+
+/**
+ * Override the db singleton for integration tests. Must be called before
+ * `createServer()` so routes close over the replaced live binding.
+ */
+export function setTestDbOverride(override: Db): void {
+  db = override;
+}
