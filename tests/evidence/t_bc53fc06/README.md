@@ -88,15 +88,19 @@ Returns vault "unlocked" state (`{ status: "unlocked", sessionId, expiresAt }`) 
 ## Files Changed (this task)
 - `apps/services/api/src/auth/lock.ts` — POST /auth/lock + GET /auth/status implementation (202 lines)
 - `apps/services/api/src/auth/index.ts` — registers lockPlugin alongside registerPlugin + unlockPlugin
-- `apps/services/api/src/auth/jwt.ts` — verifyJwtAuth guard used by both lock and status endpoints
-- `apps/services/api/tests/auth/lock.test.ts` — 11 integration tests (logger: false)
-- `apps/services/api/tests/auth/lock-v2.test.ts` — 10 integration tests (logger: true, captures server logs)
-- `apps/services/api/src/schema.ts` — sessions + refreshTokens tables (pre-existing from BE-002a/BE-002b)
+- `apps/services/api/src/auth/jwt.ts` — verifyJwtAuth guard used by both lock and status endpoints (existing, used by lock)
+- `apps/services/api/tests/auth/lock.test.ts` — 11 integration tests (logger: false) [NEW]
+- `apps/services/api/tests/auth/lock-v2.test.ts` — 10 integration tests (logger: true, captures server logs) [NEW]
+- `apps/services/api/tests/auth/jwt.test.ts` — 10 JWT helper unit tests (sign/verify/expiry/tamper) [NEW]
 
 ## Branch & PR
 - Branch: `feature/t_7918f010`
 - PR: https://github.com/zeldadil/password-manager/pull/55
-- Latest commit on this task: `df15ee6 fix(api): resolve typecheck failures`
+- Latest commits on this task:
+  - `8feccf7 fix(api): BE-002c lock endpoint — use isNull for session lookup`
+  - `df15ee6 fix(api): resolve typecheck failures — unlock/null safety + schema mode`
+  - `2c21838 test(api): BE-002c lock + status integration tests and JWT unit tests` [NEW]
+  - `a319bc6 docs: BE-002c evidence — update test counts (79/79 auth, JWT unit tests)` [NEW]
 - Combined with BE-002b (PR #53, merged) + BE-002e (same PR #55): full auth flow register → unlock → status → lock → locked
 
 ## Verification commands (re-run to confirm)
