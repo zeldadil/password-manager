@@ -20,6 +20,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db';
 import { sessions, refreshTokens } from '../schema';
 import { eq, desc, and, isNull } from 'drizzle-orm';
+import { config } from '../config';
 import { verifyJwtAuth, type JwtAuthPayload } from './jwt';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -190,6 +191,19 @@ export function lockPlugin(server: FastifyInstance): void {
           error: 'Unauthorized',
           message: 'No active session — vault is locked',
         });
+      }
+
+      // Auto-lock check: if the session has been inactive beyond the timeout,
+      // treat it as locked even though the server-side record still exists.
+      if (session.lastUsedAt) {
+        const now = new Date();
+        const inactivityMs = now.getTime() - session.lastUsedAt.getTime();
+        if (inactivityMs > config.autoLockTimeoutMs) {
+          return reply.code(401).send({
+            error: 'Unauthorized',
+            message: 'Session expired due to inactivity — vault is locked',
+          });
+        }
       }
 
       return reply.code(200).send({

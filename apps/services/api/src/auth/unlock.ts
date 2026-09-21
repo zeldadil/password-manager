@@ -22,6 +22,7 @@ import { db } from '../db';
 import { users, sessions, refreshTokens } from '../schema';
 import { eq, or } from 'drizzle-orm';
 import { unlockVaultKey, deriveVaultKey, type KdfRegistrationRecord } from '@crypto/index';
+import { config } from '../config';
 import { signAccessToken, generateRefreshToken, hashRefreshToken } from './jwt';
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 

@@ -11,9 +11,11 @@ import type { FastifyInstance } from 'fastify';
 import { registerPlugin } from './register';
 import { unlockPlugin } from './unlock';
 import { lockPlugin } from './lock';
+import { refreshPlugin } from './refresh';
 
 export function authPlugin(server: FastifyInstance): void {
   registerPlugin(server);
   unlockPlugin(server);
   lockPlugin(server);
+  refreshPlugin(server);
 }
