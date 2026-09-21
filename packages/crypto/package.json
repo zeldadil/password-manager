@@ -1,0 +1,22 @@
+{
+  "name": "@password-manager/crypto",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Crypto primitives — Argon2id KDF, AES-256-GCM AEAD, key wrap/unwrap (SEC-001)",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc --noEmit && echo 'typecheck ok'",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "argon2": "^0.45.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.3",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+}
