@@ -8,13 +8,13 @@
 
 ### Auth-focused tests (BE-002c coverage)
 - Command: `pnpm --filter=@password-manager/api exec vitest run tests/auth/lock.test.ts tests/auth/lock-v2.test.ts tests/auth/unlock.test.ts tests/auth/register.test.ts tests/auth/wrong-password.test.ts tests/auth/jwt.test.ts`
-- Result: **70/70 pass** (6 test files, 70 tests)
+- Result: **79/79 pass** (6 test files, 79 tests)
   - `lock.test.ts` — 11 tests
   - `lock-v2.test.ts` — 10 tests
-  - `unlock.test.ts` — (included above)
-  - `register.test.ts` — (included above)
-  - `wrong-password.test.ts` — (included above)
-  - `jwt.test.ts` — (included above)
+  - `unlock.test.ts` — 9 tests
+  - `register.test.ts` — 10 tests
+  - `wrong-password.test.ts` — 16 tests
+  - `jwt.test.ts` — 10 tests (BE-002c: JWT sign/verify/expiry/tamper)
 
 ### Crypto unit tests
 - Command: `pnpm --filter=@password-manager/crypto exec vitest run`
