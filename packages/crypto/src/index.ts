@@ -141,6 +141,3 @@ export async function unlockVaultKey(
     record.vaultKeyTag,
   );
 }
-
-/** JWT signing and verification utilities. */
-export * from './jwt';

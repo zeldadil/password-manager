@@ -22,7 +22,8 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "paths": {
-      "@shared/*": ["../../../packages/shared/src/*"]
+      "@shared/*": ["../../../packages/shared/src/*"],
+      "@crypto/*": ["../../../packages/crypto/src/*"]
     }
   },
   "include": ["src/", "tests/", "drizzle.config.ts"],

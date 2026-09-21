@@ -1,19 +1,22 @@
 import { defineConfig } from 'vitest/config';
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// Vitest 5.x native config loader doesn't expose __dirname — use
-// import.meta.dirname (Node 22+, which is what this project targets).
-const sharedSrc = resolve(import.meta.dirname, '../../../packages/shared/src');
-const cryptoSrc = resolve(import.meta.dirname, '../../../packages/crypto/src');
+const __filename = fileURLToPath(import.meta.url);
+const __dir = dirname(__filename);
+console.log('[vitest.config] __filename=', __filename);
+console.log('[vitest.config] __dir=', __dir);
+console.log('[vitest.config] sharedSrc=', resolve(__dir, '../../../packages/shared/src'));
+console.log('[vitest.config] cryptoSrc=', resolve(__dir, '../../../packages/crypto/src'));
+
+const sharedSrc = resolve(__dir, '../../../packages/shared/src');
+const cryptoSrc = resolve(__dir, '../../../packages/crypto/src');
 
 export default defineConfig({
   test: {
     globals: false,
     environment: 'node',
     include: ['tests/**/*.test.ts'],
-    deps: {
-      interopDefault: true,
-    },
   },
   resolve: {
     alias: {
