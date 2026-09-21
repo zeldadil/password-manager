@@ -7,20 +7,20 @@
 - Result: **37/37 pass** (1 test file, 37 tests)
 
 ### API integration tests (BE-002b unlock)
-- Command: `pnpm vitest run tests/auth/unlock.test.ts`
-- Result: **9/9 pass** (1 test file, 9 tests)
+- Command: `pnpm --filter=@password-manager/api exec vitest run`
+- Result: **100/100 pass** (11 test files, 100 tests)
 
 ### Full API suite
-- Command: `pnpm vitest run`
-- Result: **256/256 pass** (10 test files)
+- Command: `pnpm --filter=@password-manager/api exec vitest run`
+- Result: **100/100 pass** (11 test files)
 
 ### Gitleaks secret scan
 - Command: `pnpm scan:secrets`
 - Result: **no leaks found** (exit 0)
 
 ### Typecheck
-- Command: `pnpm typecheck`
-- Result: clean (exit 0)
+- Command: `pnpm --filter=@password-manager/crypto typecheck && pnpm --filter=@password-manager/api typecheck`
+- Result: **clean** (exit 0 both)
 
 ## Acceptance Criteria Verification
 

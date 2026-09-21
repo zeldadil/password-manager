@@ -163,6 +163,8 @@ CREATE TABLE `users` (
 	`recovery_kit_iv` blob,
 	`recovery_kit_tag` blob,
 	`mfa_secret` blob,
+	`failed_attempts` integer DEFAULT 0 NOT NULL,
+	`locked_until` integer,
 	`settings` text DEFAULT '{}' NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL,

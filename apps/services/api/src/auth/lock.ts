@@ -40,7 +40,7 @@ async function findActiveSession(userId: string) {
   const rows = await db.query.sessions.findMany({
     where: and(
       eq(sessions.userId, userId),
-      eq(sessions.deletedAt, null),
+      isNull(sessions.deletedAt),
     ),
     orderBy: (s, { desc }) => [desc(s.lastUsedAt)],
     limit: 1,
