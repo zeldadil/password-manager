@@ -1,0 +1,8 @@
+{
+  "plugins": {
+    "react": true
+  },
+  "rules": {
+    "ordering-style": "off"
+  }
+}
