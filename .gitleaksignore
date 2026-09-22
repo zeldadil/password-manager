@@ -71,3 +71,126 @@ c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.t
 c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.test.ts:generic-api-key:158
 c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.test.ts:generic-api-key:187
 c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.test.ts:generic-api-key:215
+
+# BE-002c-h/BE-003a/FE-002a (commit 2147c91, feat/be003a-fe002a-clean): same
+# keyword:value false-positive shape (generic-api-key), plus two
+# telegram-token/bearer-token hits.
+# - Every `generic-api-key` hit below is one of two shapes: a synthetic
+#   master-password or signing-secret test fixture (AR-4 synthetic data,
+#   a property whose key is "Password"/"SECRET" and value a short literal
+#   string), or a token/secret-named variable whose right-hand side is a
+#   function call (refresh-token generator) or an environment-variable
+#   read, not a literal value.
+# - The telegram-token (line 516) and two bearer-token (lines 523, 568)
+#   hits in tests/auth/security.test.ts were real at this commit — a
+#   Telegram-bot-token-shaped literal and two fake-JWT literals, written
+#   directly in source to test redactSecrets(). This is the exact pattern
+#   that caused this repo's real Telegram-token incident (PROJECT_BRIEF.md
+#   §9). Fixed one commit later (da8f386) by assembling them from string
+#   fragments at runtime instead, per that incident's established
+#   convention — but the pre-fix blob is still reachable at this commit
+#   hash, so it's suppressed here rather than rewriting history.
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/src/auth/jwt.ts:generic-api-key:133
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/src/auth/refresh.ts:generic-api-key:174
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/src/auth/refresh.ts:generic-api-key:210
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/src/auth/unlock.ts:generic-api-key:261
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:122
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:146
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:178
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:194
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:222
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:239
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:253
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:271
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:290
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:306
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:330
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:359
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:375
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:407
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:431
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:459
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:501
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:514
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:578
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:602
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:668
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:678
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:71
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:741
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:769
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:786
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:99
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/jwt.test.ts:generic-api-key:15
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/jwt.test.ts:generic-api-key:83
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/jwt.test.ts:generic-api-key:94
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/lock.test.ts:generic-api-key:115
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/lock.test.ts:generic-api-key:121
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/lock.test.ts:generic-api-key:141
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/lock.test.ts:generic-api-key:201
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/lock.test.ts:generic-api-key:249
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/lock.test.ts:generic-api-key:42
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/lock.test.ts:generic-api-key:58
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/lock.test.ts:generic-api-key:65
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:179
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:221
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:270
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:310
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:58
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:72
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:106
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:179
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:180
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:186
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:187
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:50
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:70
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:75
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:87
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:95
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:bearer-token:523
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:bearer-token:568
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:113
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:122
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:133
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:455
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:499
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:531
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:532
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:533
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:534
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:541
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:542
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:generic-api-key:553
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/security.test.ts:telegram-token:516
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:110
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:135
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:153
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:176
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:192
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:210
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:258
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:277
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:305
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:314
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:61
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:90
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:102
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:167
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:185
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:202
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:235
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:257
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:302
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:319
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:330
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:357
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:431
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:459
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:471
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:504
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:515
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:62
+2147c9178e6100f7c858f138643122e4b843ff8c:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:92
+2147c9178e6100f7c858f138643122e4b843ff8c:packages/crypto/tests/vault.test.ts:generic-api-key:185
+2147c9178e6100f7c858f138643122e4b843ff8c:packages/crypto/tests/vault.test.ts:generic-api-key:23
