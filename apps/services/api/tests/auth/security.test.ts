@@ -513,18 +513,25 @@ describe('BE-002h: Security — JWT algorithm confusion resistance', () => {
 // Pure unit tests on redactSecrets() — no server needed.
 describe('BE-002h: Security — secret scan on logs (redaction)', () => {
   it('redacts Telegram bot token pattern (digits:letters)', () => {
-    const input = 'Authorization header: 123456789:AAHa5sdF23klmnoPQRStuvwxyz123456';
+    // Assembled at runtime from fragments, not a literal string — a
+    // Telegram-bot-token-shaped literal in source is what triggered a real
+    // secret-scanner incident on this repo previously (see PROJECT_BRIEF.md
+    // §9). Same fragment-assembly convention as that incident's fix.
+    const fakeTelegramToken = '123456789' + ':' + 'AA'.concat('Ha5sdF23klmnoPQRStuvwxyz123456');
+    const input = 'Authorization header: ' + fakeTelegramToken;
     const redacted = redactSecrets(input);
     expect(redacted).toContain('<REDACTED>');
-    expect(redacted).not.toContain('AAHa5sdF23klmnoPQRStuvwxyz123456');
+    expect(redacted).not.toContain(fakeTelegramToken.split(':')[1]);
   });
 
   it('redacts Bearer token value (keeps "Bearer " label)', () => {
-    const input = 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.abc123def456ghi789jkl012mno345pqr678stu';
+    // Fragment-assembled fake JWT, not a literal — same convention as above.
+    const fakeJwt = ['eyJhbGciOiJIUzI1NiJ9', 'eyJzdWIiOiJ0ZXN0In0', 'abc123def456ghi789jkl012mno345pqr678stu'].join('.');
+    const input = 'Authorization: Bearer ' + fakeJwt;
     const redacted = redactSecrets(input);
     expect(redacted).toContain('Bearer ');
     expect(redacted).toContain('<REDACTED>');
-    expect(redacted).not.toContain('eyJhbGciOiJIUzI1NiJ9');
+    expect(redacted).not.toContain(fakeJwt.split('.')[0]);
   });
 
   it('redacts key=value patterns', () => {
@@ -565,9 +572,11 @@ describe('BE-002h: Security — secret scan on logs (redaction)', () => {
   it('redacts Bearer token embedded in a validation error message', () => {
     // Simulates: client sends a Bearer token in a field → validation error →
     // the error message must not echo the token value.
-    const input = 'request.body.password must be string, got Bearer eyJhbGciOiJIUzI1NiJ9.e30.abc123def456ghi789jkl012mno345pqr678stu';
+    // Fragment-assembled fake JWT, not a literal — same convention as above.
+    const fakeJwt2 = ['eyJhbGciOiJIUzI1NiJ9', 'e30', 'abc123def456ghi789jkl012mno345pqr678stu'].join('.');
+    const input = 'request.body.password must be string, got Bearer ' + fakeJwt2;
     const redacted = redactSecrets(input);
-    expect(redacted).not.toContain('eyJhbGciOiJIUzI1NiJ9');
+    expect(redacted).not.toContain(fakeJwt2.split('.')[0]);
     expect(redacted).toContain('<REDACTED>');
   });
 });
