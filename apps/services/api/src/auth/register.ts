@@ -1,4 +1,4 @@
-/** @fileoverview Registration route — POST /api/v1/auth/register (BE-002a).
+/** @fileoverview Registration route — POST /auth/register (BE-002a).
 
  * Accepts a master password, runs the KDF (Argon2id per SEC-001 Decision 1),
  * encrypts the vault key (AES-256-GCM self-wrap, SEC-001 Decision 2+3),
@@ -19,8 +19,6 @@ import {
 } from '@password-manager/crypto';
 import { randomUUID } from 'node:crypto';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
 export interface RegisterBody {
   masterPassword: string;
   email: string;
@@ -40,9 +38,7 @@ export interface RegisterResponse {
   };
 }
 
-// ─── Plugin ─────────────────────────────────────────────────────────────────
-
-export function authPlugin(server: FastifyInstance): void {
+export function registerPlugin(server: FastifyInstance): void {
   server.post<{ Body: RegisterBody; Reply: RegisterResponse }>(
     '/auth/register',
     {
@@ -130,7 +126,7 @@ export function authPlugin(server: FastifyInstance): void {
       }
 
       const passwordBuffer = Buffer.from(masterPassword, 'utf-8');
-      const record: KdfRegistrationRecord = await registerMasterPassword(passwordBuffer);
+      const record = await registerMasterPassword(passwordBuffer);
 
       const id = randomUUID();
       const now = new Date();
@@ -144,6 +140,8 @@ export function authPlugin(server: FastifyInstance): void {
         vaultKeyEncrypted: record.vaultKeyEncrypted,
         vaultKeyIv: record.vaultKeyIv,
         vaultKeyTag: record.vaultKeyTag,
+        failedAttempts: 0,
+        lockedUntil: null,
         settings: '{}',
         createdAt: now,
         updatedAt: now,

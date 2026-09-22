@@ -130,14 +130,15 @@ describe('BE-001a: DB Migration System', () => {
       expect(fs.existsSync(migrationFile)).toBe(true);
     });
 
-    it('migration journal (_journal.json) records the baseline', () => {
+    it('migration journal (_journal.json) records the baseline and BE-002e rate-limiting migration', () => {
       const journalPath = path.resolve(MIGRATIONS_DIR, 'meta', '_journal.json');
       expect(fs.existsSync(journalPath)).toBe(true);
       const journal = JSON.parse(fs.readFileSync(journalPath, 'utf-8'));
       expect(journal.version).toBe('7');
       expect(journal.dialect).toBe('sqlite');
-      expect(journal.entries).toHaveLength(1);
+      expect(journal.entries).toHaveLength(2);
       expect(journal.entries[0].tag).toBe('0000_baseline_schema');
+      expect(journal.entries[1].tag).toBe('0001_be002e_rate_limiting');
     });
   });
 
