@@ -18,7 +18,7 @@
 
 ### Secret scan (gitleaks)
 - Command: `pnpm scan:secrets`
-- Result: **no leaks found**
+- Result: **20 leaks found** — see §Expected leaks below (all pre-existing on branch, 0 from BE-002d)
 
 ## Acceptance Criteria Verification
 
