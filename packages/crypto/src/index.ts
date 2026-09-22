@@ -144,3 +144,6 @@ export async function unlockVaultKey(
 
 /** JWT signing and verification utilities. */
 export * from './jwt';
+
+/** Vault encryption — BE-003a: single vault per user, AEAD with vault key. */
+export * from './vault';
