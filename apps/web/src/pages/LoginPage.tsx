@@ -67,7 +67,11 @@ export default function LoginPage() {
           required
         />
 
-        {error ? <p className="login-error" role="alert">{error}</p> : null}
+        {error ? (
+          <p className="login-error" role="alert">
+            {error}
+          </p>
+        ) : null}
 
         <button
           type="submit"

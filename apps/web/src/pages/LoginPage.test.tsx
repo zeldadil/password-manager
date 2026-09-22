@@ -38,7 +38,13 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve({ accessToken: 'tok', refreshToken: 'ref', expiresIn: 900, tokenType: 'Bearer' }),
+      json: () =>
+        Promise.resolve({
+          accessToken: 'tok',
+          refreshToken: 'ref',
+          expiresIn: 900,
+          tokenType: 'Bearer',
+        }),
     } as unknown as Response)
     vi.stubGlobal('fetch', fetchMock)
 
