@@ -1,6 +1,5 @@
-/**
- * Runtime configuration for the API service.
- *
+/** @fileoverview Runtime configuration for the API service.
+
  * Single source of truth for the version string is the package.json
  * `version` field (currently 0.1.0 pre-release). Host/port/nodeEnv come
  * from the environment so the same binary runs in dev, test, and prod.
@@ -31,6 +30,14 @@ export interface ApiConfig {
   readonly host: string;
   /** NODE_ENV — "development" | "test" | "production". */
   readonly nodeEnv: string;
+  /**
+   * Auto-lock timeout in milliseconds.
+   * If a session has no activity (no refresh) for longer than this,
+   * the session is considered auto-locked and the user must re-unlock
+   * with their master password. Default: 15 minutes.
+   * Env: AUTO_LOCK_TIMEOUT_MS (integer milliseconds).
+   */
+  readonly autoLockTimeoutMs: number;
 }
 
 export const config: ApiConfig = {
@@ -39,4 +46,5 @@ export const config: ApiConfig = {
   port: Number(process.env.PORT ?? 3000),
   host: process.env.HOST ?? '127.0.0.1',
   nodeEnv: process.env.NODE_ENV ?? 'development',
+  autoLockTimeoutMs: parseInt(process.env.AUTO_LOCK_TIMEOUT_MS ?? '', 10) || 15 * 60 * 1000,
 };

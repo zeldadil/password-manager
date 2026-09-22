@@ -7,6 +7,8 @@
  *   - healthPlugin   (BE-001c)   → GET /health
  *   - openapiPlugin  (BE-001c)   → GET /openapi.json
  *   - envelopePlugin (BE-001d)   → envelope middleware on /api/v1
+ *   - authPlugin     (BE-002a-e) → /auth/register, /auth/unlock, /auth/lock,
+ *                                  /auth/status, /auth/refresh (see auth/index.ts)
  *   - resourcePlugin (BE-003b+)  → /api/v1/resources, etc.
  *
  * ADR-002 Sec 5.1: the server holds no vault key, master password, or
@@ -21,8 +23,7 @@ import { envelopePreSerialization } from './middleware/envelope';
 import { createErrorHandler, notFoundHandler } from './middleware/error-handler';
 import { healthPlugin } from './routes/health';
 import { openapiPlugin } from './routes/openapi';
-import { authPlugin } from './auth/register';
-import { unlockPlugin } from './auth/unlock';
+import { authPlugin } from './auth/index';
 
 export interface CreateServerOptions {
   /** Override the logger (tests pass { logger: false } for clean output). */
@@ -66,10 +67,7 @@ export function createServer(opts?: CreateServerOptions): FastifyInstance {
 
   server.register(healthPlugin);
   server.register(openapiPlugin);
-  server.register((instance) => {
-    authPlugin(instance);
-    unlockPlugin(instance);
-  });
+  server.register(authPlugin);
 
   return server;
 }

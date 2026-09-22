@@ -81,6 +81,12 @@ export const users = sqliteTable('users', {
   // Non-secret preferences
   settings: text('settings', { mode: 'json' }).notNull().default('{}'),
 
+  // Rate limiting — BE-002e: wrong-password handling
+  // Consecutive failed unlock attempts (reset on success or lockout expiry).
+  failedAttempts: integer('failed_attempts', { mode: 'number' }).notNull().default(0),
+  // Lockout expiry — when set, unlock attempts return 401 until this time.
+  lockedUntil: integer('locked_until', { mode: 'timestamp' }),
+
   createdAt: createdAt().notNull(),
   updatedAt: updatedAt().notNull(),
   deletedAt: deletedAt(),
