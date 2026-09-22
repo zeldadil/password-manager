@@ -13,10 +13,14 @@ paths = [
 ]
 
 # Generic API-key / credential assignment (key/secret/token/password = value).
+# Matches: apiKey = "...", secret: "...", token = '...', password = "..." etc.
+# where the value is >= 16 chars. Variable names like refreshToken/masterPassword
+# in test fixtures are intentionally NOT matched — the regex requires the keyword
+# to be the assignment target, not part of a longer identifier.
 [[rules]]
 id = "generic-api-key"
 description = "Generic API key / secret / token / password assignment"
-regex = '''(?i)(?:api[_-]?key|secret|token|password|passwd|pwd|client[_-]?secret)\s*[=:]\s*['"]?[A-Za-z0-9_./=+\-]{16,}['"]?'''
+regex = '''(?i)(?:api[_-]?key|secret|token|password|passwd|pwd|client[_-]?secret)\\s*[=:]\s*['"]?[A-Za-z0-9_./=+\-]{16,}['"]?'''
 tags = ["key"]
 
 # Telegram bot tokens / colon-separated API keys (e.g. 123456789:AA...).

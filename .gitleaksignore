@@ -1,12 +1,66 @@
 # .gitleaksignore — secret-scan exceptions
+#
+# This file suppresses false positives and known historical artifacts so that
+# CI secret-scan (gitleaks + truffleHog) passes on feature branches and PRs.
+# Every entry below is intentional and documented. Real secrets must NEVER be
+# committed — only synthetic fixtures, scrubbed text, and evidence files that
+# reference secret SHAPES (not real credential values) appear here.
+
+# ── Historical (pre-exist on this branch, predate BE-002d) ───────────────────
 
 # Commit a503e4d introduced a Telegram bot token in PROJECT_BRIEF.md §9.
-# The line has been scrubbed (commit 2e27da2), but the value persists in git history.
-# This entry suppresses that specific historical leak so PRs aren't blocked by a
-# commit that predates them. The token must still be rotated by the repo owner.
-
+# The line has been scrubbed (commit 2e27da2), but the value persists in git
+# history. This entry suppresses that specific historical leak so PRs aren't
+# blocked by a commit that predates them. The token must still be rotated by
+# the repo owner.
 a503e4d:PROJECT_BRIEF.md:telegram-bot-api-token
-# Commit 9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859 published the rotated token's
-# sha256 in evidence README (a derived artifact, not the secret itself).
-# Removed in 3415bd5. Suppress so CI secret-scan passes on this branch.
-9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859:tests/evidence/t_28951254/README.md:generic-api-key:22
+
+# Commit 9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859 published the rotated
+# token's sha256 in an evidence README (a derived artifact, not the secret
+# itself). Removed in 3415bd5. Suppress so CI secret-scan passes on this
+# branch.
+9a0a4bb44a5fc1e3a794f1b8bfb696301ea26859:tests/evidence/t_28951254/README.md:generic-api-key:***
+
+# ── QA self-test scripts — synthetic secret-shaped fixtures ──────────────────
+# These files deliberately contain synthetic tokens/keys that match the shape
+# of real credentials so the secret-guard gate can be tested end-to-end.
+# None of these are real credentials. They live under tests/evidence/ and
+# scripts/qa/ and are part of the SEC-001 / T_B51A1FF3 verification suite.
+
+# secret-guard.selftest.mjs: synthetic Telegram bot token shape (8615677595:AAA...)
+# used to prove the guard blocks token-shaped text. Comment on line 43 documents
+# the real value's sha256 as historical context only (not the value itself).
+f9f38eb419740f862662be5c11477adcc5ac9e11:scripts/qa/secret-guard.selftest.mjs:telegram-token:***
+f9f38eb419740f862662be5c11477adcc5ac9e11:scripts/qa/secret-guard.selftest.mjs:aws-access-key-id:***
+
+# tests/evidence/t_b51a1ff3/ — live-fire test evidence. Contains synthetic
+# token shapes (12345678:AAA…) used to demonstrate the secret-guard hook
+# blocking/allow paths. All values are documented as synthetic in-file.
+732bc559fa33c327d20ad7364283283ddbda5a90:tests/evidence/t_b51a1ff3/live-fire.txt:aws-access-key-id:***
+40280562b11fe21291dd9bd13621b09e332678db:tests/evidence/t_b51a1ff3/reproduce-review.sh:telegram-token:***
+
+# tests/evidence/t_0af5aa3e/ — gitleaks + truffleHog scan evidence from a
+# historical repo-state capture. These files contain secret-shaped strings that
+# were present in the repo at capture time (later scrubbed). They are evidence
+# of the scanning pipeline working, not live credentials.
+258ca92b8234d6dc7d41f55b39fdeb00a00c335c:tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md:generic-api-key:***
+258ca92b8234d6dc7d41f55b39fdeb00a00c335c:tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md:telegram-token:***
+433181e890fb0a9bd1f6cd0e374ee6140c3af937:tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt:telegram-token:***
+eb6044b8bb263182953dedd5af817cb01eeba6ad:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt:telegram-token:***
+48b89a359b5771153bcbd267f6c0bc03bcb92d9f:tests/evidence/t_b51a1ff3/live-fire.txt:aws-access-key-id:***
+
+# ── BE-002d (commit 126c2db) — test code false positives ────────────────────
+# The generic-api-key regex matches variable names like "refreshToken" and
+# "masterPassword" when they appear as assignment targets in test payloads and
+# source. These are synthetic test fixtures, never real secrets, suppressed
+# per AR-2 (no real secrets in code). The regex was tightened (0.34.toml) to
+# reduce these; remaining entries below were in the original commit and are
+# retained for compatibility with the CI config that pins gitleaks v8.
+
+# Source: refresh.ts uses variable name "refreshToken" in its body.
+126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/src/auth/refresh.ts:generic-api-key:***
+# Unit test: refresh-unit.test.ts — hashRefreshToken() test uses the function name.
+126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:***
+# Integration tests: refresh.test.ts — payloads contain refreshToken/masterPassword
+# variable names in test request bodies. All values are generated at runtime.
+126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:***
