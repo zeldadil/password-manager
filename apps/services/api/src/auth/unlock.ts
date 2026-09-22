@@ -258,13 +258,13 @@ export function unlockPlugin(server: FastifyInstance): void {
         .set({ failedAttempts: 0, lockedUntil: null, updatedAt: now })
         .where(eq(users.id, userId));
 
-      const accessToken = signAccessToken(userId, JWT_SECRET, ACCESS_TOKEN_TTL_SEC);
+      const sessionId = randomUUID();
+      const accessToken = signAccessToken(userId, JWT_SECRET, ACCESS_TOKEN_TTL_SEC, sessionId);
       const rawRefreshToken = generateRefreshToken();
       const refreshTokenHash = hashRefreshToken(rawRefreshToken);
 
       const expiresAt = new Date(now.getTime() + REFRESH_TOKEN_TTL_DAYS * 86400000);
 
-      const sessionId = randomUUID();
       await db.insert(sessions).values({
         id: sessionId,
         userId,

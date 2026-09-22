@@ -203,7 +203,7 @@ export function refreshPlugin(server: FastifyInstance): void {
         .where(eq(sessions.id, session.id));
 
       // ── Issue new access token ──────────────────────────────────────────────
-      const accessToken = signAccessToken(session.userId, process.env.JWT_SECRET ?? 'dev-jwt-secret-change-in-production', ACCESS_TOKEN_TTL_SEC);
+      const accessToken = signAccessToken(session.userId, process.env.JWT_SECRET ?? 'dev-jwt-secret-change-in-production', ACCESS_TOKEN_TTL_SEC, session.id);
 
       return reply.code(200).send({
         accessToken,

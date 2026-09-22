@@ -26,16 +26,17 @@ function b64urlNoPad(str: string): string {
 
 export interface JwtClaims {
   userId: string;
+  sessionId: string;
   exp: number;
   iat: number;
   type: 'access';
 }
 
-export function signAccessToken(userId: string, secret: string, expiresInSec: number): string {
+export function signAccessToken(userId: string, secret: string, expiresInSec: number, sessionId: string): string {
   const now = Math.floor(Date.now() / 1000);
   const header = b64urlNoPad(Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64'));
   const payload = b64urlNoPad(
-    Buffer.from(JSON.stringify({ userId, iat: now, exp: now + expiresInSec, type: 'access' })).toString(
+    Buffer.from(JSON.stringify({ userId, sessionId, iat: now, exp: now + expiresInSec, type: 'access' })).toString(
       'base64',
     ),
   );
@@ -46,6 +47,7 @@ export function signAccessToken(userId: string, secret: string, expiresInSec: nu
 
 export interface DecodedAccessToken {
   userId: string;
+  sessionId: string;
   exp: number;
   iat: number;
   type: 'access';
@@ -72,12 +74,14 @@ export function verifyAccessToken(token: string, secret: string): DecodedAccessT
 
   if (payload.type !== 'access') throw new Error('AUTH_INVALID_TOKEN');
   if (typeof payload.userId !== 'string' || !payload.userId) throw new Error('AUTH_INVALID_TOKEN');
+  if (typeof payload.sessionId !== 'string' || !payload.sessionId) throw new Error('AUTH_INVALID_TOKEN');
   if (typeof payload.exp !== 'number' || payload.exp < Math.floor(Date.now() / 1000)) {
     throw new Error('AUTH_INVALID_TOKEN');
   }
 
   return {
     userId: payload.userId as string,
+    sessionId: payload.sessionId as string,
     exp: payload.exp as number,
     iat: (payload.iat as number) ?? 0,
     type: 'access',
@@ -108,6 +112,7 @@ export function hashRefreshToken(token: string): string {
 
 export interface JwtAuthPayload {
   userId: string;
+  sessionId: string;
 }
 
 const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-jwt-secret-change-in-production';
@@ -130,5 +135,5 @@ export function verifyJwtAuth(request: FastifyRequest): JwtAuthPayload {
     throw new Error('AUTH_MISSING');
   }
   const decoded = verifyAccessToken(token, JWT_SECRET);
-  return { userId: decoded.userId };
+  return { userId: decoded.userId, sessionId: decoded.sessionId };
 }

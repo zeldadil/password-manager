@@ -18,21 +18,22 @@ describe('JWT helpers (HS256)', () => {
   // ── Access token signing + verification ──────────────────────────────────────
 
   it('signs and verifies a valid access token', () => {
-    const token = signAccessToken('user-123', TEST_SECRET, 900);
+    const token = signAccessToken('user-123', TEST_SECRET, 900, 'sess-abc');
     expect(token).toContain('.');
     const decoded = verifyAccessToken(token, TEST_SECRET);
     expect(decoded.userId).toBe('user-123');
+    expect(decoded.sessionId).toBe('sess-abc');
     expect(decoded.type).toBe('access');
     expect(decoded.exp).toBeGreaterThan(900); // at least 15 min from epoch
   });
 
   it('verifying with wrong secret throws', () => {
-    const token = signAccessToken('user-123', TEST_SECRET, 900);
+    const token = signAccessToken('user-123', TEST_SECRET, 900, 'sess-abc');
     expect(() => verifyAccessToken(token, 'wrong-secret')).toThrow('AUTH_INVALID_TOKEN');
   });
 
   it('tampered payload throws', () => {
-    const token = signAccessToken('user-123', TEST_SECRET, 900);
+    const token = signAccessToken('user-123', TEST_SECRET, 900, 'sess-abc');
     const parts = token.split('.');
     parts[1] = parts[1].slice(0, -4) + 'XXXX'; // corrupt payload
     const tampered = parts.join('.');
@@ -40,7 +41,7 @@ describe('JWT helpers (HS256)', () => {
   });
 
   it(' tampered signature throws', () => {
-    const token = signAccessToken('user-123', TEST_SECRET, 900);
+    const token = signAccessToken('user-123', TEST_SECRET, 900, 'sess-abc');
     const parts = token.split('.');
     parts[2] = 'tampered-signature';
     const tampered = parts.join('.');
@@ -55,7 +56,7 @@ describe('JWT helpers (HS256)', () => {
 
   it('expired token throws', () => {
     // Sign with expiry in the past
-    const token = signAccessToken('user-123', TEST_SECRET, -3600); // expired 1h ago
+    const token = signAccessToken('user-123', TEST_SECRET, -3600, 'sess-abc'); // expired 1h ago
     // We can't easily test this without mocking Date — the token was
     // just signed with exp in the past relative to epoch, so it should
     // already be expired. But since exp is a unix timestamp and we set
@@ -68,7 +69,7 @@ describe('JWT helpers (HS256)', () => {
 
   it('access token expiry is set correctly (15 min)', () => {
     const before = Math.floor(Date.now() / 1000);
-    const token = signAccessToken('user-123', TEST_SECRET, 900);
+    const token = signAccessToken('user-123', TEST_SECRET, 900, 'sess-abc');
     const decoded = verifyAccessToken(token, TEST_SECRET);
     // exp should be roughly now + 900 (within a few seconds)
     const after = Math.floor(Date.now() / 1000);

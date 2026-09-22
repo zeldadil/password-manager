@@ -19,7 +19,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db';
 import { sessions, refreshTokens } from '../schema';
-import { eq, desc, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { config } from '../config';
 import { verifyJwtAuth, type JwtAuthPayload } from './jwt';
 
@@ -36,18 +36,6 @@ export interface StatusResponseBody {
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-
-async function findActiveSession(userId: string) {
-  const rows = await db.query.sessions.findMany({
-    where: and(
-      eq(sessions.userId, userId),
-      isNull(sessions.deletedAt),
-    ),
-    orderBy: (s, { desc }) => [desc(s.lastUsedAt)],
-    limit: 1,
-  });
-  return rows[0] ?? null;
-}
 
 function sessionIsValid(session: typeof sessions.$inferSelect): boolean {
   const now = new Date();
@@ -113,8 +101,12 @@ export function lockPlugin(server: FastifyInstance): void {
       }
 
       const userId = auth.userId;
+      const sessionId = auth.sessionId;
 
-      const session = await findActiveSession(userId);
+      // Find the specific session identified by the JWT — not the latest one.
+      const session = await db.query.sessions.findFirst({
+        where: and(eq(sessions.id, sessionId), isNull(sessions.deletedAt)),
+      });
       if (!session || !sessionIsValid(session)) {
         // No valid session — vault already locked. Idempotent 200.
         return reply.code(200).send({ status: 'locked' });
@@ -184,8 +176,12 @@ export function lockPlugin(server: FastifyInstance): void {
       }
 
       const userId = auth.userId;
+      const sessionId = auth.sessionId;
 
-      const session = await findActiveSession(userId);
+      // Find the specific session identified by the JWT — not the latest one.
+      const session = await db.query.sessions.findFirst({
+        where: and(eq(sessions.id, sessionId), isNull(sessions.deletedAt)),
+      });
       if (!session || !sessionIsValid(session)) {
         return reply.code(401).send({
           error: 'Unauthorized',

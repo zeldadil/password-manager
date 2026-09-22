@@ -106,10 +106,11 @@ describe('BE-002f: token refresh — access token issuance', () => {
 
   it('signAccessToken produces a valid JWT with correct claims', () => {
     const userId = 'user-refresh-test-001';
-    const token = signAccessToken(userId, TEST_SECRET, ACCESS_TOKEN_TTL_SEC);
+    const token = signAccessToken(userId, TEST_SECRET, ACCESS_TOKEN_TTL_SEC, 'sess-001');
     const decoded = verifyAccessToken(token, TEST_SECRET);
 
     expect(decoded.userId).toBe(userId);
+    expect(decoded.sessionId).toBe('sess-001');
     expect(decoded.type).toBe('access');
     expect(decoded.exp).toBeGreaterThan(Math.floor(Date.now() / 1000));
     expect(decoded.iat).toBeGreaterThan(0);
@@ -117,7 +118,7 @@ describe('BE-002f: token refresh — access token issuance', () => {
 
   it('access token expires in exactly ACCESS_TOKEN_TTL_SEC seconds', () => {
     const before = Math.floor(Date.now() / 1000);
-    const token = signAccessToken('user-1', TEST_SECRET, ACCESS_TOKEN_TTL_SEC);
+    const token = signAccessToken('user-1', TEST_SECRET, ACCESS_TOKEN_TTL_SEC, 'sess-002');
     const decoded = verifyAccessToken(token, TEST_SECRET);
     const after = Math.floor(Date.now() / 1000);
     expect(decoded.exp).toBeGreaterThanOrEqual(before + ACCESS_TOKEN_TTL_SEC - 1);
@@ -129,7 +130,7 @@ describe('BE-002f: token refresh — access token issuance', () => {
     const pastExpiry = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
     const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');
     const payload = Buffer.from(
-      JSON.stringify({ userId: 'user-1', iat: pastExpiry - ACCESS_TOKEN_TTL_SEC, exp: pastExpiry, type: 'access' })
+      JSON.stringify({ userId: 'user-1', sessionId: 'sess-x', iat: pastExpiry - ACCESS_TOKEN_TTL_SEC, exp: pastExpiry, type: 'access' })
     ).toString('base64');
     const signingInput = `${header}.${payload}`;
     const sig = Buffer.from(createHmac('sha256', TEST_SECRET).update(signingInput).digest()).toString('base64url');
@@ -139,12 +140,12 @@ describe('BE-002f: token refresh — access token issuance', () => {
   });
 
   it('access token with wrong secret fails verification', () => {
-    const token = signAccessToken('user-1', TEST_SECRET, ACCESS_TOKEN_TTL_SEC);
+    const token = signAccessToken('user-1', TEST_SECRET, ACCESS_TOKEN_TTL_SEC, 'sess-wrong');
     expect(() => verifyAccessToken(token, 'wrong-secret')).toThrow('AUTH_INVALID_TOKEN');
   });
 
   it('tampered access token fails verification', () => {
-    const token = signAccessToken('user-1', TEST_SECRET, ACCESS_TOKEN_TTL_SEC);
+    const token = signAccessToken('user-1', TEST_SECRET, ACCESS_TOKEN_TTL_SEC, 'sess-tamper');
     const parts = token.split('.');
     parts[1] = parts[1].slice(0, -4) + 'XXXX';
     const tampered = parts.join('.');
