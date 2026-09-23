@@ -13,7 +13,7 @@
 
 import type { FastifyRequest } from 'fastify';
 import { db } from '../db';
-import { sessions } from '../schema';
+import { sessions, vaults } from '../schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { config } from '../config';
 import { verifyJwtAuth } from '../auth/jwt';
@@ -57,4 +57,20 @@ export async function requireActiveSession(request: FastifyRequest): Promise<Act
   }
 
   return { userId: auth.userId, sessionId: auth.sessionId };
+}
+
+/**
+ * The caller's own vault (ADR-003 §3.2: exactly one per user in MVP).
+ * Shared by every vault-scoped `/api/v1` resource route (folders,
+ * resources, tags, ...) — extracted from folders.ts (BE-003d) so it isn't
+ * reimplemented per plugin.
+ */
+export async function requireOwnVault(userId: string) {
+  const vault = await db.query.vaults.findFirst({
+    where: and(eq(vaults.ownerId, userId), isNull(vaults.deletedAt)),
+  });
+  if (!vault) {
+    throw httpError(404, 'No vault found for this user');
+  }
+  return vault;
 }

@@ -25,9 +25,9 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '../db';
-import { folders, vaults, resources } from '../schema';
+import { folders, resources } from '../schema';
 import { httpError } from '../middleware/error-handler';
-import { requireActiveSession } from '../middleware/auth-guard';
+import { requireActiveSession, requireOwnVault } from '../middleware/auth-guard';
 import { queryPreHandler } from '../middleware/query';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -103,17 +103,6 @@ function toDTO(row: FolderRow): FolderDTO {
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-
-/** The caller's own vault (ADR-003 §3.2: exactly one per user in MVP). */
-async function requireOwnVault(userId: string) {
-  const vault = await db.query.vaults.findFirst({
-    where: and(eq(vaults.ownerId, userId), isNull(vaults.deletedAt)),
-  });
-  if (!vault) {
-    throw httpError(404, 'No vault found for this user');
-  }
-  return vault;
-}
 
 /** Fetch a non-deleted folder by id, scoped to the caller's own vault. */
 async function findOwnFolder(userId: string, vaultId: string, folderId: string) {
