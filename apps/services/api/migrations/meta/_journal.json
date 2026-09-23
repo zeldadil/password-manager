@@ -15,6 +15,13 @@
       "when": 1790086798134,
       "tag": "0001_be002e_rate_limiting",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790166678019,
+      "tag": "0002_be003c_secrets_table",
+      "breakpoints": true
     }
   ]
 }

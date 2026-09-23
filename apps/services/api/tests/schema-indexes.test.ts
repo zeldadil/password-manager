@@ -165,6 +165,7 @@ const FK_TABLES = [
   'refresh_tokens',
   'resource_tags',
   'resources',
+  'secrets',
   'sessions',
   'tags',
   'vaults',
@@ -187,7 +188,7 @@ describe('BE-001b: Core Tables Schema — foreign-key indexes', () => {
   });
 
   describe('schema prerequisites', () => {
-    it('all 11 ADR-003 core tables are present', () => {
+    it('all 12 core tables are present (11 baseline + BE-003c secrets)', () => {
       const tables = getTableNames(sqlite).filter((t) => !t.startsWith('__drizzl'));
       expect(tables).toEqual(
         [
@@ -198,6 +199,7 @@ describe('BE-001b: Core Tables Schema — foreign-key indexes', () => {
           'refresh_tokens',
           'resource_tags',
           'resources',
+          'secrets',
           'sessions',
           'tags',
           'users',
