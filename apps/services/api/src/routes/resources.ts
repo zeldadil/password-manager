@@ -36,6 +36,20 @@
  * continuous enforcement — moving the resource back out does not revoke
  * what was granted.
  *
+ * Search (BE-003h, ADR-004 `filter[]`): `GET /resources?filter[search]=term`
+ * (or `filter[]=search:term`) performs a case-insensitive substring search
+ * across name/username/uri — see `buildSearchCondition` below for the exact
+ * columns and the metadataEncrypted interaction. `include[]`/`include=` was
+ * already parsed by the query middleware (BE-001e) before this task; this
+ * module already always returns `tagIds`/`permissionIds` per the ADR-004
+ * Resource schema (which has no embedded-object fields for these relations,
+ * only id arrays), so no change was needed there for `include=tags,
+ * permissions` to already "work" in the sense the schema defines. `folder`
+ * is accepted as a valid include token but there is no `folder` field on
+ * the Resource schema to expand it into — embedding a full Folder object
+ * would be a schema change outside this task's single acceptance criterion
+ * ("searches metadata"), so it remains a no-op today.
+ *
  * Explicitly OUT of scope (per ADR-003 §3.4/§6.3 and the BE-003 task
  * breakdown):
  *  - Tag entity CRUD (creating/renaming/deleting tags) — BE-003e. This
@@ -53,7 +67,7 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { folders, permissions, resourceTags, resources, tags } from '../schema';
 import { httpError } from '../middleware/error-handler';
@@ -214,6 +228,38 @@ async function requireResourceAccess(userId: string, resourceId: string, require
   return resource;
 }
 
+/**
+ * Build the WHERE fragment for `filter[search]=<term>` (BE-003h, ADR-004
+ * `filter[]` param): a case-insensitive (SQLite LIKE's default ASCII
+ * behavior) substring match across name/username/uri — the three plaintext
+ * metadata fields named in the task's acceptance criterion.
+ *
+ * `description` is deliberately excluded: the acceptance criterion names
+ * only name/username/uri, and description is the field most likely to
+ * carry longer free-text notes a user wouldn't expect a "search" box to
+ * scan by default.
+ *
+ * When `metadataEncrypted` is true, username/uri are never persisted as
+ * plaintext (AR-2) — they're simply NULL in the DB, so LIKE naturally
+ * can't match them. Only `name` (always plaintext, required) is
+ * searchable for such resources. This is an intentional consequence of
+ * never decrypting server-side, not a bug: an encrypted resource is only
+ * findable by its name.
+ *
+ * The literal `%`, `_`, and `\` in the caller's term are escaped so a
+ * search for e.g. "100%" matches that literal text rather than being
+ * interpreted as SQL LIKE wildcards.
+ */
+function buildSearchCondition(term: string) {
+  const escaped = term.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+  const pattern = `%${escaped}%`;
+  return or(
+    sql`${resources.name} LIKE ${pattern} ESCAPE '\\'`,
+    sql`${resources.username} LIKE ${pattern} ESCAPE '\\'`,
+    sql`${resources.uri} LIKE ${pattern} ESCAPE '\\'`,
+  );
+}
+
 /** folderId, if provided, must name a non-deleted folder in the caller's vault. */
 async function validateFolderId(vaultId: string, folderId: string): Promise<void> {
   const folder = await db.query.folders.findFirst({
@@ -280,10 +326,16 @@ export function resourcesPlugin(server: FastifyInstance): void {
       const includeDeleted = (request.query as { include_deleted?: string } | undefined)
         ?.include_deleted === 'true';
 
+      // BE-003h: `filter[search]=<term>` / `filter[]=search:<term>` —
+      // case-insensitive substring search across name/username/uri.
+      const searchClause = q.filters.clauses.find((c) => c.field === 'search');
+
+      const conditions = [eq(resources.vaultId, vault.id)];
+      if (!includeDeleted) conditions.push(isNull(resources.deletedAt));
+      if (searchClause) conditions.push(buildSearchCondition(searchClause.value)!);
+
       const rows = await db.query.resources.findMany({
-        where: includeDeleted
-          ? eq(resources.vaultId, vault.id)
-          : and(eq(resources.vaultId, vault.id), isNull(resources.deletedAt)),
+        where: and(...conditions),
         limit: q.pagination.limit,
         offset: q.pagination.offset,
       });

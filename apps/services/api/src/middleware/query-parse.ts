@@ -259,6 +259,20 @@ function tryParseOneFilter(raw: string): FilterClause | null {
   if (field.length === 0) return null;
 
   const rest = raw.slice(firstColon + 1);
+
+  // `search` (BE-003h) is a virtual field, not a real column — it means
+  // "case-insensitive substring match across a fixed set of metadata
+  // columns" (the route layer decides which columns). Unlike every other
+  // field, its value never needs an operator prefix: `filter[search]=foo`
+  // and `filter[]=search:foo` both mean "contains foo", and the entire
+  // remainder — including any colons the search term itself contains,
+  // e.g. a URI fragment — is taken as the literal search value.
+  if (field === 'search') {
+    const value = rest.trim();
+    if (value.length === 0) return null;
+    return { field, operator: 'contains', value, raw };
+  }
+
   const secondColon = rest.indexOf(':');
   if (secondColon < 0) return null;
 
