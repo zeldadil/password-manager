@@ -417,6 +417,39 @@ describe('BE-003b: POST/GET/PATCH/DELETE /api/v1/resources', () => {
       expect((res.json() as { body: { name: string } }).body.name).toBe('Work Login');
     });
 
+    it('secretCiphertext/secretIv/secretTag survive a full write-then-read roundtrip byte-for-byte (BE-003i)', async () => {
+      // Unlike the POST response (which echoes back what was just
+      // computed at insert time), this fetches via a SEPARATE GET request
+      // after create, forcing a real DB round-trip through the
+      // base64 -> Buffer (write) -> Buffer -> base64 (read) conversion —
+      // the wire-encoding roundtrip "encryption/decryption roundtrip...
+      // covered" (BE-003i AC1) refers to at the API layer, where the
+      // server never decrypts, only stores and returns opaque bytes.
+      const { accessToken } = await registerAndUnlock('get-roundtrip');
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: basePayload(),
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+
+      const res = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+      expect(res.statusCode).toBe(200);
+      const body = (
+        res.json() as {
+          body: { secretCiphertext: string; secretIv: string; secretTag: string };
+        }
+      ).body;
+      expect(body.secretCiphertext).toBe(FAKE_SECRET_B64);
+      expect(body.secretIv).toBe(FAKE_IV_B64);
+      expect(body.secretTag).toBe(FAKE_TAG_B64);
+    });
+
     it('returns 404 for a nonexistent resource id', async () => {
       const { accessToken } = await registerAndUnlock('get-missing');
       const res = await server.inject({
