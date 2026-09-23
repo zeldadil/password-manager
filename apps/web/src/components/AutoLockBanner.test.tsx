@@ -7,13 +7,18 @@
  *  - "Extend session" POSTs /auth/refresh and re-arms the countdown
  *  - server error surfaces in the banner
  *  - aria attributes and roles are correct
+ *
+ * SessionProvider calls useNavigate() internally so every render must be
+ * wrapped in a Router context (createMemoryRouter + RouterProvider).
  */
 
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
+import { useEffect } from 'react'
 import AutoLockBanner from './AutoLockBanner'
-import { SessionProvider, useSession } from '../../auth/SessionProvider'
+import { SessionProvider, useSession } from '../auth/SessionProvider'
 
 interface MountOptions {
   expirySecondsFromNow?: number
@@ -21,19 +26,24 @@ interface MountOptions {
 }
 
 function mountBanner({ expirySecondsFromNow = 45, onShow = vi.fn() }: MountOptions = {}) {
-  return render(
-    <SessionProvider>
-      <BannerMount expirySecondsFromNow={expirySecondsFromNow} onShow={onShow} />
-    </SessionProvider>,
+  const router = createMemoryRouter(
+    [{ path: '/', element: (
+      <SessionProvider>
+        <BannerMount expirySecondsFromNow={expirySecondsFromNow} onShow={onShow} />
+      </SessionProvider>
+    ) }],
+    { initialEntries: ['/'] },
   )
+  return render(<RouterProvider router={router} />)
 }
 
 /** Mount point that establishes a session expiring in `expirySecondsFromNow`
  *  seconds, so the banner has a session to observe. */
 function BannerMount({ expirySecondsFromNow, onShow }: { expirySecondsFromNow: number; onShow: ReturnType<typeof vi.fn> }) {
   const { login } = useSession()
-  // expiresIn = how many seconds until the session expires (from now).
-  login('tok-1', 'refresh-1', expirySecondsFromNow)
+  useEffect(() => {
+    login('tok-1', 'refresh-1', expirySecondsFromNow)
+  }, [login, expirySecondsFromNow])
   return <AutoLockBanner onShow={onShow} />
 }
 
@@ -43,11 +53,11 @@ describe('AutoLockBanner', () => {
   })
 
   it('does not render when no session is active', () => {
-    render(
-      <SessionProvider>
-        <div data-testid="no-session">no session</div>
-      </SessionProvider>,
+    const router = createMemoryRouter(
+      [{ path: '/', element: <div data-testid="no-session">no session</div> }],
+      { initialEntries: ['/'] },
     )
+    render(<RouterProvider router={router} />)
     expect(screen.queryByRole('alert')).toBeNull()
     expect(screen.getByTestId('no-session')).toBeTruthy()
   })
@@ -61,14 +71,20 @@ describe('AutoLockBanner', () => {
   it('does not render when the session has >60s remaining', () => {
     function MountFarExpiry() {
       const { login } = useSession()
-      login('tok-2', 'refresh-2', 120)
+      useEffect(() => {
+        login('tok-2', 'refresh-2', 120)
+      }, [login])
       return <AutoLockBanner onShow={vi.fn()} />
     }
-    render(
-      <SessionProvider>
-        <MountFarExpiry />
-      </SessionProvider>,
+    const router = createMemoryRouter(
+      [{ path: '/', element: (
+        <SessionProvider>
+          <MountFarExpiry />
+        </SessionProvider>
+      ) }],
+      { initialEntries: ['/'] },
     )
+    render(<RouterProvider router={router} />)
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
@@ -102,16 +118,25 @@ describe('AutoLockBanner', () => {
     const user = userEvent.setup()
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValueOnce({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            accessToken: 'tok-new',
-            refreshToken: 'refresh-new',
-            expiresIn: 900,
-            tokenType: 'Bearer',
-          }),
-      } as unknown as Response),
+      vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: () =>
+                    Promise.resolve({
+                      accessToken: 'tok-new',
+                      refreshToken: 'refresh-new',
+                      expiresIn: 900,
+                      tokenType: 'Bearer',
+                    }),
+                }),
+              50,
+            ),
+          ),
+      ),
     )
 
     mountBanner({ expirySecondsFromNow: 45 })
@@ -182,7 +207,7 @@ describe('AutoLockBanner', () => {
                       expiresIn: 900,
                       tokenType: 'Bearer',
                     }),
-                } as unknown as Response),
+                }),
               100,
             ),
           ),

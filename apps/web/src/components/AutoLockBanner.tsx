@@ -24,6 +24,7 @@ export default function AutoLockBanner({ onShow, extendLabel = 'Extend session' 
   const [secondsLeft, setSecondsLeft] = useState(0)
   const [visible, setVisible] = useState(false)
   const [extending, setExtending] = useState(false)
+  const [extended, setExtended] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const rafRef = useRef<number | null>(null)
   const lastTsRef = useRef<number>(0)
@@ -81,6 +82,7 @@ export default function AutoLockBanner({ onShow, extendLabel = 'Extend session' 
     setError(null)
     try {
       await extend()
+      setExtended(true)
       // Let the expiresAt-sync effect (lines 68-77) re-derive visibility and
       // secondsLeft from the new expiry. After a successful extend the session
       // may be far enough from the warning window that the banner should hide.
@@ -109,7 +111,7 @@ export default function AutoLockBanner({ onShow, extendLabel = 'Extend session' 
         disabled={extending}
         aria-busy={extending}
       >
-        {extending ? 'Extending…' : extendLabel}
+        {extending ? 'Extending…' : extended ? 'Session extended' : extendLabel}
       </button>
       {error ? <p className="auto-lock-banner__error" role="status">{error}</p> : null}
     </div>

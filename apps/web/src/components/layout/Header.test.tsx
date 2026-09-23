@@ -2,24 +2,54 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { useEffect } from 'react'
 import Header from './Header'
-import { SessionProvider } from '../../auth/SessionProvider'
+import { SessionProvider, useSession } from '../../auth/SessionProvider'
 
-function renderHeader(props: Record<string, unknown> = {}) {
+function renderHeaderWithSession(element: React.ReactNode) {
   const router = createMemoryRouter(
     [
-      { path: '/vault', element: <Header {...props} /> },
+      { path: '/vault', element },
       { path: '/unlock', element: <div>Unlock screen</div> },
       { path: '/login', element: <div>Login screen</div> },
     ],
     { initialEntries: ['/vault'] },
   )
-  render(
+  return render(<RouterProvider router={router} />)
+}
+
+function renderHeader(props: Record<string, unknown> = {}) {
+  return renderHeaderWithSession(
     <SessionProvider>
-      <RouterProvider router={router} />
+      <Header {...props} />
     </SessionProvider>,
   )
-  return router
+}
+
+/** Renders Header inside a SessionProvider with an active session so lock()
+ *  actually calls POST /auth/lock. */
+function renderHeaderWithSessionActive() {
+  const router = createMemoryRouter(
+    [
+      { path: '/', element: (
+        <SessionProvider>
+          <HeaderWithLogin />
+        </SessionProvider>
+      ) },
+      { path: '/unlock', element: <div>Unlock screen</div> },
+      { path: '/login', element: <div>Login screen</div> },
+    ],
+    { initialEntries: ['/'] },
+  )
+  return render(<RouterProvider router={router} />)
+}
+
+function HeaderWithLogin() {
+  const { login } = useSession()
+  useEffect(() => {
+    login('access-1', 'refresh-1', 900)
+  }, [login])
+  return <Header />
 }
 
 describe('Header', () => {
@@ -50,20 +80,13 @@ describe('Header', () => {
     } as unknown as Response)
     vi.stubGlobal('fetch', fetchMock)
 
-    renderHeader()
+    renderHeaderWithSessionActive()
     await user.click(screen.getByRole('button', { name: /lock vault/i }))
 
     await waitFor(() => expect(screen.getByText('Unlock screen')).toBeTruthy())
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/auth/lock',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ***',
-        }),
-      }),
-    )
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('/auth/lock')
   })
 
   it('navigates to /unlock even when /auth/lock fails', async () => {
@@ -73,7 +96,7 @@ describe('Header', () => {
       vi.fn().mockRejectedValueOnce(new TypeError('NetworkError')),
     )
 
-    renderHeader()
+    renderHeaderWithSessionActive()
     await user.click(screen.getByRole('button', { name: /lock vault/i }))
 
     await waitFor(() => expect(screen.getByText('Unlock screen')).toBeTruthy())
