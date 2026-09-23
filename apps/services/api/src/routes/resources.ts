@@ -153,7 +153,10 @@ type ResourceRow = typeof resources.$inferSelect;
 // inspects or transforms the plaintext they represent, only the wire
 // encoding (base64 string on the wire, Buffer in the DB).
 
-function b64ToBuffer(value: string, field: string): Buffer {
+// Exported (BE-003i) so the wire-encoding roundtrip these two pure
+// functions implement — base64 in, Buffer for the DB, base64 back out —
+// has dedicated unit coverage independent of the full POST/GET HTTP cycle.
+export function b64ToBuffer(value: string, field: string): Buffer {
   if (typeof value !== 'string' || value.length === 0) {
     throw httpError(400, `${field} must be a non-empty base64 string`);
   }
@@ -164,7 +167,7 @@ function b64ToBuffer(value: string, field: string): Buffer {
   }
 }
 
-function bufferToB64(value: Buffer | null): string | null {
+export function bufferToB64(value: Buffer | null): string | null {
   return value ? value.toString('base64') : null;
 }
 
@@ -251,13 +254,25 @@ async function requireResourceAccess(userId: string, resourceId: string, require
  * interpreted as SQL LIKE wildcards.
  */
 function buildSearchCondition(term: string) {
-  const escaped = term.replace(/[\\%_]/g, (ch) => `\\${ch}`);
-  const pattern = `%${escaped}%`;
+  const pattern = `%${escapeLikeTerm(term)}%`;
   return or(
     sql`${resources.name} LIKE ${pattern} ESCAPE '\\'`,
     sql`${resources.username} LIKE ${pattern} ESCAPE '\\'`,
     sql`${resources.uri} LIKE ${pattern} ESCAPE '\\'`,
   );
+}
+
+/**
+ * Escape `%`, `_`, and `\` in a raw search term so it can be embedded in a
+ * `LIKE '%<term>%' ESCAPE '\\'` pattern as literal text (BE-003h/BE-003i).
+ * Exported (BE-003i) for direct unit coverage of this security-relevant
+ * escaping logic, independent of `buildSearchCondition`'s SQL-building
+ * (which needs a live DB/query builder to assert against meaningfully) and
+ * independent of the full HTTP integration tests that already exercise it
+ * end-to-end.
+ */
+export function escapeLikeTerm(term: string): string {
+  return term.replace(/[\\%_]/g, (ch) => `\\${ch}`);
 }
 
 /** folderId, if provided, must name a non-deleted folder in the caller's vault. */
