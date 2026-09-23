@@ -81,8 +81,9 @@ export default function AutoLockBanner({ onShow, extendLabel = 'Extend session' 
     setError(null)
     try {
       await extend()
-      // Re-arm the banner to a fresh 60 s window after a successful extend.
-      setSecondsLeft(WARN_SECONDS)
+      // Let the expiresAt-sync effect (lines 68-77) re-derive visibility and
+      // secondsLeft from the new expiry. After a successful extend the session
+      // may be far enough from the warning window that the banner should hide.
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to extend session')
     } finally {

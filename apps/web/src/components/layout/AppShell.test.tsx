@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import AppShell from './AppShell'
+import { SessionProvider } from '../../auth/SessionProvider'
 import type { FolderNode, TagNode } from './types'
 
 const folders: FolderNode[] = [{ id: 'work', name: 'Work', parentId: null }]
@@ -12,7 +13,11 @@ function renderShell(props: Record<string, unknown> = {}) {
   const router = createMemoryRouter(
     [
       {
-        element: <AppShell {...props} />,
+        element: (
+          <SessionProvider>
+            <AppShell {...props} />
+          </SessionProvider>
+        ),
         children: [{ path: '/vault', element: <div>Vault content</div> }],
       },
     ],

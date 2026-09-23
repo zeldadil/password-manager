@@ -1,21 +1,32 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import Header from './Header'
+import { SessionProvider } from '../../auth/SessionProvider'
 
 function renderHeader(props: Record<string, unknown> = {}) {
   const router = createMemoryRouter(
     [
       { path: '/vault', element: <Header {...props} /> },
       { path: '/unlock', element: <div>Unlock screen</div> },
+      { path: '/login', element: <div>Login screen</div> },
     ],
     { initialEntries: ['/vault'] },
   )
-  render(<RouterProvider router={router} />)
+  render(
+    <SessionProvider>
+      <RouterProvider router={router} />
+    </SessionProvider>,
+  )
   return router
 }
 
 describe('Header', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('shows the app name', () => {
     renderHeader({ appName: 'Acme Vault' })
     expect(screen.getByText('Acme Vault')).toBeTruthy()
@@ -31,17 +42,41 @@ describe('Header', () => {
     expect(screen.getByRole('button', { name: /lock vault/i })).toBeTruthy()
   })
 
-  it('invokes onLock when the lock button is clicked', () => {
-    const onLock = vi.fn()
-    renderHeader({ onLock })
-    fireEvent.click(screen.getByRole('button', { name: /lock vault/i }))
-    expect(onLock).toHaveBeenCalledTimes(1)
+  it('POSTs /auth/lock and navigates to /unlock when the lock button is clicked', async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ status: 'locked' }),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderHeader()
+    await user.click(screen.getByRole('button', { name: /lock vault/i }))
+
+    await waitFor(() => expect(screen.getByText('Unlock screen')).toBeTruthy())
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/auth/lock',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ***',
+        }),
+      }),
+    )
   })
 
-  it('navigates to /unlock when locked without an onLock handler', () => {
+  it('navigates to /unlock even when /auth/lock fails', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValueOnce(new TypeError('NetworkError')),
+    )
+
     renderHeader()
-    fireEvent.click(screen.getByRole('button', { name: /lock vault/i }))
-    expect(screen.getByText('Unlock screen')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: /lock vault/i }))
+
+    await waitFor(() => expect(screen.getByText('Unlock screen')).toBeTruthy())
   })
 
   it('shows the user menu with the user name, Settings, and Sign out', () => {
@@ -61,11 +96,11 @@ describe('Header', () => {
     expect(toggle.getAttribute('aria-controls')).toBe('user-menu')
   })
 
-  it('invokes onSignOut when Sign out is clicked', () => {
-    const onSignOut = vi.fn()
-    renderHeader({ userName: 'Ada Lovelace', onSignOut })
+  it('navigates to /login when Sign out is clicked', async () => {
+    const user = userEvent.setup()
+    renderHeader({ userName: 'Ada Lovelace' })
     fireEvent.click(screen.getByRole('button', { name: 'Ada Lovelace' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }))
-    expect(onSignOut).toHaveBeenCalledTimes(1)
+    await user.click(screen.getByRole('button', { name: 'Sign out' }))
+    expect(screen.getByText('Login screen')).toBeTruthy()
   })
 })
