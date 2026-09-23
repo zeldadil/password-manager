@@ -792,4 +792,162 @@ describe('BE-003b: POST/GET/PATCH/DELETE /api/v1/resources', () => {
       expect(ids).not.toContain(id);
     });
   });
+
+  // ── Folder permission mask propagation (BE-003g) ──────────────────────────
+
+  describe('folder permissionMask propagation (BE-003g)', () => {
+    async function makeMaskedFolder(accessToken: string, mask: {
+      level: 'read' | 'update' | 'owner';
+      granteeType: 'user' | 'group';
+      granteeId: string;
+    }): Promise<string> {
+      const res = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { name: `masked-${Math.random().toString(36).slice(2)}`, permissionMask: mask },
+      });
+      expect(res.statusCode).toBe(201);
+      return (res.json() as { body: { id: string } }).body.id;
+    }
+
+    it('creating a resource inside a masked folder grants the mask to the grantee', async () => {
+      const owner = await registerAndUnlock('mask-create-owner');
+      const grantee = await registerAndUnlock('mask-create-grantee');
+      const folderId = await makeMaskedFolder(owner.accessToken, {
+        level: 'read',
+        granteeType: 'user',
+        granteeId: grantee.userId,
+      });
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { ...basePayload(), folderId },
+      });
+      expect(createRes.statusCode).toBe(201);
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+
+      const getRes = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(getRes.statusCode).toBe(200);
+
+      // Read-level mask: grantee cannot PATCH.
+      const patchRes = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+        payload: { name: 'nope' },
+      });
+      expect(patchRes.statusCode).toBe(403);
+    });
+
+    it('moving a resource into a masked folder (PATCH folderId) grants the mask to the grantee', async () => {
+      const owner = await registerAndUnlock('mask-move-owner');
+      const grantee = await registerAndUnlock('mask-move-grantee');
+      const folderId = await makeMaskedFolder(owner.accessToken, {
+        level: 'update',
+        granteeType: 'user',
+        granteeId: grantee.userId,
+      });
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: basePayload(),
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+
+      const before = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(before.statusCode).toBe(404);
+
+      const moveRes = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { folderId },
+      });
+      expect(moveRes.statusCode).toBe(200);
+
+      const after = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+        payload: { name: 'grantee can update now' },
+      });
+      expect(after.statusCode).toBe(200);
+    });
+
+    it('does not propagate the mask when the mover only has Update (not Owner) on the resource', async () => {
+      const owner = await registerAndUnlock('mask-nonowner-owner');
+      const mover = await registerAndUnlock('mask-nonowner-mover');
+      const grantee = await registerAndUnlock('mask-nonowner-grantee');
+      const folderId = await makeMaskedFolder(owner.accessToken, {
+        level: 'owner',
+        granteeType: 'user',
+        granteeId: grantee.userId,
+      });
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: basePayload(),
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+      await grantPermission('resource', id, mover.userId, 'update', owner.userId);
+
+      const moveRes = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${mover.accessToken}` },
+        payload: { folderId },
+      });
+      expect(moveRes.statusCode).toBe(200);
+
+      const granteeGet = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(granteeGet.statusCode).toBe(404);
+    });
+
+    it('a folder with no mask does not grant anything on create', async () => {
+      const owner = await registerAndUnlock('mask-none-owner');
+      const stranger = await registerAndUnlock('mask-none-stranger');
+
+      const folderRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { name: `unmasked-${Math.random().toString(36).slice(2)}` },
+      });
+      const folderId = (folderRes.json() as { body: { id: string } }).body.id;
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { ...basePayload(), folderId },
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+
+      const strangerGet = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${stranger.accessToken}` },
+      });
+      expect(strangerGet.statusCode).toBe(404);
+    });
+  });
 });

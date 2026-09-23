@@ -28,6 +28,7 @@ import {
   resolvePermissionLevel,
   hasPermission,
   requirePermission,
+  applyFolderPermissionMask,
   levelMeets,
   PERMISSION_VALUES,
   type PermissionLevel,
@@ -439,6 +440,137 @@ describe('BE-003f: permission resolution service', () => {
           'update',
         ),
       ).rejects.toMatchObject({ statusCode: 403 });
+    });
+  });
+
+  // ── applyFolderPermissionMask (BE-003g) ─────────────────────────────────
+
+  describe('applyFolderPermissionMask', () => {
+    async function makeResourceFor(owner: string): Promise<string> {
+      const id = randomUUID();
+      const now = new Date();
+      await db.insert(schema.resources).values({
+        id,
+        vaultId,
+        ownerId: owner,
+        name: 'Mask Test Resource',
+        type: 'password-and-description',
+        secretCiphertext: Buffer.alloc(16),
+        secretIv: Buffer.alloc(12),
+        secretTag: Buffer.alloc(16),
+        createdAt: now,
+        updatedAt: now,
+      });
+      return id;
+    }
+
+    async function makeFolderWithMask(
+      owner: string,
+      mask: { level: PermissionLevel; granteeType: 'user' | 'group'; granteeId: string } | null,
+    ): Promise<string> {
+      const id = randomUUID();
+      const now = new Date();
+      await db.insert(schema.folders).values({
+        id,
+        vaultId,
+        ownerId: owner,
+        name: 'Mask Test Folder',
+        parentId: null,
+        permissionMaskLevel: mask?.level ?? null,
+        permissionMaskGranteeType: mask?.granteeType ?? null,
+        permissionMaskGranteeId: mask?.granteeId ?? null,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return id;
+    }
+
+    it('copies the mask onto the resource when the acting user is Owner', async () => {
+      const grantee = await makeUser();
+      const maskedFolder = await makeFolderWithMask(ownerId, {
+        level: 'read',
+        granteeType: 'user',
+        granteeId: grantee,
+      });
+      const resource = await makeResourceFor(ownerId);
+
+      await applyFolderPermissionMask(db, resource, maskedFolder, ownerId);
+
+      const level = await resolvePermissionLevel({
+        db,
+        userId: grantee,
+        targetType: 'resource',
+        targetId: resource,
+      });
+      expect(level).toBe('read');
+    });
+
+    it('does nothing when the folder has no mask', async () => {
+      const maskless = await makeFolderWithMask(ownerId, null);
+      const resource = await makeResourceFor(ownerId);
+      const grantee = await makeUser();
+
+      await applyFolderPermissionMask(db, resource, maskless, ownerId);
+
+      const level = await resolvePermissionLevel({
+        db,
+        userId: grantee,
+        targetType: 'resource',
+        targetId: resource,
+      });
+      expect(level).toBeNull();
+    });
+
+    it('does nothing when folderId is null (not moved into any folder)', async () => {
+      const resource = await makeResourceFor(ownerId);
+      await expect(applyFolderPermissionMask(db, resource, null, ownerId)).resolves.toBeUndefined();
+    });
+
+    it('does NOT apply the mask when the acting user only has Update on the resource ("where possible")', async () => {
+      const updater = await makeUser();
+      const grantee = await makeUser();
+      const maskedFolder = await makeFolderWithMask(ownerId, {
+        level: 'owner',
+        granteeType: 'user',
+        granteeId: grantee,
+      });
+      const resource = await makeResourceFor(ownerId);
+      await grant('resource', resource, 'user', updater, 'update', ownerId);
+
+      await applyFolderPermissionMask(db, resource, maskedFolder, updater);
+
+      const level = await resolvePermissionLevel({
+        db,
+        userId: grantee,
+        targetType: 'resource',
+        targetId: resource,
+      });
+      expect(level).toBeNull();
+    });
+
+    it('is idempotent — applying the same mask twice does not create duplicate grant rows', async () => {
+      const grantee = await makeUser();
+      const maskedFolder = await makeFolderWithMask(ownerId, {
+        level: 'update',
+        granteeType: 'user',
+        granteeId: grantee,
+      });
+      const resource = await makeResourceFor(ownerId);
+
+      await applyFolderPermissionMask(db, resource, maskedFolder, ownerId);
+      await applyFolderPermissionMask(db, resource, maskedFolder, ownerId);
+
+      const rows = await db.query.permissions.findMany({
+        where: (p, { eq: eqOp, and: andOp, isNull: isNullOp }) =>
+          andOp(
+            eqOp(p.targetType, 'resource'),
+            eqOp(p.targetId, resource),
+            eqOp(p.granteeType, 'user'),
+            eqOp(p.granteeId, grantee),
+            isNullOp(p.deletedAt),
+          ),
+      });
+      expect(rows).toHaveLength(1);
     });
   });
 });

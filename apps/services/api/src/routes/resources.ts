@@ -27,10 +27,17 @@
  *    cross-vault aggregation is a materially different feature than
  *    enforcing access on a request that already names a target.
  *
+ * Folder permission mask propagation (BE-003g, ADR-003 §3.4/§3.5): after a
+ * resource is created in, or moved (via PATCH folderId) into, a folder that
+ * carries a `permissionMask`, the mask is applied to the resource — but
+ * only "where possible": only when the acting user has Owner permission on
+ * the resource (see `applyFolderPermissionMask` in services/permissions.ts
+ * for the exact rule). This is a one-time copy at create/move time, not
+ * continuous enforcement — moving the resource back out does not revoke
+ * what was granted.
+ *
  * Explicitly OUT of scope (per ADR-003 §3.4/§6.3 and the BE-003 task
  * breakdown):
- *  - Applying a folder's `permissionMask` to a resource at create/move
- *    time — BE-003g ("Folder Permission Mask Propagation").
  *  - Tag entity CRUD (creating/renaming/deleting tags) — BE-003e. This
  *    module only attaches/detaches EXISTING tag ids via the
  *    `resource_tags` junction, matching the ADR-004 `tagIds` field on the
@@ -52,7 +59,11 @@ import { folders, permissions, resourceTags, resources, tags } from '../schema';
 import { httpError } from '../middleware/error-handler';
 import { requireActiveSession, requireOwnVault } from '../middleware/auth-guard';
 import { queryPreHandler } from '../middleware/query';
-import { requirePermission, type PermissionLevel } from '../services/permissions';
+import {
+  requirePermission,
+  applyFolderPermissionMask,
+  type PermissionLevel,
+} from '../services/permissions';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -366,6 +377,12 @@ export function resourcesPlugin(server: FastifyInstance): void {
         await setResourceTags(id, tagIds);
       }
 
+      // BE-003g: propagate the destination folder's permissionMask, if
+      // any, "where possible" (the creator is always Owner of a resource
+      // they just created, so this always applies when folderId is set
+      // and the folder carries a mask).
+      await applyFolderPermissionMask(db, id, folderId, userId);
+
       const created = await db.query.resources.findFirst({ where: eq(resources.id, id) });
       return reply.code(201).send(await toDTO(created!));
     },
@@ -450,6 +467,13 @@ export function resourcesPlugin(server: FastifyInstance): void {
 
       if (body.tagIds !== undefined) {
         await setResourceTags(resource.id, body.tagIds);
+      }
+
+      // BE-003g: moving a resource into a folder propagates that folder's
+      // permissionMask, "where possible" (only when this user has Owner
+      // on the resource — applyFolderPermissionMask enforces that check).
+      if (body.folderId !== undefined && body.folderId !== null) {
+        await applyFolderPermissionMask(db, resource.id, body.folderId, userId);
       }
 
       const updated = await db.query.resources.findFirst({ where: eq(resources.id, resource.id) });
