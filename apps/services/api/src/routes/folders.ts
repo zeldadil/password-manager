@@ -22,10 +22,13 @@
  *    control on a request that already names a target", which is what
  *    BE-003f's own acceptance criteria describe.
  *
+ * `permissionMask` propagation to resources at create/move time (BE-003g)
+ * is implemented in routes/resources.ts (POST/PATCH) via
+ * `applyFolderPermissionMask` in services/permissions.ts — this module only
+ * stores/returns the mask on the folder itself.
+ *
  * Explicitly OUT of scope (per ADR-003 §3.4/§6.3 and the BE-003 task
  * breakdown):
- *  - Propagating `permissionMask` to resources at create/move time —
- *    BE-003g ("Folder Permission Mask Propagation").
  *  - Permission grant/revoke endpoints themselves — no task in the
  *    current backlog creates them yet; this module only *enforces*
  *    grants that already exist in the `permissions` table.

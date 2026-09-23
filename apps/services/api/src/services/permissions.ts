@@ -29,6 +29,7 @@
  * on top of it — BE-003f's actual new work.
  */
 
+import { randomUUID } from 'node:crypto';
 import { eq, and, isNull, inArray } from 'drizzle-orm';
 import type { Db } from '../db';
 import { permissions, resources, folders, groupMembers } from '../schema';
@@ -186,4 +187,83 @@ export async function requirePermission(
   if (!levelMeets(actual, required)) {
     throw httpError(403, 'Not authorized');
   }
+}
+
+// ─── Folder permission mask propagation (BE-003g) ───────────────────────────
+
+/**
+ * Apply a folder's `permissionMask` (ADR-003 §3.4/§3.5) to a resource at
+ * create/move time. "Where possible" propagation (ADR-001 §2, ADR-003 §3.4
+ * note, ADR-002 §8.1 item 4): only affects resources the acting user has
+ * OWNER permission on — a lesser-privileged move (Update-only) does not
+ * grant away access the mover doesn't themselves have Owner control over.
+ *
+ * No-ops when: the folder doesn't exist, carries no mask, or the acting
+ * user is not an Owner of the resource. Idempotent: does not insert a
+ * duplicate grant row if an identical (target, grantee, level) permission
+ * already exists — repeated moves into the same folder don't pile up
+ * redundant rows.
+ *
+ * Per ADR-003 §3.4: "Folders do not continuously enforce permissions... the
+ * mask is applied at create/move time only." This function is the entire
+ * implementation of that propagation — callers invoke it once, right after
+ * the resource's `folderId` is set, and never re-check it later.
+ */
+export async function applyFolderPermissionMask(
+  db: Db,
+  resourceId: string,
+  folderId: string | null,
+  userId: string,
+): Promise<void> {
+  if (folderId === null) return;
+
+  const folder = await db.query.folders.findFirst({
+    where: and(eq(folders.id, folderId), isNull(folders.deletedAt)),
+  });
+  if (
+    !folder ||
+    !folder.permissionMaskLevel ||
+    !folder.permissionMaskGranteeType ||
+    !folder.permissionMaskGranteeId ||
+    !isPermissionLevel(folder.permissionMaskLevel)
+  ) {
+    return;
+  }
+
+  const actual = await resolvePermissionLevel({
+    db,
+    userId,
+    targetType: 'resource',
+    targetId: resourceId,
+  });
+  if (actual !== 'owner') return;
+
+  const granteeType = folder.permissionMaskGranteeType as 'user' | 'group';
+  const granteeId = folder.permissionMaskGranteeId;
+  const level = folder.permissionMaskLevel;
+
+  const existing = await db.query.permissions.findFirst({
+    where: and(
+      eq(permissions.targetType, 'resource'),
+      eq(permissions.targetId, resourceId),
+      eq(permissions.granteeType, granteeType),
+      eq(permissions.granteeId, granteeId),
+      eq(permissions.level, level),
+      isNull(permissions.deletedAt),
+    ),
+  });
+  if (existing) return;
+
+  const now = new Date();
+  await db.insert(permissions).values({
+    id: randomUUID(),
+    targetType: 'resource',
+    targetId: resourceId,
+    granteeType,
+    granteeId,
+    level,
+    grantedBy: userId,
+    createdAt: now,
+    updatedAt: now,
+  });
 }
