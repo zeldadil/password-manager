@@ -97,6 +97,24 @@ describe('encrypt / decrypt (AES-256-GCM)', () => {
     expect(r1.ciphertext.equals(r2.ciphertext)).toBe(false);
   });
 
+  // BE-003k: IV/nonce reuse detection. AES-GCM's security collapses if the
+  // same (key, iv) pair is ever used twice — the two-sample check above
+  // proves distinctness for a single pair, but says nothing about the
+  // collision rate of the underlying randomness source at scale. This test
+  // draws a large sample and would fail (revealing a real defect) if
+  // `encrypt` ever used anything less than a full 96-bit cryptographically
+  // random IV — a fixed/predictable/counter-based IV, or a narrowed random
+  // range, would produce a collision well within this sample size.
+  it('generates no IV collisions across a large sample (statistical reuse detection)', () => {
+    const SAMPLE_SIZE = 5000;
+    const ivs = new Set<string>();
+    for (let i = 0; i < SAMPLE_SIZE; i++) {
+      const { iv } = encrypt(key, SYNTHETIC_PLAINTEXT);
+      ivs.add(iv.toString('hex'));
+    }
+    expect(ivs.size).toBe(SAMPLE_SIZE);
+  });
+
   // ── negative: wrong key ──
   it('throws on decrypt with wrong key (tag verification failure)', () => {
     const { ciphertext, iv, tag } = encrypt(key, SYNTHETIC_PLAINTEXT);
