@@ -950,4 +950,196 @@ describe('BE-003b: POST/GET/PATCH/DELETE /api/v1/resources', () => {
       expect(strangerGet.statusCode).toBe(404);
     });
   });
+
+  // ── Search (BE-003h) ───────────────────────────────────────────────────────
+
+  describe('GET /api/v1/resources?filter[search]=... (BE-003h)', () => {
+    it('matches a substring of name, case-insensitively, via the bracket-style filter[search] param', async () => {
+      const { accessToken } = await registerAndUnlock('search-name');
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { ...basePayload(), name: 'My GitHub Login' },
+      });
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { ...basePayload(), name: 'Bank Account' },
+      });
+
+      const res = await server.inject({
+        method: 'GET',
+        url: '/api/v1/resources?filter[search]=github',
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+      expect(res.statusCode).toBe(200);
+      const names = (res.json() as { body: { data: Array<{ name: string }> } }).body.data.map(
+        (r) => r.name,
+      );
+      expect(names).toEqual(['My GitHub Login']);
+    });
+
+    it('matches a substring of username or uri', async () => {
+      const { accessToken } = await registerAndUnlock('search-metadata');
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { ...basePayload(), name: 'Entry A', username: 'octocat', uri: 'https://a.example.test' },
+      });
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { ...basePayload(), name: 'Entry B', username: 'someone-else', uri: 'https://b.example.test' },
+      });
+
+      const byUsername = await server.inject({
+        method: 'GET',
+        url: '/api/v1/resources?filter[search]=octocat',
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+      expect(
+        (byUsername.json() as { body: { data: Array<{ name: string }> } }).body.data.map((r) => r.name),
+      ).toEqual(['Entry A']);
+
+      const byUri = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources?${encodeURIComponent('filter[search]')}=${encodeURIComponent('b.example.test')}`,
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+      expect(
+        (byUri.json() as { body: { data: Array<{ name: string }> } }).body.data.map((r) => r.name),
+      ).toEqual(['Entry B']);
+    });
+
+    it('also works via the array-style filter[]=search:<term> form', async () => {
+      const { accessToken } = await registerAndUnlock('search-array-form');
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { ...basePayload(), name: 'Unique Marker Xyzzy' },
+      });
+
+      const res = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources?${encodeURIComponent('filter[]')}=${encodeURIComponent('search:Xyzzy')}`,
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+      const names = (res.json() as { body: { data: Array<{ name: string }> } }).body.data.map(
+        (r) => r.name,
+      );
+      expect(names).toEqual(['Unique Marker Xyzzy']);
+    });
+
+    it('does not match resources outside the search term, and returns empty (not an error) for no matches', async () => {
+      const { accessToken } = await registerAndUnlock('search-no-match');
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { ...basePayload(), name: 'Something' },
+      });
+
+      const res = await server.inject({
+        method: 'GET',
+        url: '/api/v1/resources?filter[search]=nonexistent-term-zzz',
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+      expect(res.statusCode).toBe(200);
+      expect((res.json() as { body: { data: unknown[] } }).body.data).toEqual([]);
+    });
+
+    it('treats a literal "%" in the search term as literal text, not a SQL LIKE wildcard', async () => {
+      const { accessToken } = await registerAndUnlock('search-escape');
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { ...basePayload(), name: '100% Uptime' },
+      });
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: { ...basePayload(), name: 'Something Else Entirely' },
+      });
+
+      const res = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources?${encodeURIComponent('filter[search]')}=${encodeURIComponent('100%')}`,
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+      const names = (res.json() as { body: { data: Array<{ name: string }> } }).body.data.map(
+        (r) => r.name,
+      );
+      expect(names).toEqual(['100% Uptime']);
+    });
+
+    it('does not search plaintext metadata for a metadataEncrypted resource (only name is searchable)', async () => {
+      const { accessToken } = await registerAndUnlock('search-encrypted');
+      const fakeMetaB64 = Buffer.from('opaque-encrypted-metadata').toString('base64');
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${accessToken}` },
+        payload: {
+          ...basePayload(),
+          name: 'Encrypted Entry',
+          metadataEncrypted: true,
+          metadataCiphertext: fakeMetaB64,
+          metadataIv: FAKE_IV_B64,
+          metadataTag: FAKE_TAG_B64,
+          username: 'plaintext-was-never-persisted',
+        },
+      });
+
+      // Searching for the plaintext username that was supplied at create
+      // time finds nothing — it was never persisted (metadataEncrypted).
+      const byUsername = await server.inject({
+        method: 'GET',
+        url: '/api/v1/resources?filter[search]=plaintext-was-never-persisted',
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+      expect((byUsername.json() as { body: { data: unknown[] } }).body.data).toEqual([]);
+
+      // The name is always plaintext, so it's still searchable.
+      const byName = await server.inject({
+        method: 'GET',
+        url: '/api/v1/resources?filter[search]=Encrypted Entry',
+        headers: { authorization: `Bearer ${accessToken}` },
+      });
+      const names = (byName.json() as { body: { data: Array<{ name: string }> } }).body.data.map(
+        (r) => r.name,
+      );
+      expect(names).toEqual(['Encrypted Entry']);
+    });
+
+    it("only searches the caller's own vault (LIST scoping unchanged)", async () => {
+      const a = await registerAndUnlock('search-scope-a');
+      const b = await registerAndUnlock('search-scope-b');
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${a.accessToken}` },
+        payload: { ...basePayload(), name: 'Shared Term Marker' },
+      });
+      await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${b.accessToken}` },
+        payload: { ...basePayload(), name: 'Shared Term Marker' },
+      });
+
+      const res = await server.inject({
+        method: 'GET',
+        url: '/api/v1/resources?filter[search]=Shared Term Marker',
+        headers: { authorization: `Bearer ${a.accessToken}` },
+      });
+      expect((res.json() as { body: { data: unknown[] } }).body.data).toHaveLength(1);
+    });
+  });
 });
