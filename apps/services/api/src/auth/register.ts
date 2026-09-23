@@ -4,6 +4,11 @@
  * encrypts the vault key (AES-256-GCM self-wrap, SEC-001 Decision 2+3),
  * and persists the { kdfParams, salt, ciphertext, iv, tag } record to the DB.
  *
+ * Also creates the user's vault (ADR-003 §3.2: 1:1 Vault per User in MVP).
+ * Nothing else in the codebase creates this row, and every vault-scoped
+ * entity (folders, resources, tags — BE-003b+) has a NOT NULL FK to it, so
+ * it must exist before the user can use any of those endpoints.
+ *
  * AR-2: No real secrets in code — the master password is transient input only,
  *       never logged, never stored.
  * AR-3: Positive + negative tests in tests/auth/register.test.ts.
@@ -11,7 +16,7 @@
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db';
-import { users } from '../schema';
+import { users, vaults } from '../schema';
 import { eq } from 'drizzle-orm';
 import {
   registerMasterPassword,
@@ -143,6 +148,18 @@ export function registerPlugin(server: FastifyInstance): void {
         failedAttempts: 0,
         lockedUntil: null,
         settings: '{}',
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      // ADR-003 §3.2: exactly one vault per user in MVP, created alongside
+      // the user record so every vault-scoped entity's FK is satisfiable
+      // from the moment registration completes.
+      await db.insert(vaults).values({
+        id: randomUUID(),
+        ownerId: id,
+        name: 'My Vault',
+        version: 1,
         createdAt: now,
         updatedAt: now,
       });

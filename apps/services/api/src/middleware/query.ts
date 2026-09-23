@@ -40,6 +40,15 @@ import { parseIncludes, parseFilters, parsePagination, parseQuery } from './quer
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ParsedQuery, QueryParsed } from './query-parse';
 
+// Route handlers read `request.queryParsed` directly (typed, no cast)
+// once this plugin's preHandler hook has run. Declared here — the single
+// place that writes the decoration — rather than per-consumer.
+declare module 'fastify' {
+  interface FastifyRequest {
+    queryParsed: QueryParsed;
+  }
+}
+
 /** Register a `preHandler` hook on the given Fastify instance that parses
  *  the query string and decorates each `request` with `queryParsed`.
  *
