@@ -316,7 +316,6 @@ describe('UnlockPage', () => {
   it('decrements the countdown and re-enables the form when it expires', async () => {
     vi.useFakeTimers()
 
-    const user = userEvent.setup()
     const fetchMock = vi.fn().mockImplementation(() =>
       Promise.resolve({
         ok: false,
@@ -328,8 +327,15 @@ describe('UnlockPage', () => {
 
     renderUnlock()
 
-    await user.type(screen.getByLabelText('Email'), 'user@example.test')
-    await user.type(screen.getByLabelText('Master password'), 'wrong-password')
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Email'), {
+        target: { value: 'user@example.test' },
+      })
+      fireEvent.change(screen.getByLabelText('Master password'), {
+        target: { value: 'wrong-password' },
+      })
+      await Promise.resolve()
+    })
 
     // Re-type before each click — the page clears masterPassword after each
     // 401, so only the first click (with the value typed above) submits;
@@ -355,26 +361,39 @@ describe('UnlockPage', () => {
     // Initial countdown reads 15:00 (900 s).
     expect(screen.getByText(/try again in 15:00/i)).not.toBeNull()
 
-    // Advance 1 s → 14:59.
+    // Advance 1 s → 14:59.  `act` commits the interval tick's setState to the
+    // DOM; the two Promise.resolve calls drain the microtask queue React
+    // schedules for the re-render so the synchronous `getByText` below sees it.
     act(() => {
       vi.advanceTimersByTime(1000)
+      Promise.resolve().then(() => Promise.resolve())
     })
     expect(screen.getByText(/try again in 14:59/i)).not.toBeNull()
 
-    // Advance the remaining 14 min 58 s → 0:01.
+    // Advance the remaining 14 min 58 s → 0:01.  This advances the fake clock
+    // past many interval ticks at once — `vi.advanceTimersByTime` fires every
+    // queued timer ≤ the advanced amount, so all intermediate countdown
+    // decrements are processed in one `act` call.
     act(() => {
       vi.advanceTimersByTime(14 * 60 * 1000 + 58 * 1000)
+      Promise.resolve().then(() => Promise.resolve())
     })
     expect(screen.getByText(/try again in 0:01/i)).not.toBeNull()
 
     // Final second — countdown expires, error clears, form re-enables.
     act(() => {
       vi.advanceTimersByTime(1000)
+      Promise.resolve().then(() => Promise.resolve())
     })
     expect(screen.queryByText(/try again in/i)).toBeNull()
 
-    const submitButtonAfter2 = screen.getByRole('button', { name: 'Unlock' })
-    expect(submitButtonAfter2).not.toBeDisabled()
+    // After lockout expiry the inputs re-enable (the form is usable again),
+    // but the submit button stays disabled because masterPassword was cleared
+    // during the failed attempts and must be re-entered.
+    expect(screen.getByLabelText('Email')).not.toBeDisabled()
+    expect(screen.getByLabelText('Master password')).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Unlock' })).toBeDisabled()
+    expect(screen.getByLabelText('Master password')).toHaveValue('')
 
     vi.useRealTimers()
   })
