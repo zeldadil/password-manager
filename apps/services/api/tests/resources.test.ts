@@ -70,6 +70,29 @@ describe('BE-003b: POST/GET/PATCH/DELETE /api/v1/resources', () => {
     return id;
   }
 
+  /** Insert a permission grant directly — no grant/revoke endpoint exists
+   *  yet (BE-003f only enforces grants that already exist). */
+  async function grantPermission(
+    targetType: 'folder' | 'resource',
+    targetId: string,
+    granteeId: string,
+    level: 'read' | 'update' | 'owner',
+    grantedBy: string,
+  ): Promise<void> {
+    const now = new Date();
+    await liveDb.insert(schema.permissions).values({
+      id: randomUUID(),
+      targetType,
+      targetId,
+      granteeType: 'user',
+      granteeId,
+      level,
+      grantedBy,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
   async function vaultIdFor(accessToken: string): Promise<string> {
     const res = await server.inject({
       method: 'POST',
@@ -666,6 +689,107 @@ describe('BE-003b: POST/GET/PATCH/DELETE /api/v1/resources', () => {
         headers: { authorization: `Bearer ${b.accessToken}` },
       });
       expect(getRes.statusCode).toBe(200);
+    });
+  });
+
+  // ── Sharing (BE-003f: permission-based cross-vault access) ─────────────────
+
+  describe('permission grants (BE-003f)', () => {
+    it('a read grant allows GET but not PATCH (403, not 404)', async () => {
+      const owner = await registerAndUnlock('grant-read-owner');
+      const grantee = await registerAndUnlock('grant-read-grantee');
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: basePayload(),
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+
+      const before = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(before.statusCode).toBe(404);
+
+      await grantPermission('resource', id, grantee.userId, 'read', owner.userId);
+
+      const getRes = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(getRes.statusCode).toBe(200);
+
+      const patchRes = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+        payload: { name: 'Should not be allowed' },
+      });
+      expect(patchRes.statusCode).toBe(403);
+    });
+
+    it('an update grant allows PATCH and DELETE (Update includes delete rights)', async () => {
+      const owner = await registerAndUnlock('grant-update-owner');
+      const grantee = await registerAndUnlock('grant-update-grantee');
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: basePayload(),
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+      await grantPermission('resource', id, grantee.userId, 'update', owner.userId);
+
+      const patchRes = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+        payload: { name: 'Renamed by grantee' },
+      });
+      expect(patchRes.statusCode).toBe(200);
+
+      const deleteRes = await server.inject({
+        method: 'DELETE',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(deleteRes.statusCode).toBe(200);
+    });
+
+    it("a shared resource does NOT appear in the grantee's own LIST (own-vault scoping, unchanged)", async () => {
+      const owner = await registerAndUnlock('grant-list-owner');
+      const grantee = await registerAndUnlock('grant-list-grantee');
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: basePayload(),
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+      await grantPermission('resource', id, grantee.userId, 'owner', owner.userId);
+
+      const getRes = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(getRes.statusCode).toBe(200);
+
+      const listRes = await server.inject({
+        method: 'GET',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      const ids = (listRes.json() as { body: { data: Array<{ id: string }> } }).body.data.map(
+        (r) => r.id,
+      );
+      expect(ids).not.toContain(id);
     });
   });
 });
