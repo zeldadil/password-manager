@@ -89,7 +89,25 @@ describe('LoginPage', () => {
     const user = userEvent.setup()
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 50))),
+      vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: () =>
+                    Promise.resolve({
+                      accessToken: 'tok',
+                      refreshToken: 'ref',
+                      expiresIn: 900,
+                      tokenType: 'Bearer',
+                    }),
+                } as unknown as Response),
+              50,
+            ),
+          ),
+      ),
     )
 
     renderLogin()
@@ -100,5 +118,14 @@ describe('LoginPage', () => {
     expect(button).not.toBeDisabled()
     await user.click(button)
     expect(screen.getByRole('button', { name: 'Signing in...' })).toBeDisabled()
+
+    // Wait for the deliberately-delayed fetch to settle before the test ends —
+    // otherwise the pending setLoading(false) in LoginPage's `finally` block
+    // fires after this test (and its jsdom environment) has been torn down,
+    // throwing "window is not defined" as an unhandled rejection that fails
+    // the whole vitest run even though every assertion above passed.
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Vault', level: 1 })).not.toBeNull(),
+    )
   })
 })
