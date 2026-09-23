@@ -3,7 +3,39 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider, matchPath, type RouteObject } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { routes } from '../routes'
+import { SessionProvider } from '../auth/SessionProvider'
 import { HTML_LANG, INDEX_HTML, JSDOM_UNAVAILABLE_RULES, formatViolations, runAxe } from './axe'
+
+/** Wraps every child route in SessionProvider so components that call useSession()
+ *  (AppShell, AutoLockBanner) render without throwing. SessionProvider calls
+ *  useNavigate() internally, so it must live inside the router context — the
+ *  RouterProvider owns that context, and SessionProvider is its child.
+ *
+ *  Returns a new route list whose root layout route holds the wrapped children,
+ *  so `createMemoryRouter` receives a valid `RouteObject[]`. */
+function wrapRoutes(routeList: RouteObject[]): RouteObject[] {
+  const root = routeList[0]
+  return [
+    {
+      ...root,
+      children: root.children?.map((child) => ({
+        ...child,
+        element: (
+          <SessionProvider>
+            {child.element}
+          </SessionProvider>
+        ),
+      })),
+    },
+  ]
+}
+
+/** Routes with SessionProvider injected at the root so every screen renders
+ *  without throwing. The wrapped copy is only used to build the router; the
+ *  ROUTES case list — derived from the unwrapped `routes` export — stays the
+ *  source of truth for which paths exist, and route coverage (below) is checked
+ *  against that same unwrapped export. */
+const routesWithSession: RouteObject[] = wrapRoutes(routes)
 
 /**
  * FE-001k — axe-core sweep over every route.
@@ -148,9 +180,11 @@ const REQUIRED_PASSES: readonly string[] = [
 const MIN_GRADED_RULES = 20
 
 function renderAt(path: string) {
-  const router = createMemoryRouter(routes, { initialEntries: [path] })
-  render(<RouterProvider router={router} />)
-  return router
+  // SessionProvider must be inside the router context (it calls useNavigate),
+  // so we wrap the matched route element rather than the RouterProvider.
+  const router = createMemoryRouter(routesWithSession, { initialEntries: [path] })
+  const utils = render(<RouterProvider router={router} />)
+  return { router, ...utils }
 }
 
 /** Applies a DOM mutation for a single axe run and always undoes it. */
@@ -165,7 +199,7 @@ async function axeWithMutation(mutate: () => () => void) {
 
 describe('axe-core — zero violations on every route', () => {
   it.each(ROUTES)('$path ($screen)', async ({ path, resolved }) => {
-    const router = renderAt(path)
+    const { router } = renderAt(path)
 
     // Guard resolution first: sweeping the wrong screen would make the rest moot.
     expect(router.state.location.pathname).toBe(resolved)
