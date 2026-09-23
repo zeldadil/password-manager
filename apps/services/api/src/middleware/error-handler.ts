@@ -230,3 +230,19 @@ export function notFoundHandler(_request: FastifyRequest, _reply: FastifyReply):
   error.code = 'FST_ERR_NOT_FOUND';
   throw error;
 }
+
+/**
+ * Build a thrown, typed HTTP error for a route handler.
+ *
+ * `message` is never sent to the client — this handler's own status→message
+ * mapping (`friendlyMessage`/`machineCode` above) is what reaches the
+ * response body, so `message` here is only for server-side logs. Route
+ * handlers under `/api/v1` throw the result; the global error handler
+ * converts it into an ADR-004 error envelope with the generic per-status
+ * message.
+ */
+export function httpError(statusCode: number, message = 'Error'): FastifyError {
+  const error = new Error(message) as FastifyError;
+  error.statusCode = statusCode;
+  return error;
+}
