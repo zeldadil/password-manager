@@ -79,6 +79,57 @@ describe('BE-003d: POST/GET/PATCH/DELETE /api/v1/folders', () => {
     });
   }
 
+  /** Insert a group + membership directly — no group CRUD endpoint exists
+   *  yet, same reasoning as `grantPermission` above. Returns the new
+   *  group's id. */
+  async function makeGroup(ownerId: string, memberIds: string[]): Promise<string> {
+    const groupId = randomUUID();
+    const now = new Date();
+    await liveDb.insert(schema.groups).values({
+      id: groupId,
+      name: `test-group-${groupId.slice(0, 8)}`,
+      ownerId,
+      createdAt: now,
+      updatedAt: now,
+    });
+    if (memberIds.length > 0) {
+      await liveDb.insert(schema.groupMembers).values(
+        memberIds.map((userId) => ({
+          id: randomUUID(),
+          groupId,
+          userId,
+          isAdmin: false,
+          createdAt: now,
+          updatedAt: now,
+        })),
+      );
+    }
+    return groupId;
+  }
+
+  /** Grant a permission to a GROUP (granteeType='group') rather than a
+   *  user — mirrors `grantPermission` above (BE-003j: sharing via group). */
+  async function grantGroupPermission(
+    targetType: 'folder' | 'resource',
+    targetId: string,
+    groupId: string,
+    level: 'read' | 'update' | 'owner',
+    grantedBy: string,
+  ): Promise<void> {
+    const now = new Date();
+    await liveDb.insert(schema.permissions).values({
+      id: randomUUID(),
+      targetType,
+      targetId,
+      granteeType: 'group',
+      granteeId: groupId,
+      level,
+      grantedBy,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
   beforeAll(async () => {
     const setupDb = new Database(dbPath);
     setupDb.exec('PRAGMA foreign_keys = ON;');
@@ -733,6 +784,113 @@ describe('BE-003d: POST/GET/PATCH/DELETE /api/v1/folders', () => {
         (f) => f.id,
       );
       expect(ids).not.toContain(folderId);
+    });
+  });
+
+  // ── Sharing via group (BE-003j) ─────────────────────────────────────────
+
+  describe('sharing via group (BE-003j)', () => {
+    it('a group member can GET a folder shared with their group, via a read grant', async () => {
+      const owner = await registerAndUnlock('group-read-owner');
+      const member = await registerAndUnlock('group-read-member');
+      const groupId = await makeGroup(owner.userId, [member.userId]);
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { name: 'Shared with the team' },
+      });
+      const folderId = (createRes.json() as { body: { id: string } }).body.id;
+
+      const before = await server.inject({
+        method: 'GET',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${member.accessToken}` },
+      });
+      expect(before.statusCode).toBe(404);
+
+      await grantGroupPermission('folder', folderId, groupId, 'read', owner.userId);
+
+      const after = await server.inject({
+        method: 'GET',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${member.accessToken}` },
+      });
+      expect(after.statusCode).toBe(200);
+    });
+
+    it('a non-member of the group gets no access at all (404)', async () => {
+      const owner = await registerAndUnlock('group-nonmember-owner');
+      const member = await registerAndUnlock('group-nonmember-member');
+      const stranger = await registerAndUnlock('group-nonmember-stranger');
+      const groupId = await makeGroup(owner.userId, [member.userId]);
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { name: 'Group-only folder' },
+      });
+      const folderId = (createRes.json() as { body: { id: string } }).body.id;
+      await grantGroupPermission('folder', folderId, groupId, 'owner', owner.userId);
+
+      const res = await server.inject({
+        method: 'GET',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${stranger.accessToken}` },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+
+    it('a group read grant is not enough to PATCH — 403, not 404', async () => {
+      const owner = await registerAndUnlock('group-patch-owner');
+      const member = await registerAndUnlock('group-patch-member');
+      const groupId = await makeGroup(owner.userId, [member.userId]);
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { name: 'Group read-only' },
+      });
+      const folderId = (createRes.json() as { body: { id: string } }).body.id;
+      await grantGroupPermission('folder', folderId, groupId, 'read', owner.userId);
+
+      const res = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${member.accessToken}` },
+        payload: { name: 'Should not be allowed' },
+      });
+      expect(res.statusCode).toBe(403);
+    });
+
+    it('the HIGHER of a direct grant and a group grant wins for the same user (effective level = max)', async () => {
+      const owner = await registerAndUnlock('group-vs-direct-owner');
+      const member = await registerAndUnlock('group-vs-direct-member');
+      const groupId = await makeGroup(owner.userId, [member.userId]);
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { name: 'Direct read, group update' },
+      });
+      const folderId = (createRes.json() as { body: { id: string } }).body.id;
+
+      // Direct grant: read only. Group grant: update. Effective level must
+      // be the max of the two (ADR-003 §6.1/§6.2) — update wins.
+      await grantPermission('folder', folderId, member.userId, 'read', owner.userId);
+      await grantGroupPermission('folder', folderId, groupId, 'update', owner.userId);
+
+      const res = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${member.accessToken}` },
+        payload: { name: 'Group grant should allow this' },
+      });
+      expect(res.statusCode).toBe(200);
     });
   });
 });

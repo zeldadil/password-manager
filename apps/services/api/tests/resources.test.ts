@@ -93,6 +93,57 @@ describe('BE-003b: POST/GET/PATCH/DELETE /api/v1/resources', () => {
     });
   }
 
+  /** Insert a group + membership directly — no group CRUD endpoint exists
+   *  yet, same reasoning as `grantPermission` above (BE-003j: sharing via
+   *  group). Returns the new group's id. */
+  async function makeGroup(ownerId: string, memberIds: string[]): Promise<string> {
+    const groupId = randomUUID();
+    const now = new Date();
+    await liveDb.insert(schema.groups).values({
+      id: groupId,
+      name: `test-group-${groupId.slice(0, 8)}`,
+      ownerId,
+      createdAt: now,
+      updatedAt: now,
+    });
+    if (memberIds.length > 0) {
+      await liveDb.insert(schema.groupMembers).values(
+        memberIds.map((userId) => ({
+          id: randomUUID(),
+          groupId,
+          userId,
+          isAdmin: false,
+          createdAt: now,
+          updatedAt: now,
+        })),
+      );
+    }
+    return groupId;
+  }
+
+  /** Grant a permission to a GROUP (granteeType='group') rather than a
+   *  user — mirrors `grantPermission` above. */
+  async function grantGroupPermission(
+    targetType: 'folder' | 'resource',
+    targetId: string,
+    groupId: string,
+    level: 'read' | 'update' | 'owner',
+    grantedBy: string,
+  ): Promise<void> {
+    const now = new Date();
+    await liveDb.insert(schema.permissions).values({
+      id: randomUUID(),
+      targetType,
+      targetId,
+      granteeType: 'group',
+      granteeId: groupId,
+      level,
+      grantedBy,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
   async function vaultIdFor(accessToken: string): Promise<string> {
     const res = await server.inject({
       method: 'POST',
@@ -1173,6 +1224,256 @@ describe('BE-003b: POST/GET/PATCH/DELETE /api/v1/resources', () => {
         headers: { authorization: `Bearer ${a.accessToken}` },
       });
       expect((res.json() as { body: { data: unknown[] } }).body.data).toHaveLength(1);
+    });
+  });
+
+  // ── Sharing via group (BE-003j) ─────────────────────────────────────────
+
+  describe('sharing via group (BE-003j)', () => {
+    it('a group member can GET a resource shared with their group, via a read grant', async () => {
+      const owner = await registerAndUnlock('res-group-read-owner');
+      const member = await registerAndUnlock('res-group-read-member');
+      const groupId = await makeGroup(owner.userId, [member.userId]);
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: basePayload(),
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+
+      const before = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${member.accessToken}` },
+      });
+      expect(before.statusCode).toBe(404);
+
+      await grantGroupPermission('resource', id, groupId, 'read', owner.userId);
+
+      const after = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${member.accessToken}` },
+      });
+      expect(after.statusCode).toBe(200);
+    });
+
+    it('a non-member of the group gets no access at all (404)', async () => {
+      const owner = await registerAndUnlock('res-group-nonmember-owner');
+      const member = await registerAndUnlock('res-group-nonmember-member');
+      const stranger = await registerAndUnlock('res-group-nonmember-stranger');
+      const groupId = await makeGroup(owner.userId, [member.userId]);
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: basePayload(),
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+      await grantGroupPermission('resource', id, groupId, 'owner', owner.userId);
+
+      const res = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${stranger.accessToken}` },
+      });
+      expect(res.statusCode).toBe(404);
+    });
+
+    it('a group update grant allows PATCH and DELETE', async () => {
+      const owner = await registerAndUnlock('res-group-update-owner');
+      const member = await registerAndUnlock('res-group-update-member');
+      const groupId = await makeGroup(owner.userId, [member.userId]);
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: basePayload(),
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+      await grantGroupPermission('resource', id, groupId, 'update', owner.userId);
+
+      const patchRes = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${member.accessToken}` },
+        payload: { name: 'Group member update' },
+      });
+      expect(patchRes.statusCode).toBe(200);
+
+      const deleteRes = await server.inject({
+        method: 'DELETE',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${member.accessToken}` },
+      });
+      expect(deleteRes.statusCode).toBe(200);
+    });
+
+    it('the HIGHER of a direct grant and a group grant wins for the same user (effective level = max)', async () => {
+      const owner = await registerAndUnlock('res-group-vs-direct-owner');
+      const member = await registerAndUnlock('res-group-vs-direct-member');
+      const groupId = await makeGroup(owner.userId, [member.userId]);
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: basePayload(),
+      });
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+
+      // Direct grant: read only. Group grant: update. Effective level must
+      // be the max of the two (ADR-003 §6.1/§6.2) — update wins.
+      await grantPermission('resource', id, member.userId, 'read', owner.userId);
+      await grantGroupPermission('resource', id, groupId, 'update', owner.userId);
+
+      const res = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${member.accessToken}` },
+        payload: { name: 'Group grant should allow this' },
+      });
+      expect(res.statusCode).toBe(200);
+    });
+  });
+
+  // ── Full resource lifecycle (BE-003j) ───────────────────────────────────
+
+  describe('full resource lifecycle (BE-003j)', () => {
+    it('create -> appears in list -> get -> tag -> move into masked folder -> patch -> delete -> gone', async () => {
+      const owner = await registerAndUnlock('lifecycle-owner');
+      const grantee = await registerAndUnlock('lifecycle-grantee');
+
+      // 1. Create, at the vault root, with no tags/folder.
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { ...basePayload(), name: 'Lifecycle Entry' },
+      });
+      expect(createRes.statusCode).toBe(201);
+      const id = (createRes.json() as { body: { id: string } }).body.id;
+
+      // 2. Appears in the owner's LIST.
+      const listAfterCreate = await server.inject({
+        method: 'GET',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+      });
+      expect(
+        (listAfterCreate.json() as { body: { data: Array<{ id: string }> } }).body.data.map(
+          (r) => r.id,
+        ),
+      ).toContain(id);
+
+      // 3. GET returns it with the expected fields.
+      const getRes = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+      });
+      expect(getRes.statusCode).toBe(200);
+      expect((getRes.json() as { body: { name: string } }).body.name).toBe('Lifecycle Entry');
+
+      // 4. Attach a tag (BE-003e junction — tag created directly, no Tag
+      // CRUD dependency needed for this flow).
+      const tagId = await insertTag(await vaultIdFor(owner.accessToken), 'lifecycle-tag');
+      const tagPatchRes = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { tagIds: [tagId] },
+      });
+      expect(tagPatchRes.statusCode).toBe(200);
+      expect((tagPatchRes.json() as { body: { tagIds: string[] } }).body.tagIds).toEqual([tagId]);
+
+      // 5. Move into a folder that carries a permissionMask (BE-003g) —
+      // the move both re-parents the resource AND propagates sharing.
+      const folderRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: {
+          name: 'Lifecycle Folder',
+          permissionMask: { level: 'read', granteeType: 'user', granteeId: grantee.userId },
+        },
+      });
+      const folderId = (folderRes.json() as { body: { id: string } }).body.id;
+      const moveRes = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { folderId },
+      });
+      expect(moveRes.statusCode).toBe(200);
+      expect((moveRes.json() as { body: { folderId: string } }).body.folderId).toBe(folderId);
+
+      // Mask propagation took effect: the grantee can now GET it.
+      const granteeGet = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(granteeGet.statusCode).toBe(200);
+
+      // 6. Rename via PATCH; confirm the change is visible on a fresh GET.
+      const renameRes = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { name: 'Lifecycle Entry (renamed)' },
+      });
+      expect(renameRes.statusCode).toBe(200);
+      const getAfterRename = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+      });
+      expect((getAfterRename.json() as { body: { name: string } }).body.name).toBe(
+        'Lifecycle Entry (renamed)',
+      );
+
+      // 7. Delete (soft) — confirm it disappears from GET/LIST but is
+      // still visible with include_deleted=true.
+      const deleteRes = await server.inject({
+        method: 'DELETE',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+      });
+      expect(deleteRes.statusCode).toBe(200);
+
+      const getAfterDelete = await server.inject({
+        method: 'GET',
+        url: `/api/v1/resources/${id}`,
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+      });
+      expect(getAfterDelete.statusCode).toBe(404);
+
+      const listAfterDelete = await server.inject({
+        method: 'GET',
+        url: '/api/v1/resources',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+      });
+      expect(
+        (listAfterDelete.json() as { body: { data: Array<{ id: string }> } }).body.data.map(
+          (r) => r.id,
+        ),
+      ).not.toContain(id);
+
+      const listWithDeleted = await server.inject({
+        method: 'GET',
+        url: '/api/v1/resources?include_deleted=true',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+      });
+      expect(
+        (listWithDeleted.json() as { body: { data: Array<{ id: string; deleted: boolean }> } }).body.data
+          .filter((r) => r.id === id)
+          .map((r) => r.deleted),
+      ).toEqual([true]);
     });
   });
 });
