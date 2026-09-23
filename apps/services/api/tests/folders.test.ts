@@ -18,6 +18,7 @@ import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from '../src/schema';
 import { createServer } from '../src/server';
 import { setTestDbOverride } from '../src/db';
+import { randomUUID } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -27,6 +28,7 @@ const dbPath = join(tmpDir, 'test.db');
 
 describe('BE-003d: POST/GET/PATCH/DELETE /api/v1/folders', () => {
   let server: ReturnType<typeof createServer>;
+  let liveDb: ReturnType<typeof drizzle<typeof schema>>;
 
   async function registerAndUnlock(label: string) {
     const email = `folders-${label}-${Math.random().toString(36).slice(2)}@example.test`;
@@ -54,6 +56,29 @@ describe('BE-003d: POST/GET/PATCH/DELETE /api/v1/folders', () => {
     return { userId, accessToken };
   }
 
+  /** Insert a permission grant directly — no grant/revoke endpoint exists
+   *  yet (BE-003f only enforces grants that already exist). */
+  async function grantPermission(
+    targetType: 'folder' | 'resource',
+    targetId: string,
+    granteeId: string,
+    level: 'read' | 'update' | 'owner',
+    grantedBy: string,
+  ): Promise<void> {
+    const now = new Date();
+    await liveDb.insert(schema.permissions).values({
+      id: randomUUID(),
+      targetType,
+      targetId,
+      granteeType: 'user',
+      granteeId,
+      level,
+      grantedBy,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
   beforeAll(async () => {
     const setupDb = new Database(dbPath);
     setupDb.exec('PRAGMA foreign_keys = ON;');
@@ -63,7 +88,7 @@ describe('BE-003d: POST/GET/PATCH/DELETE /api/v1/folders', () => {
 
     const sql = new Database(dbPath);
     sql.exec('PRAGMA foreign_keys = ON;');
-    const liveDb = drizzle(sql, { schema });
+    liveDb = drizzle(sql, { schema });
     setTestDbOverride(liveDb);
 
     server = createServer({ logger: false });
@@ -589,6 +614,125 @@ describe('BE-003d: POST/GET/PATCH/DELETE /api/v1/folders', () => {
         headers: { authorization: `Bearer ${b.accessToken}` },
       });
       expect(getRes.statusCode).toBe(200);
+    });
+  });
+
+  // ── Sharing (BE-003f: permission-based cross-vault access) ─────────────────
+
+  describe('permission grants (BE-003f)', () => {
+    it('a user with a read grant can GET a folder they do not own', async () => {
+      const owner = await registerAndUnlock('grant-read-owner');
+      const grantee = await registerAndUnlock('grant-read-grantee');
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { name: "Owner's shared folder" },
+      });
+      const folderId = (createRes.json() as { body: { id: string } }).body.id;
+
+      // Without a grant, still 404 (regression check for this exact pair).
+      const before = await server.inject({
+        method: 'GET',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(before.statusCode).toBe(404);
+
+      await grantPermission('folder', folderId, grantee.userId, 'read', owner.userId);
+
+      const after = await server.inject({
+        method: 'GET',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(after.statusCode).toBe(200);
+    });
+
+    it('a read grant is not enough to PATCH — 403, not 404', async () => {
+      const owner = await registerAndUnlock('grant-insufficient-owner');
+      const grantee = await registerAndUnlock('grant-insufficient-grantee');
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { name: 'Read-only share' },
+      });
+      const folderId = (createRes.json() as { body: { id: string } }).body.id;
+      await grantPermission('folder', folderId, grantee.userId, 'read', owner.userId);
+
+      const res = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+        payload: { name: 'Should not be allowed' },
+      });
+      expect(res.statusCode).toBe(403);
+    });
+
+    it('an update grant is enough to PATCH and DELETE (Update includes delete rights)', async () => {
+      const owner = await registerAndUnlock('grant-update-owner');
+      const grantee = await registerAndUnlock('grant-update-grantee');
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { name: 'Update share' },
+      });
+      const folderId = (createRes.json() as { body: { id: string } }).body.id;
+      await grantPermission('folder', folderId, grantee.userId, 'update', owner.userId);
+
+      const patchRes = await server.inject({
+        method: 'PATCH',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+        payload: { name: 'Renamed by grantee' },
+      });
+      expect(patchRes.statusCode).toBe(200);
+      expect((patchRes.json() as { body: { name: string } }).body.name).toBe('Renamed by grantee');
+
+      const deleteRes = await server.inject({
+        method: 'DELETE',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(deleteRes.statusCode).toBe(200);
+    });
+
+    it("a shared folder does NOT appear in the grantee's own LIST (own-vault scoping, unchanged)", async () => {
+      const owner = await registerAndUnlock('grant-list-owner');
+      const grantee = await registerAndUnlock('grant-list-grantee');
+
+      const createRes = await server.inject({
+        method: 'POST',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${owner.accessToken}` },
+        payload: { name: 'Shared, not listed' },
+      });
+      const folderId = (createRes.json() as { body: { id: string } }).body.id;
+      await grantPermission('folder', folderId, grantee.userId, 'owner', owner.userId);
+
+      // The grant makes GET succeed...
+      const getRes = await server.inject({
+        method: 'GET',
+        url: `/api/v1/folders/${folderId}`,
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      expect(getRes.statusCode).toBe(200);
+
+      // ...but LIST is still scoped to the grantee's own vault only.
+      const listRes = await server.inject({
+        method: 'GET',
+        url: '/api/v1/folders',
+        headers: { authorization: `Bearer ${grantee.accessToken}` },
+      });
+      const ids = (listRes.json() as { body: { data: Array<{ id: string }> } }).body.data.map(
+        (f) => f.id,
+      );
+      expect(ids).not.toContain(folderId);
     });
   });
 });

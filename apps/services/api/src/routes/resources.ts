@@ -12,9 +12,20 @@
  * persisted or returned — only the encrypted blob is — same
  * server-blind-to-plaintext guarantee as the secret itself.
  *
- * Authorization: ownership-only (`resource.ownerId === caller`), same
- * documented-baseline scope as BE-003d (folders) — full `permissions`
- * table + grantee enforcement is BE-003f's job (not yet built).
+ * Authorization (BE-003f, ADR-003 §6.1-6.2):
+ *  - GET (single): requires Read+.
+ *  - PATCH, DELETE: require Update+ (Update level already includes
+ *    delete rights per the level table in §3.5 — Owner is NOT required).
+ *  - Effective level = max(ownership, direct user grant, group grant), so
+ *    a grantee may act on a resource outside their own vault; single-item
+ *    routes fetch by id only (no vault filter) and let `requirePermission`
+ *    decide 404 (no access) vs 403 (access below the required level) vs
+ *    allow.
+ *  - LIST and CREATE remain scoped to the caller's own vault only
+ *    (unchanged from BE-003b) — same reasoning as folders.ts: the ADR-004
+ *    listResources description is "in authenticated user's vault", and
+ *    cross-vault aggregation is a materially different feature than
+ *    enforcing access on a request that already names a target.
  *
  * Explicitly OUT of scope (per ADR-003 §3.4/§6.3 and the BE-003 task
  * breakdown):
@@ -24,6 +35,9 @@
  *    module only attaches/detaches EXISTING tag ids via the
  *    `resource_tags` junction, matching the ADR-004 `tagIds` field on the
  *    resource itself.
+ *  - Permission grant/revoke endpoints — no task in the current backlog
+ *    creates them yet; this module only *enforces* grants that already
+ *    exist in the `permissions` table.
  *
  * AR-2: no secret ever reaches a log line or an error message — every
  * ciphertext/iv/tag field is treated as opaque bytes, in one direction
@@ -38,6 +52,7 @@ import { folders, permissions, resourceTags, resources, tags } from '../schema';
 import { httpError } from '../middleware/error-handler';
 import { requireActiveSession, requireOwnVault } from '../middleware/auth-guard';
 import { queryPreHandler } from '../middleware/query';
+import { requirePermission, type PermissionLevel } from '../services/permissions';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -172,16 +187,19 @@ async function toDTO(row: ResourceRow): Promise<ResourceDTO> {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-async function findOwnResource(userId: string, vaultId: string, resourceId: string) {
+/**
+ * Fetch a non-deleted resource by id and enforce the required permission
+ * level on it (BE-003f, ADR-003 §6.1-6.2). Deliberately NOT scoped to the
+ * caller's own vault — see the module docblock.
+ */
+async function requireResourceAccess(userId: string, resourceId: string, required: PermissionLevel) {
   const resource = await db.query.resources.findFirst({
     where: and(eq(resources.id, resourceId), isNull(resources.deletedAt)),
   });
-  if (!resource || resource.vaultId !== vaultId) {
+  if (!resource) {
     throw httpError(404, 'Resource not found');
   }
-  if (resource.ownerId !== userId) {
-    throw httpError(403, 'Not authorized');
-  }
+  await requirePermission({ db, userId, targetType: 'resource', targetId: resourceId }, required);
   return resource;
 }
 
@@ -272,8 +290,7 @@ export function resourcesPlugin(server: FastifyInstance): void {
     { config: { operationId: 'GetResource' } },
     async (request, reply) => {
       const { userId } = await requireActiveSession(request);
-      const vault = await requireOwnVault(userId);
-      const resource = await findOwnResource(userId, vault.id, request.params.id);
+      const resource = await requireResourceAccess(userId, request.params.id, 'read');
       return reply.code(200).send(await toDTO(resource));
     },
   );
@@ -365,15 +382,16 @@ export function resourcesPlugin(server: FastifyInstance): void {
     },
     async (request, reply) => {
       const { userId } = await requireActiveSession(request);
-      const vault = await requireOwnVault(userId);
-      const resource = await findOwnResource(userId, vault.id, request.params.id);
+      const resource = await requireResourceAccess(userId, request.params.id, 'update');
 
+      // Scoped to the RESOURCE's own vault, not the caller's — see
+      // folders.ts's PATCH handler for the same reasoning.
       const body = request.body;
       if (body.folderId !== undefined && body.folderId !== null) {
-        await validateFolderId(vault.id, body.folderId);
+        await validateFolderId(resource.vaultId, body.folderId);
       }
       if (body.tagIds !== undefined) {
-        await validateTagIds(vault.id, body.tagIds);
+        await validateTagIds(resource.vaultId, body.tagIds);
       }
 
       // Effective metadataEncrypted after this update (may be unchanged).
@@ -445,8 +463,8 @@ export function resourcesPlugin(server: FastifyInstance): void {
     { config: { operationId: 'DeleteResource' } },
     async (request, reply) => {
       const { userId } = await requireActiveSession(request);
-      const vault = await requireOwnVault(userId);
-      const resource = await findOwnResource(userId, vault.id, request.params.id);
+      // Update+ per ADR-003 §6.2 point 7 — Owner is not required to delete.
+      const resource = await requireResourceAccess(userId, request.params.id, 'update');
 
       const now = new Date();
       await db

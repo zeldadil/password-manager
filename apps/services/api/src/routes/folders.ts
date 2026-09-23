@@ -1,21 +1,34 @@
 /** @fileoverview Folder CRUD — POST/GET/PATCH/DELETE /api/v1/folders (BE-003d).
  *
  * Tree structure (self-referential `parentId`) + permission mask
- * (ADR-003 §3.4/§3.5, ADR-004 `/folders` paths). Scope of BE-003d:
+ * (ADR-003 §3.4/§3.5, ADR-004 `/folders` paths).
  *
- *  - CRUD for the folder entity itself, including its tree shape and its
- *    `permissionMask` field (level/granteeType/granteeId).
- *  - Authorization: ownership-only (`folder.ownerId === caller`). The full
- *    grantee-based `permissions` table enforcement is BE-003f's scope (not
- *    yet built) — ownership is the documented baseline in the meantime
- *    (ADR-003 §3.5: "Ownership is baseline... gives the owner implicit
- *    Owner-level access").
+ * Authorization (BE-003f, ADR-003 §6.1-6.2):
+ *  - GET (single): requires Read+.
+ *  - PATCH, DELETE: require Update+ (Update level already includes
+ *    delete rights per the level table in §3.5 — Owner is NOT required
+ *    to delete).
+ *  - Effective level = max(ownership, direct user grant, group grant).
+ *    Ownership on ANY folder still yields Owner; once a grant exists a
+ *    caller may act on a folder outside their own vault, so single-item
+ *    routes below fetch by id only (no vault filter) and let
+ *    `requirePermission` decide 404 (no access at all) vs 403 (access
+ *    below the required level) vs allow.
+ *  - LIST and CREATE remain scoped to the caller's own vault only
+ *    (unchanged from BE-003d) — ADR-004's listFolders description says
+ *    "in authenticated user's vault", with no mention of merging in
+ *    folders shared from other vaults, and that would be a materially
+ *    different feature (cross-vault aggregation) than "enforce access
+ *    control on a request that already names a target", which is what
+ *    BE-003f's own acceptance criteria describe.
  *
- * Explicitly OUT of scope (per ADR-003 §3.4/§3.5 and the BE-003 task
+ * Explicitly OUT of scope (per ADR-003 §3.4/§6.3 and the BE-003 task
  * breakdown):
  *  - Propagating `permissionMask` to resources at create/move time —
  *    BE-003g ("Folder Permission Mask Propagation").
- *  - `permissions` table grants/checks beyond ownership — BE-003f.
+ *  - Permission grant/revoke endpoints themselves — no task in the
+ *    current backlog creates them yet; this module only *enforces*
+ *    grants that already exist in the `permissions` table.
  *
  * AR-2: no secrets pass through this module — folders carry only
  * non-secret metadata (name, description, icon, color).
@@ -29,6 +42,7 @@ import { folders, resources } from '../schema';
 import { httpError } from '../middleware/error-handler';
 import { requireActiveSession, requireOwnVault } from '../middleware/auth-guard';
 import { queryPreHandler } from '../middleware/query';
+import { requirePermission, type PermissionLevel } from '../services/permissions';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -104,17 +118,21 @@ function toDTO(row: FolderRow): FolderDTO {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-/** Fetch a non-deleted folder by id, scoped to the caller's own vault. */
-async function findOwnFolder(userId: string, vaultId: string, folderId: string) {
+/**
+ * Fetch a non-deleted folder by id and enforce the required permission
+ * level on it (BE-003f, ADR-003 §6.1-6.2). Deliberately NOT scoped to the
+ * caller's own vault — a folder shared via the `permissions` table lives
+ * in someone else's vault, and `requirePermission` is what decides 404
+ * (no access at all) vs 403 (access below the required level) vs allow.
+ */
+async function requireFolderAccess(userId: string, folderId: string, required: PermissionLevel) {
   const folder = await db.query.folders.findFirst({
     where: and(eq(folders.id, folderId), isNull(folders.deletedAt)),
   });
-  if (!folder || folder.vaultId !== vaultId) {
+  if (!folder) {
     throw httpError(404, 'Folder not found');
   }
-  if (folder.ownerId !== userId) {
-    throw httpError(403, 'Not authorized');
-  }
+  await requirePermission({ db, userId, targetType: 'folder', targetId: folderId }, required);
   return folder;
 }
 
@@ -194,8 +212,7 @@ export function foldersPlugin(server: FastifyInstance): void {
     { config: { operationId: 'GetFolder' } },
     async (request, reply) => {
       const { userId } = await requireActiveSession(request);
-      const vault = await requireOwnVault(userId);
-      const folder = await findOwnFolder(userId, vault.id, request.params.id);
+      const folder = await requireFolderAccess(userId, request.params.id, 'read');
       return reply.code(200).send(toDTO(folder));
     },
   );
@@ -301,12 +318,15 @@ export function foldersPlugin(server: FastifyInstance): void {
     },
     async (request, reply) => {
       const { userId } = await requireActiveSession(request);
-      const vault = await requireOwnVault(userId);
-      const folder = await findOwnFolder(userId, vault.id, request.params.id);
+      const folder = await requireFolderAccess(userId, request.params.id, 'update');
 
       const body = request.body;
       if (body.parentId !== undefined && body.parentId !== null) {
-        await validateParent(vault.id, folder.id, body.parentId);
+        // Scoped to the FOLDER's own vault, not the caller's — a grantee
+        // acting on a shared folder may have a different (or no) vault of
+        // their own; the tree the folder can move within is its own
+        // vault's tree.
+        await validateParent(folder.vaultId, folder.id, body.parentId);
       }
 
       const updates: Partial<typeof folders.$inferInsert> = { updatedAt: new Date() };
@@ -334,8 +354,9 @@ export function foldersPlugin(server: FastifyInstance): void {
     { config: { operationId: 'DeleteFolder' } },
     async (request, reply) => {
       const { userId } = await requireActiveSession(request);
-      const vault = await requireOwnVault(userId);
-      const folder = await findOwnFolder(userId, vault.id, request.params.id);
+      // Update+ per ADR-003 §6.2 point 7 ("Update/Delete require Update+")
+      // — Owner is not required to delete.
+      const folder = await requireFolderAccess(userId, request.params.id, 'update');
 
       const now = new Date();
 
