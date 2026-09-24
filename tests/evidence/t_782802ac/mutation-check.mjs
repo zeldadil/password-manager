@@ -73,6 +73,11 @@ const AUDIT_CASE = edit(
   GENERATOR_CASE,
   `${GENERATOR_CASE}  { path: '/audit', screen: 'Audit (positive control)', resolved: '/audit' },\n`,
 )
+const GHOST_CASE = edit(
+  ROUTES_SPEC,
+  GENERATOR_CASE,
+  `${GENERATOR_CASE}  { path: '/ghost', screen: 'ghost (a path no route declares)', resolved: '/login' },\n`,
+)
 
 const MUTATIONS = [
   {
@@ -105,6 +110,14 @@ const MUTATIONS = [
       'R1 + the coverage block skipped — exactly the pre-fix lane, which had no coverage block',
     expected: 'pass',
     edits: [UNSWEPT_ROUTE, edit(ROUTES_SPEC, COVERAGE_DESCRIBE, COVERAGE_DESCRIBE_SKIPPED)],
+  },
+  {
+    id: 'R5',
+    scope: 'lane',
+    describe:
+      'a stray swept case `/ghost` added to ROUTES that the route table does not declare (not via any concrete pattern, and not marked `isSplatWitness`) — the fix for the review-round-1 defect: the converse spec previously could not fail because every path trivially matches the declared `*` catch-all pattern',
+    expected: 'fail',
+    edits: [GHOST_CASE],
   },
   {
     id: 'P1',
@@ -180,7 +193,12 @@ function summarise(output) {
   const rules = [...new Set([...plain.matchAll(/- \[[a-z]+\] ([a-z0-9-]+):/g)].map((match) => match[1]))]
   const coverageMessages = [
     ...new Set(
-      [...plain.matchAll(/(route table declares screen paths this sweep does not grade: [^\n]*)/g)]
+      [
+        ...plain.matchAll(
+          /(route table declares screen paths this sweep does not grade: [^\n]*)/g,
+        ),
+        ...plain.matchAll(/(swept paths the route table does not declare: [^\n]*)/g),
+      ]
         .map((match) => match[1].trim())
         // The stack frame echoes the template literal itself; keep only the real message.
         .filter((message) => !message.includes('${')),

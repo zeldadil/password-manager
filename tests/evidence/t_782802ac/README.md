@@ -1,19 +1,23 @@
 # FE-001k-fu (t_782802ac) — the a11y sweep's route coverage is now self-checking
 
 **Task:** FE-001k-fu — *"make the a11y sweep's route coverage self-checking (+ two false doc/spec claims)"*
-**Branch:** `feature/t_782802ac` (base: `feature/t_cdd23d35` @ `48f6e27`, PR #30, whose base is the FE fan-in branch
-`feature/t_4e1b6937`; `master` has no `apps/web`)
-**Lane:** `pnpm test:a11y` (`apps/web`, `vitest.a11y.config.ts`) · also runs inside `pnpm test:unit`
 **Driver:** condition from the round-1 review of FE-001k (`t_cdd23d35`), reproduced independently by QA as probe
 `Q4`: a route added to the route table was graded by nobody, and both lanes stayed green.
+**Lane:** `pnpm test:a11y` (`apps/web`, `vitest.a11y.config.ts`) · also runs inside `pnpm test:unit`
+
+This work was originally merged via PR #37 (recreated from the auto-closed PR #32, base `feature/t_cdd23d35`) — but
+that merge carried an unresolved round-1 review defect (§2a): the reviewer's `changes_requested` verdict on the
+converse coverage spec was never actually addressed before the branch got merged, because PR #32's auto-close (when
+its base branch was deleted after the parent PR merged) and PR #37's straight recreation bypassed the pending
+review. Discovered and fixed here, based on current `master` (which now carries `apps/web` from the FE fan-in).
 
 ## 1. What changed
 
 | File | Change |
 |---|---|
-| `apps/web/src/a11y/routes.a11y.test.tsx` | +2 specs (route coverage vs the route table, both directions); 3 false claims corrected in place |
+| `apps/web/src/a11y/routes.a11y.test.tsx` | +2 specs (route coverage vs the route table, both directions); 3 false claims corrected in place; round-1 review defect fixed (§2a) |
 | `tests/evidence/t_cdd23d35/README.md` | §5 claim about route coverage corrected (it described behaviour nothing enforced) |
-| `tests/evidence/t_782802ac/mutation-check.mjs` | re-runnable mutation harness (R1–R4, P1–P2) |
+| `tests/evidence/t_782802ac/mutation-check.mjs` | re-runnable mutation harness (R1–R5, P1–P2) |
 | `tests/evidence/t_782802ac/` | this README + the run logs below |
 
 **No production/UI code changed.** No file under `apps/web/src/**` other than the a11y spec was touched, and the
@@ -37,7 +41,33 @@ a route pattern means):
   that instantiates it (`matchPath({ path: declared, end: true }, sweptPath) !== null`). This is the assertion the
   card asks for: a route added to the table without a swept case now fails the lane.
 - **`grades no path the route table does not declare`** — the converse, so a stale swept case cannot masquerade as
-  coverage (a route renamed/removed, or a path that only resolves through the `*` catch-all, is not a screen).
+  coverage (a route renamed/removed is not a screen). This direction checks against the route table's CONCRETE
+  (non-splat) patterns only — a splat/catch-all pattern (`*`) matches every possible path by definition, so treating
+  it as ordinary "declared" evidence here would make the spec unable to ever fail (see §2a — this was a real,
+  reviewer-caught defect in round 1, now fixed). The one swept case that deliberately represents the catch-all
+  (`/no/such/route`) is exempted via an explicit `isSplatWitness: true` marker on its `ROUTES` entry, not by
+  incidentally matching `*` the way every other path also would.
+
+### 2a. Round-1 review defect — the converse spec could not fail — fixed
+
+Round-1 review (`frontend`, run 606, 2026-09-19) reproduced that `grades no path the route table does not declare`
+was structurally unable to fail: `declaredScreenPaths` included the literal `*` pattern in `declared`, and
+`matchPath({path:'*',end:true}, anyPath)` is non-null for **every** pathname — so `undeclared` was always `[]`,
+regardless of what was swept. Verified independently before this fix (`node -e` against `react-router-dom`'s
+`matchPath` directly): `matchPath({path:'*',end:true}, '/ghost')` → non-null, same for `/audit`, `/`, any string.
+Adding a stray swept case (`/ghost`, a path nothing in the route table declares) left the lane 22/22 green — nothing
+fired.
+
+**Fix:** `concreteDeclared` excludes splat patterns (`isSplatPattern()`); the converse check matches swept paths
+against `concreteDeclared` only, with a single explicit `isSplatWitness` exemption for `/no/such/route` (the
+catch-all's designated witness) instead of implicit, unintentional splat matching. Re-verified the exact `/ghost`
+repro from the review now fails; formalized as harness case **R5** (§5) — `node
+tests/evidence/t_782802ac/mutation-check.mjs` regenerates `mutations.txt` and reproduces it on demand. A
+rename/removal repro (drop `/tags` from the route table, leave the `ROUTES` case) is also now caught: `/tags` no
+longer matches any concrete declared pattern, has no `isSplatWitness`, so it's flagged undeclared.
+
+The docstring at the top of `routes.a11y.test.tsx` ("in both directions") is accurate again now that the converse
+genuinely can fail — it previously described the intent, not the (broken) implementation.
 
 The mapping the two specs enforce today (route table → swept case):
 
@@ -106,6 +136,7 @@ and verifies they are identical afterwards, so a leaked edit fails the run. `--o
 | R2 | lane: `/generator` case dropped from the sweep while the table still declares it | fail | **fail** — 1 failed \| 19 passed; coverage names `/generator` |
 | R3 | app+lane: the same `/audit` added to the table **and** to the sweep (compliant screen) | pass | **pass** — 22 passed (coverage is a contract, not a blanket refusal of table changes) |
 | R4 | control: R1 **+** the coverage block skipped (= the pre-fix lane) | pass | **pass** — 19 passed \| 2 skipped (the defect reproduces; the new specs are what turn R1 red) |
+| R5 | lane: stray swept case `/ghost` added — route table does not declare it, not `isSplatWitness` (§2a fix) | fail | **fail** — 1 failed \| 21 passed; coverage names `/ghost` |
 | P1 | app: skip link removed from `A11yLayout` | fail | **fail** — 4 failed \| 17 passed; `bypass` not in `passes` on `/login`, `/unlock`, `/`, `/no/such/route` |
 | P2 | app: skip-link target id dropped from `<main>` | fail | **fail** — 11 failed \| 10 passed; rule id `region` |
 | — | clean tree (control) | pass | **pass** — 21 passed |

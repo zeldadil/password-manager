@@ -51,9 +51,12 @@ const routesWithSession: RouteObject[] = wrapRoutes(routes)
  * - `route coverage` ties that list to `src/routes.tsx` instead of trusting it: the
  *   screen paths are *derived* from the exported route table and matched against the
  *   swept set, in both directions (no declared path unswept, no swept path
- *   undeclared). The route table — not this file — is therefore the source of truth
- *   for what "all routes" means: a route added to the table without a swept case
- *   fails this lane instead of being graded by nobody.
+ *   undeclared — the latter excludes the declared catch-all pattern, which the
+ *   designated `isSplatWitness` case in `ROUTES` represents explicitly, since
+ *   every path trivially matches a splat pattern). The route table — not this
+ *   file — is therefore the source of truth for what "all routes" means: a
+ *   route added to the table without a swept case fails this lane instead of
+ *   being graded by nobody, and a stale/renamed swept case fails it too.
  * - A route passes on `violations.length === 0` **and** `incomplete.length === 0`.
  *   `incomplete` is axe saying "I could not decide" — counting it as a pass is how a
  *   "zero violations" claim turns vacuous (see the `landmark-one-main` note in
@@ -80,6 +83,15 @@ interface RouteCase {
   screen: string
   /** Where the guard/redirect lands — asserted so a route sweep can't silently drift. */
   resolved: string
+  /**
+   * Set ONLY when `path` is the deliberate witness for a declared catch-all
+   * (splat) route pattern, e.g. `'*'` — not a real, concrete declared path of
+   * its own. Every path trivially "matches" a splat pattern (that's what a
+   * catch-all does), so without this explicit marker the converse coverage
+   * spec below could not tell a legitimate catch-all witness apart from a
+   * genuinely stale/undeclared swept case — see that spec's comment.
+   */
+  isSplatWitness?: true
 }
 
 /**
@@ -102,7 +114,12 @@ const ROUTES: readonly RouteCase[] = [
   { path: '/settings', screen: 'Settings', resolved: '/settings' },
   { path: '/generator', screen: 'Password generator', resolved: '/generator' },
   { path: '/', screen: 'root guard', resolved: '/login' },
-  { path: '/no/such/route', screen: 'not-found guard', resolved: '/login' },
+  {
+    path: '/no/such/route',
+    screen: 'not-found guard',
+    resolved: '/login',
+    isSplatWitness: true,
+  },
 ]
 
 /**
@@ -134,6 +151,18 @@ function joinRoutePath(parentPath: string, childPath: string | undefined): strin
 /** Is `pathname` an instance of the route pattern `pattern`? */
 function routeMatches(pattern: string, pathname: string): boolean {
   return matchPath({ path: pattern, end: true }, pathname) !== null
+}
+
+/**
+ * Is `pattern` a catch-all (splat) route pattern — `'*'`, or ending in `/*'`?
+ * A splat pattern matches every pathname by definition (`routeMatches('*', x)`
+ * is true for any `x`), which makes it useless as evidence that a *specific*
+ * swept path corresponds to a *specific* declared route. The converse
+ * coverage spec below excludes splat patterns from that direction of the
+ * check for exactly this reason.
+ */
+function isSplatPattern(pattern: string): boolean {
+  return pattern === '*' || pattern.endsWith('/*')
 }
 
 /**
@@ -239,12 +268,23 @@ describe('route coverage — the sweep is tied to the route table', () => {
   // routes exist. These two specs are the link between them, so "axe-core on all
   // routes" cannot quietly become "on the routes someone remembered to list".
   const declared = declaredScreenPaths(routes)
+  // Splat (catch-all) patterns are excluded from `concreteDeclared` — see
+  // `isSplatPattern`'s docstring for why: every path trivially matches one, so
+  // treating them as ordinary declared patterns would make the converse spec
+  // below (direction 2) unable to ever fail.
+  const concreteDeclared = declared.filter((pattern) => !isSplatPattern(pattern))
+  const splatDeclared = declared.filter(isSplatPattern)
   const swept = ROUTES.map((route) => route.path)
 
   it('grades every screen path the route table declares', () => {
     // Without this, adding `{ path: '/audit', element: <div>audit log</div> }` to the
     // table left this lane 19/19 green (QA probe Q4) — the new route was graded by
     // nobody, and would have violated `page-has-heading-one` had it been swept.
+    //
+    // Checked against ALL declared patterns (concrete + splat), not just
+    // `concreteDeclared` — unlike direction 2 below, a splat pattern here is
+    // fine: any swept path at all would trivially satisfy "the catch-all has
+    // a witness", so this direction doesn't need the concrete/splat split.
     const unswept = declared.filter((pattern) => !swept.some((path) => routeMatches(pattern, path)))
 
     expect(
@@ -254,12 +294,23 @@ describe('route coverage — the sweep is tied to the route table', () => {
   })
 
   it('grades no path the route table does not declare', () => {
-    // The converse, so a stale case cannot masquerade as coverage: a swept path that
-    // matches no declared route (route renamed or removed, and — worse — a path that
-    // only resolves through the `*` catch-all) is not grading a screen.
-    const undeclared = swept.filter(
-      (path) => !declared.some((pattern) => routeMatches(pattern, path)),
-    )
+    // The converse, so a stale case cannot masquerade as coverage: a swept path
+    // that matches no CONCRETE declared route (renamed, removed, or simply never
+    // declared) is not grading a real screen — UNLESS it's the route table's
+    // explicit, declared witness for a splat route (`isSplatWitness`).
+    //
+    // This direction deliberately does NOT match against splat patterns the way
+    // direction 1 does: `matchPath('*', anyPath)` is non-null for every possible
+    // path, so if a splat pattern counted as "declared" here, no swept path
+    // could ever be undeclared — the spec would be unable to fail. Requiring an
+    // explicit `isSplatWitness` marker instead means only the route case(s) that
+    // deliberately represent the catch-all are exempted; every other
+    // stray/stale swept path is still caught.
+    const undeclared = ROUTES.filter((route) => {
+      if (concreteDeclared.some((pattern) => routeMatches(pattern, route.path))) return false
+      if (route.isSplatWitness && splatDeclared.length > 0) return false
+      return true
+    }).map((route) => route.path)
 
     expect(
       undeclared,
