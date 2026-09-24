@@ -11,9 +11,9 @@
  *  - `extend()` — POST /auth/refresh + rotate tokens + reset expiry
  */
 
-import { createContext, useContext, useState, useCallback, useRef } from 'react'
+import { createContext, useContext, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { postLock, postRefresh, type RefreshResponse } from './api'
+import { postLock, postRefresh } from './api'
 
 export interface SessionState {
   accessToken: string | null

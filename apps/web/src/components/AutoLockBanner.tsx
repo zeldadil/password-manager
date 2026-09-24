@@ -19,7 +19,10 @@ export interface AutoLockBannerProps {
 
 const WARN_SECONDS = 60
 
-export default function AutoLockBanner({ onShow, extendLabel = 'Extend session' }: AutoLockBannerProps) {
+export default function AutoLockBanner({
+  onShow,
+  extendLabel = 'Extend session',
+}: AutoLockBannerProps) {
   const { expiresAt, extend } = useSession()
   const [secondsLeft, setSecondsLeft] = useState(0)
   const [visible, setVisible] = useState(false)
@@ -113,7 +116,11 @@ export default function AutoLockBanner({ onShow, extendLabel = 'Extend session' 
       >
         {extending ? 'Extending…' : extended ? 'Session extended' : extendLabel}
       </button>
-      {error ? <p className="auto-lock-banner__error" role="status">{error}</p> : null}
+      {error ? (
+        <p className="auto-lock-banner__error" role="status">
+          {error}
+        </p>
+      ) : null}
     </div>
   )
 }

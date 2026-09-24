@@ -30,11 +30,7 @@ function wrapRoutes(routeList: RouteObject[]): RouteObject[] {
       ...root,
       children: root.children?.map((child) => ({
         ...child,
-        element: (
-          <SessionProvider>
-            {child.element}
-          </SessionProvider>
-        ),
+        element: <SessionProvider>{child.element}</SessionProvider>,
       })),
     },
   ] as RouteObject[]
@@ -155,10 +151,7 @@ describe('UnlockPage', () => {
 
   it('shows a retry button on network error', async () => {
     const user = userEvent.setup()
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockRejectedValueOnce(new TypeError('Network error')),
-    )
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new TypeError('Network error')))
 
     renderUnlock()
 
@@ -184,10 +177,7 @@ describe('UnlockPage', () => {
 
   it('keeps the master password in state after a network error so the retry path can resubmit', async () => {
     const user = userEvent.setup()
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockRejectedValueOnce(new TypeError('Network error')),
-    )
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new TypeError('Network error')))
 
     renderUnlock()
 
@@ -252,7 +242,6 @@ describe('UnlockPage', () => {
   it('shows a rate-limit countdown after 5 consecutive failed attempts', async () => {
     vi.useFakeTimers()
 
-    const user = userEvent.setup()
     const fetchMock = vi.fn().mockImplementation(() =>
       Promise.resolve({
         ok: false,

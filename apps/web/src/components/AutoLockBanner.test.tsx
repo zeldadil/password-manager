@@ -15,7 +15,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useEffect } from 'react'
 import AutoLockBanner from './AutoLockBanner'
 import { SessionProvider, useSession } from '../auth/SessionProvider'
@@ -27,11 +27,16 @@ interface MountOptions {
 
 function mountBanner({ expirySecondsFromNow = 45, onShow = vi.fn() }: MountOptions = {}) {
   const router = createMemoryRouter(
-    [{ path: '/', element: (
-      <SessionProvider>
-        <BannerMount expirySecondsFromNow={expirySecondsFromNow} onShow={onShow} />
-      </SessionProvider>
-    ) }],
+    [
+      {
+        path: '/',
+        element: (
+          <SessionProvider>
+            <BannerMount expirySecondsFromNow={expirySecondsFromNow} onShow={onShow} />
+          </SessionProvider>
+        ),
+      },
+    ],
     { initialEntries: ['/'] },
   )
   return render(<RouterProvider router={router} />)
@@ -39,7 +44,13 @@ function mountBanner({ expirySecondsFromNow = 45, onShow = vi.fn() }: MountOptio
 
 /** Mount point that establishes a session expiring in `expirySecondsFromNow`
  *  seconds, so the banner has a session to observe. */
-function BannerMount({ expirySecondsFromNow, onShow }: { expirySecondsFromNow: number; onShow: ReturnType<typeof vi.fn> }) {
+function BannerMount({
+  expirySecondsFromNow,
+  onShow,
+}: {
+  expirySecondsFromNow: number
+  onShow: ReturnType<typeof vi.fn>
+}) {
   const { login } = useSession()
   useEffect(() => {
     login('tok-1', 'refresh-1', expirySecondsFromNow)
@@ -77,11 +88,16 @@ describe('AutoLockBanner', () => {
       return <AutoLockBanner onShow={vi.fn()} />
     }
     const router = createMemoryRouter(
-      [{ path: '/', element: (
-        <SessionProvider>
-          <MountFarExpiry />
-        </SessionProvider>
-      ) }],
+      [
+        {
+          path: '/',
+          element: (
+            <SessionProvider>
+              <MountFarExpiry />
+            </SessionProvider>
+          ),
+        },
+      ],
       { initialEntries: ['/'] },
     )
     render(<RouterProvider router={router} />)
@@ -142,9 +158,7 @@ describe('AutoLockBanner', () => {
     mountBanner({ expirySecondsFromNow: 45 })
 
     await user.click(screen.getByRole('button', { name: 'Extend session' }))
-    await waitFor(() =>
-      expect(screen.getByText('Session extended')).toBeTruthy(),
-    )
+    await waitFor(() => expect(screen.getByText('Session extended')).toBeTruthy())
   })
 
   it('does not show the countdown after a successful extend (session now far from expiry)', async () => {

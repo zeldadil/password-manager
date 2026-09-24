@@ -15,18 +15,15 @@ import { SessionProvider } from '../auth/SessionProvider'
  *  so `createMemoryRouter` receives a valid `RouteObject[]`. */
 function wrapRoutes(routeList: RouteObject[]): RouteObject[] {
   const root = routeList[0]
+  const wrappedChildren: RouteObject[] | undefined = root.children?.map((child) => ({
+    ...child,
+    element: <SessionProvider>{child.element}</SessionProvider>,
+  }))
   return [
     {
       ...root,
-      children: root.children?.map((child) => ({
-        ...child,
-        element: (
-          <SessionProvider>
-            {child.element}
-          </SessionProvider>
-        ),
-      })),
-    },
+      children: wrappedChildren,
+    } as RouteObject,
   ]
 }
 
@@ -290,23 +287,24 @@ describe('accessibility baseline', () => {
       const user = userEvent.setup()
       vi.stubGlobal(
         'fetch',
-        vi.fn().mockImplementation(() =>
-          new Promise((resolve) =>
-            setTimeout(
-              () =>
-                resolve({
-                  ok: true,
-                  json: () =>
-                    Promise.resolve({
-                      accessToken: 'tok',
-                      refreshToken: 'ref',
-                      expiresIn: 900,
-                      tokenType: 'Bearer',
-                    }),
-                } as unknown as Response),
-              50,
+        vi.fn().mockImplementation(
+          () =>
+            new Promise((resolve) =>
+              setTimeout(
+                () =>
+                  resolve({
+                    ok: true,
+                    json: () =>
+                      Promise.resolve({
+                        accessToken: 'tok',
+                        refreshToken: 'ref',
+                        expiresIn: 900,
+                        tokenType: 'Bearer',
+                      }),
+                  } as unknown as Response),
+                50,
+              ),
             ),
-          ),
         ),
       )
 
@@ -319,8 +317,8 @@ describe('accessibility baseline', () => {
       await user.click(button)
       expect(screen.getByRole('button', { name: 'Signing in...' })).toBeDisabled()
 
-      await waitFor(
-        () => expect(screen.getByRole('heading', { name: 'Vault', level: 1 })).not.toBeNull(),
+      await waitFor(() =>
+        expect(screen.getByRole('heading', { name: 'Vault', level: 1 })).not.toBeNull(),
       )
     })
   })
@@ -486,23 +484,24 @@ describe('accessibility baseline', () => {
       const user = userEvent.setup()
       vi.stubGlobal(
         'fetch',
-        vi.fn().mockImplementation(() =>
-          new Promise((resolve) =>
-            setTimeout(
-              () =>
-                resolve({
-                  ok: true,
-                  json: () =>
-                    Promise.resolve({
-                      accessToken: 'tok',
-                      refreshToken: 'ref',
-                      expiresIn: 900,
-                      tokenType: 'Bearer',
-                    }),
-                } as unknown as Response),
-              50,
+        vi.fn().mockImplementation(
+          () =>
+            new Promise((resolve) =>
+              setTimeout(
+                () =>
+                  resolve({
+                    ok: true,
+                    json: () =>
+                      Promise.resolve({
+                        accessToken: 'tok',
+                        refreshToken: 'ref',
+                        expiresIn: 900,
+                        tokenType: 'Bearer',
+                      }),
+                  } as unknown as Response),
+                50,
+              ),
             ),
-          ),
         ),
       )
 
@@ -515,8 +514,8 @@ describe('accessibility baseline', () => {
       await user.click(button)
       expect(screen.getByRole('button', { name: 'Unlocking...' })).toBeDisabled()
 
-      await waitFor(
-        () => expect(screen.getByRole('heading', { name: 'Vault', level: 1 })).not.toBeNull(),
+      await waitFor(() =>
+        expect(screen.getByRole('heading', { name: 'Vault', level: 1 })).not.toBeNull(),
       )
     })
   })

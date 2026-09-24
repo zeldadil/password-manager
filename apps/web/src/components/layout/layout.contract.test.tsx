@@ -7,6 +7,7 @@ import Header from './Header'
 import Sidebar from './Sidebar'
 import TagsList from './TagsList'
 import type { FolderNode, TagNode } from './types'
+import { SessionProvider } from '../../auth/SessionProvider'
 
 /**
  * Layout component contract tests (FE-001i).
@@ -32,7 +33,14 @@ const tags: TagNode[] = [
 function renderHeader(props: Record<string, unknown> = {}) {
   const router = createMemoryRouter(
     [
-      { path: '/vault', element: <Header {...props} /> },
+      {
+        path: '/vault',
+        element: (
+          <SessionProvider>
+            <Header {...props} />
+          </SessionProvider>
+        ),
+      },
       { path: '/settings', element: <div>Settings screen</div> },
       { path: '/login', element: <div>Login screen</div> },
       { path: '/unlock', element: <div>Unlock screen</div> },
@@ -47,7 +55,11 @@ function renderShell(props: Record<string, unknown> = {}) {
   const router = createMemoryRouter(
     [
       {
-        element: <AppShell {...props} />,
+        element: (
+          <SessionProvider>
+            <AppShell {...props} />
+          </SessionProvider>
+        ),
         children: [{ path: '/vault', element: <div>Vault content</div> }],
       },
     ],

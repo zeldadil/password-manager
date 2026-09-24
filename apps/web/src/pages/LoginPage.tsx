@@ -25,9 +25,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
 
   // Error classification so the UI can show the right affordance.
-  const [errorKind, setErrorKind] = useState<
-    'none' | 'auth' | 'rate-limited' | 'network'
-  >('none')
+  const [errorKind, setErrorKind] = useState<'none' | 'auth' | 'rate-limited' | 'network'>('none')
 
   // Client-side rate-limit tracking.
   const [failedAttempts, setFailedAttempts] = useState(0)
@@ -152,8 +150,7 @@ export default function LoginPage() {
   // always type. The submit button is disabled when empty/loading/rate-limited
   // or during an active network error (retry via the Retry button instead).
   const isInputDisabled = loading || isRateLimited
-  const isSubmitDisabled =
-    loading || isRateLimited || !email || !masterPassword || isNetworkError
+  const isSubmitDisabled = loading || isRateLimited || !email || !masterPassword || isNetworkError
 
   return (
     <main
@@ -206,12 +203,7 @@ export default function LoginPage() {
 
         {error ? (
           <div className="login-error-container">
-            <p
-              className="login-error"
-              id="login-error"
-              role="alert"
-              aria-live="assertive"
-            >
+            <p className="login-error" id="login-error" role="alert" aria-live="assertive">
               {error}
             </p>
 
@@ -238,11 +230,7 @@ export default function LoginPage() {
           </div>
         ) : null}
 
-        <button
-          type="submit"
-          className="login-button"
-          disabled={isSubmitDisabled}
-        >
+        <button type="submit" className="login-button" disabled={isSubmitDisabled}>
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>

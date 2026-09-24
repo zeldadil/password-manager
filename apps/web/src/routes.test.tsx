@@ -1,10 +1,29 @@
 import { render, screen } from '@testing-library/react'
-import { createMemoryRouter, RouterProvider } from 'react-router-dom'
+import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { routes } from './routes'
+import { SessionProvider } from './auth/SessionProvider'
+
+/** Wraps every child route in SessionProvider so components that call useSession()
+ *  (AppShell, AutoLockBanner) render without throwing. */
+function wrapRoutes(routeList: RouteObject[]): RouteObject[] {
+  const root = routeList[0]
+  const wrappedChildren: RouteObject[] | undefined = root.children?.map((child) => ({
+    ...child,
+    element: <SessionProvider>{child.element}</SessionProvider>,
+  }))
+  return [
+    {
+      ...root,
+      children: wrappedChildren,
+    } as RouteObject,
+  ]
+}
+
+const routesWithSession: RouteObject[] = wrapRoutes(routes)
 
 function renderAt(initialPath: string) {
-  const router = createMemoryRouter(routes, { initialEntries: [initialPath] })
+  const router = createMemoryRouter(routesWithSession, { initialEntries: [initialPath] })
   render(<RouterProvider router={router} />)
 }
 

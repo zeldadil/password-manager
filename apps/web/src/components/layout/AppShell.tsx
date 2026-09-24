@@ -18,7 +18,7 @@ export interface AppShellProps {
 
 export default function AppShell({ appName, userName, folders, tags }: AppShellProps) {
   const theme = useThemeStore((s) => s.theme)
-  const active = useSession((s) => s.active)
+  const { active } = useSession()
 
   useEffect(() => {
     const root = document.documentElement

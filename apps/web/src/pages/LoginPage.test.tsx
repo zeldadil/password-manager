@@ -30,11 +30,7 @@ function wrapRoutes(routeList: RouteObject[]): RouteObject[] {
       ...root,
       children: root.children?.map((child) => ({
         ...child,
-        element: (
-          <SessionProvider>
-            {child.element}
-          </SessionProvider>
-        ),
+        element: <SessionProvider>{child.element}</SessionProvider>,
       })),
     },
   ] as RouteObject[]
@@ -147,10 +143,7 @@ describe('LoginPage', () => {
 
   it('shows a retry button on network error', async () => {
     const user = userEvent.setup()
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockRejectedValueOnce(new TypeError('Network error')),
-    )
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new TypeError('Network error')))
 
     renderLogin()
 
@@ -176,10 +169,7 @@ describe('LoginPage', () => {
 
   it('keeps the master password in state after a network error so the retry path can resubmit', async () => {
     const user = userEvent.setup()
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockRejectedValueOnce(new TypeError('Network error')),
-    )
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new TypeError('Network error')))
 
     renderLogin()
 
@@ -238,7 +228,9 @@ describe('LoginPage', () => {
     // the whole vitest run even though every assertion above passed.
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: 'Vault', level: 1 })).not.toBeNull(),
-    ).catch(() => {/* stale timer: environment already torn down; best-effort */})
+    ).catch(() => {
+      /* stale timer: environment already torn down; best-effort */
+    })
   })
 
   it('shows a rate-limit countdown after 5 consecutive failed attempts', async () => {

@@ -31,11 +31,14 @@ function renderHeader(props: Record<string, unknown> = {}) {
 function renderHeaderWithSessionActive() {
   const router = createMemoryRouter(
     [
-      { path: '/', element: (
-        <SessionProvider>
-          <HeaderWithLogin />
-        </SessionProvider>
-      ) },
+      {
+        path: '/',
+        element: (
+          <SessionProvider>
+            <HeaderWithLogin />
+          </SessionProvider>
+        ),
+      },
       { path: '/unlock', element: <div>Unlock screen</div> },
       { path: '/login', element: <div>Login screen</div> },
     ],
@@ -91,10 +94,7 @@ describe('Header', () => {
 
   it('navigates to /unlock even when /auth/lock fails', async () => {
     const user = userEvent.setup()
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockRejectedValueOnce(new TypeError('NetworkError')),
-    )
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValueOnce(new TypeError('NetworkError')))
 
     renderHeaderWithSessionActive()
     await user.click(screen.getByRole('button', { name: /lock vault/i }))

@@ -25,9 +25,7 @@ export default function UnlockPage() {
   const [error, setError] = useState<string | null>(null)
 
   // Error classification so the UI can show the right affordance.
-  const [errorKind, setErrorKind] = useState<
-    'none' | 'auth' | 'rate-limited' | 'network'
-  >('none')
+  const [errorKind, setErrorKind] = useState<'none' | 'auth' | 'rate-limited' | 'network'>('none')
 
   // Client-side rate-limit tracking.
   const [failedAttempts, setFailedAttempts] = useState(0)
@@ -160,9 +158,7 @@ export default function UnlockPage() {
     >
       <form onSubmit={handleSubmit} className="unlock-form" noValidate>
         <h1 className="unlock-heading">Unlock</h1>
-        <p className="unlock-subtitle">
-          Vault locked — enter master password to unlock
-        </p>
+        <p className="unlock-subtitle">Vault locked — enter master password to unlock</p>
 
         <label className="unlock-label" htmlFor="email">
           Email
@@ -204,12 +200,7 @@ export default function UnlockPage() {
 
         {error ? (
           <div className="unlock-error-container">
-            <p
-              className="unlock-error"
-              id="unlock-error"
-              role="alert"
-              aria-live="assertive"
-            >
+            <p className="unlock-error" id="unlock-error" role="alert" aria-live="assertive">
               {error}
             </p>
 
@@ -236,11 +227,7 @@ export default function UnlockPage() {
           </div>
         ) : null}
 
-        <button
-          type="submit"
-          className="unlock-button"
-          disabled={isSubmitDisabled}
-        >
+        <button type="submit" className="unlock-button" disabled={isSubmitDisabled}>
           {loading ? 'Unlocking...' : 'Unlock'}
         </button>
       </form>

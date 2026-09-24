@@ -113,7 +113,9 @@
   border: 1px solid var(--accent);
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .auto-lock-banner__extend:hover:not(:disabled) {
@@ -129,7 +131,7 @@
 .auto-lock-banner__error {
   margin: 0;
   font-size: 0.85rem;
-  color: #f87171;
+  color: var(--danger);
 }
 
 /* --- Sidebar --- */

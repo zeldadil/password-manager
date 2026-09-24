@@ -15,18 +15,15 @@ import { HTML_LANG, INDEX_HTML, JSDOM_UNAVAILABLE_RULES, formatViolations, runAx
  *  so `createMemoryRouter` receives a valid `RouteObject[]`. */
 function wrapRoutes(routeList: RouteObject[]): RouteObject[] {
   const root = routeList[0]
+  const wrappedChildren: RouteObject[] | undefined = root.children?.map((child) => ({
+    ...child,
+    element: <SessionProvider>{child.element}</SessionProvider>,
+  }))
   return [
     {
       ...root,
-      children: root.children?.map((child) => ({
-        ...child,
-        element: (
-          <SessionProvider>
-            {child.element}
-          </SessionProvider>
-        ),
-      })),
-    },
+      children: wrappedChildren,
+    } as RouteObject,
   ]
 }
 
