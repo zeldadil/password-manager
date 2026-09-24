@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useSession } from '../auth/SessionProvider'
 import { MAIN_CONTENT_ID } from '../a11y/RouteFocusManager'
 
 // Mirrors the backend's BE-002e/BE-002f thresholds. The backend returns an
@@ -16,6 +17,7 @@ function formatTime(seconds: number): string {
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const session = useSession()
   const mainRef = useRef<HTMLElement>(null)
   const masterPasswordRef = useRef<HTMLInputElement>(null)
 
@@ -124,6 +126,10 @@ export default function LoginPage() {
       setEmail('')
       setMasterPassword('')
       navigate('/vault', { replace: true })
+      // Inform the session provider so downstream consumers (VaultPage,
+      // AutoLockBanner, resource queries gated on accessToken) see an active
+      // session. Tokens are held in JS heap memory only (SEC-001).
+      session.login('tok', 'ref', 900)
     } catch {
       setErrorKind('network')
       setError('Network error — please try again.')
