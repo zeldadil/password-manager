@@ -1,40 +1,29 @@
 import { useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useThemeStore } from '../../stores/themeStore'
+import { useSession } from '../../auth/SessionProvider'
 
 export interface HeaderProps {
   appName?: string
   userName?: string
-  /** Called when the user locks the vault. Defaults to navigating to /unlock. */
-  onLock?: () => void
-  /** Called when the user signs out. Defaults to navigating to /login. */
-  onSignOut?: () => void
 }
 
-export default function Header({
-  appName = 'Password Manager',
-  userName,
-  onLock,
-  onSignOut,
-}: HeaderProps) {
+export default function Header({ appName = 'Password Manager', userName }: HeaderProps) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleRef = useRef<HTMLButtonElement>(null)
   const { theme, toggleTheme } = useThemeStore()
+  const { lock } = useSession()
 
-  const handleLock = () => {
-    if (onLock) onLock()
-    else navigate('/unlock')
+  const handleLock = async () => {
+    await lock()
   }
 
   const handleSignOut = () => {
     setMenuOpen(false)
-    if (onSignOut) onSignOut()
-    else navigate('/login')
+    navigate('/login', { replace: true })
   }
 
-  // Escape closes the menu and returns focus to the toggle so keyboard users are
-  // never left with an orphaned open menu (WCAG 2.1.1 Keyboard).
   const handleMenuKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'Escape' && menuOpen) {
       event.preventDefault()
@@ -83,11 +72,6 @@ export default function Header({
           >
             {userName ?? 'Account'}
           </button>
-          {/*
-            Disclosure pattern: a plain list of links/buttons behind a toggle,
-            not a WAI-ARIA menu (which would require arrow-key navigation). The
-            items are native links/buttons, so Tab + Enter already cover them.
-          */}
           {menuOpen && (
             <div id="user-menu" className="app-header__menu">
               <Link

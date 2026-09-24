@@ -19,6 +19,10 @@
  *   --border             #30363d   ← --ui-stroke-tertiary (desktop border)
  *   --card               #161b22   ← --ui-bg-editor       (desktop elevated surface)
  *   --background         #0d1117   ← --ui-bg-chrome       (desktop page background)
+ *   --danger             #f87171   ← error/destructive text (FE-002c AutoLockBanner);
+ *                                    no direct desktop-theme mapping, chosen to sit
+ *                                    alongside the existing palette at adequate
+ *                                    contrast in both modes.
  */
 
 :root {
@@ -30,6 +34,7 @@
   --border: #30363d;
   --card: #161b22;
   --background: #0d1117;
+  --danger: #f87171;
 }
 
 :root[data-theme='light'] {
@@ -41,4 +46,5 @@
   --border: #d0d7de;
   --card: #f6f8fa;
   --background: #ffffff;
+  --danger: #dc2626;
 }

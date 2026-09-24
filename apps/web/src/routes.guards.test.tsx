@@ -2,6 +2,27 @@ import { act, render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { routes } from './routes'
+import { SessionProvider } from './auth/SessionProvider'
+
+/** Wraps every child route in SessionProvider so components that call useSession()
+ *  (AppShell, AutoLockBanner) render without throwing. SessionProvider calls
+ *  useNavigate() internally, so it must live inside the router context — the
+ *  RouterProvider owns that context, and SessionProvider is its child. */
+function wrapRoutes(routeList: RouteObject[]): RouteObject[] {
+  const root = routeList[0]
+  const wrappedChildren: RouteObject[] | undefined = root.children?.map((child) => ({
+    ...child,
+    element: <SessionProvider>{child.element}</SessionProvider>,
+  }))
+  return [
+    {
+      ...root,
+      children: wrappedChildren,
+    } as RouteObject,
+  ]
+}
+
+const routesWithSession: RouteObject[] = wrapRoutes(routes)
 
 /**
  * Router guard unit tests (FE-001i).
@@ -23,7 +44,10 @@ import { routes } from './routes'
  */
 
 function renderEntries(entries: string[], index = entries.length - 1) {
-  const router = createMemoryRouter(routes, { initialEntries: entries, initialIndex: index })
+  const router = createMemoryRouter(routesWithSession, {
+    initialEntries: entries,
+    initialIndex: index,
+  })
   render(<RouterProvider router={router} />)
   return router
 }
