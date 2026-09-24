@@ -70,3 +70,17 @@ All tests pass:
   - `apps/web/src/components/AutoLockBanner.test.tsx` (9 tests)
   - `apps/web/src/components/AutoLockBanner.tsx` (fixed)
   - `apps/web/src/components/layout/layout.css` (banner styles added)
+
+## Update (2026-09-24) — the merge that actually landed this code
+
+This task was marked `done` on 2026-09-23 at 14:12, but the commit cited above only ever existed on branch
+`feature/t_12f540bf` inside PR #68, which was still `OPEN` and failing CI (`build`/`lint-typecheck`/`unit` all
+red) at the time. Nothing under `apps/web/src/auth/` existed on `master` until the fix below landed — see
+`tests/evidence/t_b037ed46/README.md`'s "Update" section for the full list of what was actually broken and how
+it was fixed (SessionProvider wiring across three test files, a real `AppShell.tsx` bug calling `useSession` with
+a selector argument it doesn't accept, a hardcoded color, and the lint/typecheck errors a round-1 review had
+already flagged but were never fixed before the branch was left to sit).
+
+**Landed:** PR #68, merge commit `aa4200a` (2026-09-24). Fresh-clone verified post-merge: `pnpm -r typecheck`
+clean, `pnpm -r test` 205 web / 615 api / 53 crypto all green, `pnpm test:a11y` 21/21, `pnpm lint` clean, `pnpm
+build` clean.
