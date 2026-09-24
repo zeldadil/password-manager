@@ -9,7 +9,9 @@
  *   - envelopePlugin (BE-001d)   → envelope middleware on /api/v1
  *   - authPlugin     (BE-002a-e) → /auth/register, /auth/unlock, /auth/lock,
  *                                  /auth/status, /auth/refresh (see auth/index.ts)
- *   - resourcePlugin (BE-003b+)  → /api/v1/resources, etc.
+ *   - foldersPlugin  (BE-003d)   → /api/v1/folders (tree + permission mask)
+ *   - resourcesPlugin (BE-003b)  → /api/v1/resources (resource/secret split)
+ *   - tagsPlugin     (BE-003e)   → /api/v1/tags (flat, many-to-many)
  *
  * ADR-002 Sec 5.1: the server holds no vault key, master password, or
  * ciphertext. Crypto lives in packages/crypto (gated by SEC-001); until
@@ -24,6 +26,9 @@ import { createErrorHandler, notFoundHandler } from './middleware/error-handler'
 import { healthPlugin } from './routes/health';
 import { openapiPlugin } from './routes/openapi';
 import { authPlugin } from './auth/index';
+import { foldersPlugin } from './routes/folders';
+import { resourcesPlugin } from './routes/resources';
+import { tagsPlugin } from './routes/tags';
 
 export interface CreateServerOptions {
   /** Override the logger (tests pass { logger: false } for clean output). */
@@ -68,6 +73,9 @@ export function createServer(opts?: CreateServerOptions): FastifyInstance {
   server.register(healthPlugin);
   server.register(openapiPlugin);
   server.register(authPlugin);
+  server.register(foldersPlugin, { prefix: '/api/v1' });
+  server.register(resourcesPlugin, { prefix: '/api/v1' });
+  server.register(tagsPlugin, { prefix: '/api/v1' });
 
   return server;
 }

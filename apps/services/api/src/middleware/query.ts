@@ -40,6 +40,15 @@ import { parseIncludes, parseFilters, parsePagination, parseQuery } from './quer
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ParsedQuery, QueryParsed } from './query-parse';
 
+// Route handlers read `request.queryParsed` directly (typed, no cast)
+// once this plugin's preHandler hook has run. Declared here — the single
+// place that writes the decoration — rather than per-consumer.
+declare module 'fastify' {
+  interface FastifyRequest {
+    queryParsed: QueryParsed;
+  }
+}
+
 /** Register a `preHandler` hook on the given Fastify instance that parses
  *  the query string and decorates each `request` with `queryParsed`.
  *
@@ -60,14 +69,76 @@ export function queryPreHandler(server: FastifyInstance): void {
     // Fastify already parsed the query string into `request.query` per the
     // route schema (if any) or the default parser. We re-parse the raw
     // shapes into our typed structures.
-    const params = request.query as
-      | { include?: unknown; filter?: unknown; page?: unknown; per_page?: unknown }
-      | undefined;
-    (request as FastifyRequest & { queryParsed?: QueryParsed }).queryParsed =
-      params == null
-        ? { includes: { relations: new Set() }, filters: { clauses: [] }, pagination: { page: 1, perPage: 20, offset: 0, limit: 20 } }
-        : parseQuery(params);
+    const params = request.query as Record<string, unknown> | undefined;
+    if (params == null) {
+      (request as FastifyRequest & { queryParsed?: QueryParsed }).queryParsed = {
+        includes: { relations: new Set() },
+        filters: { clauses: [] },
+        pagination: { page: 1, perPage: 20, offset: 0, limit: 20 },
+      };
+      return;
+    }
+    const { include, filter } = collectBracketed(params);
+    (request as FastifyRequest & { queryParsed?: QueryParsed }).queryParsed = parseQuery({
+      include,
+      filter,
+      page: params.page,
+      per_page: params.per_page,
+    });
   });
+}
+
+/**
+ * Normalize the bracket-style query keys ADR-004 actually specifies
+ * (`filter[]=...`, `filter[field]=value`, `include[]=...`) into the plain
+ * `filter`/`include` string-array shape `parseQuery` expects.
+ *
+ * Fastify's default query-string parser (no `qs`/bracket-nesting plugin
+ * installed) does NOT nest bracket keys into objects or arrays — it hands
+ * back literal keys like `"filter[search]"` and `"filter[]"` untouched.
+ * Without this normalization, every bracket-form query in the ADR-004
+ * contract (including this task's own `GET /resources?filter[search]=...`
+ * example) would silently parse to nothing — `queryPreHandler` only ever
+ * looked at the flat `filter`/`include` keys, which a bracket-style
+ * request never populates. Discovered while implementing BE-003h.
+ *
+ * `filter[field]=value` is folded into the same `"field:contains:value"`-
+ * style clause strings `filter[]=field:op:value` already produces (via the
+ * `field:value` composition parseFilters' object-form path also uses),
+ * so a single call to `parseFilters` on a flat string array handles every
+ * input shape uniformly.
+ */
+function collectBracketed(params: Record<string, unknown>): { include: string[]; filter: string[] } {
+  const include: string[] = [];
+  const filter: string[] = [];
+
+  const pushAll = (target: string[], value: unknown) => {
+    if (typeof value === 'string') target.push(value);
+    else if (Array.isArray(value)) {
+      for (const item of value) if (typeof item === 'string') target.push(item);
+    }
+  };
+
+  pushAll(include, params.include);
+  pushAll(include, params['include[]']);
+  pushAll(filter, params.filter);
+  pushAll(filter, params['filter[]']);
+
+  const bracketFieldPattern = /^filter\[([^[\]]+)\]$/;
+  for (const [key, value] of Object.entries(params)) {
+    const match = bracketFieldPattern.exec(key);
+    if (!match) continue;
+    const field = match[1];
+    if (typeof value === 'string') {
+      filter.push(`${field}:${value}`);
+    } else if (Array.isArray(value)) {
+      for (const item of value) {
+        if (typeof item === 'string') filter.push(`${field}:${item}`);
+      }
+    }
+  }
+
+  return { include, filter };
 }
 
 export type { ParsedQuery, QueryParsed };

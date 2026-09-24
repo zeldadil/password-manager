@@ -78,6 +78,7 @@ const ALL_TABLES = [
   'resources',
   'tags',
   'resource_tags',
+  'secrets',
   'permissions',
   'groups',
   'group_members',
@@ -118,6 +119,7 @@ describe('BE-001a: DB Migration System', () => {
       expect(schema.resources).toBeDefined();
       expect(schema.tags).toBeDefined();
       expect(schema.resourceTags).toBeDefined();
+      expect(schema.secrets).toBeDefined();
       expect(schema.permissions).toBeDefined();
       expect(schema.groups).toBeDefined();
       expect(schema.groupMembers).toBeDefined();
@@ -130,22 +132,23 @@ describe('BE-001a: DB Migration System', () => {
       expect(fs.existsSync(migrationFile)).toBe(true);
     });
 
-    it('migration journal (_journal.json) records the baseline and BE-002e rate-limiting migration', () => {
+    it('migration journal (_journal.json) records the baseline, BE-002e rate-limiting, and BE-003c secrets migrations', () => {
       const journalPath = path.resolve(MIGRATIONS_DIR, 'meta', '_journal.json');
       expect(fs.existsSync(journalPath)).toBe(true);
       const journal = JSON.parse(fs.readFileSync(journalPath, 'utf-8'));
       expect(journal.version).toBe('7');
       expect(journal.dialect).toBe('sqlite');
-      expect(journal.entries).toHaveLength(2);
+      expect(journal.entries).toHaveLength(3);
       expect(journal.entries[0].tag).toBe('0000_baseline_schema');
       expect(journal.entries[1].tag).toBe('0001_be002e_rate_limiting');
+      expect(journal.entries[2].tag).toBe('0002_be003c_secrets_table');
     });
   });
 
   // ─── Table creation ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   describe('Baseline migration creates all tables', () => {
-    it('creates all 11 baseline tables from ADR-003', () => {
+    it('creates all 12 tables (11 baseline + BE-003c secrets)', () => {
       const tables = getTableNames(sqlite);
       for (const table of ALL_TABLES) {
         expect(tables).toContain(table);
@@ -327,6 +330,39 @@ describe('BE-001a: DB Migration System', () => {
     });
   });
 
+  describe('secrets table — per-grantee encrypted copies for sharing (BE-003c)', () => {
+    it('has resource_id, user_id, ciphertext, iv, tag columns', () => {
+      const cols = getColumnNames(sqlite, 'secrets');
+      expect(cols).toContain('id');
+      expect(cols).toContain('resource_id');
+      expect(cols).toContain('user_id');
+      expect(cols).toContain('ciphertext');
+      expect(cols).toContain('iv');
+      expect(cols).toContain('tag');
+      expect(cols).toContain('created_at');
+      expect(cols).toContain('updated_at');
+    });
+
+    it('stores ciphertext, iv, and tag as BLOB (never plaintext)', () => {
+      const info = getColumns(sqlite, 'secrets');
+      const byName = Object.fromEntries(info.map((c) => [c.name, c]));
+      expect(byName['ciphertext'].type.toUpperCase()).toBe('BLOB');
+      expect(byName['iv'].type.toUpperCase()).toBe('BLOB');
+      expect(byName['tag'].type.toUpperCase()).toBe('BLOB');
+    });
+
+    it('has FKs to both resources and users', () => {
+      const fks = getForeignKeys(sqlite, 'secrets');
+      expect(fks.find((f) => f.from === 'resource_id' && f.to_table === 'resources')).toBeDefined();
+      expect(fks.find((f) => f.from === 'user_id' && f.to_table === 'users')).toBeDefined();
+    });
+
+    it('does not have a deleted_at column (hard-delete on revoke)', () => {
+      const cols = getColumnNames(sqlite, 'secrets');
+      expect(cols).not.toContain('deleted_at');
+    });
+  });
+
   describe('permissions table — ADR-003 Section 3.5', () => {
     it('has target + grantee + level columns', () => {
       const cols = getColumnNames(sqlite, 'permissions');
@@ -382,8 +418,10 @@ describe('BE-001a: DB Migration System', () => {
   describe('Soft delete (ADR-003 Section 2.5, ADR-001 Section 8)', () => {
     it('every entity table has a nullable deleted_at column', () => {
       for (const table of ALL_TABLES) {
-        // resource_tags is a pure junction table (no soft-delete)
-        if (table === 'resource_tags') continue;
+        // resource_tags is a pure junction table (no soft-delete); secrets
+        // is a per-grantee copy table with the same hard-delete-on-revoke
+        // treatment (BE-003c — see schema.ts's comment on the table).
+        if (table === 'resource_tags' || table === 'secrets') continue;
         const info = getColumns(sqlite, table);
         const deletedAt = info.find((c) => c.name === 'deleted_at');
         expect(deletedAt, `${table} missing deleted_at`).toBeDefined();
@@ -466,6 +504,12 @@ describe('BE-001a: DB Migration System', () => {
         const fks = getForeignKeys(sqlite, 'resource_tags');
         const resourceFk = fks.find((f) => f.from === 'resource_id');
         expect(resourceFk).toBeDefined();
+      });
+
+      it('secrets cascades on resource delete and on user delete', () => {
+        const fks = getForeignKeys(sqlite, 'secrets');
+        expect(fks.find((f) => f.from === 'resource_id')).toBeDefined();
+        expect(fks.find((f) => f.from === 'user_id')).toBeDefined();
       });
     });
   });

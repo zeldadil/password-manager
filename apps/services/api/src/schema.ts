@@ -247,6 +247,43 @@ export const resourceTags = sqliteTable('resource_tags', {
   idx_resource_tags_tag_id: index('idx_resource_tags_tag_id').on(table.tagId),
 }));
 
+// ─── Secret (per-user encrypted copy, for sharing) ──────────────────────
+// BE-003c. A Resource's own secretCiphertext/secretIv/secretTag (§3.3
+// above) is the OWNER's copy. When a resource is shared, each additional
+// grantee needs their OWN copy of the secret, re-wrapped under their own
+// vault key — vault keys are per-user and symmetric, so a single
+// ciphertext cannot be read by more than one key holder. This table holds
+// those additional per-grantee copies; one row per (resource, user) pair.
+//
+// "One secret per resource per user" (task spec) is an application-level
+// invariant, not a DB constraint — same convention already used for
+// group_members' (group, user) pairing in this schema; the API endpoint
+// that creates these rows (a future sharing task) is responsible for it.
+//
+// No deleted_at: revoking a user's access to a shared resource removes
+// their copy outright (hard delete), matching resource_tags' junction-
+// table treatment above, not the soft-delete convention used for
+// standalone entities.
+export const secrets = sqliteTable('secrets', {
+  id: uuid('id').primaryKey(),
+  resourceId: uuid('resource_id')
+    .notNull()
+    .references(() => resources.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+
+  ciphertext: blob('ciphertext', { mode: 'buffer' }).notNull(),
+  iv: blob('iv', { mode: 'buffer' }).notNull(),
+  tag: blob('tag', { mode: 'buffer' }).notNull(),
+
+  createdAt: createdAt().notNull(),
+  updatedAt: updatedAt().notNull(),
+}, (table) => ({
+  idx_secrets_resource_id: index('idx_secrets_resource_id').on(table.resourceId),
+  idx_secrets_user_id: index('idx_secrets_user_id').on(table.userId),
+}));
+
 // ─── Permission ────────────────────────────────────────────────────────
 // ADR-003 Section 3.5 / ADR-001 Section 5. Enum levels 1/7/15.
 
@@ -436,6 +473,11 @@ export const resourceTagsRelations = relations(resourceTags, ({ one }) => ({
   }),
 }));
 
+export const secretsRelations = relations(secrets, ({ one }) => ({
+  resource: one(resources, { fields: [secrets.resourceId], references: [resources.id] }),
+  user: one(users, { fields: [secrets.userId], references: [users.id] }),
+}));
+
 export const permissionsRelations = relations(permissions, ({ one }) => ({
   grantor: one(users, { fields: [permissions.grantedBy], references: [users.id] }),
 }));
@@ -467,6 +509,7 @@ export const schema = {
   resources,
   tags,
   resourceTags,
+  secrets,
   permissions,
   groups,
   groupMembers,
@@ -478,6 +521,7 @@ export const schema = {
   resourcesRelations,
   tagsRelations,
   resourceTagsRelations,
+  secretsRelations,
   permissionsRelations,
   groupsRelations,
   groupMembersRelations,

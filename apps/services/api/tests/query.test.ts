@@ -300,6 +300,42 @@ describe('parseFilters', () => {
     const result = parseFilters({ name: 'justastring' });
     expect(result.clauses).toHaveLength(0);
   });
+
+  // ── `search` virtual field (BE-003h) ──────────────────────────────────────
+
+  it('parses object-form filter[search]=<term> WITHOUT requiring an operator prefix', () => {
+    const result = parseFilters({ search: 'github' });
+    expect(result.clauses).toHaveLength(1);
+    expect(result.clauses[0]).toMatchObject({ field: 'search', operator: 'contains', value: 'github' });
+  });
+
+  it('parses array-form filter[]=search:<term> the same way', () => {
+    const result = parseFilters(['search:github']);
+    expect(result.clauses).toHaveLength(1);
+    expect(result.clauses[0]).toMatchObject({ field: 'search', operator: 'contains', value: 'github' });
+  });
+
+  it('keeps embedded colons in a search term literal (e.g. a URI fragment)', () => {
+    const result = parseFilters({ search: 'https://example.test' });
+    expect(result.clauses[0].value).toBe('https://example.test');
+  });
+
+  it('trims a search term but does not otherwise alter it', () => {
+    const result = parseFilters('  search  :  My Github  ');
+    expect(result.clauses[0].value).toBe('My Github');
+  });
+
+  it('drops an empty search term', () => {
+    const result = parseFilters({ search: '' });
+    expect(result.clauses).toHaveLength(0);
+  });
+
+  it('an explicit operator-looking prefix in a search term is treated as literal text, not stripped', () => {
+    // Unlike every other field, `search` never expects an operator prefix —
+    // "contains:foo" as the value IS the literal search term "contains:foo".
+    const result = parseFilters({ search: 'contains:foo' });
+    expect(result.clauses[0]).toMatchObject({ field: 'search', operator: 'contains', value: 'contains:foo' });
+  });
 });
 
 /* ═══════════════════════════════════════════════════════════════════════
