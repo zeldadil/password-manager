@@ -1,4 +1,4 @@
-# FE-001k-fu (t_782802ac) mutation checks — 2026-09-19T07:17:59.473Z
+# FE-001k-fu (t_782802ac) mutation checks — 2026-09-24T09:58:27.433Z
 # lane: pnpm test:a11y (apps/web) — the acceptance-criteria command
 # mode: all mutations
 # files under mutation: apps/web/src/routes.tsx, apps/web/src/a11y/routes.a11y.test.tsx, apps/web/src/a11y/A11yLayout.tsx, apps/web/src/components/layout/AppShell.tsx (blob hashes recorded before the run)
@@ -27,17 +27,24 @@
    observed: pass (exit 0, tests 19 passed | 2 skipped (21))
    RESULT:   as expected
 
+## R5 — [lane] a stray swept case `/ghost` added to ROUTES that the route table does not declare (not via any concrete pattern, and not marked `isSplatWitness`) — the fix for the review-round-1 defect: the converse spec previously could not fail because every path trivially matches the declared `*` catch-all pattern
+   expected: fail
+   observed: fail (exit 1, tests 1 failed | 21 passed (22))
+   failing:  src/a11y/routes.a11y.test.tsx > route coverage — the sweep is tied to the route table > grades no path the route table does not declare
+   coverage: swept paths the route table does not declare: /ghost: expected [ '/ghost' ] to deeply equal []
+   RESULT:   as expected
+
 ## P1 — [probe] the skip link is removed from `A11yLayout` — fails on the four pre-auth resolutions (nothing else satisfies `bypass` there), green on the six shell routes (header/landmarks satisfy it)
    expected: fail
    observed: fail (exit 1, tests 4 failed | 17 passed (21))
-   failing:  src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /login (Login (pre-auth)) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /unlock (Unlock (pre-auth)) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > / (root guard) …(+1)
+   failing:  src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > '/login' ('Login (pre-auth)') | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > '/unlock' ('Unlock (pre-auth)') | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > '/' ('root guard') …(+1)
    required-pass failures: bypass on /login, bypass on /unlock, bypass on /, bypass on /no/such/route
    RESULT:   as expected
 
 ## P2 — [probe] the skip-link target id is dropped from `<main>` in `AppShell`
    expected: fail
    observed: fail (exit 1, tests 11 failed | 10 passed (21))
-   failing:  src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /vault (Vault) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /resources/res-123 (Resource detail) | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > /folders (Folders) …(+8)
+   failing:  src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > '/vault' ('Vault') | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > '/resources/res-123' ('Resource detail') | src/a11y/routes.a11y.test.tsx > axe-core — zero violations on every route > '/folders' ('Folders') …(+8)
    rule ids named in failures: region
    RESULT:   as expected
 
