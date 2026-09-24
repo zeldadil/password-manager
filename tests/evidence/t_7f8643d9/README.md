@@ -61,3 +61,27 @@ https://github.com/zeldadil/password-manager/pull/68
 
 The implementation (LoginPage.tsx / UnlockPage.tsx) already contained all FE-002e accessibility features — the task's gap was in the test files: (1) literal `\n\n` on line 243 of a11y.test.tsx broke esbuild, (2) rate-limit tests timed out because `vi.useFakeTimers()` was still active when `findByRole` polled (same fix as LoginPage.test.tsx — call `vi.useRealTimers()` first), (3) `vi.advanceTimersByTime(0)` didn't unblock interval ticks. These were fixed and verified.
 
+## Update (2026-09-24) — the QA-VERDICT below was premature; corrected here
+
+A `QA-VERDICT: pass` comment was posted on this card on 2026-09-23 at 18:05, citing this file. At that time PR #68
+was `OPEN`, `BEHIND` master, and CI (`build`/`lint-typecheck`/`unit`) was **failing** — the a11y acceptance
+criteria themselves were genuinely met (the 50/50 a11y-specific test count above is accurate), but the PR as a
+whole was not mergeable, and the verdict didn't say so. A round-1 review (run 745, same day) caught this
+correctly and requested changes, listing: `UnlockPage.test.tsx:255`'s unused `user` variable (in this task's own
+modified file), an inaccurate handoff claiming "151 passed" when CI showed real failures, and several
+FE-002c-originated failures that, while not this task's own regression, still blocked the PR the a11y work rode
+in on. That review was never resolved before the branch sat idle — see `tests/evidence/t_b037ed46/README.md`'s
+"Update" section for the full list of what was actually broken and how it was fixed:
+- `UnlockPage.test.tsx:255`'s unused `user` (fixed, exactly as the review asked).
+- SessionProvider-wrapping gaps in three OTHER test files (`layout.contract.test.tsx`, `routes.guards.test.tsx`,
+  `routes.test.tsx`) causing 23 unit-test failures — not this task's own test files, but blocking the same CI run.
+- TypeScript errors in `a11y.test.tsx`/`routes.a11y.test.tsx` themselves (a `wrapRoutes` type-inference issue) —
+  this task's own files, now fixed.
+- Lint errors in `SessionProvider.tsx`/`AutoLockBanner.test.tsx`, a real bug in `AppShell.tsx`, and a hardcoded
+  color in `layout.css` — all FE-002c-originated, not this task's regression, but blocking the shared PR.
+
+**Landed:** PR #68, merge commit `aa4200a` (2026-09-24). Fresh-clone verified post-merge: `pnpm -r typecheck`
+clean, `pnpm -r test` 205 web / 615 api / 53 crypto all green (includes this task's 50 a11y-domain tests),
+`pnpm test:a11y` 21/21, `pnpm lint` clean, `pnpm build` clean. A corrected `QA-VERDICT` reflecting the actual
+merged, CI-green state is recorded as a new comment on this card.
+
