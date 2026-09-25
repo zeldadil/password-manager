@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config';
-import { INTEGRATION, CRITICAL_PATHS, CRITICAL_PATH_GLOBS } from '../../../tests/coverage-gates/thresholds.js';
+import { INTEGRATION, CRITICAL_PATHS, CRITICAL_PATH_GLOBS } from '../../coverage-gates/thresholds.ts';
 
 /**
  * Web integration tests config (FE-002g).
@@ -14,7 +14,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./setupTests.ts'],
+    setupFiles: ['./tests/integration/web/setupTests.ts'],
     include: [
       'tests/integration/web/**/*.test.ts',
       'tests/integration/web/**/*.test.tsx',

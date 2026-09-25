@@ -15,9 +15,11 @@
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 import { routes } from '../routes'
 import { SessionProvider } from '../auth/SessionProvider'
+import { createQueryClient } from '../queryClient'
 
 /** Wraps every child route element in SessionProvider so that navigating to
  *  /vault (after a successful login) renders AppShell without throwing.
@@ -40,7 +42,11 @@ const routesWithSession: RouteObject[] = wrapRoutes(routes)
 
 function renderLogin() {
   const router = createMemoryRouter(routesWithSession, { initialEntries: ['/login'] })
-  return render(<RouterProvider router={router} />)
+  return render(
+    <QueryClientProvider client={createQueryClient()}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  )
 }
 
 describe('LoginPage', () => {
@@ -80,9 +86,14 @@ describe('LoginPage', () => {
     await user.type(screen.getByLabelText('Master password'), 'login-test-master-password-001')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    // At least the /auth/unlock call — VaultPage may also fire its own
+    // resources fetch once the session becomes active post-login, so the
+    // total call count is no longer exactly 1.
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
 
-    const [url, init] = fetchMock.mock.calls[0] as [RequestInfo, RequestInit]
+    const unlockCall = fetchMock.mock.calls.find(([url]) => url === '/auth/unlock')
+    expect(unlockCall).toBeDefined()
+    const [url, init] = unlockCall as [RequestInfo, RequestInit]
     expect(url).toBe('/auth/unlock')
     const bodyStr = typeof init.body === 'string' ? init.body : JSON.stringify(init.body)
     expect(bodyStr).toContain('login-test-master-password-001')

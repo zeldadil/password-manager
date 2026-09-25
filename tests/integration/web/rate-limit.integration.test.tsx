@@ -20,6 +20,7 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 // ── Real API server ──────────────────────────────────────────────────────────────
 import { createServer } from '../../../apps/services/api/src/server';
@@ -38,6 +39,7 @@ const dbPath = join(tmpDir, 'test.db');
 // ── Route wrapping ───────────────────────────────────────────────────────────────
 import { routes } from '../../../apps/web/src/routes';
 import { SessionProvider } from '../../../apps/web/src/auth/SessionProvider';
+import { createQueryClient } from '../../../apps/web/src/queryClient';
 
 function wrapRoutes(routeList: RouteObject[]): RouteObject[] {
   const root = routeList[0];
@@ -120,7 +122,11 @@ function stubFetchForServer() {
 
 function renderApp(initialPath: string) {
   const router = createMemoryRouter(routesWithSession, { initialEntries: [initialPath] });
-  return render(<RouterProvider router={router} />);
+  return render(
+    <QueryClientProvider client={createQueryClient()}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -178,18 +184,20 @@ describe('AC-3: rate-limit UI (backend + frontend)', () => {
     });
 
     // 5 consecutive failed attempts — each clears the password field,
-    // so we must re-type before each click.
+    // so we must re-type before each click. Each round trip runs a REAL
+    // argon2id hash comparison via server.inject(), which is real async
+    // CPU-bound work — a fixed handful of `await Promise.resolve()` ticks
+    // only drains already-queued microtasks and isn't guaranteed to wait
+    // long enough for that to finish, so we poll for the password field
+    // to clear (LoginPage's own 401-handling side effect) as the signal
+    // that this round's response was actually processed before moving on.
     for (let i = 0; i < 5; i++) {
       await act(async () => {
         fireEvent.change(passwordInput, { target: { value: WRONG_PASSWORD } });
         await Promise.resolve();
       });
-      await act(async () => {
-        fireEvent.click(submitButton);
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-      vi.advanceTimersByTime(1);
+      fireEvent.click(submitButton);
+      await waitFor(() => expect(passwordInput).toHaveValue(''));
     }
 
     // After 5 failures, the rate-limit message + countdown appear.
@@ -230,10 +238,14 @@ describe('AC-3: rate-limit UI (backend + frontend)', () => {
       });
       await act(async () => {
         fireEvent.click(submitButton);
-        await Promise.resolve();
-        await Promise.resolve();
+        // `advanceTimersByTimeAsync` (not the sync `advanceTimersByTime`)
+        // so pending real I/O — the stubbed fetch's server.inject() call,
+        // which runs a real argon2id hash — actually gets to interleave
+        // and resolve while fake timers are active. The sync variant
+        // advances virtual time without yielding to the real event loop,
+        // which left this submit permanently stuck in its loading state.
+        await vi.advanceTimersByTimeAsync(1);
       });
-      vi.advanceTimersByTime(1);
     }
 
     // Initial countdown: 15:00.
@@ -241,25 +253,19 @@ describe('AC-3: rate-limit UI (backend + frontend)', () => {
 
     // Advance 1s → 14:59.
     await act(async () => {
-      vi.advanceTimersByTime(1000);
-      await Promise.resolve();
-      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(1000);
     });
     expect(screen.getByText(/try again in 14:59/i)).not.toBeNull();
 
     // Advance remaining 14m 58s → 0:01.
     await act(async () => {
-      vi.advanceTimersByTime(14 * 60 * 1000 + 58 * 1000);
-      await Promise.resolve();
-      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(14 * 60 * 1000 + 58 * 1000);
     });
     expect(screen.getByText(/try again in 0:01/i)).not.toBeNull();
 
     // Final second — countdown expires, form re-enables.
     await act(async () => {
-      vi.advanceTimersByTime(1000);
-      await Promise.resolve();
-      await Promise.resolve();
+      await vi.advanceTimersByTimeAsync(1000);
     });
     expect(screen.queryByText(/try again in/i)).toBeNull();
 

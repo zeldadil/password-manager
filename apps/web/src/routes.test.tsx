@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { routes } from './routes'
 import { SessionProvider } from './auth/SessionProvider'
+import { createQueryClient } from './queryClient'
 
 /** Wraps every child route in SessionProvider so components that call useSession()
  *  (AppShell, AutoLockBanner) render without throwing. */
@@ -24,7 +26,11 @@ const routesWithSession: RouteObject[] = wrapRoutes(routes)
 
 function renderAt(initialPath: string) {
   const router = createMemoryRouter(routesWithSession, { initialEntries: [initialPath] })
-  render(<RouterProvider router={router} />)
+  render(
+    <QueryClientProvider client={createQueryClient()}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  )
 }
 
 // Route tables may nest (e.g. the AppShell layout route); collect every path,

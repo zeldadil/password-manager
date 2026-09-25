@@ -35,7 +35,12 @@ export default function VaultPage() {
   const { accessToken } = useSession()
   const theme = useThemeStore((s) => s.theme)
 
-  const { data: resources = [], isLoading, error, refetch } = useQuery({
+  const {
+    data: resources = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['resources'],
     queryFn: async () => {
       const client = new ApiClient({
@@ -47,8 +52,10 @@ export default function VaultPage() {
           clear: () => {},
         },
       })
-      const body = await client.get<ResourceRow[]>('/resources')
-      return body
+      // GET /resources returns the envelope body `{ data, pagination }`
+      // (ADR-004 list-endpoint shape), not a bare array.
+      const body = await client.get<{ data: ResourceRow[] }>('/resources')
+      return body.data
     },
     enabled: accessToken !== null,
     refetchInterval: false,
@@ -72,18 +79,18 @@ export default function VaultPage() {
 
   if (isLoading) {
     return (
-      <main id="main-content" tabIndex={-1} className="vault-page" data-theme={theme}>
+      <div className="vault-page" data-theme={theme}>
         <h1 className="vault-heading">Vault</h1>
         <div className="vault-loading" role="status" aria-live="polite">
           Loading resources…
         </div>
-      </main>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <main id="main-content" tabIndex={-1} className="vault-page" data-theme={theme}>
+      <div className="vault-page" data-theme={theme}>
         <h1 className="vault-heading">Vault</h1>
         <div className="vault-error" role="alert" aria-live="assertive">
           <p>Failed to load resources.</p>
@@ -91,12 +98,12 @@ export default function VaultPage() {
             Retry
           </button>
         </div>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main id="main-content" tabIndex={-1} className="vault-page" data-theme={theme}>
+    <div className="vault-page" data-theme={theme}>
       <h1 className="vault-heading">Vault</h1>
 
       <div className="vault-toolbar">
@@ -176,6 +183,6 @@ export default function VaultPage() {
           </table>
         </div>
       )}
-    </main>
+    </div>
   )
 }

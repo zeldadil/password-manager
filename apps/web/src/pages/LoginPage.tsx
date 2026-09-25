@@ -122,14 +122,20 @@ export default function LoginPage() {
         return
       }
 
+      const body = (await res.json()) as {
+        accessToken: string
+        refreshToken: string
+        expiresIn: number
+      }
+
       setFailedAttempts(0)
       setEmail('')
       setMasterPassword('')
-      navigate('/vault', { replace: true })
       // Inform the session provider so downstream consumers (VaultPage,
       // AutoLockBanner, resource queries gated on accessToken) see an active
       // session. Tokens are held in JS heap memory only (SEC-001).
-      session.login('tok', 'ref', 900)
+      session.login(body.accessToken, body.refreshToken, body.expiresIn)
+      navigate('/vault', { replace: true })
     } catch {
       setErrorKind('network')
       setError('Network error — please try again.')

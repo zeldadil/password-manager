@@ -1,10 +1,12 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { routes } from '../routes'
 
 import { SessionProvider } from '../auth/SessionProvider'
+import { createQueryClient } from '../queryClient'
 
 /** Wraps every child route in SessionProvider so components that call useSession()
  *  (AppShell, AutoLockBanner) render without throwing. SessionProvider calls
@@ -31,7 +33,11 @@ const routesWithSession: RouteObject[] = wrapRoutes(routes)
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routesWithSession, { initialEntries: [path] })
-  const utils = render(<RouterProvider router={router} />)
+  const utils = render(
+    <QueryClientProvider client={createQueryClient()}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  )
   return { router, ...utils }
 }
 
@@ -280,7 +286,9 @@ describe('accessibility baseline', () => {
       // Enter in the password field submits the form.
       await user.keyboard('{Enter}')
       await waitFor(() => screen.getByRole('heading', { name: 'Vault', level: 1 }))
-      expect(fetchMock).toHaveBeenCalledTimes(1)
+      // At least the /auth/unlock call — VaultPage may also fire its own
+      // resources fetch once the session becomes active post-login/unlock.
+      expect(fetchMock.mock.calls.some(([url]) => url === '/auth/unlock')).toBe(true)
     })
 
     it('keeps the submit button keyboard-reachable and disabled only while loading', async () => {
@@ -477,7 +485,9 @@ describe('accessibility baseline', () => {
       // Enter in the password field submits the form.
       await user.keyboard('{Enter}')
       await waitFor(() => screen.getByRole('heading', { name: 'Vault', level: 1 }))
-      expect(fetchMock).toHaveBeenCalledTimes(1)
+      // At least the /auth/unlock call — VaultPage may also fire its own
+      // resources fetch once the session becomes active post-login/unlock.
+      expect(fetchMock.mock.calls.some(([url]) => url === '/auth/unlock')).toBe(true)
     })
 
     it('keeps the submit button keyboard-reachable and disabled only while loading', async () => {

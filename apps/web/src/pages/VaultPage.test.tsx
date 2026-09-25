@@ -24,10 +24,7 @@ function makeQueryClient() {
 }
 
 /** Wrap every child route element in SessionProvider + QueryClientProvider. */
-function wrapRoutes(
-  routeList: RouteObject[],
-  queryClient: QueryClient,
-): RouteObject[] {
+function wrapRoutes(routeList: RouteObject[], queryClient: QueryClient): RouteObject[] {
   const root = routeList[0]
   return [
     {
@@ -36,9 +33,7 @@ function wrapRoutes(
         ...child,
         element: (
           <SessionProvider>
-            <QueryClientProvider client={queryClient}>
-              {child.element}
-            </QueryClientProvider>
+            <QueryClientProvider client={queryClient}>{child.element}</QueryClientProvider>
           </SessionProvider>
         ),
       })) as RouteObject[],
@@ -63,9 +58,7 @@ const loginOk = {
  *  callers can chain additional `.mockResolvedValueOnce` / `.mockRejectedValueOnce`
  *  for refresh / retry flows, plus a `login` helper that types credentials,
  *  submits, and waits for navigation to /vault. */
-function renderAppWithLogin(
-  stub: FetchStub,
-): { stub: FetchStub; login: () => Promise<void> } {
+function renderAppWithLogin(stub: FetchStub): { stub: FetchStub; login: () => Promise<void> } {
   const qc = makeQueryClient()
   const wrapped = wrapRoutes(routes, qc)
   const router = createMemoryRouter(wrapped, { initialEntries: ['/login'] })
@@ -91,14 +84,7 @@ describe('vaultColumns', () => {
   it('returns the six columns the task specifies', () => {
     const cols = vaultColumns()
     expect(cols).toHaveLength(6)
-    expect(cols.map((c) => c.key)).toEqual([
-      'name',
-      'username',
-      'uri',
-      'folder',
-      'tags',
-      'actions',
-    ])
+    expect(cols.map((c) => c.key)).toEqual(['name', 'username', 'uri', 'folder', 'tags', 'actions'])
     expect(cols.map((c) => c.label)).toEqual([
       'Name',
       'Username',
@@ -110,12 +96,21 @@ describe('vaultColumns', () => {
   })
 })
 
-function mockResources(body: unknown): Response {
+/** `rows` is the raw ResourceRow[] — wrapped as the real GET /resources
+ *  envelope body shape (ADR-004 list-endpoint: `{ data, pagination }`,
+ *  not a bare array). */
+function mockResources(rows: unknown): Response {
   return {
     ok: true,
     json: async () => ({
-      header: { id: 'h1', status: 'success', servertime: new Date().toISOString(), action: 'ListResources', code: 200 },
-      body,
+      header: {
+        id: 'h1',
+        status: 'success',
+        servertime: new Date().toISOString(),
+        action: 'ListResources',
+        code: 200,
+      },
+      body: { data: rows, pagination: { page: 1, perPage: 20 } },
     }),
   } as unknown as Response
 }
@@ -136,7 +131,11 @@ describe('VaultPage — authenticated', () => {
   it('renders the heading and the six column headers', async () => {
     const stub = vi.fn()
     stub.mockResolvedValueOnce(loginOk)
-    stub.mockResolvedValueOnce(mockResources([{ id: 'r1', name: 'A', username: '', uri: '', folderId: null, folderName: null, tags: [] }]))
+    stub.mockResolvedValueOnce(
+      mockResources([
+        { id: 'r1', name: 'A', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+      ]),
+    )
     vi.stubGlobal('fetch', stub)
 
     const { login } = renderAppWithLogin(stub)
@@ -197,26 +196,28 @@ describe('VaultPage — authenticated', () => {
   it('renders a row per resource with the six columns', async () => {
     const stub = vi.fn()
     stub.mockResolvedValueOnce(loginOk)
-    stub.mockResolvedValueOnce(mockResources([
-      {
-        id: 'res-1',
-        name: 'GitHub',
-        username: 'adil',
-        uri: 'https://github.example.test',
-        folderId: null,
-        folderName: null,
-        tags: ['work', 'production'],
-      },
-      {
-        id: 'res-2',
-        name: 'Internal admin',
-        username: '',
-        uri: '',
-        folderId: 'f-1',
-        folderName: 'Admin',
-        tags: [],
-      },
-    ]))
+    stub.mockResolvedValueOnce(
+      mockResources([
+        {
+          id: 'res-1',
+          name: 'GitHub',
+          username: 'adil',
+          uri: 'https://github.example.test',
+          folderId: null,
+          folderName: null,
+          tags: ['work', 'production'],
+        },
+        {
+          id: 'res-2',
+          name: 'Internal admin',
+          username: '',
+          uri: '',
+          folderId: 'f-1',
+          folderName: 'Admin',
+          tags: [],
+        },
+      ]),
+    )
     vi.stubGlobal('fetch', stub)
 
     const { login } = renderAppWithLogin(stub)
@@ -245,9 +246,19 @@ describe('VaultPage — authenticated', () => {
   it('links each name to /resources/:id and each Edit action to /resources/:id', async () => {
     const stub = vi.fn()
     stub.mockResolvedValueOnce(loginOk)
-    stub.mockResolvedValueOnce(mockResources([
-      { id: 'abc-123', name: 'MyService', username: 'svc', uri: '', folderId: null, folderName: null, tags: [] },
-    ]))
+    stub.mockResolvedValueOnce(
+      mockResources([
+        {
+          id: 'abc-123',
+          name: 'MyService',
+          username: 'svc',
+          uri: '',
+          folderId: null,
+          folderName: null,
+          tags: [],
+        },
+      ]),
+    )
     vi.stubGlobal('fetch', stub)
 
     const { login } = renderAppWithLogin(stub)
@@ -280,11 +291,13 @@ describe('VaultPage — authenticated', () => {
   it('shows the resource count in the toolbar', async () => {
     const stub = vi.fn()
     stub.mockResolvedValueOnce(loginOk)
-    stub.mockResolvedValueOnce(mockResources([
-      { id: 'r1', name: 'A', username: '', uri: '', folderId: null, folderName: null, tags: [] },
-      { id: 'r2', name: 'B', username: '', uri: '', folderId: null, folderName: null, tags: [] },
-      { id: 'r3', name: 'C', username: '', uri: '', folderId: null, folderName: null, tags: [] },
-    ]))
+    stub.mockResolvedValueOnce(
+      mockResources([
+        { id: 'r1', name: 'A', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+        { id: 'r2', name: 'B', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+        { id: 'r3', name: 'C', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+      ]),
+    )
     vi.stubGlobal('fetch', stub)
 
     const { login } = renderAppWithLogin(stub)
@@ -296,8 +309,32 @@ describe('VaultPage — authenticated', () => {
   it('renders a Refresh button that re-triggers the query', async () => {
     const stub = vi.fn()
     stub.mockResolvedValueOnce(loginOk)
-    stub.mockResolvedValueOnce(mockResources([{ id: 'r1', name: 'Old', username: '', uri: '', folderId: null, folderName: null, tags: [] }]))
-    stub.mockResolvedValueOnce(mockResources([{ id: 'r2', name: 'New', username: '', uri: '', folderId: null, folderName: null, tags: [] }]))
+    stub.mockResolvedValueOnce(
+      mockResources([
+        {
+          id: 'r1',
+          name: 'Old',
+          username: '',
+          uri: '',
+          folderId: null,
+          folderName: null,
+          tags: [],
+        },
+      ]),
+    )
+    stub.mockResolvedValueOnce(
+      mockResources([
+        {
+          id: 'r2',
+          name: 'New',
+          username: '',
+          uri: '',
+          folderId: null,
+          folderName: null,
+          tags: [],
+        },
+      ]),
+    )
     vi.stubGlobal('fetch', stub)
 
     const { login } = renderAppWithLogin(stub)

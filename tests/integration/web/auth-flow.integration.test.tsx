@@ -27,6 +27,7 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 // ── Real API server (integration: real server + real DB + real crypto) ──────────
 import { createServer } from '../../../apps/services/api/src/server';
@@ -45,6 +46,7 @@ const dbPath = join(tmpDir, 'test.db');
 // ── Route wrapping (same pattern as web unit tests) ─────────────────────────────
 import { routes } from '../../../apps/web/src/routes';
 import { SessionProvider } from '../../../apps/web/src/auth/SessionProvider';
+import { createQueryClient } from '../../../apps/web/src/queryClient';
 
 function wrapRoutes(routeList: RouteObject[]): RouteObject[] {
   const root = routeList[0];
@@ -131,7 +133,11 @@ function stubFetchForServer() {
 
 function renderApp(initialPath: string) {
   const router = createMemoryRouter(routesWithSession, { initialEntries: [initialPath] });
-  return render(<RouterProvider router={router} />);
+  return render(
+    <QueryClientProvider client={createQueryClient()}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
