@@ -324,3 +324,20 @@ c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.t
 99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:92
 99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:packages/crypto/tests/vault.test.ts:generic-api-key:185
 99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:packages/crypto/tests/vault.test.ts:generic-api-key:23
+
+# tests/integration/web/*.integration.test.{ts,tsx} — FE-002g (t_63323ce5),
+# commit 091f35dd37c62e12dd026bd3d28d7cd7f5ce9c21. Two synthetic fixture
+# constants per file (descriptive identifier names, one pairs with a
+# .test email domain a few lines away, the other is a hardcoded wrong
+# value used only to fail an auth check on purpose) trip the
+# generic-api-key rule's keyword+entropy heuristic on a long lowercase
+# literal assigned to an identifier containing that keyword. Same
+# false-positive class already accepted elsewhere in this file (e.g.
+# auth/security.test.ts, crypto/vault.test.ts). Verified via PR #88.
+# (Deliberately not quoting the literal values here — doing so in an
+# earlier revision of this comment reproduced the exact pattern and
+# gitleaks flagged this file itself.)
+091f35dd37c62e12dd026bd3d28d7cd7f5ce9c21:tests/integration/web/token-refresh.integration.test.ts:generic-api-key:32
+091f35dd37c62e12dd026bd3d28d7cd7f5ce9c21:tests/integration/web/rate-limit.integration.test.tsx:generic-api-key:63
+091f35dd37c62e12dd026bd3d28d7cd7f5ce9c21:tests/integration/web/rate-limit.integration.test.tsx:generic-api-key:64
+091f35dd37c62e12dd026bd3d28d7cd7f5ce9c21:tests/integration/web/auth-flow.integration.test.tsx:generic-api-key:71
