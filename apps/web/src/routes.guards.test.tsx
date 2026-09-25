@@ -1,8 +1,10 @@
 import { act, render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { routes } from './routes'
 import { SessionProvider } from './auth/SessionProvider'
+import { createQueryClient } from './queryClient'
 
 /** Wraps every child route in SessionProvider so components that call useSession()
  *  (AppShell, AutoLockBanner) render without throwing. SessionProvider calls
@@ -48,7 +50,11 @@ function renderEntries(entries: string[], index = entries.length - 1) {
     initialEntries: entries,
     initialIndex: index,
   })
-  render(<RouterProvider router={router} />)
+  render(
+    <QueryClientProvider client={createQueryClient()}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  )
   return router
 }
 

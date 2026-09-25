@@ -234,6 +234,13 @@ describe('AutoLockBanner', () => {
     await user.click(button)
 
     expect(screen.getByRole('button', { name: 'Extending…' })).toBeDisabled()
+
+    // Let the mocked fetch's real 100ms setTimeout actually resolve before
+    // the test ends — otherwise the resulting `setExtending(false)` state
+    // update fires after this test (or even a later file's) jsdom
+    // environment has already been torn down, throwing "window is not
+    // defined" as an unhandled rejection that fails the whole run.
+    await waitFor(() => expect(screen.getByText('Session extended')).toBeTruthy())
   })
 
   it('has the correct aria attributes for an auto-locking session', () => {

@@ -10,13 +10,22 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
 interface PackageJson {
   name: string;
   version: string;
 }
 
-const pkgPath = new URL('../package.json', import.meta.url);
+// Resolved via fileURLToPath + path.join rather than `new URL(..., import.meta.url)`
+// so this doesn't depend on the global `URL` constructor — some test environments
+// (e.g. Vitest's jsdom environment, used by FE-002g's cross-package integration
+// suites that import this server module for real HTTP testing) shim the global
+// `URL` with a browser-semantics implementation that rejects `file:` scheme
+// results from a relative-path + base-URL construction. `fileURLToPath` uses
+// Node's own WHATWG URL parsing internally, independent of that global.
+const pkgPath = join(dirname(fileURLToPath(import.meta.url)), '../package.json');
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8')) as PackageJson;
 
 export interface ApiConfig {

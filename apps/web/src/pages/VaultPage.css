@@ -1,0 +1,153 @@
+/* Vault page — resource list table.
+   Colors come exclusively from theme.css variables
+   (--foreground, --muted-foreground, --accent, --border, --card, --background)
+   per FE-001d. No hardcoded colors here. */
+
+.vault-page {
+  max-width: 1100px;
+}
+
+.vault-heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+.vault-loading,
+.vault-error,
+.vault-empty {
+  margin: 0 0 16px;
+  color: var(--muted-foreground);
+}
+
+.vault-error {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--card);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vault-error-refresh {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font: inherit;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.vault-error-refresh:hover:not(:disabled) {
+  background-color: var(--accent);
+  color: var(--card);
+}
+
+.vault-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.vault-count {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.vault-refresh-button {
+  padding: 6px 12px;
+  font: inherit;
+  color: var(--foreground);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.vault-refresh-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.vault-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--card);
+}
+
+.vault-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.vault-th {
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.vault-tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.vault-tr:last-child {
+  border-bottom: none;
+}
+
+.vault-td {
+  padding: 10px 12px;
+  color: var(--foreground);
+  vertical-align: middle;
+}
+
+.vault-td-name {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.vault-td-actions {
+  white-space: nowrap;
+}
+
+.vault-name-link,
+.vault-action-link {
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.vault-name-link:hover,
+.vault-action-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.vault-empty-cell {
+  color: var(--muted-foreground);
+}
+
+.vault-tags {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.vault-tag {
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  color: var(--foreground);
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}

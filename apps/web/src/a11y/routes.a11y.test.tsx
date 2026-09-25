@@ -1,9 +1,11 @@
 import axe from 'axe-core'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider, matchPath, type RouteObject } from 'react-router-dom'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it } from 'vitest'
 import { routes } from '../routes'
 import { SessionProvider } from '../auth/SessionProvider'
+import { createQueryClient } from '../queryClient'
 import { HTML_LANG, INDEX_HTML, JSDOM_UNAVAILABLE_RULES, formatViolations, runAxe } from './axe'
 
 /** Wraps every child route in SessionProvider so components that call useSession()
@@ -209,7 +211,11 @@ function renderAt(path: string) {
   // SessionProvider must be inside the router context (it calls useNavigate),
   // so we wrap the matched route element rather than the RouterProvider.
   const router = createMemoryRouter(routesWithSession, { initialEntries: [path] })
-  const utils = render(<RouterProvider router={router} />)
+  const utils = render(
+    <QueryClientProvider client={createQueryClient()}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  )
   return { router, ...utils }
 }
 

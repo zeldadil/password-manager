@@ -13,7 +13,12 @@ import { INTEGRATION, CRITICAL_PATHS, CRITICAL_PATH_GLOBS } from "./tests/covera
  */
 export default defineConfig({
   test: {
-    include: ["tests/integration/**/*.test.ts", "apps/services/api/**/__tests__/**/*.test.ts", "packages/**/__tests__/**/*.test.ts"],
+    include: [
+      "tests/integration/**/*.test.ts",
+      "tests/integration/**/*.test.tsx",
+      "apps/services/api/**/__tests__/**/*.test.ts",
+      "packages/**/__tests__/**/*.test.ts",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov", "html"],
