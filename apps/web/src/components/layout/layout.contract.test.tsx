@@ -131,8 +131,11 @@ describe('AppShell — shell contract', () => {
 
     const sidebar = screen.getByRole('complementary')
     expect(within(sidebar).getByText('Work')).toBeTruthy()
-    expect(within(sidebar).getByText('Platform')).toBeTruthy()
+    // Engineering is hidden until Work is expanded
     expect(within(sidebar).getByText('Production')).toBeTruthy()
+    // Expand Work to reveal Engineering
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+    expect(within(sidebar).getByText('Engineering')).toBeTruthy()
   })
 })
 
@@ -143,7 +146,8 @@ describe('Sidebar — labelled sections', () => {
     const foldersNav = screen.getByRole('navigation', { name: 'Folders' })
     const tagsNav = screen.getByRole('navigation', { name: 'Tags' })
 
-    expect(within(foldersNav).getByText('Engineering')).toBeTruthy()
+    // Engineering is hidden until Work expanded; Production/Staging are always rendered
+    expect(within(foldersNav).getByText('Work')).toBeTruthy()
     expect(within(tagsNav).getByText('Staging')).toBeTruthy()
     expect(within(foldersNav).queryByText('Staging')).toBeNull()
     expect(within(tagsNav).queryByText('Engineering')).toBeNull()
@@ -156,30 +160,49 @@ describe('Sidebar — labelled sections', () => {
     expect(screen.getByRole('heading', { name: 'Tags' })).toBeTruthy()
     expect(container.querySelectorAll('ul')).toHaveLength(0)
   })
+
+  it('renders expand toggle for folders with children and spacer for leaves', () => {
+    render(<Sidebar folders={folders} tags={tags} />)
+    expect(screen.getByRole('button', { name: /expand work/i })).toBeTruthy()
+    // Personal is a leaf — no toggle, spacer instead
+    const personalRow = screen.getByText('Personal').closest('.folder-tree__row') as HTMLElement
+    expect(personalRow.querySelector('.folder-tree__toggle')).toBeNull()
+    expect(personalRow.querySelector('.folder-tree__spacer')).toBeTruthy()
+  })
 })
 
 describe('FolderTree — hierarchy', () => {
-  it('renders three levels of nesting', () => {
+  it('renders three levels of nesting when expanded', () => {
     render(<FolderTree folders={folders} />)
 
-    // Work → Engineering → Platform
-    const work = screen.getByText('Work').closest('li') as HTMLElement
-    const engineering = within(work).getByText('Engineering').closest('li') as HTMLElement
-    const platform = within(engineering).getByText('Platform') as HTMLElement
+    // Expand Work, then Engineering
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+    fireEvent.click(screen.getByRole('button', { name: /expand engineering/i }))
+
+    // Work → Engineering → Platform: each folder row is inside a <li>, with children in a sibling <ul>
+    const workLi = screen.getByText('Work').closest('li') as HTMLElement
+    const engineeringLi = within(workLi).getByText('Engineering').closest('li') as HTMLElement
+    const platform = within(engineeringLi).getByText('Platform')
 
     // Platform lives in a nested list below Engineering, not next to it.
-    expect(platform.closest('ul')?.parentElement).toBe(engineering)
+    expect(platform.closest('.folder-tree__children')?.parentElement).toBe(engineeringLi)
     // A sibling root folder never leaks into the Work subtree.
-    expect(within(work).queryByText('Personal')).toBeNull()
+    expect(within(workLi).queryByText('Personal')).toBeNull()
   })
 
   it('keeps root folders in input order', () => {
     const { container } = render(<FolderTree folders={folders} />)
 
-    const rootNames = Array.from((container.querySelector('ul') as HTMLElement).children).map(
-      (li) => li.querySelector('span')?.textContent,
-    )
+    const rootNames = Array.from(
+      container.querySelectorAll('.folder-tree__row .folder-tree__name'),
+    ).map((el) => el.textContent)
+
     expect(rootNames).toEqual(['Work', 'Personal'])
+  })
+
+  it('renders role="tree" on the root list', () => {
+    render(<FolderTree folders={folders} />)
+    expect(screen.getByRole('tree', { name: /folders/i })).toBeTruthy()
   })
 })
 
@@ -187,7 +210,18 @@ describe('TagsList — flat list', () => {
   it('renders one list item per tag, in input order', () => {
     const { container } = render(<TagsList tags={tags} />)
 
-    const items = Array.from(container.querySelectorAll('li')).map((node) => node.textContent)
+    const items = Array.from(container.querySelectorAll('.tags-list__tag')).map(
+      (node) => (node as HTMLElement).textContent,
+    )
     expect(items).toEqual(['Production', 'Staging'])
+  })
+
+  it('renders tags as buttons with aria-pressed', () => {
+    render(<TagsList tags={tags} />)
+    expect(screen.getByRole('button', { name: 'Production' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    expect(screen.getByRole('button', { name: 'Staging' })).toHaveAttribute('aria-pressed', 'false')
   })
 })
