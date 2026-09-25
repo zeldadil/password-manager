@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useSession } from '../auth/SessionProvider'
@@ -35,6 +35,18 @@ export default function VaultPage() {
   const { accessToken } = useSession()
   const theme = useThemeStore((s) => s.theme)
 
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [search])
+
   const { data: resources = [], isLoading, error, refetch } = useQuery({
     queryKey: ['resources'],
     queryFn: async () => {
@@ -54,16 +66,26 @@ export default function VaultPage() {
     refetchInterval: false,
   })
 
+  const lower = debouncedSearch.trim().toLowerCase()
   const rows = useMemo(
     () =>
-      resources.map((r) => ({
-        ...r,
-        username: r.username ?? '',
-        uri: r.uri ?? '',
-        folderName: r.folderName ?? '',
-        tags: r.tags ?? [],
-      })),
-    [resources],
+      resources
+        .map((r) => ({
+          ...r,
+          username: r.username ?? '',
+          uri: r.uri ?? '',
+          folderName: r.folderName ?? '',
+          tags: r.tags ?? [],
+        }))
+        .filter(
+          lower
+            ? (r) =>
+                r.name.toLowerCase().includes(lower) ||
+                r.username.toLowerCase().includes(lower) ||
+                r.uri.toLowerCase().includes(lower)
+            : () => true,
+        ),
+    [resources, lower],
   )
 
   const handleRefresh = useCallback(() => {
@@ -74,6 +96,34 @@ export default function VaultPage() {
     return (
       <main id="main-content" tabIndex={-1} className="vault-page" data-theme={theme}>
         <h1 className="vault-heading">Vault</h1>
+        <div className="vault-toolbar">
+          <div className="vault-search">
+            <label htmlFor="vault-search-input" className="vault-search-label">
+              Search resources
+            </label>
+            <input
+              id="vault-search-input"
+              type="search"
+              className="vault-search-input"
+              placeholder="Filter by name, username, or URI…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Filter resources by name, username, or URI"
+              disabled={isLoading}
+            />
+            {debouncedSearch && (
+              <button
+                type="button"
+                className="vault-search-clear"
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+                disabled={isLoading}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
         <div className="vault-loading" role="status" aria-live="polite">
           Loading resources…
         </div>
@@ -100,6 +150,31 @@ export default function VaultPage() {
       <h1 className="vault-heading">Vault</h1>
 
       <div className="vault-toolbar">
+        <div className="vault-search">
+          <label htmlFor="vault-search-input" className="vault-search-label">
+            Search resources
+          </label>
+          <input
+            id="vault-search-input"
+            type="search"
+            className="vault-search-input"
+            placeholder="Filter by name, username, or URI…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Filter resources by name, username, or URI"
+            disabled={isLoading}
+          />
+          {debouncedSearch && (
+            <button
+              type="button"
+              className="vault-search-clear"
+              onClick={() => setSearch('')}
+              aria-label="Clear search"
+            >
+              Clear
+            </button>
+          )}
+        </div>
         <span className="vault-count" aria-live="polite">
           {rows.length} resource{rows.length !== 1 ? 's' : ''}
         </span>

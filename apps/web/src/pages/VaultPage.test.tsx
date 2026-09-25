@@ -311,4 +311,215 @@ describe('VaultPage — authenticated', () => {
     await waitFor(() => expect(within(screen.getByRole('table')).getByText('New')).not.toBeNull())
     expect(stub).toHaveBeenCalledTimes(3)
   })
+
+  it('renders a search input that filters by name', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(mockResources([
+      { id: 'r1', name: 'GitHub', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+      { id: 'r2', name: 'GitLab', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+    ]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+
+    expect(await screen.findByText('2 resources')).not.toBeNull()
+
+    const input = screen.getByLabelText('Filter resources by name, username, or URI')
+    await userEvent.type(input, 'Hub')
+
+    await screen.findByText('1 resource')
+    expect(screen.getByText('GitHub')).not.toBeNull()
+    expect(screen.queryByText('GitLab')).toBeNull()
+  })
+
+  it('filters by username', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(mockResources([
+      { id: 'r1', name: 'Service A', username: 'svc', uri: '', folderId: null, folderName: null, tags: [] },
+      { id: 'r2', name: 'Service B', username: 'admin', uri: '', folderId: null, folderName: null, tags: [] },
+    ]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+
+    const input = screen.getByLabelText('Filter resources by name, username, or URI')
+    await userEvent.type(input, 'admin')
+
+    await screen.findByText('1 resource')
+    expect(screen.getByText('Service B')).not.toBeNull()
+    expect(screen.queryByText('Service A')).toBeNull()
+  })
+
+  it('filters by URI', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(mockResources([
+      { id: 'r1', name: 'A', username: '', uri: 'https://alpha.example.test', folderId: null, folderName: null, tags: [] },
+      { id: 'r2', name: 'B', username: '', uri: 'https://beta.example.test', folderId: null, folderName: null, tags: [] },
+    ]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+
+    const input = screen.getByLabelText('Filter resources by name, username, or URI')
+    await userEvent.type(input, 'alpha')
+
+    await screen.findByText('1 resource')
+    expect(screen.getByText('A')).not.toBeNull()
+    expect(screen.queryByText('B')).toBeNull()
+  })
+
+  it('is case-insensitive across name, username, and URI', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(mockResources([
+      { id: 'r1', name: 'Alpha', username: 'USR', uri: 'https://example.test', folderId: null, folderName: null, tags: [] },
+    ]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+
+    const input = screen.getByLabelText('Filter resources by name, username, or URI')
+    await userEvent.type(input, 'alpha usR eXaMpLe')
+
+    await screen.findByText(/1 resource/i)
+    expect(screen.getByText('Alpha')).not.toBeNull()
+  })
+
+  it('shows all rows when search is cleared', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(mockResources([
+      { id: 'r1', name: 'GitHub', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+      { id: 'r2', name: 'GitLab', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+    ]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+
+    const input = screen.getByLabelText('Filter resources by name, username, or URI')
+    await userEvent.type(input, 'Hub')
+    await screen.findByText('1 resource')
+
+    const clearButton = screen.getByLabelText('Clear search')
+    await userEvent.click(clearButton)
+
+    expect(input).toHaveValue('')
+    await screen.findByText('2 resources')
+    expect(screen.getByText('GitHub')).not.toBeNull()
+    expect(screen.getByText('GitLab')).not.toBeNull()
+  })
+
+  it('ignores leading/trailing whitespace in search', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(mockResources([
+      { id: 'r1', name: 'GitHub', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+    ]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+
+    const input = screen.getByLabelText('Filter resources by name, username, or URI')
+    await userEvent.type(input, '  Hub  ')
+
+    await screen.findByText('1 resource')
+    expect(screen.getByText('GitHub')).not.toBeNull()
+  })
+
+  it('shows all rows when search input is empty', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(mockResources([
+      { id: 'r1', name: 'GitHub', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+    ]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+
+    expect(await screen.findByText('1 resource')).not.toBeNull()
+    expect(screen.getByText('GitHub')).not.toBeNull()
+  })
+
+  it('keeps the search input disabled while resources are loading', async () => {
+    let resolvePending: () => void = () => {}
+    const pendingJson = new Promise<undefined>((resolve) => {
+      resolvePending = () => resolve(undefined)
+    })
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce({
+      ok: true,
+      json: () => pendingJson,
+    } as unknown as Response)
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+    await screen.findByText('Loading resources…')
+
+    const input = screen.getByLabelText('Filter resources by name, username, or URI')
+    expect(input).toBeDisabled()
+
+    resolvePending()
+    await pendingJson.catch(() => {})
+  })
+
+  it('does not filter while search text is debouncing', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(mockResources([
+      { id: 'r1', name: 'Alpha', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+      { id: 'r2', name: 'Beta', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+    ]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+
+    const input = screen.getByLabelText('Filter resources by name, username, or URI')
+    await userEvent.type(input, 'alpha')
+
+    // Before debounce elapses, all rows still render.
+    expect(await screen.findByText('2 resources')).not.toBeNull()
+
+    // After debounce, only the matching row remains.
+    await waitFor(() => expect(screen.getByText('1 resource')).not.toBeNull(), { timeout: 1000 })
+    expect(screen.getByText('Alpha')).not.toBeNull()
+  })
+
+  it('clears the filter immediately when typing after a debounce', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(mockResources([
+      { id: 'r1', name: 'Alpha', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+      { id: 'r2', name: 'Beta', username: '', uri: '', folderId: null, folderName: null, tags: [] },
+    ]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+
+    const input = screen.getByLabelText('Filter resources by name, username, or URI')
+    await userEvent.type(input, 'alpha')
+    await waitFor(() => expect(screen.getByText('1 resource')).not.toBeNull(), { timeout: 1000 })
+
+    // Type additional characters — previous debounce is cancelled, new debounce kicks in.
+    await userEvent.type(input, 'a')
+
+    // Before new debounce elapses, filter is still applied from previous debounce.
+    expect(screen.getByText('1 resource')).not.toBeNull()
+
+    // After the new debounce, filter updates to the latest text.
+    await waitFor(() => expect(screen.getByText('0 resources')).not.toBeNull(), { timeout: 1000 })
+  })
 })
