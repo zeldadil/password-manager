@@ -71,3 +71,41 @@ Total: 9 tests, 0 failures.
 
 Deferred to child `t_xxxxxxxx` (qa) for QA-002 release verification per
 QA_SIGN_OFF_GATE §5.4 linked-child heuristic.
+
+## Update (2026-09-25) — corrections and the real landing
+
+This evidence was written while PR #87 was still open and
+`DIRTY`/`CONFLICTING` against master; it never actually merged as-is.
+The task was untangled onto current master as **PR #88** (commit
+`09b91f3`) — see `tests/evidence/t_63323ce5/README.md` for the full
+timeline.
+
+Two claims above turned out to be incomplete, found by actually running
+the page against a real backend rather than trusting the unit tests'
+own mocks:
+
+- **"root-cause fix: call `session.login()` after a successful
+  `/auth/unlock`"** — the call that landed was `session.login('tok',
+  'ref', 900)`: literal placeholder strings, not the real response
+  tokens. Every login would have produced a completely non-functional
+  session. Fixed in PR #88 to parse and pass the actual
+  accessToken/refreshToken/expiresIn from the response body (same fix
+  applied to `UnlockPage.tsx`, which didn't call `session.login()` at
+  all).
+- The 9/9 passing `VaultPage.test.tsx` tests did not catch a real bug:
+  `GET /resources` returns the envelope body shape `{ data, pagination }`
+  (ADR-004), not a bare array, but `VaultPage`'s query treated it as if
+  it already were the array (`resources.map is not a function` at
+  runtime) — and `VaultPage.test.tsx`'s own `mockResources()` helper
+  had copied the same wrong assumption, so its mocks matched the bug
+  instead of the real contract. Also found: `VaultPage` rendered its
+  own duplicate `<main id="main-content">`, nested inside `AppShell`'s.
+  Both fixed in PR #88; full detail in `tests/evidence/t_63323ce5/README.md`
+  and `tests/evidence/t_a9d5cb1b`'s own section there.
+
+**Landed:** PR #88, commit `09b91f3` (2026-09-25). Fresh-clone verified:
+`pnpm -r typecheck` clean, `pnpm -r test` 214 web / 615 api / 53 crypto
+all green (including `VaultPage.test.tsx`'s 9 tests with corrected
+envelope-shape mocks), `pnpm test:integration` 18/18 (including the new
+`auth-flow.integration.test.tsx`, which exercises `/vault` against the
+real backend), `pnpm build` clean. All 10 CI checks green.
