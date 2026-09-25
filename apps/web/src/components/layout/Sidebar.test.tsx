@@ -65,7 +65,9 @@ describe('Sidebar', () => {
   it('passes activeTagId to TagsList for controlled highlight', () => {
     render(<Sidebar folders={folders} tags={tags} activeTagId="t1" />)
     expect(screen.getByRole('button', { name: 'Production' })).toHaveClass('tags-list__tag--active')
-    expect(screen.getByRole('button', { name: 'Staging' })).not.toHaveClass('tags-list__tag--active')
+    expect(screen.getByRole('button', { name: 'Staging' })).not.toHaveClass(
+      'tags-list__tag--active',
+    )
   })
 
   it('renders empty folder and tag sections with headings but no lists', () => {

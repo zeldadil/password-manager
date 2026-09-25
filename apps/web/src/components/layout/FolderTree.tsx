@@ -16,7 +16,11 @@ function groupFoldersByParent(folders: readonly FolderNode[]): Map<string | null
   return grouped
 }
 
-function canAcceptDrop(sourceId: string, targetId: string | null, grouped: Map<string | null, FolderNode[]>): boolean {
+function canAcceptDrop(
+  sourceId: string,
+  targetId: string | null,
+  grouped: Map<string | null, FolderNode[]>,
+): boolean {
   if (sourceId === targetId) return false
   // Build a parent lookup map: child id -> parent id
   const parentMap = new Map<string, string | null>()
@@ -99,11 +103,7 @@ function TreeNode({
   )
 
   return (
-    <li
-      role="treeitem"
-      aria-level={depth + 1}
-      aria-labelledby={`folder-tree-item-${folder.id}`}
-    >
+    <li role="treeitem" aria-level={depth + 1} aria-labelledby={`folder-tree-item-${folder.id}`}>
       <div
         className={`folder-tree__row ${isDragged ? 'folder-tree__row--dragged' : ''} ${isDropTarget ? 'drop-target' : ''}`}
         style={{ paddingLeft: `${depth * 16 + 4}px` }}
@@ -141,7 +141,9 @@ function TreeNode({
         ) : (
           <span className="folder-tree__spacer" aria-hidden="true" />
         )}
-        <span className="folder-tree__name" id={`folder-tree-item-${folder.id}`}>{folder.name}</span>
+        <span className="folder-tree__name" id={`folder-tree-item-${folder.id}`}>
+          {folder.name}
+        </span>
       </div>
       {isExpanded && hasChildren && (
         <ul className="folder-tree__children" role="group" id={`folder-tree-children-${folder.id}`}>

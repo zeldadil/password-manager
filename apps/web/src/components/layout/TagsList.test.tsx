@@ -77,7 +77,9 @@ describe('TagsList', () => {
   it('renders active class on the active tag', () => {
     render(<TagsList tags={sample} onFilter={vi.fn()} activeTagId="t1" />)
     expect(screen.getByRole('button', { name: 'Production' })).toHaveClass('tags-list__tag--active')
-    expect(screen.getByRole('button', { name: 'Staging' })).not.toHaveClass('tags-list__tag--active')
+    expect(screen.getByRole('button', { name: 'Staging' })).not.toHaveClass(
+      'tags-list__tag--active',
+    )
   })
 
   it('clears active tag when clicking active tag in uncontrolled mode', async () => {
@@ -99,18 +101,28 @@ describe('TagsList', () => {
     render(<TagsList tags={sample} />)
 
     await user.click(screen.getByRole('button', { name: 'Production' }))
-    expect(screen.getByRole('button', { name: 'Production' }).getAttribute('aria-pressed')).toBe('true')
-    expect(screen.getByRole('button', { name: 'Staging' }).getAttribute('aria-pressed')).toBe('false')
+    expect(screen.getByRole('button', { name: 'Production' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
+    expect(screen.getByRole('button', { name: 'Staging' }).getAttribute('aria-pressed')).toBe(
+      'false',
+    )
 
     await user.click(screen.getByRole('button', { name: 'Staging' }))
-    expect(screen.getByRole('button', { name: 'Production' }).getAttribute('aria-pressed')).toBe('false')
-    expect(screen.getByRole('button', { name: 'Staging' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: 'Production' }).getAttribute('aria-pressed')).toBe(
+      'false',
+    )
+    expect(screen.getByRole('button', { name: 'Staging' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
   })
 
   it('works in uncontrolled mode (no onFilter prop)', () => {
     render(<TagsList tags={sample} />)
     fireEvent.click(screen.getByRole('button', { name: 'Production' }))
-    expect(screen.getByRole('button', { name: 'Production' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: 'Production' }).getAttribute('aria-pressed')).toBe(
+      'true',
+    )
   })
 
   it('renders a single tag only', () => {
