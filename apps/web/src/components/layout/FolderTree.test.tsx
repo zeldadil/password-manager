@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import FolderTree from './FolderTree'
 import type { FolderNode } from './types'
@@ -12,22 +12,96 @@ const sampleTree: FolderNode[] = [
   { id: 'child3', name: 'Health', parentId: 'root2' },
 ]
 
+// Minimal fake client — only the shape FolderTree consumes.
+const fakeClient = {
+  post: vi.fn(),
+  patch: vi.fn(),
+  delete: vi.fn(),
+  get: vi.fn(),
+}
+
 describe('FolderTree — structure and rendering', () => {
-  it('renders nothing when there are no folders', () => {
-    const { container } = render(<FolderTree folders={[]} />)
-    expect(container.querySelector('ul')).toBeNull()
+  it('renders every root-level folder', () => {
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
+    expect(screen.getByText('Work')).toBeTruthy()
+    expect(screen.getByText('Personal')).toBeTruthy()
+  })
+
+  it('nests child folders under their parent when expanded', () => {
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
+    // Expand Work to reveal children
+    const workRow = screen.getByText('Work').closest('li') as HTMLElement
+    const toggle = workRow.querySelector('.folder-tree__toggle') as HTMLElement
+    fireEvent.click(toggle)
+    const workItem = screen.getByText('Work').closest('li') as HTMLElement
+    const withinWork = within(workItem)
+    expect(withinWork.getByText('Engineering')).toBeTruthy()
+    expect(withinWork.getByText('Finance')).toBeTruthy()
+  })
+
+  it('keeps sibling folders out of an unrelated parent subtree', () => {
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
+    const workRow = screen.getByText('Work').closest('li') as HTMLElement
+    const toggle = workRow.querySelector('.folder-tree__toggle') as HTMLElement
+    fireEvent.click(toggle)
+    const workItem = screen.getByText('Work').closest('li') as HTMLElement
+    expect(within(workItem).queryByText('Personal')).toBeNull()
+  })
+
+  it('renders an empty root <ul> when there are no folders', () => {
+    const { container } = render(<FolderTree folders={[]} client={fakeClient as any} vaultId="v1" />)
+    expect(container.querySelector('.folder-tree')).not.toBeNull()
+    expect(container.querySelector('.folder-tree > ul')).not.toBeNull()
+    expect(container.querySelector('.folder-tree > ul > li')).toBeNull()
+  })
+
+  it('shows a "+ New folder" button at the bottom of the tree', () => {
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
+
+  it('renders expand/collapse chevrons for folders with children', () => {
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
+    const workRow = screen.getByText('Work').closest('li') as HTMLElement
+    expect(workRow.querySelector('.folder-tree__toggle')).not.toBeNull()
+  })
+
+  it('renders a dot chevron for leaf folders', () => {
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
+    // Personal has no children → should show a dot
+    const personalRow = screen.getByText('Personal').closest('li') as HTMLElement
+    const chevron = personalRow.querySelector('.folder-tree__chevron')
+    expect(chevron?.textContent).toBe('·')
+  })
+
+  it('expands and collapses a folder when its chevron is clicked', () => {
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
+    const workRow = screen.getByText('Work').closest('li') as HTMLElement
+    const toggle = workRow.querySelector('.folder-tree__toggle') as HTMLElement
+
+    // Initially collapsed — children hidden
+    expect(screen.queryByText('Engineering')).toBeNull()
+
+    // Click toggle to expand
+    fireEvent.click(toggle)
+    expect(screen.getByText('Engineering')).toBeTruthy()
+    expect(screen.getByText('Finance')).toBeTruthy()
+
+    // Click again to collapse
+    fireEvent.click(toggle)
+    expect(screen.queryByText('Engineering')).toBeNull()
+    expect(screen.queryByText('Finance')).toBeNull()
   })
 
   it('renders every root-level folder in input order', () => {
-    render(<FolderTree folders={sampleTree} />)
-    const rootNames = Array.from(
-      document.querySelectorAll('.folder-tree__row .folder-tree__name'),
-    ).map((el) => (el as HTMLElement).textContent)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
+    const rootItems = Array.from(
+      (screen.getByRole('tree').querySelector('ul') as HTMLElement).children,
+    ) as HTMLElement[]
+    const rootNames = rootItems.map((li) => li.querySelector('.folder-tree__name')?.textContent)
     expect(rootNames).toEqual(['Work', 'Personal'])
   })
 
   it('nests child folders under their parent when expanded', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     expect(screen.queryByText('Engineering')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
     expect(screen.getByText('Engineering')).toBeTruthy()
@@ -35,32 +109,32 @@ describe('FolderTree — structure and rendering', () => {
   })
 
   it('nests grandchildren under children when expanded', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
     fireEvent.click(screen.getByRole('button', { name: /expand engineering/i }))
     expect(screen.getByText('Frontend')).toBeTruthy()
   })
 
   it('keeps a sibling root folder out of an expanded parent subtree', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
     const workLi = screen.getByText('Work').closest('li') as HTMLElement
     expect(within(workLi).queryByText('Personal')).toBeNull()
   })
 
-  it('renders a role="tree" wrapper', () => {
-    render(<FolderTree folders={sampleTree} />)
+  it('renders role="tree" wrapper', () => {
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     expect(screen.getByRole('tree', { name: 'Folders' })).toBeTruthy()
   })
 
   it('marks root rows as treeitem with level 1', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     const workRow = screen.getByText('Work').closest('[role="treeitem"]') as HTMLElement
     expect(workRow.getAttribute('aria-level')).toBe('1')
   })
 
   it('marks child rows with increasing aria-level', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
     const engRow = screen.getByText('Engineering').closest('[role="treeitem"]') as HTMLElement
     expect(engRow.getAttribute('aria-level')).toBe('2')
@@ -70,7 +144,7 @@ describe('FolderTree — structure and rendering', () => {
   })
 
   it('renders folder rows as draggable', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     const rows = document.querySelectorAll('.folder-tree__row[draggable="true"]')
     expect(rows.length).toBeGreaterThanOrEqual(2)
   })
@@ -78,20 +152,20 @@ describe('FolderTree — structure and rendering', () => {
 
 describe('FolderTree — expand/collapse', () => {
   it('starts with all folders collapsed (no children visible)', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     expect(screen.queryByText('Engineering')).toBeNull()
     expect(screen.queryByText('Frontend')).toBeNull()
   })
 
   it('expands a folder and shows its children when toggle is clicked', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
     expect(screen.getByText('Engineering')).toBeTruthy()
     expect(screen.getByText('Finance')).toBeTruthy()
   })
 
   it('collapses an expanded folder when toggle is clicked again', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
     expect(screen.getByText('Engineering')).toBeTruthy()
 
@@ -100,7 +174,7 @@ describe('FolderTree — expand/collapse', () => {
   })
 
   it('shows aria-expanded="true" on the toggle when expanded', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     const toggle = screen.getByRole('button', { name: /expand work/i })
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
 
@@ -110,7 +184,7 @@ describe('FolderTree — expand/collapse', () => {
   })
 
   it('shows aria-expanded="false" on the toggle when collapsed from expanded state', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     const toggle = screen.getByRole('button', { name: /expand work/i })
     fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-expanded')).toBe('true')
@@ -120,8 +194,8 @@ describe('FolderTree — expand/collapse', () => {
     expect(screen.queryByText('Engineering')).toBeNull()
   })
 
-  it('does not render a toggle button for a leaf folder (Finance is child of Work, leave it collapsed to test sibling)', () => {
-    render(<FolderTree folders={sampleTree} />)
+  it('does not render a toggle button for a leaf folder', () => {
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     // Finance is a leaf — only visible when Work expanded
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
     const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
@@ -129,14 +203,14 @@ describe('FolderTree — expand/collapse', () => {
   })
 
   it('renders a spacer element where a toggle would be on a leaf row', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
     const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
     expect(financeRow.querySelector('.folder-tree__spacer')).toBeTruthy()
   })
 
   it('renders a toggle for every folder that has children', () => {
-    render(<FolderTree folders={sampleTree} />)
+    render(<FolderTree folders={sampleTree} client={fakeClient as any} vaultId="v1" />)
     expect(screen.getByRole('button', { name: /expand work/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /expand personal/i })).toBeTruthy()
   })
@@ -150,7 +224,7 @@ describe('FolderTree — drag and drop', () => {
   })
 
   function renderWithMove() {
-    return render(<FolderTree folders={sampleTree} onMove={onMove} />)
+    return render(<FolderTree folders={sampleTree} onMove={onMove} client={fakeClient as any} vaultId="v1" />)
   }
 
   it('calls onMove with source and new parent when dropped on a folder', () => {
@@ -261,7 +335,7 @@ describe('FolderTree — drag and drop', () => {
 describe('FolderTree — edge cases', () => {
   it('handles a single root folder with no children', () => {
     const folders: FolderNode[] = [{ id: 'only', name: 'Only Folder', parentId: null }]
-    render(<FolderTree folders={folders} />)
+    render(<FolderTree folders={folders} client={fakeClient as any} vaultId="v1" />)
     expect(screen.getByText('Only Folder')).toBeTruthy()
     const row = screen.getByText('Only Folder').closest('.folder-tree__row') as HTMLElement
     expect(row.querySelector('.folder-tree__toggle')).toBeNull()
@@ -274,14 +348,14 @@ describe('FolderTree — edge cases', () => {
       { id: 'b', name: 'B', parentId: null },
       { id: 'c', name: 'C', parentId: null },
     ]
-    render(<FolderTree folders={folders} />)
+    render(<FolderTree folders={folders} client={fakeClient as any} vaultId="v1" />)
     expect(screen.getByText('A')).toBeTruthy()
     expect(screen.getByText('B')).toBeTruthy()
     expect(screen.getByText('C')).toBeTruthy()
   })
 
   it('renders empty state when folders array is empty', () => {
-    const { container } = render(<FolderTree folders={[]} />)
+    const { container } = render(<FolderTree folders={[]} client={fakeClient as any} vaultId="v1" />)
     expect(container.querySelector('.folder-tree')).toBeNull()
   })
 })

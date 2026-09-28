@@ -1,6 +1,7 @@
 import FolderTree from './FolderTree'
 import TagsList from './TagsList'
 import type { FolderNode, TagNode } from './types'
+import type { ApiClient } from '../../api/client'
 
 export interface SidebarProps {
   folders?: readonly FolderNode[]
@@ -8,6 +9,8 @@ export interface SidebarProps {
   activeTagId?: string | null
   onMoveFolder?: (sourceId: string, newParentId: string | null) => void
   onFilterTag?: (tagId: string | null) => void
+  vaultId?: string
+  client?: ApiClient
 }
 
 export default function Sidebar({
@@ -16,6 +19,8 @@ export default function Sidebar({
   activeTagId,
   onMoveFolder,
   onFilterTag,
+  vaultId,
+  client,
 }: SidebarProps) {
   return (
     <aside className="app-sidebar" aria-label="Vault navigation">
@@ -23,7 +28,13 @@ export default function Sidebar({
         <h2 id="app-sidebar__folders-heading" className="app-sidebar__heading">
           Folders
         </h2>
-        <FolderTree folders={folders} onMove={onMoveFolder} />
+        <FolderTree
+          folders={folders}
+          onMove={onMoveFolder}
+          vaultId={vaultId ?? ''}
+          client={client ?? (undefined as any)}
+          onFoldersChanged={() => {}}
+        />
       </nav>
 
       <nav className="app-sidebar__section" aria-labelledby="app-sidebar__tags-heading">
