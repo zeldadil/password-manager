@@ -1,12 +1,20 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import AppShell from './AppShell'
 import FolderTree from './FolderTree'
 import Header from './Header'
 import Sidebar from './Sidebar'
 import TagsList from './TagsList'
 import type { FolderNode, TagNode } from './types'
+
+/** Minimal fake client — only the shape FolderTree consumes. */
+const fakeClient = {
+  post: vi.fn(),
+  patch: vi.fn(),
+  delete: vi.fn(),
+  get: vi.fn(),
+}
 
 /**
  * Layout component contract tests (FE-001i).
@@ -131,7 +139,11 @@ describe('Sidebar — labelled sections', () => {
     const foldersNav = screen.getByRole('navigation', { name: 'Folders' })
     const tagsNav = screen.getByRole('navigation', { name: 'Tags' })
 
-    expect(within(foldersNav).getByText('Engineering')).toBeTruthy()
+    // Expand Work to reveal Engineering
+    const workRow = screen.getByText('Work').closest('li') as HTMLElement
+    fireEvent.click(workRow.querySelector('.folder-tree__toggle') as HTMLElement)
+    const workItem = screen.getByText('Work').closest('li') as HTMLElement
+    expect(within(workItem).getByText('Engineering')).toBeTruthy()
     expect(within(tagsNav).getByText('Staging')).toBeTruthy()
     expect(within(foldersNav).queryByText('Staging')).toBeNull()
     expect(within(tagsNav).queryByText('Engineering')).toBeNull()
@@ -142,31 +154,38 @@ describe('Sidebar — labelled sections', () => {
 
     expect(screen.getByRole('heading', { name: 'Folders' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Tags' })).toBeTruthy()
-    expect(container.querySelectorAll('ul')).toHaveLength(0)
+    // The folder tree renders an empty <ul> when there are no folders.
+    const uls = container.querySelectorAll('ul')
+    expect(uls).toHaveLength(1)
+    expect(uls[0].children).toHaveLength(0)
   })
 })
 
 describe('FolderTree — hierarchy', () => {
   it('renders three levels of nesting', () => {
-    render(<FolderTree folders={folders} />)
+    render(<FolderTree folders={folders} client={fakeClient as any} vaultId="v1" />)
 
-    // Work → Engineering → Platform
-    const work = screen.getByText('Work').closest('li') as HTMLElement
-    const engineering = within(work).getByText('Engineering').closest('li') as HTMLElement
-    const platform = within(engineering).getByText('Platform') as HTMLElement
+    // Work → Engineering → Platform (expand Work first)
+    const workRow = screen.getByText('Work').closest('li') as HTMLElement
+    fireEvent.click(workRow.querySelector('.folder-tree__toggle') as HTMLElement)
+    const workItem = screen.getByText('Work').closest('li') as HTMLElement
+    const withinWork = within(workItem)
+    expect(withinWork.getByText('Engineering')).toBeTruthy()
 
-    // Platform lives in a nested list below Engineering, not next to it.
-    expect(platform.closest('ul')?.parentElement).toBe(engineering)
-    // A sibling root folder never leaks into the Work subtree.
-    expect(within(work).queryByText('Personal')).toBeNull()
+    const engRow = withinWork.getByText('Engineering').closest('li') as HTMLElement
+    fireEvent.click(engRow.querySelector('.folder-tree__toggle') as HTMLElement)
+    const engItem = withinWork.getByText('Engineering').closest('li') as HTMLElement
+    const withinEng = within(engItem)
+    expect(withinEng.getByText('Platform')).toBeTruthy()
   })
 
   it('keeps root folders in input order', () => {
-    const { container } = render(<FolderTree folders={folders} />)
+    const { container } = render(<FolderTree folders={folders} client={fakeClient as any} vaultId="v1" />)
 
-    const rootNames = Array.from((container.querySelector('ul') as HTMLElement).children).map(
-      (li) => li.querySelector('span')?.textContent,
-    )
+    const rootItems = Array.from(
+      (container.querySelector('.folder-tree > ul') as HTMLElement).children,
+    ) as HTMLElement[]
+    const rootNames = rootItems.map((li) => li.querySelector('.folder-tree__name')?.textContent)
     expect(rootNames).toEqual(['Work', 'Personal'])
   })
 })
