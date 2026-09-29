@@ -229,6 +229,35 @@ de push et merger, pas après. Classer chaque fichier explicitement :
 Un écart de nombre de fichiers, seul, n'est jamais une justification suffisante pour
 merger — il doit être expliqué, fichier par fichier, avant.
 
+## Piège n°11 — `hermes kanban block` ne marche que sur `ready`/`running`, jamais sur `todo`/`triage`
+
+Constaté le 29/09 en essayant de dependency-bloquer deux tâches FE-003 en attente d'une
+décision d'architecture (ADR-007) : `hermes kanban block <id> "raison" --kind dependency`
+échoue systématiquement avec `cannot block <id>` (exit 1, aucune trace même avec
+`HERMES_DEBUG=1`/`--dev`) sur toute tâche en statut `todo` ou `triage` — y compris des
+tâches saines, sans lien avec le travail en cours. `hermes kanban repair --json` confirme
+que ce n'est pas une corruption de la DB (`"status": "ok"`), et `hermes kanban comment`
+continue de fonctionner normalement pendant ce temps.
+
+**Cause réelle, trouvée en lisant `hermes_cli/kanban_db.py`** (`/home/sap/.hermes/hermes-agent/`,
+fonction `block_task`, ligne ~3208) : la transition SQL est explicitement
+`WHERE status IN ('running', 'ready')` — bloquer une tâche `todo`/`triage` n'est tout
+simplement pas un chemin de code supporté, ce n'est pas un bug/une régression d'environnement.
+Effet de bord à connaître : même quand la transition échoue, le commentaire "BLOCKED: <raison>"
+est quand même posté (auteur `default`) avant l'échec — donc un `cannot block` peut laisser un
+commentaire trompeur sur la tâche ; le corriger avec un commentaire de suivi si ça arrive.
+
+**Comment bloquer une dépendance sur une tâche `todo`/`triage` à la place** : ne pas utiliser
+`block`, utiliser un lien parent→enfant, qui est le vrai mécanisme de gating (vérifié dans
+`recompute_ready`/`claim_task`/`_parents_satisfied` du même fichier — une tâche `todo` ne peut
+JAMAIS passer à `ready` tant que tous ses parents ne sont pas `done`/`archived`, et `claim_task`
+revérifie ça de façon atomique même si `ready` était atteint par un autre chemin) :
+```bash
+hermes kanban link <id-de-la-tâche-bloquante> <id-de-la-tâche-à-bloquer>
+```
+`block` reste correct pour une tâche déjà `ready`/`running` (ex. un crash actif qu'on veut
+figer côté humain) — c'est seulement le cas `todo`/`triage` qui n'est pas supporté.
+
 ## Point non résolu — à investiguer si le temps le permet
 
 La tâche Kanban `t_df8e644a` est marquée `done` ("VERDICT_LOOSE_RE still parses a
