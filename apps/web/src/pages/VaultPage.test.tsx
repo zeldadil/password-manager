@@ -349,3 +349,195 @@ describe('VaultPage — authenticated', () => {
     expect(stub).toHaveBeenCalledTimes(3)
   })
 })
+
+describe('VaultPage — search bar (FE-003c)', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', undefined)
+  })
+
+  it('renders a labelled search input', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(mockResources([]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+
+    const input = await screen.findByLabelText('Search')
+    expect(input).toHaveAttribute('type', 'search')
+    expect(input).toHaveAttribute('placeholder', 'Search by name, username, or URI')
+  })
+
+  it('debounces: does not refetch on every keystroke, only once typing settles', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(
+      mockResources([
+        {
+          id: 'r1',
+          name: 'GitHub',
+          username: '',
+          uri: '',
+          folderId: null,
+          folderName: null,
+          tags: [],
+        },
+      ]),
+    )
+    stub.mockResolvedValueOnce(mockResources([]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+    await screen.findByRole('table')
+
+    const user = userEvent.setup()
+    const input = screen.getByLabelText('Search')
+    await user.type(input, 'git')
+
+    // Still only the 2 calls from login + initial load — typing itself
+    // must not have triggered a request yet.
+    expect(stub).toHaveBeenCalledTimes(2)
+
+    await waitFor(() => expect(stub).toHaveBeenCalledTimes(3), { timeout: 1000 })
+    const [url] = stub.mock.calls[2] as [string]
+    expect(url).toBe(`/api/v1/resources?filter[search]=${encodeURIComponent('git')}`)
+  })
+
+  it('shows the matching resources returned by a search', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(
+      mockResources([
+        {
+          id: 'r1',
+          name: 'GitHub',
+          username: '',
+          uri: '',
+          folderId: null,
+          folderName: null,
+          tags: [],
+        },
+        {
+          id: 'r2',
+          name: 'Bank',
+          username: '',
+          uri: '',
+          folderId: null,
+          folderName: null,
+          tags: [],
+        },
+      ]),
+    )
+    stub.mockResolvedValueOnce(
+      mockResources([
+        {
+          id: 'r1',
+          name: 'GitHub',
+          username: '',
+          uri: '',
+          folderId: null,
+          folderName: null,
+          tags: [],
+        },
+      ]),
+    )
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+    await screen.findByRole('table')
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Search'), 'git')
+
+    await waitFor(() => {
+      const table = screen.getByRole('table')
+      expect(within(table).queryByText('Bank')).toBeNull()
+      expect(within(table).getByText('GitHub')).not.toBeNull()
+    })
+  })
+
+  it('shows a Clear button once a search term is entered, which resets the filter', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(
+      mockResources([
+        {
+          id: 'r1',
+          name: 'GitHub',
+          username: '',
+          uri: '',
+          folderId: null,
+          folderName: null,
+          tags: [],
+        },
+      ]),
+    )
+    stub.mockResolvedValueOnce(mockResources([]))
+    stub.mockResolvedValueOnce(
+      mockResources([
+        {
+          id: 'r1',
+          name: 'GitHub',
+          username: '',
+          uri: '',
+          folderId: null,
+          folderName: null,
+          tags: [],
+        },
+      ]),
+    )
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+    await screen.findByRole('table')
+
+    expect(screen.queryByRole('button', { name: 'Clear search' })).toBeNull()
+
+    const user = userEvent.setup()
+    const input = screen.getByLabelText('Search')
+    await user.type(input, 'zzz')
+
+    const clearButton = await screen.findByRole('button', { name: 'Clear search' })
+    await user.click(clearButton)
+
+    expect(input).toHaveValue('')
+    expect(screen.queryByRole('button', { name: 'Clear search' })).toBeNull()
+    await waitFor(() =>
+      expect(within(screen.getByRole('table')).getByText('GitHub')).not.toBeNull(),
+    )
+  })
+
+  it('shows a search-specific empty message when no resources match', async () => {
+    const stub = vi.fn()
+    stub.mockResolvedValueOnce(loginOk)
+    stub.mockResolvedValueOnce(
+      mockResources([
+        {
+          id: 'r1',
+          name: 'GitHub',
+          username: '',
+          uri: '',
+          folderId: null,
+          folderName: null,
+          tags: [],
+        },
+      ]),
+    )
+    stub.mockResolvedValueOnce(mockResources([]))
+    vi.stubGlobal('fetch', stub)
+
+    const { login } = renderAppWithLogin(stub)
+    await login()
+    await screen.findByRole('table')
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Search'), 'nomatch')
+
+    expect(await screen.findByText('No resources match “nomatch”.')).not.toBeNull()
+    expect(screen.queryByText('No resources yet.')).toBeNull()
+  })
+})
