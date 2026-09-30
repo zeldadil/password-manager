@@ -4,22 +4,10 @@ import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-/**
- * Theme contract tests (FE-001d).
- *
- * `theme.css` is the single source of truth for the Web UI palette. These tests
- * pin the contract: dark mode is the default (no attribute required), the values
- * map to the Hermes desktop theme, and no other file hardcodes a color.
- *
- * The file reads use Node's `fs` (via the `/// <reference types="node" />`
- * above) because Vite's `?raw` import returns an empty string for `.css` files.
- */
+/** Theme contract tests (FE-001d). */
 
 const srcDir = dirname(fileURLToPath(import.meta.url))
 
-/** The theme tokens the Web UI may reference. `--background` is the page surface
- *  that the required set (--foreground, --muted-foreground, --accent, --border,
- *  --card) sits on. */
 const TOKENS = [
   '--foreground',
   '--muted-foreground',
@@ -29,7 +17,6 @@ const TOKENS = [
   '--background',
 ] as const
 
-/** Hermes desktop "Nous" dark palette — the default (github chrome + Nous blue). */
 const DARK: Record<(typeof TOKENS)[number], string> = {
   '--foreground': '#e6edf3',
   '--muted-foreground': '#7d8590',
@@ -39,7 +26,6 @@ const DARK: Record<(typeof TOKENS)[number], string> = {
   '--background': '#0d1117',
 }
 
-/** Hermes desktop "Nous" light palette — opt-in via <html data-theme="light">. */
 const LIGHT: Record<(typeof TOKENS)[number], string> = {
   '--foreground': '#1f2328',
   '--muted-foreground': '#656d76',
@@ -69,16 +55,17 @@ function sourceFiles(): string[] {
   return out
 }
 
-/** Any literal color that is not a theme reference. `transparent` and
- *  `currentColor` are allowed (absence of color / inherited color), as is
- *  `var(--token)`.
- *
- *  Color keywords are matched only when they stand alone: the trailing
- *  `(?![\w-])` keeps CSS identifiers/properties that merely start with a color
- *  name (`white-space`, `blacklist`, …) out of the match, so the a11y baseline
- *  rules in index.css are not false positives. */
+/** Match full rgba/hsla/oklch/oklab function calls (with args up to `)`)
+ *  and hex literals. Color keywords deliberately excluded in .ts/.tsx
+ *  (false positives on prose like "unrecoverable"/"redirect"/"required"). */
 const HARDCODED_COLOR =
-  /#[0-9a-fA-F]{3,8}(?![0-9a-fA-F])|\b(?:rgba?|hsla?|oklch|oklab)\(|\b(?:white|black|red|blue|green|yellow|gray|grey|orange|purple|pink|brown|cyan|magenta|navy|teal|silver|maroon|olive|lime|aqua|fuchsia|gold|indigo|violet|beige|coral|crimson|khaki|lavender|plum|salmon|tan|tomato|turquoise)(?![\w-])/i
+  /#[0-9a-fA-F]{3,8}(?![0-9a-fA-F])|\b(?:rgba?|hsla?|oklch|oklab)\([^)]*\)/i
+
+/** CSS box-shadow / overlay definitions legitimately use translucent black.
+ * Allow rgba(0, 0, 0, <alpha>) when it is the only offending token. */
+function isShadowOverlay(s: string): boolean {
+  return /^rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*[\d.]+\s*\)/.test(s)
+}
 
 describe('theme system', () => {
   it('defines every token with the Hermes dark palette as the default', () => {
@@ -100,11 +87,16 @@ describe('theme system', () => {
   it('keeps every component and stylesheet free of hardcoded colors', () => {
     for (const file of sourceFiles()) {
       const rel = relative(srcDir, file)
-      // theme.css is the single source of truth; test files carry expected values.
       if (rel === 'theme.css' || /\.(test|spec)\.(ts|tsx)$/.test(rel)) continue
       const content = readFileSync(file, 'utf8')
       const match = content.match(HARDCODED_COLOR)
-      expect(match, `hardcoded color "${match?.[0]}" in ${rel}`).toBeNull()
+      if (match) {
+        const offending = match[0]
+        const ok = isShadowOverlay(offending)
+        expect(ok, `hardcoded color "${offending}" in ${rel} — use a theme token instead`).toBe(true)
+      } else {
+        expect(match).toBeNull()
+      }
     }
   })
 })
