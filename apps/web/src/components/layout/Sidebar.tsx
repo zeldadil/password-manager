@@ -1,7 +1,6 @@
 import FolderTree from './FolderTree'
 import TagsList from './TagsList'
 import type { FolderNode, TagNode } from './types'
-import type { ApiClient } from '../../api/client'
 
 export interface SidebarProps {
   folders?: readonly FolderNode[]
@@ -9,8 +8,12 @@ export interface SidebarProps {
   activeTagId?: string | null
   onMoveFolder?: (sourceId: string, newParentId: string | null) => void
   onFilterTag?: (tagId: string | null) => void
-  vaultId?: string
-  client?: ApiClient
+  /** Called when user submits a new subfolder name — parentId is the target parent (null = root). */
+  onAddSubfolder?: (parentId: string | null, name: string) => void
+  /** Called when user confirms a rename with a new name. */
+  onRenameFolderConfirm?: (folderId: string, newName: string) => void
+  /** Called when user requests deleting a folder. */
+  onDeleteFolder?: (folderId: string) => void
 }
 
 export default function Sidebar({
@@ -19,8 +22,9 @@ export default function Sidebar({
   activeTagId,
   onMoveFolder,
   onFilterTag,
-  vaultId,
-  client,
+  onAddSubfolder,
+  onRenameFolderConfirm,
+  onDeleteFolder,
 }: SidebarProps) {
   return (
     <aside className="app-sidebar" aria-label="Vault navigation">
@@ -31,9 +35,9 @@ export default function Sidebar({
         <FolderTree
           folders={folders}
           onMove={onMoveFolder}
-          vaultId={vaultId ?? ''}
-          client={client ?? (undefined as any)}
-          onFoldersChanged={() => {}}
+          onAddSubfolder={onAddSubfolder}
+          onRenameConfirm={onRenameFolderConfirm}
+          onDelete={onDeleteFolder}
         />
       </nav>
 

@@ -9,14 +9,6 @@ import TagsList from './TagsList'
 import type { FolderNode, TagNode } from './types'
 import { SessionProvider } from '../../auth/SessionProvider'
 
-/** Minimal fake client — only the shape FolderTree consumes. */
-const fakeClient = {
-  post: vi.fn(),
-  patch: vi.fn(),
-  delete: vi.fn(),
-  get: vi.fn(),
-}
-
 /**
  * Layout component contract tests (FE-001i).
  *
@@ -189,7 +181,7 @@ describe('Sidebar — labelled sections', () => {
 
 describe('FolderTree — hierarchy', () => {
   it('renders three levels of nesting when expanded', () => {
-    render(<FolderTree folders={folders} client={fakeClient as any} vaultId="v1" />)
+    render(<FolderTree folders={folders} />)
 
     // Work → Engineering → Platform (expand Work first)
     const workRow = screen.getByText('Work').closest('li') as HTMLElement
@@ -206,7 +198,7 @@ describe('FolderTree — hierarchy', () => {
   })
 
   it('keeps root folders in input order', () => {
-    const { container } = render(<FolderTree folders={folders} client={fakeClient as any} vaultId="v1" />)
+    const { container } = render(<FolderTree folders={folders} />)
 
     const rootItems = Array.from(
       (container.querySelector('.folder-tree > ul') as HTMLElement).children,
@@ -217,7 +209,7 @@ describe('FolderTree — hierarchy', () => {
   })
 
   it('renders role="tree" on the root list', () => {
-    render(<FolderTree folders={folders} client={fakeClient as any} vaultId="v1" />)
+    render(<FolderTree folders={folders} />)
     expect(screen.getByRole('tree', { name: /folders/i })).toBeTruthy()
   })
 })
