@@ -159,20 +159,20 @@ describe('Sidebar — labelled sections', () => {
   })
 
   it('renders empty sections without stray lists', () => {
-    const { container } = render(<Sidebar />)
+    render(<Sidebar />)
 
     expect(screen.getByRole('heading', { name: 'Folders' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Tags' })).toBeTruthy()
-    // The folder tree renders an empty <ul> when there are no folders.
-    const uls = container.querySelectorAll('ul')
-    expect(uls).toHaveLength(1)
-    expect(uls[0].children).toHaveLength(0)
+    // FolderTree returns null when there are no folders, TagsList too for no tags.
+    const sidebar = screen.getByRole('complementary')
+    const uls = sidebar.querySelectorAll('ul')
+    expect(uls).toHaveLength(0)
   })
 
   it('renders expand toggle for folders with children and spacer for leaves', () => {
     render(<Sidebar folders={folders} tags={tags} />)
     expect(screen.getByRole('button', { name: /expand work/i })).toBeTruthy()
-    // Personal is a leaf — no toggle, spacer instead
+    // Personal has no children → leaf → spacer, no toggle
     const personalRow = screen.getByText('Personal').closest('.folder-tree__row') as HTMLElement
     expect(personalRow.querySelector('.folder-tree__toggle')).toBeNull()
     expect(personalRow.querySelector('.folder-tree__spacer')).toBeTruthy()
@@ -198,11 +198,11 @@ describe('FolderTree — hierarchy', () => {
   })
 
   it('keeps root folders in input order', () => {
-    const { container } = render(<FolderTree folders={folders} />)
+    render(<FolderTree folders={folders} />)
 
     const rootItems = Array.from(
-      (container.querySelector('.folder-tree > ul') as HTMLElement).children,
-    ) as HTMLElement[]
+      screen.getAllByRole('treeitem'),
+    ).filter((el) => (el as HTMLElement).getAttribute('aria-level') === '1') as HTMLElement[]
     const rootNames = rootItems.map((li) => li.querySelector('.folder-tree__name')?.textContent)
 
     expect(rootNames).toEqual(['Work', 'Personal'])

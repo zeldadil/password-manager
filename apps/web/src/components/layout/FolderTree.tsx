@@ -117,7 +117,7 @@ function TreeNode({
       role="treeitem"
       aria-level={depth + 1}
       aria-labelledby={`folder-tree-item-${folder.id}`}
-      className="folder-tree__item"
+      className="folder-tree__row folder-tree__item"
       style={{ paddingLeft: `${depth * 16 + 4}px` }}
       onContextMenu={(e) => { e.stopPropagation(); onContextMenu(folder, e) }}
     >
