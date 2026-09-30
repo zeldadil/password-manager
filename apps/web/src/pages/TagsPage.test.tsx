@@ -300,9 +300,9 @@ describe('TagsPage', () => {
   })
 
   it('shows a loading state while tags are fetching', async () => {
-    let resolvePending: (() => void) | undefined = undefined
+    let pendingResolve: (() => void) = () => {}
     const pending = new Promise<undefined>((resolve) => {
-      resolvePending = () => resolve(undefined)
+      pendingResolve = () => resolve(undefined)
     })
     const stub = vi.fn()
     stub.mockResolvedValueOnce(loginOk)
@@ -333,7 +333,7 @@ describe('TagsPage', () => {
     await screen.findByText('Loading tags…')
     expect(screen.queryByRole('heading', { name: /create tag/i })).toBeNull()
 
-    resolvePending?.()
+    pendingResolve()
     await pending.catch(() => {})
   })
 
