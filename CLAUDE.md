@@ -258,6 +258,47 @@ hermes kanban link <id-de-la-tâche-bloquante> <id-de-la-tâche-à-bloquer>
 `block` reste correct pour une tâche déjà `ready`/`running` (ex. un crash actif qu'on veut
 figer côté humain) — c'est seulement le cas `todo`/`triage` qui n'est pas supporté.
 
+## Piège n°12 — `kanban.default_assignee` auto-assigne et dispatch une carte non-assignée en ~1 minute
+
+Constaté le 30/09 en créant une carte "human gate" volontairement sans assignee
+(pour qu'elle ne puisse jamais être dispatchée automatiquement, seul un humain
+devant la clore) : `~/.hermes/config.yaml` a `kanban.default_assignee: architect`
+configuré. Le dispatcher applique ce défaut à toute tâche `ready` sans assignee
+et la spawn — la carte "human gate" a été assignée à `architect` et un run a
+démarré dessus en moins d'une minute, contrariant complètement l'intention.
+Rattrapé à temps (`hermes kanban reclaim` puis `hermes kanban block --kind
+needs_input`) avant qu'aucun commentaire ne soit posté par ce run — mais ça
+aurait pu produire du travail non voulu sur une carte censée n'être touchée
+que par l'humain.
+
+**Une carte "humain seulement" doit être créée `blocked` (pas juste sans
+assignee) :**
+```bash
+# 1. Créer normalement
+hermes kanban create "..." --json
+# 2. IMMÉDIATEMENT après (avant que le dispatcher ne passe), bloquer en sticky :
+hermes kanban block <id> "raison" --kind needs_input
+# 3. Puis désassigner (au cas où default_assignee ait déjà agi entre 1 et 2) :
+hermes kanban assign <id> none
+```
+`block_task` transitionne `ready`/`running` → `blocked` (voir Piège n°11) — un
+blocage `needs_input` est sticky (`recompute_ready` ne le relève jamais tout
+seul, seul un `kanban unblock` explicite le fait) et n'est pas concerné par
+`default_assignee`, qui ne s'applique qu'aux tâches `ready` sans assignee.
+
+**Procédure testée pour que l'humain clôture lui-même une telle carte**, sans
+jamais repasser par `ready` (donc sans risque que `default_assignee` la
+rattrape entre-temps) : `complete_task` accepte directement une tâche
+`blocked` (`WHERE status IN ('running', 'ready', 'blocked', 'review')`) — pas
+besoin d'`unblock` avant :
+```bash
+hermes kanban complete <id> --summary "<ce qui a été approuvé et pourquoi>"
+```
+Testé sur une carte jetable le 30/09 : `blocked` → `done` directement, aucun
+passage intermédiaire par `ready`. Ne PAS faire `hermes kanban unblock` avant
+`complete` sur ce genre de carte — ça réintroduit exactement la fenêtre de
+course que cette procédure évite.
+
 ## Point non résolu — à investiguer si le temps le permet
 
 La tâche Kanban `t_df8e644a` est marquée `done` ("VERDICT_LOOSE_RE still parses a
