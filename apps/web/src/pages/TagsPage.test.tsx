@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider, type RouteObject } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import TagsPage from './TagsPage'
+import './TagsPage'
 import { SessionProvider } from '../auth/SessionProvider'
 import { routes } from '../routes'
 
@@ -300,9 +300,9 @@ describe('TagsPage', () => {
   })
 
   it('shows a loading state while tags are fetching', async () => {
-    let resolvePending: () => void = () => {}
+    let resolvePending: (() => void) | undefined = undefined
     const pending = new Promise<undefined>((resolve) => {
-      resolvePending = resolve
+      resolvePending = () => resolve(undefined)
     })
     const stub = vi.fn()
     stub.mockResolvedValueOnce(loginOk)
@@ -333,7 +333,7 @@ describe('TagsPage', () => {
     await screen.findByText('Loading tags…')
     expect(screen.queryByRole('heading', { name: /create tag/i })).toBeNull()
 
-    resolvePending()
+    resolvePending?.()
     await pending.catch(() => {})
   })
 

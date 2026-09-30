@@ -1,7 +1,6 @@
 /** Tag API client — typed helpers over the shared {@link ApiClient}. */
 
 import { ApiClient } from './client'
-import type { ApiClientOptions } from './client'
 
 export interface TagInput {
   name: string

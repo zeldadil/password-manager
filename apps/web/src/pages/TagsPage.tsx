@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSession } from '../auth/SessionProvider'
 import { ApiClient } from '../api'
@@ -108,12 +108,15 @@ export default function TagsPage() {
   )
 
   const resources = (() => {
-    try {
-      const data = queryClient.getQueryData<Array<{ id: string; name: string; tagIds: string[] }>>(['resources'])
-      return data ?? []
-    } catch {
-      return []
+    // VaultPage (FE-003c) keys its query as ['resources', trimmedSearch],
+    // so the idle key is ['resources', '']. Read everything under the
+    // ['resources'] prefix and use the most recent non-empty entry.
+    const entries = queryClient.getQueriesData({ queryKey: ['resources'] })
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const [, raw] = entries[i]
+      if (Array.isArray(raw)) return raw as Array<{ id: string; name: string; tagIds: string[] }>
     }
+    return []
   })()
 
   const toggleResourceExpand = useCallback((id: string) => {
