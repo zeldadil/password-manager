@@ -1,12 +1,13 @@
 # ADR-007: Vault Key Client Availability (the ADR-002 §4.2 FLAG, unresolved)
 
-**Status:** Proposed — decision needed
-**Date:** 2026-09-28
+**Status:** Accepted — Option B (2026-09-29)
+**Date:** 2026-09-28 (proposed) · 2026-09-29 (accepted)
 **Author:** QA (found while investigating FE-003d)
-**Decision-Makers:** Architect + QA
+**Decision-Makers:** Architect (recommendation) + QA (independent review) + Ze (final decision)
 **References:** ADR-002 §4.2 (Unlock/Login Flow), §4.3 (Vault Data Flow), §9.3;
 SEC-001 Decision 6; `packages/crypto/`; `apps/services/api/src/auth/unlock.ts`;
-`apps/web/src/auth/SessionProvider.tsx`
+`apps/web/src/auth/SessionProvider.tsx`; kanban `t_4de1f6aa` (decision card,
+full review thread)
 
 ---
 
@@ -297,20 +298,73 @@ padding, consistent with it discovering it had no real key/ciphertext to work
 with and improvising). The others simply haven't been picked up yet; they
 will hit the same wall.
 
-## 6. What this ADR does *not* do
+## 6. Decision (2026-09-29)
 
-This document does not choose between Option A1, A2, and B. That is a
-security-posture decision (it changes what SEC-001 can truthfully claim about
-the server's trust boundary) and belongs to whoever owns that document —
-proposed as Architect + QA per the ADR-006 precedent. No implementation
-(browser Argon2 library, `SessionProvider` changes, or endpoint changes) has
-been started against any option. If B is chosen, the library-approval gate in
-§4 applies before any implementation of that option begins.
+**Option B is accepted: client-side key derivation. The server never
+receives the master password or the encryption key.**
+
+Process followed, per ADR-006 precedent (Architect proposes, QA reviews
+independently, human decides): Architect recommended Option B (kanban
+`t_4de1f6aa` comment #303), citing that only B keeps ADR-002/SEC-001's
+zero-knowledge guarantee true without amendment and that ADR-002 §4.2
+already named it preferred. QA's independent review (comment #307) returned
+**pass-with-conditions**, confirming B's protocol impact on `register.ts`/
+`unlock.ts` (register needs no change; unlock must additionally return
+`salt`/`kdfParams`), but surfacing two real findings: the current KDF output
+serves as both auth verifier and encryption key with no domain separation,
+and SEC-001's KDF parameters (64MB memory, parallelism 4) are unverified in
+browser WASM, particularly on mobile Safari. Ze's decision (comment on
+`t_4de1f6aa`, 2026-09-29) accepted B on top of QA's findings and added a
+stronger requirement neither the recommendation nor the review had assumed:
+**the server must stop receiving the master password at all**, not merely
+stop transmitting the derived key (see condition 3 below and the filed
+security card `t_dd9eb295`, which confirms today's `unlockVaultKey()`
+reconstructs the plaintext vault key server-side as a side effect of
+verifying the self-wrapped KDF record — a fact QA's key-separation finding
+implied but did not state directly).
+
+**Conditions — all blocking before any Option B implementation starts:**
+
+1. **Key separation.** The authentication verifier sent to the server and
+   the encryption (vault) key must be derived separately from the Argon2id
+   output (e.g. HKDF with distinct labels). Without this, B would still send
+   information equivalent to the encryption key to the server — not
+   acceptable.
+2. **Library gate.** The browser Argon2id library is chosen through a
+   separate sign-off (Architect proposes, QA reviews, Ze decides — the gate
+   already described in §4). It must confirm SEC-001's parameters (64MB
+   memory, parallelism 4) actually run in browser WASM on desktop *and*
+   mobile Safari. If they don't, retuning the parameters is a SEC-001
+   amendment that returns to Ze — no silent change, and **no automatic
+   fallback to A2**.
+3. **Server-side rework.** BE-002a's registration and `/auth/unlock` flow
+   must be reworked so the server stops receiving the master password
+   entirely — not just stops receiving/transmitting the vault key. Scope and
+   any data-migration impact to be specified by Architect (tracked as
+   `t_e88bcc25`).
+4. **Key-recovery check — resolved.** Whether the server-stored value alone
+   allows recovering the encryption key: no, the at-rest `vaultKeyEncrypted`
+   record (self-wrapped, `encrypt(vaultKey, vaultKey)`) requires the master
+   password to decrypt, same as any password-wrapped key. The real finding
+   was at unlock time, not at rest — filed as `t_dd9eb295` and folded into
+   condition 3's scope, since it's the same server-side-verification
+   mechanism that needs to change.
+
+**A2 is explicitly not pre-approved as a fallback.** If B proves infeasible
+under these conditions, that returns to Ze as a new decision — this ADR does
+not authorize silently falling back to A2 or A1.
+
+No implementation (browser Argon2 library, `SessionProvider` changes, or
+endpoint changes) has started. This ADR's acceptance authorizes the scoping
+and library-gate work in conditions 1-3 to proceed; it does not authorize
+writing Option B's actual implementation code until all three blocking
+conditions are satisfied.
 
 ---
 
-*Date: 2026-09-28 (updated same day: split "Option A" into A1/A2 after review
-— the original draft conflated two server-side key-custody mechanics under
-one option without distinguishing whether the vault key itself ever reaches
-the browser, which is the actual security-relevant axis) · Author: QA ·
-Status: Proposed — awaiting Architect decision*
+*Date: 2026-09-28 (proposed; updated same day to split "Option A" into A1/A2
+after review — the original draft conflated two server-side key-custody
+mechanics under one option without distinguishing whether the vault key
+itself ever reaches the browser, which is the actual security-relevant axis)
+· 2026-09-29 (accepted — Option B, conditions above) · Author: QA (proposal),
+Ze (decision) · Status: Accepted*
