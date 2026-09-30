@@ -56,7 +56,9 @@ describe('tagApi', () => {
   }
 
   it('lists tags with pagination params', async () => {
-    const fetchMock = makeFetch(() => envelope({ data: [tag], pagination: { page: 1, perPage: 20 } }))
+    const fetchMock = makeFetch(() =>
+      envelope({ data: [tag], pagination: { page: 1, perPage: 20 } }),
+    )
     const api = tagApi(clientWith(fetchMock))
 
     const result = await api.list({ page: 2, perPage: 10 })
@@ -69,12 +71,17 @@ describe('tagApi', () => {
   })
 
   it('lists tags without pagination params', async () => {
-    const fetchMock = makeFetch(() => envelope({ data: [tag], pagination: { page: 1, perPage: 20 } }))
+    const fetchMock = makeFetch(() =>
+      envelope({ data: [tag], pagination: { page: 1, perPage: 20 } }),
+    )
     const api = tagApi(clientWith(fetchMock))
 
     await api.list()
 
-    expect(fetchMock).toHaveBeenCalledWith(`${BASE_URL}/tags`, expect.objectContaining({ method: 'GET' }))
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${BASE_URL}/tags`,
+      expect.objectContaining({ method: 'GET' }),
+    )
   })
 
   it('gets a single tag by id', async () => {
@@ -84,7 +91,10 @@ describe('tagApi', () => {
     const result = await api.get('tag-1')
 
     expect(result).toEqual(tag)
-    expect(fetchMock).toHaveBeenCalledWith(`${BASE_URL}/tags/tag-1`, expect.objectContaining({ method: 'GET' }))
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${BASE_URL}/tags/tag-1`,
+      expect.objectContaining({ method: 'GET' }),
+    )
   })
 
   it('creates a tag', async () => {
@@ -140,7 +150,10 @@ describe('tagApi', () => {
     const result = await api.delete('tag-1')
 
     expect(result.deleted).toBe(true)
-    expect(fetchMock).toHaveBeenCalledWith(`${BASE_URL}/tags/tag-1`, expect.objectContaining({ method: 'DELETE' }))
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${BASE_URL}/tags/tag-1`,
+      expect.objectContaining({ method: 'DELETE' }),
+    )
   })
 })
 
@@ -155,7 +168,7 @@ describe('resourceTagApi', () => {
     deleted: false,
   }
 
-  it('replaces a resource\'s tags', async () => {
+  it("replaces a resource's tags", async () => {
     const fetchMock = makeFetch(() => envelope(tag))
     const api = resourceTagApi(clientWith(fetchMock))
 
@@ -171,7 +184,7 @@ describe('resourceTagApi', () => {
     )
   })
 
-  it('clears a resource\'s tags with an empty array', async () => {
+  it("clears a resource's tags with an empty array", async () => {
     const fetchMock = makeFetch(() => envelope(tag))
     const api = resourceTagApi(clientWith(fetchMock))
 

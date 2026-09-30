@@ -190,34 +190,30 @@ describe('TagsPage', () => {
     stub.mockResolvedValueOnce(mockResources([]))
     stub
       .mockResolvedValueOnce(tagsEnvelope([]))
-      .mockResolvedValueOnce(
-        {
-          ok: true,
-          json: async () => ({
-            header: {
-              id: 'h1',
-              status: 'success',
-              servertime: new Date().toISOString(),
-              action: 'CreateTag',
-              code: 200,
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          header: {
+            id: 'h1',
+            status: 'success',
+            servertime: new Date().toISOString(),
+            action: 'CreateTag',
+            code: 200,
+          },
+          body: {
+            data: {
+              id: 'new',
+              name: 'NewTag',
+              color: '#ff0000',
+              vaultId: 'v1',
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: '2026-01-01T00:00:00.000Z',
+              deleted: false,
             },
-            body: {
-              data: {
-                id: 'new',
-                name: 'NewTag',
-                color: '#ff0000',
-                vaultId: 'v1',
-                createdAt: '2026-01-01T00:00:00.000Z',
-                updatedAt: '2026-01-01T00:00:00.000Z',
-                deleted: false,
-              },
-            },
-          }),
-        } as unknown as Response,
-      )
-      .mockResolvedValueOnce(
-        tagsEnvelope([{ id: 'new', name: 'NewTag', color: '#ff0000' }]),
-      )
+          },
+        }),
+      } as unknown as Response)
+      .mockResolvedValueOnce(tagsEnvelope([{ id: 'new', name: 'NewTag', color: '#ff0000' }]))
     vi.stubGlobal('fetch', stub)
 
     const { login } = renderApp(stub)
@@ -300,7 +296,7 @@ describe('TagsPage', () => {
   })
 
   it('shows a loading state while tags are fetching', async () => {
-    let pendingResolve: (() => void) = () => {}
+    let pendingResolve: () => void = () => {}
     const pending = new Promise<undefined>((resolve) => {
       pendingResolve = () => resolve(undefined)
     })
@@ -405,7 +401,10 @@ describe('TagsPage — resource tag assignment', () => {
 
   it('renders resource items with current tags', async () => {
     const { login } = renderWithResources(
-      [{ id: 't1', name: 'Work' }, { id: 't2', name: 'Personal' }],
+      [
+        { id: 't1', name: 'Work' },
+        { id: 't2', name: 'Personal' },
+      ],
       [
         { id: 'r1', name: 'GitHub', tagIds: ['t1'] },
         { id: 'r2', name: 'Internal', tagIds: [] },
@@ -440,20 +439,41 @@ describe('TagsPage — resource tag assignment', () => {
     stub
       .mockResolvedValueOnce(loginOk)
       .mockResolvedValueOnce(mockResources([{ id: 'r1', name: 'GitHub', tagIds: [] }]))
-      .mockResolvedValueOnce(tagsEnvelope([{ id: 't1', name: 'Work' }, { id: 't2', name: 'Personal' }]))
-      // 4th: tag search inside handleAssign searches all tags via GET /tags.
-      .mockResolvedValueOnce(tagsEnvelope([{ id: 't1', name: 'Work' }, { id: 't2', name: 'Personal' }]))
-      // 5th: PATCH /resources/r1 with the matched tag id.
-      .mockResolvedValueOnce(tagsEnvelope([{ id: 't1', name: 'Work' }, { id: 't2', name: 'Personal' }]))
       .mockResolvedValueOnce(
-        {
-          ok: true,
-          json: async () => ({
-            header: { id: 'h1', status: 'success', servertime: new Date().toISOString(), action: 'PatchResource', code: 200 },
-            body: { data: { id: 'r1', name: 'GitHub', tagIds: ['t1'], created: '2026-01-01T00:00:00.000Z' } },
-          }),
-        } as unknown as Response,
+        tagsEnvelope([
+          { id: 't1', name: 'Work' },
+          { id: 't2', name: 'Personal' },
+        ]),
       )
+      // 4th: tag search inside handleAssign searches all tags via GET /tags.
+      .mockResolvedValueOnce(
+        tagsEnvelope([
+          { id: 't1', name: 'Work' },
+          { id: 't2', name: 'Personal' },
+        ]),
+      )
+      // 5th: PATCH /resources/r1 with the matched tag id.
+      .mockResolvedValueOnce(
+        tagsEnvelope([
+          { id: 't1', name: 'Work' },
+          { id: 't2', name: 'Personal' },
+        ]),
+      )
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          header: {
+            id: 'h1',
+            status: 'success',
+            servertime: new Date().toISOString(),
+            action: 'PatchResource',
+            code: 200,
+          },
+          body: {
+            data: { id: 'r1', name: 'GitHub', tagIds: ['t1'], created: '2026-01-01T00:00:00.000Z' },
+          },
+        }),
+      } as unknown as Response)
     vi.stubGlobal('fetch', stub)
 
     const qc = makeQueryClient()
@@ -485,32 +505,48 @@ describe('TagsPage — resource tag assignment', () => {
     await userEvent.type(assignInput, 'Work')
     await userEvent.click(screen.getByRole('button', { name: /assign/i }))
 
-    await waitFor(() => expect(stub).toHaveBeenCalledWith(
-      expect.stringContaining('/resources/r1'),
-      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ tagIds: ['t1'] }), }),
-    ))
+    await waitFor(() =>
+      expect(stub).toHaveBeenCalledWith(
+        expect.stringContaining('/resources/r1'),
+        expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ tagIds: ['t1'] }) }),
+      ),
+    )
   })
 
   it('removes a tag from a resource', async () => {
     const stub: FetchStub = vi.fn()
     stub
       .mockResolvedValueOnce(loginOk)
+      .mockResolvedValueOnce(mockResources([{ id: 'r1', name: 'GitHub', tagIds: ['t1', 't2'] }]))
       .mockResolvedValueOnce(
-        mockResources([{ id: 'r1', name: 'GitHub', tagIds: ['t1', 't2'] }]),
+        tagsEnvelope([
+          { id: 't1', name: 'Work' },
+          { id: 't2', name: 'Personal' },
+        ]),
       )
-      .mockResolvedValueOnce(tagsEnvelope([{ id: 't1', name: 'Work' }, { id: 't2', name: 'Personal' }]))
       // 4th: tag search inside handleRemoveTagSearch finds both tags via GET /tags.
-      .mockResolvedValueOnce(tagsEnvelope([{ id: 't1', name: 'Work' }, { id: 't2', name: 'Personal' }]))
-      // 5th: PATCH /resources/r1 removing t1, keeping t2.
       .mockResolvedValueOnce(
-        {
-          ok: true,
-          json: async () => ({
-            header: { id: 'h1', status: 'success', servertime: new Date().toISOString(), action: 'PatchResource', code: 200 },
-            body: { data: { id: 'r1', name: 'GitHub', tagIds: ['t2'], created: '2026-01-01T00:00:00.000Z' } },
-          }),
-        } as unknown as Response,
+        tagsEnvelope([
+          { id: 't1', name: 'Work' },
+          { id: 't2', name: 'Personal' },
+        ]),
       )
+      // 5th: PATCH /resources/r1 removing t1, keeping t2.
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          header: {
+            id: 'h1',
+            status: 'success',
+            servertime: new Date().toISOString(),
+            action: 'PatchResource',
+            code: 200,
+          },
+          body: {
+            data: { id: 'r1', name: 'GitHub', tagIds: ['t2'], created: '2026-01-01T00:00:00.000Z' },
+          },
+        }),
+      } as unknown as Response)
     vi.stubGlobal('fetch', stub)
 
     const qc = makeQueryClient()
@@ -541,13 +577,15 @@ describe('TagsPage — resource tag assignment', () => {
     const removeBtn = screen.getByRole('button', { name: /remove work from github/i })
     await userEvent.click(removeBtn)
 
-    await waitFor(() => expect(stub).toHaveBeenCalledWith(
-      expect.stringContaining('/resources/r1'),
-      expect.objectContaining({
-        method: 'PATCH',
-        body: JSON.stringify({ tagIds: ['t2'] }),
-      }),
-    ))
+    await waitFor(() =>
+      expect(stub).toHaveBeenCalledWith(
+        expect.stringContaining('/resources/r1'),
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({ tagIds: ['t2'] }),
+        }),
+      ),
+    )
   })
 
   it('clears the assign input after a successful assign', async () => {
@@ -555,19 +593,35 @@ describe('TagsPage — resource tag assignment', () => {
     stub
       .mockResolvedValueOnce(loginOk)
       .mockResolvedValueOnce(mockResources([{ id: 'r1', name: 'GitHub', tagIds: [] }]))
-      .mockResolvedValueOnce(tagsEnvelope([{ id: 't1', name: 'Work' }, { id: 't2', name: 'Personal' }]))
-      // 4th: tag search inside handleAssign searches all tags via GET /tags.
-      .mockResolvedValueOnce(tagsEnvelope([{ id: 't1', name: 'Work' }, { id: 't2', name: 'Personal' }]))
-      // 5th: PATCH /resources/r1 with the matched tag id.
       .mockResolvedValueOnce(
-        {
-          ok: true,
-          json: async () => ({
-            header: { id: 'h1', status: 'success', servertime: new Date().toISOString(), action: 'PatchResource', code: 200 },
-            body: { data: { id: 'r1', name: 'GitHub', tagIds: ['t1'], created: '2026-01-01T00:00:00.000Z' } },
-          }),
-        } as unknown as Response,
+        tagsEnvelope([
+          { id: 't1', name: 'Work' },
+          { id: 't2', name: 'Personal' },
+        ]),
       )
+      // 4th: tag search inside handleAssign searches all tags via GET /tags.
+      .mockResolvedValueOnce(
+        tagsEnvelope([
+          { id: 't1', name: 'Work' },
+          { id: 't2', name: 'Personal' },
+        ]),
+      )
+      // 5th: PATCH /resources/r1 with the matched tag id.
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          header: {
+            id: 'h1',
+            status: 'success',
+            servertime: new Date().toISOString(),
+            action: 'PatchResource',
+            code: 200,
+          },
+          body: {
+            data: { id: 'r1', name: 'GitHub', tagIds: ['t1'], created: '2026-01-01T00:00:00.000Z' },
+          },
+        }),
+      } as unknown as Response)
     vi.stubGlobal('fetch', stub)
 
     const qc = makeQueryClient()

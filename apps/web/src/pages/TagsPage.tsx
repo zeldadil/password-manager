@@ -12,10 +12,10 @@ export default function TagsPage() {
   const [createName, setCreateName] = useState('')
   const [createColor, setCreateColor] = useState('')
   const [createError, setCreateError] = useState<string | null>(null)
-  const [ deletingId, setDeletingId ] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [expandedResources, setExpandedResources] = useState<Set<string>>(new Set())
   const [resourceTagInput, setResourceTagInput] = useState<string>('')
-  const [ patchingResourceId, setPatchingResourceId ] = useState<string | null>(null)
+  const [patchingResourceId, setPatchingResourceId] = useState<string | null>(null)
 
   const client = useCallback(
     () =>
@@ -34,7 +34,11 @@ export default function TagsPage() {
   const tagClient = tagApi(client())
   const resourceTagClient = resourceTagApi(client())
 
-  const { data: tagsEnvelope, isLoading, error } = useQuery({
+  const {
+    data: tagsEnvelope,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['tags'],
     queryFn: () => tagClient.list(),
     enabled: accessToken !== null,
@@ -53,7 +57,9 @@ export default function TagsPage() {
     },
     onError: (err) => {
       const message =
-        err && typeof err === 'object' && 'message' in err ? String((err as { message: string }).message) : 'Failed to create tag'
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: string }).message)
+          : 'Failed to create tag'
       setCreateError(message)
     },
   })
@@ -136,7 +142,10 @@ export default function TagsPage() {
       const raw = resourceTagInput.trim()
       if (!raw) return
       // Comma or space separated tag names — resolve to ids from current tag list.
-      const names = raw.split(/[, ]+/).map((s) => s.trim()).filter(Boolean)
+      const names = raw
+        .split(/[, ]+/)
+        .map((s) => s.trim())
+        .filter(Boolean)
       const nameToId = new Map(tags.map((t) => [t.name.toLowerCase(), t.id]))
       const ids = names
         .map((n) => nameToId.get(n.toLowerCase()))
@@ -161,7 +170,9 @@ export default function TagsPage() {
     return (
       <div className="tags-page">
         <h1 className="tags-heading">Tags</h1>
-        <div className="tags-loading" role="status" aria-live="polite">Loading tags…</div>
+        <div className="tags-loading" role="status" aria-live="polite">
+          Loading tags…
+        </div>
       </div>
     )
   }
@@ -183,7 +194,9 @@ export default function TagsPage() {
 
       {/* ── Create tag form ── */}
       <section className="tags-section" aria-labelledby="tags-create-heading">
-        <h2 id="tags-create-heading" className="tags-section-title">Create tag</h2>
+        <h2 id="tags-create-heading" className="tags-section-title">
+          Create tag
+        </h2>
         <form onSubmit={handleCreate} className="tags-create-form" noValidate>
           <div className="tags-create-row">
             <label className="tags-label" htmlFor="tag-name">
@@ -227,7 +240,11 @@ export default function TagsPage() {
               title="Hex color, e.g. 6-digit hex"
             />
           </div>
-          {createError && <p className="tags-form-error" role="alert">{createError}</p>}
+          {createError && (
+            <p className="tags-form-error" role="alert">
+              {createError}
+            </p>
+          )}
           <div className="tags-create-actions">
             <button
               type="submit"
@@ -281,7 +298,9 @@ export default function TagsPage() {
 
       {/* ── Resource tag assignments ── */}
       <section className="tags-section" aria-labelledby="tags-assign-heading">
-        <h2 id="tags-assign-heading" className="tags-section-title">Assign tags to resources</h2>
+        <h2 id="tags-assign-heading" className="tags-section-title">
+          Assign tags to resources
+        </h2>
         {resources.length === 0 ? (
           <p className="tags-empty">No resources available to tag.</p>
         ) : (
@@ -351,7 +370,11 @@ export default function TagsPage() {
                           {resourceTagsMutation.isPending ? 'Assigning…' : 'Assign'}
                         </button>
                       </div>
-                      <ul className="tags-resource-tag-list" role="list" aria-label={`Tags for ${resource.name}`}>
+                      <ul
+                        className="tags-resource-tag-list"
+                        role="list"
+                        aria-label={`Tags for ${resource.name}`}
+                      >
                         {resource.tagIds.map((tagId) => {
                           const tag = tags.find((t) => t.id === tagId)
                           if (!tag) return null
