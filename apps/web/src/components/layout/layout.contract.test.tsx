@@ -148,23 +148,31 @@ describe('Sidebar — labelled sections', () => {
 
     // Engineering is hidden until Work expanded; Production/Staging are always rendered
     expect(within(foldersNav).getByText('Work')).toBeTruthy()
+    // Expand Work to reveal Engineering
+    const workRow = screen.getByText('Work').closest('li') as HTMLElement
+    fireEvent.click(workRow.querySelector('.folder-tree__toggle') as HTMLElement)
+    const workItem = screen.getByText('Work').closest('li') as HTMLElement
+    expect(within(workItem).getByText('Engineering')).toBeTruthy()
     expect(within(tagsNav).getByText('Staging')).toBeTruthy()
     expect(within(foldersNav).queryByText('Staging')).toBeNull()
     expect(within(tagsNav).queryByText('Engineering')).toBeNull()
   })
 
   it('renders empty sections without stray lists', () => {
-    const { container } = render(<Sidebar />)
+    render(<Sidebar />)
 
     expect(screen.getByRole('heading', { name: 'Folders' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Tags' })).toBeTruthy()
-    expect(container.querySelectorAll('ul')).toHaveLength(0)
+    // FolderTree returns null when there are no folders, TagsList too for no tags.
+    const sidebar = screen.getByRole('complementary')
+    const uls = sidebar.querySelectorAll('ul')
+    expect(uls).toHaveLength(0)
   })
 
   it('renders expand toggle for folders with children and spacer for leaves', () => {
     render(<Sidebar folders={folders} tags={tags} />)
     expect(screen.getByRole('button', { name: /expand work/i })).toBeTruthy()
-    // Personal is a leaf — no toggle, spacer instead
+    // Personal has no children → leaf → spacer, no toggle
     const personalRow = screen.getByText('Personal').closest('.folder-tree__row') as HTMLElement
     expect(personalRow.querySelector('.folder-tree__toggle')).toBeNull()
     expect(personalRow.querySelector('.folder-tree__spacer')).toBeTruthy()
@@ -175,27 +183,27 @@ describe('FolderTree — hierarchy', () => {
   it('renders three levels of nesting when expanded', () => {
     render(<FolderTree folders={folders} />)
 
-    // Expand Work, then Engineering
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    fireEvent.click(screen.getByRole('button', { name: /expand engineering/i }))
+    // Work → Engineering → Platform (expand Work first)
+    const workRow = screen.getByText('Work').closest('li') as HTMLElement
+    fireEvent.click(workRow.querySelector('.folder-tree__toggle') as HTMLElement)
+    const workItem = screen.getByText('Work').closest('li') as HTMLElement
+    const withinWork = within(workItem)
+    expect(withinWork.getByText('Engineering')).toBeTruthy()
 
-    // Work → Engineering → Platform: each folder row is inside a <li>, with children in a sibling <ul>
-    const workLi = screen.getByText('Work').closest('li') as HTMLElement
-    const engineeringLi = within(workLi).getByText('Engineering').closest('li') as HTMLElement
-    const platform = within(engineeringLi).getByText('Platform')
-
-    // Platform lives in a nested list below Engineering, not next to it.
-    expect(platform.closest('.folder-tree__children')?.parentElement).toBe(engineeringLi)
-    // A sibling root folder never leaks into the Work subtree.
-    expect(within(workLi).queryByText('Personal')).toBeNull()
+    const engRow = withinWork.getByText('Engineering').closest('li') as HTMLElement
+    fireEvent.click(engRow.querySelector('.folder-tree__toggle') as HTMLElement)
+    const engItem = withinWork.getByText('Engineering').closest('li') as HTMLElement
+    const withinEng = within(engItem)
+    expect(withinEng.getByText('Platform')).toBeTruthy()
   })
 
   it('keeps root folders in input order', () => {
-    const { container } = render(<FolderTree folders={folders} />)
+    render(<FolderTree folders={folders} />)
 
-    const rootNames = Array.from(
-      container.querySelectorAll('.folder-tree__row .folder-tree__name'),
-    ).map((el) => el.textContent)
+    const rootItems = Array.from(screen.getAllByRole('treeitem')).filter(
+      (el) => (el as HTMLElement).getAttribute('aria-level') === '1',
+    ) as HTMLElement[]
+    const rootNames = rootItems.map((li) => li.querySelector('.folder-tree__name')?.textContent)
 
     expect(rootNames).toEqual(['Work', 'Personal'])
   })

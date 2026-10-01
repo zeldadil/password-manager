@@ -8,6 +8,12 @@ export interface SidebarProps {
   activeTagId?: string | null
   onMoveFolder?: (sourceId: string, newParentId: string | null) => void
   onFilterTag?: (tagId: string | null) => void
+  /** Called when user submits a new subfolder name — parentId is the target parent (null = root). */
+  onAddSubfolder?: (parentId: string | null, name: string) => void
+  /** Called when user confirms a rename with a new name. */
+  onRenameFolderConfirm?: (folderId: string, newName: string) => void
+  /** Called when user requests deleting a folder. */
+  onDeleteFolder?: (folderId: string) => void
 }
 
 export default function Sidebar({
@@ -16,6 +22,9 @@ export default function Sidebar({
   activeTagId,
   onMoveFolder,
   onFilterTag,
+  onAddSubfolder,
+  onRenameFolderConfirm,
+  onDeleteFolder,
 }: SidebarProps) {
   return (
     <aside className="app-sidebar" aria-label="Vault navigation">
@@ -23,7 +32,13 @@ export default function Sidebar({
         <h2 id="app-sidebar__folders-heading" className="app-sidebar__heading">
           Folders
         </h2>
-        <FolderTree folders={folders} onMove={onMoveFolder} />
+        <FolderTree
+          folders={folders}
+          onMove={onMoveFolder}
+          onAddSubfolder={onAddSubfolder}
+          onRenameConfirm={onRenameFolderConfirm}
+          onDelete={onDeleteFolder}
+        />
       </nav>
 
       <nav className="app-sidebar__section" aria-labelledby="app-sidebar__tags-heading">

@@ -167,6 +167,161 @@
   color: var(--foreground);
 }
 
+/* --- Folder context menu --- */
+.folder-context-menu {
+  min-width: 180px;
+  padding: 4px 0;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.folder-context-menu__item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.folder-context-menu__item:hover,
+.folder-context-menu__item--focused {
+  background-color: var(--accent);
+  color: var(--card);
+}
+
+/* --- Folder tree inline rename --- */
+.folder-tree__rename-row {
+  padding: 0;
+}
+
+.folder-tree__rename-input {
+  width: 120px;
+  max-width: 60vw;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  background-color: var(--card);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  outline: none;
+}
+
+/* --- Folder name dialog --- */
+.folder-name-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 900;
+}
+
+.folder-name-dialog {
+  width: 100%;
+  max-width: 360px;
+  padding: 20px;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.folder-name-dialog__title {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.folder-name-dialog__label {
+  display: block;
+  margin: 0 0 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+
+.folder-name-dialog__input {
+  display: block;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--foreground);
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  outline: none;
+}
+
+.folder-name-dialog__input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(/* accent */ var(--accent-rgb, 99, 102, 241), 0.25);
+}
+
+.folder-name-dialog__hint {
+  margin: 0 0 16px;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.folder-name-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.folder-name-dialog__cancel,
+.folder-name-dialog__confirm {
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.folder-name-dialog__cancel {
+  color: var(--foreground);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.folder-name-dialog__cancel:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.folder-name-dialog__confirm {
+  color: var(--card);
+  background-color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.folder-name-dialog__confirm:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.folder-name-dialog__confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* --- Main content --- */
 .app-main {
   grid-area: main;

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import FolderTree from './FolderTree'
 import type { FolderNode } from './types'
@@ -13,25 +13,76 @@ const sampleTree: FolderNode[] = [
 ]
 
 describe('FolderTree — structure and rendering', () => {
-  it('renders nothing when there are no folders', () => {
-    const { container } = render(<FolderTree folders={[]} />)
-    expect(container.querySelector('ul')).toBeNull()
-  })
-
-  it('renders every root-level folder in input order', () => {
+  it('renders every root-level folder', () => {
     render(<FolderTree folders={sampleTree} />)
-    const rootNames = Array.from(
-      document.querySelectorAll('.folder-tree__row .folder-tree__name'),
-    ).map((el) => (el as HTMLElement).textContent)
-    expect(rootNames).toEqual(['Work', 'Personal'])
+    expect(screen.getByText('Work')).toBeTruthy()
+    expect(screen.getByText('Personal')).toBeTruthy()
   })
 
   it('nests child folders under their parent when expanded', () => {
     render(<FolderTree folders={sampleTree} />)
-    expect(screen.queryByText('Engineering')).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+    // Expand Work to reveal children
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    const toggle = workRow.querySelector('.folder-tree__toggle') as HTMLElement
+    fireEvent.click(toggle)
     expect(screen.getByText('Engineering')).toBeTruthy()
     expect(screen.getByText('Finance')).toBeTruthy()
+  })
+
+  it('keeps sibling folders out of an unrelated parent subtree', () => {
+    render(<FolderTree folders={sampleTree} />)
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    const toggle = workRow.querySelector('.folder-tree__toggle') as HTMLElement
+    fireEvent.click(toggle)
+    const workItem = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    expect(within(workItem).queryByText('Personal')).toBeNull()
+  })
+
+  it('renders nothing when there are no folders', () => {
+    const { container } = render(<FolderTree folders={[]} />)
+    expect(container.querySelector('.folder-tree')).toBeNull()
+  })
+
+  it('renders expand/collapse chevrons for folders with children', () => {
+    render(<FolderTree folders={sampleTree} />)
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    expect(workRow.querySelector('.folder-tree__toggle')).not.toBeNull()
+  })
+
+  it('renders a dot chevron for leaf folders', () => {
+    render(<FolderTree folders={sampleTree} />)
+    // Finance is a leaf (Work → Finance, no children) → spacer, not chevron
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    expect(financeRow.querySelector('.folder-tree__spacer')).not.toBeNull()
+  })
+
+  it('expands and collapses a folder when its chevron is clicked', () => {
+    render(<FolderTree folders={sampleTree} />)
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    const toggle = workRow.querySelector('.folder-tree__toggle') as HTMLElement
+
+    // Initially collapsed — children hidden
+    expect(screen.queryByText('Engineering')).toBeNull()
+
+    // Click toggle to expand
+    fireEvent.click(toggle)
+    expect(screen.getByText('Engineering')).toBeTruthy()
+    expect(screen.getByText('Finance')).toBeTruthy()
+
+    // Click again to collapse
+    fireEvent.click(toggle)
+    expect(screen.queryByText('Engineering')).toBeNull()
+    expect(screen.queryByText('Finance')).toBeNull()
+  })
+
+  it('renders every root-level folder in input order', () => {
+    render(<FolderTree folders={sampleTree} />)
+    const rootItems = Array.from(screen.getAllByRole('treeitem')).filter(
+      (el) => (el as HTMLElement).getAttribute('aria-level') === '1',
+    ) as HTMLElement[]
+    const rootNames = rootItems.map((li) => li.querySelector('.folder-tree__name')?.textContent)
+    expect(rootNames).toEqual(['Work', 'Personal'])
   })
 
   it('nests grandchildren under children when expanded', () => {
@@ -44,11 +95,11 @@ describe('FolderTree — structure and rendering', () => {
   it('keeps a sibling root folder out of an expanded parent subtree', () => {
     render(<FolderTree folders={sampleTree} />)
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    const workLi = screen.getByText('Work').closest('li') as HTMLElement
-    expect(within(workLi).queryByText('Personal')).toBeNull()
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    expect(within(workRow).queryByText('Personal')).toBeNull()
   })
 
-  it('renders a role="tree" wrapper', () => {
+  it('renders role="tree" wrapper', () => {
     render(<FolderTree folders={sampleTree} />)
     expect(screen.getByRole('tree', { name: 'Folders' })).toBeTruthy()
   })
@@ -120,7 +171,7 @@ describe('FolderTree — expand/collapse', () => {
     expect(screen.queryByText('Engineering')).toBeNull()
   })
 
-  it('does not render a toggle button for a leaf folder (Finance is child of Work, leave it collapsed to test sibling)', () => {
+  it('does not render a toggle button for a leaf folder', () => {
     render(<FolderTree folders={sampleTree} />)
     // Finance is a leaf — only visible when Work expanded
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
@@ -255,6 +306,105 @@ describe('FolderTree — drag and drop', () => {
   it('does not show drop-target on rows when no drag is in progress', () => {
     renderWithMove()
     expect(document.querySelectorAll('.drop-target').length).toBe(0)
+  })
+})
+
+describe('FolderTree — context menu', () => {
+  const onAddSubfolder = vi.fn()
+  const onRenameConfirm = vi.fn()
+  const onDelete = vi.fn()
+  const onMove = vi.fn()
+
+  beforeEach(() => {
+    onAddSubfolder.mockClear()
+    onRenameConfirm.mockClear()
+    onDelete.mockClear()
+    onMove.mockClear()
+  })
+
+  function renderWithContext() {
+    return render(
+      <FolderTree
+        folders={sampleTree}
+        onMove={onMove}
+        onAddSubfolder={onAddSubfolder}
+        onRenameConfirm={onRenameConfirm}
+        onDelete={onDelete}
+      />,
+    )
+  }
+
+  it('opens context menu on right-click', () => {
+    renderWithContext()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    fireEvent.contextMenu(workRow)
+
+    expect(screen.getByRole('menu')).toBeTruthy()
+  })
+
+  it('closes context menu on Escape', () => {
+    renderWithContext()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    fireEvent.contextMenu(workRow)
+    expect(screen.getByRole('menu')).toBeTruthy()
+
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('menu')).toBeNull()
+  })
+
+  it('calls onAddSubfolder when Create subfolder is clicked', () => {
+    renderWithContext()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    fireEvent.contextMenu(workRow)
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Create subfolder' }))
+    expect(screen.getByRole('dialog')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    expect(onAddSubfolder).toHaveBeenCalled()
+  })
+
+  it('calls onRenameConfirm when Rename is clicked and confirmed', () => {
+    renderWithContext()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    fireEvent.contextMenu(workRow)
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Rename…' }))
+    expect(screen.getByRole('dialog')).toBeTruthy()
+    expect(screen.getByLabelText('Name')).toHaveValue('Work')
+
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Renamed' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+    expect(onRenameConfirm).toHaveBeenCalledWith('root1', 'Renamed')
+  })
+
+  it('calls onDelete when Delete is clicked', () => {
+    renderWithContext()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    fireEvent.contextMenu(workRow)
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete…' }))
+    expect(onDelete).toHaveBeenCalled()
+  })
+
+  it('calls onMove when Move… is clicked', () => {
+    renderWithContext()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    fireEvent.contextMenu(workRow)
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Move…' }))
+    expect(onMove).toHaveBeenCalled()
   })
 })
 

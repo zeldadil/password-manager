@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import type { FolderNode } from './types'
+import FolderContextMenu from './FolderContextMenu'
+import FolderNameDialog from './FolderNameDialog'
 
 /** Groups folders by `parentId` (`null` = vault root) so the tree can render level by level. */
 function groupFoldersByParent(folders: readonly FolderNode[]): Map<string | null, FolderNode[]> {
@@ -45,6 +47,12 @@ export interface FolderTreeProps {
   folders?: readonly FolderNode[]
   /** Called when a folder is dropped onto another folder (or the root). */
   onMove?: (sourceId: string, newParentId: string | null) => void
+  /** Called when user submits a new subfolder name — parentId is the target parent (null = root). */
+  onAddSubfolder?: (parentId: string | null, name: string) => void
+  /** Called when user confirms a rename with a new name. */
+  onRenameConfirm?: (folderId: string, newName: string) => void
+  /** Called when user requests deleting a folder. */
+  onDelete?: (folderId: string) => void
 }
 
 interface TreeNodeProps {
@@ -59,6 +67,7 @@ interface TreeNodeProps {
   onDragEnd: () => void
   onDragOver: (targetId: string | null) => void
   onDrop: (targetId: string | null) => void
+  onContextMenu: (folder: FolderNode, e: React.MouseEvent) => void
 }
 
 function TreeNode({
@@ -73,6 +82,7 @@ function TreeNode({
   onDragEnd,
   onDragOver,
   onDrop,
+  onContextMenu,
 }: TreeNodeProps) {
   const isExpanded = expandedIds.has(folder.id)
   const children = grouped.get(folder.id) ?? []
@@ -103,7 +113,17 @@ function TreeNode({
   )
 
   return (
-    <li role="treeitem" aria-level={depth + 1} aria-labelledby={`folder-tree-item-${folder.id}`}>
+    <li
+      role="treeitem"
+      aria-level={depth + 1}
+      aria-labelledby={`folder-tree-item-${folder.id}`}
+      className="folder-tree__row folder-tree__item"
+      style={{ paddingLeft: `${depth * 16 + 4}px` }}
+      onContextMenu={(e) => {
+        e.stopPropagation()
+        onContextMenu(folder, e)
+      }}
+    >
       <div
         className={`folder-tree__row ${isDragged ? 'folder-tree__row--dragged' : ''} ${isDropTarget ? 'drop-target' : ''}`}
         style={{ paddingLeft: `${depth * 16 + 4}px` }}
@@ -117,6 +137,10 @@ function TreeNode({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          onContextMenu(folder, e)
+        }}
       >
         {hasChildren ? (
           <button
@@ -161,6 +185,7 @@ function TreeNode({
               onDragEnd={onDragEnd}
               onDragOver={onDragOver}
               onDrop={onDrop}
+              onContextMenu={onContextMenu}
             />
           ))}
         </ul>
@@ -169,10 +194,28 @@ function TreeNode({
   )
 }
 
-export default function FolderTree({ folders = [], onMove }: FolderTreeProps) {
+export default function FolderTree({
+  folders = [],
+  onMove,
+  onAddSubfolder,
+  onRenameConfirm,
+  onDelete,
+}: FolderTreeProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+  const [contextMenu, setContextMenu] = useState<{
+    folder: FolderNode
+    x: number
+    y: number
+  } | null>(null)
+  const [createDialog, setCreateDialog] = useState<{ parentId: string | null } | null>(null)
+  const [renameDialog, setRenameDialog] = useState<{
+    folderId: string
+    currentName: string
+  } | null>(null)
+  const [createName, setCreateName] = useState('New folder')
+  const [renameName, setRenameName] = useState('')
   const grouped = groupFoldersByParent(folders)
   const wasDraggedId = useRef<string | null>(null)
 
@@ -194,6 +237,8 @@ export default function FolderTree({ folders = [], onMove }: FolderTreeProps) {
     setDraggedId(null)
     setDropTargetId(null)
     wasDraggedId.current = null
+    // Drag end fires mouse events that should close any open context menu.
+    setContextMenu(null)
   }, [])
 
   const handleDragOver = useCallback((targetId: string | null) => {
@@ -217,6 +262,66 @@ export default function FolderTree({ folders = [], onMove }: FolderTreeProps) {
     [grouped, onMove],
   )
 
+  // Close context menu on Escape.
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape' && contextMenu) {
+        setContextMenu(null)
+        e.preventDefault()
+      }
+    },
+    [contextMenu],
+  )
+
+  // Close rename inline input when clicking elsewhere in the tree.
+  const handleTreeClick = useCallback(() => {
+    // Rename is handled via dialog now; no inline rename state to clear.
+  }, [])
+
+  const handleContextMenu = useCallback((folder: FolderNode, e: React.MouseEvent) => {
+    // Position menu below and to the right of the cursor, clamped to viewport.
+    const menuWidth = 180
+    const menuHeight = 120
+    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 8)
+    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 8)
+    setContextMenu({ folder, x: Math.max(8, x), y: Math.max(8, y) })
+  }, [])
+
+  const handleAddSubfolder = useCallback(() => {
+    if (!contextMenu) return
+    setCreateDialog({ parentId: contextMenu.folder.parentId })
+    setCreateName('New folder')
+    setContextMenu(null)
+  }, [contextMenu])
+
+  const handleRename = useCallback(() => {
+    if (!contextMenu) return
+    setRenameDialog({
+      folderId: contextMenu.folder.id,
+      currentName: contextMenu.folder.name,
+    })
+    setRenameName(contextMenu.folder.name)
+    setContextMenu(null)
+  }, [contextMenu])
+
+  const handleCreateConfirm = useCallback(() => {
+    const trimmed = createName.trim()
+    if (trimmed && createDialog) {
+      onAddSubfolder?.(createDialog.parentId, trimmed)
+    }
+    setCreateDialog(null)
+    setCreateName('New folder')
+  }, [createDialog, createName, onAddSubfolder])
+
+  const handleRenameConfirm = useCallback(() => {
+    const trimmed = renameName.trim()
+    if (trimmed && renameDialog) {
+      onRenameConfirm?.(renameDialog.folderId, trimmed)
+    }
+    setRenameDialog(null)
+    setRenameName('')
+  }, [renameDialog, renameName, onRenameConfirm])
+
   if (folders.length === 0) return null
 
   return (
@@ -224,6 +329,8 @@ export default function FolderTree({ folders = [], onMove }: FolderTreeProps) {
       className="folder-tree"
       role="tree"
       aria-label="Folders"
+      onKeyDown={handleKeyDown}
+      onClick={handleTreeClick}
       onDragOver={(e) => {
         e.preventDefault()
         e.dataTransfer.dropEffect = 'move'
@@ -248,8 +355,50 @@ export default function FolderTree({ folders = [], onMove }: FolderTreeProps) {
           onDragEnd={handleDragEnd}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
+          onContextMenu={handleContextMenu}
         />
       ))}
+
+      {/* Context menu floating popup */}
+      {contextMenu && (
+        <FolderContextMenu
+          folder={contextMenu.folder}
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          onAddSubfolder={handleAddSubfolder}
+          onRename={handleRename}
+          onMove={() => onMove?.(contextMenu.folder.id, null)}
+          onDelete={() => onDelete?.(contextMenu.folder.id)}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {/* Create subfolder dialog */}
+      {createDialog && (
+        <FolderNameDialog
+          title="Create subfolder"
+          initialName={createName}
+          onChange={setCreateName}
+          onConfirm={handleCreateConfirm}
+          onClose={() => {
+            setCreateDialog(null)
+            setCreateName('New folder')
+          }}
+        />
+      )}
+
+      {/* Rename folder dialog */}
+      {renameDialog && (
+        <FolderNameDialog
+          title="Rename folder"
+          initialName={renameName}
+          onChange={setRenameName}
+          onConfirm={handleRenameConfirm}
+          onClose={() => {
+            setRenameDialog(null)
+            setRenameName('')
+          }}
+        />
+      )}
     </ul>
   )
 }
