@@ -200,9 +200,9 @@ describe('FolderTree — hierarchy', () => {
   it('keeps root folders in input order', () => {
     render(<FolderTree folders={folders} />)
 
-    const rootItems = Array.from(
-      screen.getAllByRole('treeitem'),
-    ).filter((el) => (el as HTMLElement).getAttribute('aria-level') === '1') as HTMLElement[]
+    const rootItems = Array.from(screen.getAllByRole('treeitem')).filter(
+      (el) => (el as HTMLElement).getAttribute('aria-level') === '1',
+    ) as HTMLElement[]
     const rootNames = rootItems.map((li) => li.querySelector('.folder-tree__name')?.textContent)
 
     expect(rootNames).toEqual(['Work', 'Personal'])

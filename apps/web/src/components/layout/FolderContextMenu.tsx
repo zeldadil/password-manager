@@ -63,7 +63,10 @@ export default function FolderContextMenu({
       } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         e.preventDefault()
         setFocusedIndex((prev) => {
-          const next = e.key === 'ArrowDown' ? (prev + 1) % items.length : (prev - 1 + items.length) % items.length
+          const next =
+            e.key === 'ArrowDown'
+              ? (prev + 1) % items.length
+              : (prev - 1 + items.length) % items.length
           return next
         })
       } else if (e.key === 'Enter' || e.key === ' ') {

@@ -58,8 +58,7 @@ function sourceFiles(): string[] {
 /** Match full rgba/hsla/oklch/oklab function calls (with args up to `)`)
  *  and hex literals. Color keywords deliberately excluded in .ts/.tsx
  *  (false positives on prose like "unrecoverable"/"redirect"/"required"). */
-const HARDCODED_COLOR =
-  /#[0-9a-fA-F]{3,8}(?![0-9a-fA-F])|\b(?:rgba?|hsla?|oklch|oklab)\([^)]*\)/i
+const HARDCODED_COLOR = /#[0-9a-fA-F]{3,8}(?![0-9a-fA-F])|\b(?:rgba?|hsla?|oklch|oklab)\([^)]*\)/i
 
 /** CSS box-shadow / overlay definitions legitimately use translucent black.
  * Allow rgba(0, 0, 0, <alpha>) when it is the only offending token. */
@@ -93,7 +92,9 @@ describe('theme system', () => {
       if (match) {
         const offending = match[0]
         const ok = isShadowOverlay(offending)
-        expect(ok, `hardcoded color "${offending}" in ${rel} — use a theme token instead`).toBe(true)
+        expect(ok, `hardcoded color "${offending}" in ${rel} — use a theme token instead`).toBe(
+          true,
+        )
       } else {
         expect(match).toBeNull()
       }

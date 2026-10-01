@@ -53,7 +53,9 @@ export interface DeleteFolderResult {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 /** Narrow a backend `FolderRecord` to the `FolderNode` shape the sidebar tree consumes. */
-export function toFolderNode(record: FolderRecord): import('../components/layout/types').FolderNode {
+export function toFolderNode(
+  record: FolderRecord,
+): import('../components/layout/types').FolderNode {
   return {
     id: record.id,
     name: record.name,
@@ -110,9 +112,6 @@ export async function updateFolder(
  * Throws an `ApiError` on 4xx/5xx (e.g. 404 if already deleted, 403 if
  * caller lacks Update+ permission per BE-003f).
  */
-export async function deleteFolder(
-  client: ApiClient,
-  id: string,
-): Promise<DeleteFolderResult> {
+export async function deleteFolder(client: ApiClient, id: string): Promise<DeleteFolderResult> {
   return client.delete<DeleteFolderResult>(`/folders/${encodeURIComponent(id)}`)
 }

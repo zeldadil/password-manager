@@ -119,7 +119,10 @@ function TreeNode({
       aria-labelledby={`folder-tree-item-${folder.id}`}
       className="folder-tree__row folder-tree__item"
       style={{ paddingLeft: `${depth * 16 + 4}px` }}
-      onContextMenu={(e) => { e.stopPropagation(); onContextMenu(folder, e) }}
+      onContextMenu={(e) => {
+        e.stopPropagation()
+        onContextMenu(folder, e)
+      }}
     >
       <div
         className={`folder-tree__row ${isDragged ? 'folder-tree__row--dragged' : ''} ${isDropTarget ? 'drop-target' : ''}`}
@@ -207,7 +210,10 @@ export default function FolderTree({
     y: number
   } | null>(null)
   const [createDialog, setCreateDialog] = useState<{ parentId: string | null } | null>(null)
-  const [renameDialog, setRenameDialog] = useState<{ folderId: string; currentName: string } | null>(null)
+  const [renameDialog, setRenameDialog] = useState<{
+    folderId: string
+    currentName: string
+  } | null>(null)
   const [createName, setCreateName] = useState('New folder')
   const [renameName, setRenameName] = useState('')
   const grouped = groupFoldersByParent(folders)
@@ -272,17 +278,14 @@ export default function FolderTree({
     // Rename is handled via dialog now; no inline rename state to clear.
   }, [])
 
-  const handleContextMenu = useCallback(
-    (folder: FolderNode, e: React.MouseEvent) => {
-      // Position menu below and to the right of the cursor, clamped to viewport.
-      const menuWidth = 180
-      const menuHeight = 120
-      const x = Math.min(e.clientX, window.innerWidth - menuWidth - 8)
-      const y = Math.min(e.clientY, window.innerHeight - menuHeight - 8)
-      setContextMenu({ folder, x: Math.max(8, x), y: Math.max(8, y) })
-    },
-    [],
-  )
+  const handleContextMenu = useCallback((folder: FolderNode, e: React.MouseEvent) => {
+    // Position menu below and to the right of the cursor, clamped to viewport.
+    const menuWidth = 180
+    const menuHeight = 120
+    const x = Math.min(e.clientX, window.innerWidth - menuWidth - 8)
+    const y = Math.min(e.clientY, window.innerHeight - menuHeight - 8)
+    setContextMenu({ folder, x: Math.max(8, x), y: Math.max(8, y) })
+  }, [])
 
   const handleAddSubfolder = useCallback(() => {
     if (!contextMenu) return

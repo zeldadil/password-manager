@@ -130,7 +130,9 @@ describe('FolderNameDialog — cancel flow', () => {
   it('does not call onClose when clicking inside the dialog box', () => {
     const { spies } = renderDialog()
     // Click the dialog content box (the inner div), not the overlay backdrop.
-    const contentBox = screen.getByRole('dialog').querySelector('.folder-name-dialog') as HTMLElement
+    const contentBox = screen
+      .getByRole('dialog')
+      .querySelector('.folder-name-dialog') as HTMLElement
     fireEvent.click(contentBox)
     expect(spies.onClose).not.toHaveBeenCalled()
   })

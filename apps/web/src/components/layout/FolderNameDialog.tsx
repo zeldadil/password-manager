@@ -125,11 +125,7 @@ export default function FolderNameDialog({
           {name.length}/255 characters
         </p>
         <div className="folder-name-dialog__actions">
-          <button
-            type="button"
-            className="folder-name-dialog__cancel"
-            onClick={onClose}
-          >
+          <button type="button" className="folder-name-dialog__cancel" onClick={onClose}>
             Cancel
           </button>
           <button

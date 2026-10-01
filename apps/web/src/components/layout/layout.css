@@ -291,7 +291,9 @@
   font-weight: 500;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .folder-name-dialog__cancel {

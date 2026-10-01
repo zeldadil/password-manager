@@ -203,7 +203,9 @@ describe('FolderTree — context menu integration', () => {
     fireEvent.contextMenu(workRow)
     fireEvent.click(screen.getByRole('menuitem', { name: /create subfolder/i }))
 
-    const contentBox = screen.getByRole('dialog').querySelector('.folder-name-dialog') as HTMLElement
+    const contentBox = screen
+      .getByRole('dialog')
+      .querySelector('.folder-name-dialog') as HTMLElement
     fireEvent.click(contentBox)
 
     expect(screen.queryByRole('dialog')).toBeTruthy()
@@ -218,9 +220,7 @@ describe('FolderTree — context menu and drag-drop coexist', () => {
   })
 
   it('right-click opens context menu; drag on a different row keeps it open', () => {
-    render(
-      <FolderTree folders={sampleTree} onMove={onMove} />,
-    )
+    render(<FolderTree folders={sampleTree} onMove={onMove} />)
     const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
 
     // Open context menu on Work.
@@ -238,9 +238,7 @@ describe('FolderTree — context menu and drag-drop coexist', () => {
   })
 
   it('closes context menu when drag ends', () => {
-    render(
-      <FolderTree folders={sampleTree} onMove={onMove} />,
-    )
+    render(<FolderTree folders={sampleTree} onMove={onMove} />)
     const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
     fireEvent.contextMenu(workRow)
     expect(screen.getByRole('menu')).toBeTruthy()

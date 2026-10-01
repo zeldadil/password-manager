@@ -78,9 +78,9 @@ describe('FolderTree — structure and rendering', () => {
 
   it('renders every root-level folder in input order', () => {
     render(<FolderTree folders={sampleTree} />)
-    const rootItems = Array.from(
-      screen.getAllByRole('treeitem'),
-    ).filter((el) => (el as HTMLElement).getAttribute('aria-level') === '1') as HTMLElement[]
+    const rootItems = Array.from(screen.getAllByRole('treeitem')).filter(
+      (el) => (el as HTMLElement).getAttribute('aria-level') === '1',
+    ) as HTMLElement[]
     const rootNames = rootItems.map((li) => li.querySelector('.folder-tree__name')?.textContent)
     expect(rootNames).toEqual(['Work', 'Personal'])
   })
@@ -323,7 +323,15 @@ describe('FolderTree — context menu', () => {
   })
 
   function renderWithContext() {
-    return render(<FolderTree folders={sampleTree} onMove={onMove} onAddSubfolder={onAddSubfolder} onRenameConfirm={onRenameConfirm} onDelete={onDelete} />)
+    return render(
+      <FolderTree
+        folders={sampleTree}
+        onMove={onMove}
+        onAddSubfolder={onAddSubfolder}
+        onRenameConfirm={onRenameConfirm}
+        onDelete={onDelete}
+      />,
+    )
   }
 
   it('opens context menu on right-click', () => {
