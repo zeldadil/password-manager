@@ -1,0 +1,360 @@
+/* TagsPage — tag management UI (FE-003h).
+   Colors come exclusively from theme.css variables
+   (--foreground, --muted-foreground, --accent, --border, --card, --background)
+   per FE-001d. Tag color swatches use inline styles set by the user. */
+
+.tags-page {
+  max-width: 900px;
+}
+
+.tags-heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 20px;
+}
+
+.tags-loading,
+.tags-error {
+  margin: 0 0 16px;
+  color: var(--muted-foreground);
+}
+
+.tags-error {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--card);
+}
+
+.tags-section {
+  margin-bottom: 32px;
+}
+
+.tags-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--foreground);
+}
+
+.tags-empty {
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+/* ── Create form ── */
+
+.tags-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--card);
+}
+
+.tags-create-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tags-label {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  min-width: 70px;
+}
+
+.tags-input {
+  flex: 1;
+  padding: 6px 10px;
+  font: inherit;
+  color: var(--foreground);
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.tags-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.tags-color-input {
+  width: 40px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  background: none;
+}
+
+.tags-color-input::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.tags-color-input::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+.tags-color-text {
+  flex: 1;
+  padding: 6px 10px;
+  font: inherit;
+  color: var(--foreground);
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.tags-form-error {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  color: var(--danger);
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.tags-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ── Buttons ── */
+
+.tags-button {
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.tags-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tags-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tags-button--primary {
+  color: var(--card);
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.tags-button--primary:hover:not(:disabled) {
+  background-color: var(--foreground);
+  border-color: var(--foreground);
+  color: var(--card);
+}
+
+.tags-button--secondary {
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.tags-button--danger {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.tags-button--danger:hover:not(:disabled) {
+  background-color: var(--accent);
+  color: var(--card);
+}
+
+.tags-button--ghost {
+  padding: 2px 8px;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--muted-foreground);
+  border: none;
+  background: transparent;
+}
+
+.tags-button--ghost:hover:not(:disabled) {
+  color: var(--foreground);
+  background: transparent;
+}
+
+/* ── Tag grid ── */
+
+.tags-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tags-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--card);
+}
+
+.tags-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tags-card__color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.tags-card__name {
+  font-weight: 500;
+  color: var(--foreground);
+  word-break: break-word;
+}
+
+.tags-card__meta {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.tags-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+/* ── Resource tag assignments ── */
+
+.tags-resource-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tags-resource-item {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--card);
+  overflow: hidden;
+}
+
+.tags-resource-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  font: inherit;
+  color: var(--foreground);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tags-resource-header:hover {
+  background-color: var(--background);
+}
+
+.tags-resource-name {
+  font-weight: 500;
+}
+
+.tags-resource-toggle {
+  font-size: 1.25rem;
+  color: var(--muted-foreground);
+  line-height: 1;
+}
+
+.tags-resource-body {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tags-resource-current {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.tags-resource-assign {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tags-resource-assign .tags-label {
+  min-width: unset;
+}
+
+.tags-resource-assign .tags-input {
+  width: 100%;
+}
+
+.tags-resource-assign .tags-create-actions {
+  justify-content: flex-start;
+}
+
+.tags-resource-tag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tags-resource-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px 2px 4px;
+  font-size: 0.8rem;
+  color: var(--foreground);
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.tags-resource-tag__color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.tags-resource-tag__name {
+  word-break: break-word;
+}
