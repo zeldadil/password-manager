@@ -42,6 +42,14 @@ const repo = join(root, "repo");
 // The guard rule matches the shape, not a specific id.
 const SYNTH_TOKEN = "1111222222:" + "A".repeat(35);
 
+// ── Synthetic AWS access-key-id shape (AKIA + 16 upper/digits) ──────────────
+// Built at runtime, never written as a literal: gitleaks' `aws-access-key-id`
+// rule scans source text, so an inline `AKIA…` fixture makes this very file a
+// CI secret-scan finding (3 leaks on the first attempt to land it). Same
+// convention as SYNTH_TOKEN above and as tests/evidence/t_cc570a8b. The guard
+// matches the shape, not a specific id, so no assertion depends on the value.
+const SYNTH_AWS_KEY = "AKIA" + "Q".repeat(16);
+
 // ── fixture boards ────────────────────────────────────────────────────────────
 
 const BOARD_SQL = `
@@ -81,7 +89,7 @@ const dirtyBoardSQL = [
   `INSERT INTO tasks (id,title,body,assignee,status,completed_at,created_at) VALUES ('${KEYVAL_TASK}','keyval card','**Test Types:** unit','backend','done',${now},${now-1000});`,
   `INSERT INTO task_comments (task_id,author,body,created_at) VALUES ('${KEYVAL_TASK}','architect','API key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',${now});`,
   `INSERT INTO tasks (id,title,body,assignee,status,completed_at,created_at) VALUES ('${AWS_TASK}','aws card','**Test Types:** unit','backend','done',${now},${now-1000});`,
-  `INSERT INTO task_comments (task_id,author,body,created_at) VALUES ('${AWS_TASK}','backend','deployed with AKIA1234567890ABCDEF',${now});`,
+  `INSERT INTO task_comments (task_id,author,body,created_at) VALUES ('${AWS_TASK}','backend','deployed with ${SYNTH_AWS_KEY}',${now});`,
 ].join("\n");
 
 const cleanBoardSQL = [
@@ -179,7 +187,7 @@ check(
 const awsPayload = JSON.stringify({
   hook_event_name: "pre_tool_call",
   tool_name: "kanban_comment",
-  args: { task_id: AWS_TASK, body: "deployed with AKIA0123456789ABCDEF" },
+  args: { task_id: AWS_TASK, body: "deployed with " + SYNTH_AWS_KEY + "" },
   session_id: "sess_fixture",
   cwd: repo,
   profile: "backend",
@@ -419,7 +427,7 @@ check("check mode: text with Telegram bot token → exit 1", tokenCheck.code ===
 const keyvalCheck = runGate(["check"], "API key=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
 check("check mode: text with key=value secret → exit 1", keyvalCheck.code === 1, `exit=${keyvalCheck.code}`);
 
-const awsCheck = runGate(["check"], "deployed with AKIA1234567890ABCDEF\n");
+const awsCheck = runGate(["check"], "deployed with " + SYNTH_AWS_KEY + "\n");
 check("check mode: text with AWS key id → exit 1", awsCheck.code === 1, `exit=${awsCheck.code}`);
 
 console.log("\n3. Audit mode — whole-board scan");
