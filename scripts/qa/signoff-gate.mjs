@@ -620,7 +620,25 @@ export function evaluateCard(board, task, opts = {}) {
   const verdicts = collectVerdicts(board, task);
   const valid = verdicts.filter((v) => VERDICTS.has(v.token));
   // `deferred` is a legal marker value but not a verdict — §5.4 handles it (R8).
-  const invalid = verdicts.filter((v) => v.token && !VERDICTS.has(v.token) && v.token !== "deferred");
+  const invalidAll = verdicts.filter((v) => v.token && !VERDICTS.has(v.token) && v.token !== "deferred");
+  // A verdict comment is immutable audit history, so an off-vocabulary token can
+  // never be taken back — only superseded. R5 already resolves the **operative
+  // (newest)** verdict only; R2 must use the same rule or a single mistyped token
+  // blocks the card forever and the only "fix" is editing the audit trail
+  // (t_c015bda7). An invalid token is a violation only when no VALID verdict was
+  // recorded after it; a later valid verdict demotes it to an advisory. The
+  // ordering matters in one direction only: valid-then-invalid still fires R2,
+  // so a good verdict can never mask a bad one that followed it.
+  const lastValidAt = valid.length ? valid[valid.length - 1].at : null;
+  const supersededBy = (v) => {
+    if (lastValidAt === null) return null;
+    const after = valid.filter((w) => (w.at ?? 0) > (v.at ?? 0));
+    return after.length ? after[after.length - 1] : null;
+  };
+  const invalid = invalidAll.filter((v) => !supersededBy(v));
+  const invalidSuperseded = invalidAll
+    .filter((v) => supersededBy(v))
+    .map((v) => ({ raw: v.raw, token: v.token, author: v.author, at: v.at, replacedBy: supersededBy(v) }));
   const deferral = collectDeferral(board, task);
   // Verdict-shaped records the gate discounts (§3 author rule, t_338f47fd):
   // non-QA marker comments (ignored) and a non-QA run-metadata verdict (accepted
@@ -675,6 +693,17 @@ export function evaluateCard(board, task, opts = {}) {
     add(
       "R2_QA_VERDICT_INVALID",
       `verdict "${v.raw}" (${v.source}${v.author ? ` by ${v.author}` : ""}) is not one of: ${[...VERDICTS].join(", ")}`,
+    );
+  }
+
+  // A9 — an off-vocabulary token that a later valid verdict superseded. Reported
+  // so the correction stays visible in the audit trail instead of vanishing
+  // silently: the mistyped token is still part of the card's history, it just no
+  // longer blocks the card (t_c015bda7).
+  for (const v of invalidSuperseded) {
+    advise(
+      "A9_VERDICT_SUPERSEDED",
+      `off-vocabulary verdict "${v.raw}"${v.author ? ` by ${v.author}` : ""} superseded by a later valid "${v.replacedBy.token}"${v.replacedBy.author ? ` by ${v.replacedBy.author}` : ""} — not a violation, recorded for the audit trail`,
     );
   }
 
