@@ -1,0 +1,2 @@
+B2 fix: verify-secret-guard.sh line 92 now greps "secret-guard.sh" before checking "✓ allowed"; line 103 uses grep -qF 'issue(s) found.' (exact match, no BRE miss).
+B3 evidence: secret-guard.selftest.mjs uses fully synthetic fixture SYNTH_TOKEN (no real bot id); gitleaks 5 hits are all historical (.gitleaksignore-covered); trufflehog filesystem . -> 0 verified / 0 unverified.

@@ -1,0 +1,3 @@
+B1: installed to all 7 profiles via scripts/qa/hooks/install-secret-guard.sh --all --apply; sha256 matches repo (2e60bb23...) for all profiles.
+B2: verify-secret-guard.sh — consent check scoped to secret-guard.sh line; doctor check uses exact-match grep -qF 'issue(s) found.' (no false-green).
+B3: selftest synthetic only (SYNTH_TOKEN 1111222222:...); no real bot id embedded. gitleaks: 5 historical hits (none in guard). trufflehog: 0 verified / 0 unverified.
