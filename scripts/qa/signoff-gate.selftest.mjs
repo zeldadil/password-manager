@@ -628,6 +628,38 @@ const CITED_PATH_LOOSE_VERDICT = card({
 });
 fixtureFile(`tests/evidence/${CITED_PATH_LOOSE_VERDICT}/README.md`);
 
+// ── t_c015bda7 regression fixtures ─────────────────────────────────────────
+// A verdict comment is immutable audit history, so a mistyped token can only be
+// superseded, never retracted. R2 flagged **every** invalid token unconditionally,
+// so one off-vocabulary verdict blocked the card permanently and the only way out
+// was editing the audit trail. Live repro: `t_c7c986c7`, where `qa` wrote
+// `QA-VERDICT: confirm supersession` (comment #403) and then the correctly
+// formatted `QA-VERDICT: pass` 446s later (#406) — the card still failed.
+//
+// R5 already resolves the operative (newest) verdict only; R2 now does the same.
+// The pair below pins the asymmetry: a later valid verdict heals an earlier bad
+// token, but an earlier good verdict must NEVER mask a bad one that followed it.
+// Comments are seeded at `EPOCH_AFTER + i`, so array order is timestamp order.
+const INVALID_THEN_VALID = card({
+  title: "BE-946 off-vocabulary verdict corrected by a later valid one (A5, no R2)",
+  body: "**Test Types:** unit",
+  comments: [
+    qaVerdict("QA-VERDICT: confirm supersession — all brief points covered by the replacement cards."),
+    qaVerdict("QA-VERDICT: pass — Evidence: tests/evidence/__ID__/README.md"),
+  ],
+});
+fixtureFile(`tests/evidence/${INVALID_THEN_VALID}/README.md`);
+
+const VALID_THEN_INVALID = card({
+  title: "BE-947 valid verdict followed by an off-vocabulary one still fires R2",
+  body: "**Test Types:** unit",
+  comments: [
+    qaVerdict("QA-VERDICT: pass — Evidence: tests/evidence/__ID__/README.md"),
+    qaVerdict("QA-VERDICT: confirm supersession — on reflection this needs rework."),
+  ],
+});
+fixtureFile(`tests/evidence/${VALID_THEN_INVALID}/README.md`);
+
 // Anti-degradation controls for the same change: the loose path is a *fallback
 // for a QA record written in prose*, not only a source of false positives.
 const LOOSE_OFFVOCAB = card({
@@ -1107,6 +1139,35 @@ console.log("\n1e. t_df8e644a regressions (a cited file name must not read as a 
     LOOSE_MISSING_EVIDENCE,
     "R5_EVIDENCE_FILE_MISSING",
     { forbid: ["R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"] },
+  );
+
+  // t_c015bda7 — R2 must follow R5's operative-verdict rule. The two directions
+  // are asserted as a pair: healing forward is allowed, masking backward is not.
+  const healed = gateJson(INVALID_THEN_VALID);
+  check(
+    "t_c015bda7: an invalid token superseded by a later valid verdict passes, with A9 recorded",
+    healed.code === 0 &&
+      healed.parsed !== null &&
+      healed.parsed.facts.verdict === "pass" &&
+      violationRules(healed).length === 0 &&
+      advisoryRules(healed).includes("A9_VERDICT_SUPERSEDED"),
+    `exit=${healed.code} verdict=${healed.parsed && healed.parsed.facts.verdict} rules=[${violationRules(healed).join(",")}] adv=[${advisoryRules(healed).join(",")}]`,
+  );
+  expectRule(
+    "t_c015bda7: anti-degradation — a valid verdict followed by an invalid one still fires R2",
+    VALID_THEN_INVALID,
+    "R2_QA_VERDICT_INVALID",
+  );
+  // `forbid` on expectRule only inspects violations, so the advisory has to be
+  // asserted separately: an invalid token that nothing supersedes must NOT be
+  // downgraded to A9.
+  const masked = gateJson(VALID_THEN_INVALID);
+  check(
+    "t_c015bda7: a trailing invalid token is not downgraded to an advisory",
+    masked.code === 1 &&
+      violationRules(masked).includes("R2_QA_VERDICT_INVALID") &&
+      !advisoryRules(masked).includes("A9_VERDICT_SUPERSEDED"),
+    `exit=${masked.code} rules=[${violationRules(masked).join(",")}] adv=[${advisoryRules(masked).join(",")}]`,
   );
 }
 
