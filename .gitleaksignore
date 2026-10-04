@@ -341,3 +341,22 @@ c0b4e455613e0089e91c6f21728b0adff7b6785b:apps/services/api/tests/auth/register.t
 091f35dd37c62e12dd026bd3d28d7cd7f5ce9c21:tests/integration/web/rate-limit.integration.test.tsx:generic-api-key:63
 091f35dd37c62e12dd026bd3d28d7cd7f5ce9c21:tests/integration/web/rate-limit.integration.test.tsx:generic-api-key:64
 091f35dd37c62e12dd026bd3d28d7cd7f5ce9c21:tests/integration/web/auth-flow.integration.test.tsx:generic-api-key:71
+
+# scripts/qa/secret-guard.selftest.mjs — three AWS-key-shaped fixtures in the
+# secret-guard's own selftest (commit a87abc2, lines 84/182/422). Each one
+# feeds a fake credential-shaped string to the guard and asserts it is
+# BLOCKED (decision=block / exit 2); a guard that detects secrets cannot be
+# tested without strings in a secret's shape, so gitleaks flags the very
+# fixtures that prove the guard works. truffleHog — which verifies against
+# the provider rather than matching a shape — reports verified_secrets: 0
+# and unverified_secrets: 0 on this tree, so no live credential is present.
+# Scoped per-fingerprint (commit:file:rule:line), same mechanism and minimal
+# blast radius as the PR #16 and PR #88 entries above: no rule weakened, no
+# path excluded, and the guard's own logic and fixtures are left untouched.
+# Option A, decided by qa (gitleaks-vs-truffleHog conflict on PR #106);
+# architect did not self-sign this security decision.
+# (Values deliberately not quoted here — see the PR #88 note above: quoting
+# them reproduces the pattern and makes gitleaks flag this file itself.)
+a87abc223243fff6eae7546899e6160b87ac45ef:scripts/qa/secret-guard.selftest.mjs:aws-access-key-id:84
+a87abc223243fff6eae7546899e6160b87ac45ef:scripts/qa/secret-guard.selftest.mjs:aws-access-key-id:182
+a87abc223243fff6eae7546899e6160b87ac45ef:scripts/qa/secret-guard.selftest.mjs:aws-access-key-id:422
