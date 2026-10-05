@@ -7,6 +7,9 @@ export interface SidebarProps {
   tags?: readonly TagNode[]
   activeTagId?: string | null
   onMoveFolder?: (sourceId: string, newParentId: string | null) => void
+  onCreateFolder?: (parentId: string | null) => void
+  onRenameFolder?: (folderId: string, newName: string) => void
+  onDeleteFolder?: (folderId: string) => void
   onFilterTag?: (tagId: string | null) => void
 }
 
@@ -15,6 +18,9 @@ export default function Sidebar({
   tags = [],
   activeTagId,
   onMoveFolder,
+  onCreateFolder,
+  onRenameFolder,
+  onDeleteFolder,
   onFilterTag,
 }: SidebarProps) {
   return (
@@ -23,7 +29,13 @@ export default function Sidebar({
         <h2 id="app-sidebar__folders-heading" className="app-sidebar__heading">
           Folders
         </h2>
-        <FolderTree folders={folders} onMove={onMoveFolder} />
+        <FolderTree
+          folders={folders}
+          onMove={onMoveFolder}
+          onCreate={onCreateFolder}
+          onRename={onRenameFolder}
+          onDelete={onDeleteFolder}
+        />
       </nav>
 
       <nav className="app-sidebar__section" aria-labelledby="app-sidebar__tags-heading">

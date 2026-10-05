@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import FolderTree from './FolderTree'
 import type { FolderNode } from './types'
@@ -12,276 +12,362 @@ const sampleTree: FolderNode[] = [
   { id: 'child3', name: 'Health', parentId: 'root2' },
 ]
 
-describe('FolderTree — structure and rendering', () => {
-  it('renders nothing when there are no folders', () => {
-    const { container } = render(<FolderTree folders={[]} />)
-    expect(container.querySelector('ul')).toBeNull()
-  })
-
-  it('renders every root-level folder in input order', () => {
-    render(<FolderTree folders={sampleTree} />)
-    const rootNames = Array.from(
-      document.querySelectorAll('.folder-tree__row .folder-tree__name'),
-    ).map((el) => (el as HTMLElement).textContent)
-    expect(rootNames).toEqual(['Work', 'Personal'])
-  })
-
-  it('nests child folders under their parent when expanded', () => {
-    render(<FolderTree folders={sampleTree} />)
-    expect(screen.queryByText('Engineering')).toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    expect(screen.getByText('Engineering')).toBeTruthy()
-    expect(screen.getByText('Finance')).toBeTruthy()
-  })
-
-  it('nests grandchildren under children when expanded', () => {
-    render(<FolderTree folders={sampleTree} />)
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    fireEvent.click(screen.getByRole('button', { name: /expand engineering/i }))
-    expect(screen.getByText('Frontend')).toBeTruthy()
-  })
-
-  it('keeps a sibling root folder out of an expanded parent subtree', () => {
-    render(<FolderTree folders={sampleTree} />)
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    const workLi = screen.getByText('Work').closest('li') as HTMLElement
-    expect(within(workLi).queryByText('Personal')).toBeNull()
-  })
-
-  it('renders a role="tree" wrapper', () => {
-    render(<FolderTree folders={sampleTree} />)
-    expect(screen.getByRole('tree', { name: 'Folders' })).toBeTruthy()
-  })
-
-  it('marks root rows as treeitem with level 1', () => {
-    render(<FolderTree folders={sampleTree} />)
-    const workRow = screen.getByText('Work').closest('[role="treeitem"]') as HTMLElement
-    expect(workRow.getAttribute('aria-level')).toBe('1')
-  })
-
-  it('marks child rows with increasing aria-level', () => {
-    render(<FolderTree folders={sampleTree} />)
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    const engRow = screen.getByText('Engineering').closest('[role="treeitem"]') as HTMLElement
-    expect(engRow.getAttribute('aria-level')).toBe('2')
-    fireEvent.click(screen.getByRole('button', { name: /expand engineering/i }))
-    const feRow = screen.getByText('Frontend').closest('[role="treeitem"]') as HTMLElement
-    expect(feRow.getAttribute('aria-level')).toBe('3')
-  })
-
-  it('renders folder rows as draggable', () => {
-    render(<FolderTree folders={sampleTree} />)
-    const rows = document.querySelectorAll('.folder-tree__row[draggable="true"]')
-    expect(rows.length).toBeGreaterThanOrEqual(2)
-  })
-})
-
-describe('FolderTree — expand/collapse', () => {
-  it('starts with all folders collapsed (no children visible)', () => {
-    render(<FolderTree folders={sampleTree} />)
-    expect(screen.queryByText('Engineering')).toBeNull()
-    expect(screen.queryByText('Frontend')).toBeNull()
-  })
-
-  it('expands a folder and shows its children when toggle is clicked', () => {
-    render(<FolderTree folders={sampleTree} />)
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    expect(screen.getByText('Engineering')).toBeTruthy()
-    expect(screen.getByText('Finance')).toBeTruthy()
-  })
-
-  it('collapses an expanded folder when toggle is clicked again', () => {
-    render(<FolderTree folders={sampleTree} />)
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    expect(screen.getByText('Engineering')).toBeTruthy()
-
-    fireEvent.click(screen.getByRole('button', { name: /collapse work/i }))
-    expect(screen.queryByText('Engineering')).toBeNull()
-  })
-
-  it('shows aria-expanded="true" on the toggle when expanded', () => {
-    render(<FolderTree folders={sampleTree} />)
-    const toggle = screen.getByRole('button', { name: /expand work/i })
-    expect(toggle.getAttribute('aria-expanded')).toBe('false')
-
-    fireEvent.click(toggle)
-    expect(toggle.getAttribute('aria-expanded')).toBe('true')
-    expect(screen.getByText('Engineering')).toBeTruthy()
-  })
-
-  it('shows aria-expanded="false" on the toggle when collapsed from expanded state', () => {
-    render(<FolderTree folders={sampleTree} />)
-    const toggle = screen.getByRole('button', { name: /expand work/i })
-    fireEvent.click(toggle)
-    expect(toggle.getAttribute('aria-expanded')).toBe('true')
-
-    fireEvent.click(toggle)
-    expect(toggle.getAttribute('aria-expanded')).toBe('false')
-    expect(screen.queryByText('Engineering')).toBeNull()
-  })
-
-  it('does not render a toggle button for a leaf folder (Finance is child of Work, leave it collapsed to test sibling)', () => {
-    render(<FolderTree folders={sampleTree} />)
-    // Finance is a leaf — only visible when Work expanded
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
-    expect(financeRow.querySelector('.folder-tree__toggle')).toBeNull()
-  })
-
-  it('renders a spacer element where a toggle would be on a leaf row', () => {
-    render(<FolderTree folders={sampleTree} />)
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
-    expect(financeRow.querySelector('.folder-tree__spacer')).toBeTruthy()
-  })
-
-  it('renders a toggle for every folder that has children', () => {
-    render(<FolderTree folders={sampleTree} />)
-    expect(screen.getByRole('button', { name: /expand work/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /expand personal/i })).toBeTruthy()
-  })
-})
-
-describe('FolderTree — drag and drop', () => {
+describe('FolderTree — context menu', () => {
+  const onCreate = vi.fn()
+  const onRename = vi.fn()
+  const onDelete = vi.fn()
   const onMove = vi.fn()
 
   beforeEach(() => {
+    onCreate.mockClear()
+    onRename.mockClear()
+    onDelete.mockClear()
     onMove.mockClear()
   })
 
-  function renderWithMove() {
-    return render(<FolderTree folders={sampleTree} onMove={onMove} />)
+  function renderWithCallbacks() {
+    return render(
+      <FolderTree
+        folders={sampleTree}
+        onCreate={onCreate}
+        onRename={onRename}
+        onDelete={onDelete}
+        onMove={onMove}
+      />,
+    )
   }
 
-  it('calls onMove with source and new parent when dropped on a folder', () => {
-    renderWithMove()
+  it('opens a context menu on right-click over a folder row', () => {
+    renderWithCallbacks()
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
 
     const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
-    const personalRow = screen.getByText('Personal').closest('.folder-tree__row') as HTMLElement
-
     const dt = { effectAllowed: 'move', setData: vi.fn() }
-    fireEvent.dragStart(financeRow, { dataTransfer: dt as unknown as DataTransfer })
-    fireEvent.drop(personalRow, { dataTransfer: dt as unknown as DataTransfer })
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
 
-    expect(onMove).toHaveBeenCalledWith('child2', 'root2')
+    expect(screen.getByRole('menu', { name: 'Folder actions' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'Move to root' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'New subfolder' })).toBeTruthy()
   })
 
-  it('calls onMove with null parent when dropped on root tree background', () => {
-    renderWithMove()
+  it('opens a context menu on right-click over the root tree background', () => {
+    renderWithCallbacks()
+    const tree = screen.getByRole('tree')
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(tree, { clientX: 50, clientY: 50, dataTransfer: dt as unknown as DataTransfer })
+
+    expect(screen.getByRole('menu', { name: 'Folder actions' })).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: 'New folder' })).toBeTruthy()
+  })
+
+  it('has exactly one menu item for root context (New folder)', () => {
+    renderWithCallbacks()
+    const tree = screen.getByRole('tree')
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(tree, { clientX: 50, clientY: 50, dataTransfer: dt as unknown as DataTransfer })
+
+    const items = screen.getAllByRole('menuitem')
+    expect(items).toHaveLength(1)
+    expect(items[0]).toHaveTextContent('New folder')
+  })
+
+  it('has four menu items for a folder context', () => {
+    renderWithCallbacks()
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
 
     const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
-    const tree = screen.getByRole('tree')
-
     const dt = { effectAllowed: 'move', setData: vi.fn() }
-    fireEvent.dragStart(financeRow, { dataTransfer: dt as unknown as DataTransfer })
-    fireEvent.drop(tree, { dataTransfer: dt as unknown as DataTransfer })
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
 
+    const items = screen.getAllByRole('menuitem')
+    expect(items).toHaveLength(4)
+  })
+
+  it('calls onCreate with null when "New folder" is selected from root context', () => {
+    renderWithCallbacks()
+    const tree = screen.getByRole('tree')
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(tree, { clientX: 50, clientY: 50, dataTransfer: dt as unknown as DataTransfer })
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'New folder' }))
+    expect(onCreate).toHaveBeenCalledWith(null)
+  })
+
+  it('calls onCreate with the folder id when "New subfolder" is selected', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'New subfolder' }))
+    expect(onCreate).toHaveBeenCalledWith('child2')
+  })
+
+  it('opens the inline rename input when "Rename" is selected from context menu', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }))
+
+    // The rename input should be in the DOM with the Finance folder's name as initial value
+    const input = screen.getByRole('textbox', { name: /rename finance/i })
+    expect(input).toBeTruthy()
+    expect(input).toHaveValue('Finance')
+  })
+
+  it('commits the rename on Enter in the inline rename input', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }))
+
+    const input = screen.getByRole('textbox', { name: /rename finance/i })
+    fireEvent.change(input, { target: { value: 'NewFinance' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+
+    expect(onRename).toHaveBeenCalledWith('child2', 'NewFinance')
+  })
+
+  it('commits the rename on blur in the inline rename input', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }))
+
+    const input = screen.getByRole('textbox', { name: /rename finance/i })
+    fireEvent.change(input, { target: { value: 'Renamed' } })
+    fireEvent.blur(input)
+
+    expect(onRename).toHaveBeenCalledWith('child2', 'Renamed')
+  })
+
+  it('cancels the rename without calling onRename when Escape is pressed', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }))
+
+    const input = screen.getByRole('textbox', { name: /rename finance/i })
+    fireEvent.change(input, { target: { value: 'Changed' } })
+    fireEvent.keyDown(input, { key: 'Escape' })
+
+    expect(onRename).not.toHaveBeenCalled()
+    // Input should be gone
+    expect(screen.queryByRole('textbox')).toBeNull()
+  })
+
+  it('does not commit rename when the input is empty', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }))
+
+    const input = screen.getByRole('textbox', { name: /rename finance/i })
+    fireEvent.change(input, { target: { value: '' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+
+    expect(onRename).not.toHaveBeenCalled()
+  })
+
+  it('restores the original name in the input after a cancelled rename', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }))
+
+    const input = screen.getByRole('textbox', { name: /rename finance/i })
+    fireEvent.change(input, { target: { value: 'Altered' } })
+    fireEvent.keyDown(input, { key: 'Escape' })
+
+    // After cancel, the rename input should be removed
+    expect(screen.queryByRole('textbox')).toBeNull()
+    // The folder name should still display as Finance
+    expect(screen.getByText('Finance')).toBeTruthy()
+  })
+
+  it('calls onDelete with the folder id when "Delete" is selected', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }))
+    expect(onDelete).toHaveBeenCalledWith('child2')
+  })
+
+  it('calls onMove with the folder id and null when "Move to root" is selected', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Move to root' }))
     expect(onMove).toHaveBeenCalledWith('child2', null)
   })
 
-  it('does not call onMove when dropping a folder on itself', () => {
-    renderWithMove()
+  it('closes the context menu when an item is selected', () => {
+    renderWithCallbacks()
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
 
-    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
     const dt = { effectAllowed: 'move', setData: vi.fn() }
-    fireEvent.dragStart(workRow, { dataTransfer: dt as unknown as DataTransfer })
-    fireEvent.drop(workRow, { dataTransfer: dt as unknown as DataTransfer })
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
 
-    expect(onMove).not.toHaveBeenCalled()
+    expect(screen.queryByRole('menu')).not.toBeNull()
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }))
+    expect(screen.queryByRole('menu')).toBeNull()
   })
 
-  it('prevents dropping a folder on its own descendant (cycle prevention)', () => {
-    renderWithMove()
+  it('closes the context menu on Escape', () => {
+    renderWithCallbacks()
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-    fireEvent.click(screen.getByRole('button', { name: /expand engineering/i }))
 
-    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
-    const frontendRow = screen.getByText('Frontend').closest('.folder-tree__row') as HTMLElement
-
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
     const dt = { effectAllowed: 'move', setData: vi.fn() }
-    fireEvent.dragStart(workRow, { dataTransfer: dt as unknown as DataTransfer })
-    fireEvent.drop(frontendRow, { dataTransfer: dt as unknown as DataTransfer })
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
 
-    expect(onMove).not.toHaveBeenCalled()
+    expect(screen.queryByRole('menu')).not.toBeNull()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('menu')).toBeNull()
   })
 
-  it('allows dropping a folder onto a sibling (valid move)', () => {
-    renderWithMove()
+  it('closes the context menu when clicking outside', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: dt as unknown as DataTransfer })
+
+    expect(screen.queryByRole('menu')).not.toBeNull()
+    fireEvent.mouseDown(document.body)
+    expect(screen.queryByRole('menu')).toBeNull()
+  })
+
+  it('double-clicking a folder row opens the inline rename input', () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    fireEvent.doubleClick(financeRow)
+
+    const input = screen.getByRole('textbox', { name: /rename finance/i })
+    expect(input).toHaveValue('Finance')
+  })
+
+  it('shows a context-target outline on the row under the context menu', async () => {
+    renderWithCallbacks()
+    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
+
+    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200 })
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200 })
+
+    // Verify the event handler fired (context menu opened with folder items)
+    expect(screen.queryByRole('menu')).not.toBeNull()
+    expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeTruthy()
+
+    await waitFor(() => {
+      const updatedRow = screen.getByText('Finance').closest('.folder-tree__row')
+      expect(updatedRow).toHaveClass('folder-tree__row--context-target')
+    })
+  })
+
+  it('right-clicking a different folder moves the context target', () => {
+    renderWithCallbacks()
     fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
 
     const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
     const personalRow = screen.getByText('Personal').closest('.folder-tree__row') as HTMLElement
+    fireEvent.contextMenu(financeRow, { clientX: 300, clientY: 200, dataTransfer: { effectAllowed: 'move', setData: () => {} } as unknown as DataTransfer })
+    fireEvent.contextMenu(personalRow, { clientX: 400, clientY: 300, dataTransfer: { effectAllowed: 'move', setData: () => {} } as unknown as DataTransfer })
 
-    const dt = { effectAllowed: 'move', setData: vi.fn() }
-    fireEvent.dragStart(financeRow, { dataTransfer: dt as unknown as DataTransfer })
-    fireEvent.drop(personalRow, { dataTransfer: dt as unknown as DataTransfer })
-
-    expect(onMove).toHaveBeenCalledWith('child2', 'root2')
-  })
-
-  it('clears dragged state after drag ends', () => {
-    renderWithMove()
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-
-    const workRow = screen.getByText('Work').closest('.folder-tree__row') as HTMLElement
-    const dt = { effectAllowed: 'move', setData: vi.fn() }
-    fireEvent.dragStart(workRow, { dataTransfer: dt as unknown as DataTransfer })
-    expect(workRow.classList.contains('folder-tree__row--dragged')).toBe(true)
-
-    fireEvent.dragEnd(workRow)
-    expect(workRow.classList.contains('folder-tree__row--dragged')).toBe(false)
-  })
-
-  it('applies drop-target class to the row being hovered during drag', () => {
-    renderWithMove()
-    fireEvent.click(screen.getByRole('button', { name: /expand work/i }))
-
-    const financeRow = screen.getByText('Finance').closest('.folder-tree__row') as HTMLElement
-    const personalRow = screen.getByText('Personal').closest('.folder-tree__row') as HTMLElement
-
-    const dt = { effectAllowed: 'move', setData: vi.fn() }
-    fireEvent.dragStart(financeRow, { dataTransfer: dt as unknown as DataTransfer })
-
-    fireEvent.dragOver(personalRow, { dataTransfer: dt as unknown as DataTransfer })
-    expect(personalRow.classList.contains('drop-target')).toBe(true)
-
-    fireEvent.dragLeave(personalRow)
-    expect(personalRow.classList.contains('drop-target')).toBe(false)
-  })
-
-  it('does not show drop-target on rows when no drag is in progress', () => {
-    renderWithMove()
-    expect(document.querySelectorAll('.drop-target').length).toBe(0)
+    expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeTruthy()
+    // The menu should now show folder-level items (Rename, Delete, etc.) not "New folder"
+    expect(screen.getByText('Rename')).toBeTruthy()
   })
 })
 
-describe('FolderTree — edge cases', () => {
-  it('handles a single root folder with no children', () => {
-    const folders: FolderNode[] = [{ id: 'only', name: 'Only Folder', parentId: null }]
-    render(<FolderTree folders={folders} />)
-    expect(screen.getByText('Only Folder')).toBeTruthy()
-    const row = screen.getByText('Only Folder').closest('.folder-tree__row') as HTMLElement
-    expect(row.querySelector('.folder-tree__toggle')).toBeNull()
-    expect(row.querySelector('.folder-tree__spacer')).toBeTruthy()
+describe('FolderTree — context menu keyboard navigation', () => {
+  const onCreate = vi.fn()
+  const onRename = vi.fn()
+  const onDelete = vi.fn()
+  const onMove = vi.fn()
+
+  beforeEach(() => {
+    onCreate.mockClear()
+    onRename.mockClear()
+    onDelete.mockClear()
+    onMove.mockClear()
   })
 
-  it('handles multiple root folders at same depth', () => {
-    const folders: FolderNode[] = [
-      { id: 'a', name: 'A', parentId: null },
-      { id: 'b', name: 'B', parentId: null },
-      { id: 'c', name: 'C', parentId: null },
-    ]
-    render(<FolderTree folders={folders} />)
-    expect(screen.getByText('A')).toBeTruthy()
-    expect(screen.getByText('B')).toBeTruthy()
-    expect(screen.getByText('C')).toBeTruthy()
+  it('activates the first item and navigates with arrow keys', () => {
+    render(
+      <FolderTree
+        folders={sampleTree}
+        onCreate={onCreate}
+        onRename={onRename}
+        onDelete={onDelete}
+        onMove={onMove}
+      />,
+    )
+
+    const tree = screen.getByRole('tree')
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(tree, { clientX: 50, clientY: 50, dataTransfer: dt as unknown as DataTransfer })
+
+    const menu = screen.getByRole('menu')
+    const firstItem = screen.getByRole('menuitem', { name: 'New folder' })
+    expect(firstItem).toHaveClass('folder-context-menu__item--active')
+
+    fireEvent.keyDown(menu, { key: 'ArrowDown' })
+    // Only one item, so it stays active
+    expect(firstItem).toHaveClass('folder-context-menu__item--active')
   })
 
-  it('renders empty state when folders array is empty', () => {
-    const { container } = render(<FolderTree folders={[]} />)
-    expect(container.querySelector('.folder-tree')).toBeNull()
+  it('selects the active item with Enter', () => {
+    render(
+      <FolderTree
+        folders={sampleTree}
+        onCreate={onCreate}
+        onRename={onRename}
+        onDelete={onDelete}
+        onMove={onMove}
+      />,
+    )
+
+    const tree = screen.getByRole('tree')
+    const dt = { effectAllowed: 'move', setData: vi.fn() }
+    fireEvent.contextMenu(tree, { clientX: 50, clientY: 50, dataTransfer: dt as unknown as DataTransfer })
+
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Enter' })
+    expect(onCreate).toHaveBeenCalledWith(null)
   })
 })

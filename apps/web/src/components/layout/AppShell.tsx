@@ -14,9 +14,20 @@ export interface AppShellProps {
   userName?: string
   folders?: readonly FolderNode[]
   tags?: readonly TagNode[]
+  onCreateFolder?: (parentId: string | null) => void
+  onRenameFolder?: (folderId: string, newName: string) => void
+  onDeleteFolder?: (folderId: string) => void
 }
 
-export default function AppShell({ appName, userName, folders, tags }: AppShellProps) {
+export default function AppShell({
+  appName,
+  userName,
+  folders,
+  tags,
+  onCreateFolder,
+  onRenameFolder,
+  onDeleteFolder,
+}: AppShellProps) {
   const theme = useThemeStore((s) => s.theme)
   const { active } = useSession()
 
@@ -36,7 +47,13 @@ export default function AppShell({ appName, userName, folders, tags }: AppShellP
   return (
     <div className="app-shell">
       <Header appName={appName} userName={userName} />
-      <Sidebar folders={folders} tags={tags} />
+      <Sidebar
+        folders={folders}
+        tags={tags}
+        onCreateFolder={onCreateFolder}
+        onRenameFolder={onRenameFolder}
+        onDeleteFolder={onDeleteFolder}
+      />
       <main id={MAIN_CONTENT_ID} tabIndex={-1} className="app-main">
         {active && <AutoLockBanner />}
         <Outlet />
