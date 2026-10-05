@@ -43,10 +43,27 @@ Full detail, rationale, and absolute rules in [SEC-001](architecture/adr/SEC-001
 - Security issues: do not open a public issue. Contact the maintainers directly.
 - All security-relevant changes must pass the SEC-001 threat-vector checklist before merge.
 - Secret scanning (gitleaks / truffleHog) runs in CI on every push; a real secret fails the pipeline.
-- **Response timeline:** we aim to acknowledge reports within 5 business days and provide a status update within 10 business days. There is no fixed deadline for a fix; complex issues may require more time, and we will communicate any expected delay.
-- **Authorized testing scope:** testing is welcome on the staging/recette environment only. Do not test against production, do not perform denial-of-service attacks, and do not attempt social engineering against users or maintainers. Out-of-scope activity includes credential stuffing, brute-force of auth endpoints, and any test that may degrade service for others.
-- **Safe harbor:** reports made in good faith, within the authorized scope above, will not be the subject of legal action or disclosure to law enforcement. We ask reporters to avoid accessing, modifying, or exfiltrating user data beyond what is strictly necessary to demonstrate the issue.
-- **Recognition:** with your permission, we acknowledge responsible reporters in the release notes and/or a hall-of-fame section. This is optional — you may request anonymity.
+- **Response timeline:** we aim to acknowledge reports within 5 business days
+  and provide a status update within 10 business days. There is no fixed
+  deadline for a fix; complex issues may require more time, and we will
+  communicate any expected delay.
+- **Authorized testing scope:** testing is welcome on the staging/recette
+  environment only. Do not test against production, do not perform
+  denial-of-service attacks, and do not attempt social engineering against
+  users or maintainers. Out-of-scope activity includes credential stuffing,
+  brute-force of auth endpoints, and any test that may degrade service for
+  others.
+- **Safe harbor:** reports made in good faith, within the authorized scope
+  above, will not be the subject of legal action or disclosure to law
+  enforcement. We ask reporters to avoid accessing, modifying, or exfiltrating
+  user data beyond what is strictly necessary to demonstrate the issue.
+- **Recognition:** with your permission, we acknowledge responsible reporters
+  in the release notes and/or a hall-of-fame section. This is optional — you
+  may request anonymity.
+- **Industry reference:** the elements above (scope, safe harbor, response
+  expectations, recognition) follow the structure promoted by
+  [disclose.io](https://disclose.io/). This is not a formal adoption of the
+  disclose.io policy terms; the safe-harbor wording above is the project's own.
 
 ## CI security gates
 
