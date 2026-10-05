@@ -1,0 +1,14 @@
+{"comment":28,"task":"t_430aa9a3","author":"qa","hits":[]}
+{"comment":30,"task":"t_33dcad7d","author":"architect","hits":[{"at":861,"quoted":true,"reason":"` marker — both mechanisms exist and are audit-vis"}]}
+{"comment":31,"task":"t_33dcad7d","author":"architect","hits":[{"at":681,"quoted":true,"reason":"` (audit-visible as X1_EXCEPTION); false negatives"}]}
+{"comment":32,"task":"t_33dcad7d","author":"architect","hits":[{"at":664,"quoted":true,"reason":"` (X1_EXCEPTION, audit-visible)."}]}
+{"comment":33,"task":"t_33dcad7d","author":"architect","hits":[{"at":164,"quoted":true,"reason":"` in backticks as a description of the exception m"}]}
+{"comment":80,"task":"t_80fc0326","author":"dashboard","hits":[{"at":0,"quoted":false,"reason":"closed by human decision (Ze), not by qa-profile Q"}]}
+{"comment":81,"task":"t_9b3bdba0","author":"dashboard","hits":[{"at":0,"quoted":false,"reason":"closed by human decision (Ze), not by qa-profile Q"}]}
+{"comment":82,"task":"t_b51a1ff3","author":"dashboard","hits":[{"at":0,"quoted":false,"reason":"closed by human decision (Ze), not by qa-profile Q"}]}
+{"comment":90,"task":"t_930fddbe","author":"dashboard","hits":[{"at":915,"quoted":false,"reason":"closed by human decision (Ze), duplicate of alread"}]}
+{"comment":96,"task":"t_f49d448c","author":"human","hits":[{"at":0,"quoted":false,"reason":"closed by human decision (Ze), bypassing gate defe"}]}
+{"comment":98,"task":"t_f49d448c","author":"qa","hits":[]}
+{"comment":551,"task":"t_75180b28","author":"architect","hits":[{"at":21,"quoted":true,"reason":"` n'a aucune contrainte d'auteur"},{"at":1411,"quoted":true,"reason":"...` dans un commentaire ferme une carte de la fro"}]}
+{"comment":552,"task":"t_75180b28","author":"qa","hits":[]}
+{"comment":554,"task":"t_2bb5f1f2","author":"qa","hits":[]}
