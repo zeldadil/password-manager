@@ -90,7 +90,8 @@ were passing on a non-QA record now surface as `R1` failures rather than passing
 | `A6_EVIDENCE_CITED` | a path named in the operative verdict only as a **citation** — reporting another card's artifact, cross-checking it, quoting a defect transcript — is absent from this checkout | report-only — the card that *reports* a broken pointer elsewhere must stay completable (§5.7) |
 | `A7_VERDICT_AUTHOR_IGNORED` | a `QA-VERDICT: <token>` (or `deferred`) comment written by a profile other than `qa` — **discounted, not a verdict** (§3, `t_338f47fd`) | report-only — it does not satisfy `R1`, so the card must record its verdict from the `qa` profile; the advisory is what tells you the comment you are looking at is not the one the gate reads |
 | `A8_VERDICT_SELF_DECLARED` | the operative verdict comes from the run metadata of a **non-`qa`** run — accepted per §3 (the one author-independent source) | report-only — a self-declared verdict must never be invisible; the card should still carry a QA review |
-| `X1_EXCEPTION` | a recorded `qa-signoff-exception:` marker (§5.6) | report-only — exceptions stay visible in every audit |
+| `A10_EXCEPTION_IGNORED` | a `qa-signoff-exception:` record the gate **refused** (§5.6, `t_b8001b55`): written by an author outside `human` · `dashboard` · `user` · `architect` · `qa` (including the anonymous `worker`), quoted only inside a code span/fence, or recorded on a security-track card | report-only — the refused record waives nothing, so `R1`/`R4`/`R7` apply as if it were absent; the advisory says which of the three reasons applied |
+| `X1_EXCEPTION` | a recorded `qa-signoff-exception:` marker (§5.6) **that the gate applied** — allowed author, outside code, non-security card | report-only — exceptions stay visible in every audit |
 
 **Fail closed only on genuinely unverifiable input** (added 2026-09-17, `t_5455942d`). The gate blocks when it cannot
 establish the facts it needs (no resolvable task id, unreadable board, unparseable payload, a violation it *can*
@@ -173,7 +174,7 @@ marker always wins.
 
 AR-6 requires Architect **and** QA sign-off on anything touching the crypto boundary. The Architect records it as a comment on the same card, e.g.
 `AR-6 review — nonce handling and key-wrap interface reviewed; signed off (architect, 2026-09-17)`.
-The gate treats a comment authored by `architect` containing `signed off` / `approved` / `ARCH-VERDICT:` / `LGTM` as that sign-off. The heuristic that identifies a "security track" card is deliberately conservative (security Test Type **and** a crypto/bridge keyword); a false positive is cleared by the Architect commenting, or by a §5.6 exception.
+The gate treats a comment authored by `architect` containing `signed off` / `approved` / `ARCH-VERDICT:` / `LGTM` as that sign-off. The heuristic that identifies a "security track" card is deliberately conservative (security Test Type **and** a crypto/bridge keyword); a false positive is cleared by the Architect commenting. A §5.6 exception no longer clears it (`t_b8001b55`): on a security-track card exceptions are refused (`A10_EXCEPTION_IGNORED`).
 
 ### 5.6 Exceptions (audited, never silent)
 
@@ -181,7 +182,25 @@ The gate treats a comment authored by `architect` containing `signed off` / `app
 hermes kanban comment <task-id> --author qa --body "qa-signoff-exception: <reason> (approved by <who>, expires <when>)"
 ```
 
-An exception marker bypasses `R1`–`R8` for that card and is reported as `X1_EXCEPTION` in **every** audit, so it cannot be forgotten. Exceptions are for incidents and hotfixes, not for routine work.
+An applied exception marker (see the three conditions below) bypasses `R1`–`R8` for that card and is reported as `X1_EXCEPTION` in **every** audit, so it cannot be forgotten. Exceptions are for incidents and hotfixes, not for routine work.
+
+**Who may record one, and where it never applies** (added 2026-10-05, `t_b8001b55`). Until then the gate displayed
+the exception's author but never checked it. An exception is applied only when all three conditions hold:
+
+1. **Allowed author**: `human`, `dashboard`, `user` (the human surfaces), `architect` or `qa`. Any other profile is
+   refused. The generic `worker` author is refused too, because it names no profile and so no one is accountable for
+   the waiver.
+2. **Outside code**: the key must appear outside every code span (`` `…` ``) and fenced block. A quoted key is
+   documentation, the same rule as deferral markers and evidence pointers (§5.7). Live origin: the comment that
+   reported this defect on `t_75180b28` quoted the key between backticks, and the gate treated the quote as that
+   card's exception. Each occurrence is checked on its own, so a comment that quotes the key and then records a real
+   one still counts.
+3. **Not a security-track card** (§5.5): AR-6 needs an Architect **and** a QA sign-off on the crypto/bridge/auth
+   boundary. Those are signed, never waived, so no exception, whoever wrote it, disarms `R1`, `R4` or `R7` there.
+   `R7` no longer consults the exception at all.
+
+A refused record is reported as `A10_EXCEPTION_IGNORED`, never dropped silently. The first record that meets all
+three conditions is the operative exception; a refused record earlier in the thread no longer hides it.
 
 ---
 
