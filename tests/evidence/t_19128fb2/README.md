@@ -1,6 +1,6 @@
 # Evidence — t_19128fb2 (FE-003g CI fixes)
 
-> **Corrected 2026-10-01** after QA review (attachment 143 on t_069c605b). The previous version of this file
+> **Corrected 2026-10-05** after QA review (attachment 143 on t_069c605b). The previous version of this file
 > cited a non-existent commit SHA, a failing CI run reported as passing, and CI job names that do not exist in
 > `.github/workflows/ci.yml`. Every value below was re-checked against GitHub (`gh api` / `gh run view`).
 
