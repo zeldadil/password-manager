@@ -10,7 +10,7 @@
 
 ## Purpose
 
-This document is the **security gate** for the Secure Password Manager project. No secret-storage, cryptographic, or browser-bridge code may be written until this document is signed off by Architect + QA. It establishes:
+This document is the **security gate** for the Secure Password Manager project. No secret-storage, cryptographic, or browser-bridge code may be written until this document is signed off by the Architect (policy of 2026-09-18, `docs/decisions/SEC-001-gate-policy-2026-09-18.md`: document-level gate closure requires the Architect signature alone; QA retains full veto and review authority, and every crypto-path change still requires Architect + QA sign-off before merge per AR-6 below). It establishes:
 
 1. A threat model covering 7 minimum attack vectors
 2. 9 mandatory cryptographic decisions with rationale
