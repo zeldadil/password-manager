@@ -1,0 +1,35 @@
+---- real gh, merged card t_19128fb2 (timing of a full lookup)
+exit=0 elapsed_ms=6550
+  t_19128fb2  FE-003g: Folder Management
+      pr_rule: in_scope=true applies=true linked=[#115:open #113:merged→master #102:merged→master #101:merged→master #94:closed] judged=113 merge_commit=783be286c612
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      advisory A12_LINKED_PR_OPEN: PR #115 also references t_19128fb2 and is still open — not judged (PR #113 is the merged one); make sure no part of this card's deliverable lives only there
+---- real gh, open-PR card t_b8001b55
+exit=1 elapsed_ms=2716
+  t_b8001b55  SEC-GATE: QA signoff exception — author allowlist, never exempt securi
+      pr_rule: in_scope=true applies=true linked=[#114:open] judged=- merge_commit=-
+      VIOLATION R9_PR_NOT_MERGED: PR not merged: no pull request linked to t_b8001b55 is merged into master — #114 is open (not merged). The card completes after the merge, by the merger (§5.9)
+---- invalid token (GH_TOKEN=invalid) -> A11, never a violation
+exit=0 elapsed_ms=508
+  t_b8001b55  SEC-GATE: QA signoff exception — author allowlist, never exempt securi
+      pr_rule: in_scope=true applies=null linked=[] judged=- merge_commit=-
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (gh pr list failed: HTTP 401: Bad credentials (https://api.github.com/graphql)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+---- gh not on PATH (PATH holds only git) -> A11
+exit=0 elapsed_ms=104
+  t_b8001b55  SEC-GATE: QA signoff exception — author allowlist, never exempt securi
+      pr_rule: in_scope=true applies=null linked=[] judged=- merge_commit=-
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (`gh` CLI not on PATH) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+---- unreachable API host (GH_HOST=github.invalid) -> A11
+exit=0 elapsed_ms=205
+  t_b8001b55  SEC-GATE: QA signoff exception — author allowlist, never exempt securi
+      pr_rule: in_scope=true applies=null linked=[] judged=- merge_commit=-
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (gh pr list failed: error connecting to github.invalid) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+---- time budget exhausted (QA_GATE_GH_BUDGET_MS=1) -> A11
+exit=0 elapsed_ms=150
+  t_b8001b55  SEC-GATE: QA signoff exception — author allowlist, never exempt securi
+      pr_rule: in_scope=true applies=null linked=[] judged=- merge_commit=-
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (GitHub time budget (1 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+---- hook, real gh, payload cwd = a non-git scratch dir (worker workspace shape)
+exit=2 elapsed_ms=2208
+{"decision":"block","reason":"QA sign-off gate blocked this completion of t_b8001b55 (2 violation(s)):\n  - R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: tests/evidence/t_b8001b55/README.md (repo: /home/sap/.hermes/profiles/qa/cache/scratch/tmp.1kfmBsIQPS; not found on any ref)\n  - R9_PR_NOT_MERGED: PR not merged: no pull request linked to t_b8001b55 is merged into master — #114 is open (not merged). The card completes after the merge, by the merger (§5.9)\nRecord the verdict on the card, then call kanban_complete again:\n  hermes kanban comment t_b8001b55 --author qa --body \"QA-VERDICT: pass — evidence: tests/evidence/t_b8001b55/README.md\"\nA code card completes only after its PR is merged into master with green CI on the merge commit (§5.9):\n  the author moves the card to review with \"PR: #<n>\" (kanban_request_review); the merger completes it after the merge.\nPolicy: QA_SIGN_OFF_GATE.md · re-check: node scripts/qa/signoff-gate.mjs check --task t_b8001b55 --pre-complete"}
+

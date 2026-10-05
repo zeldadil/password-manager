@@ -55,6 +55,16 @@
  *     reported as `A7_VERDICT_AUTHOR_IGNORED`; a run-metadata verdict stays
  *     author-independent by design (§3 row 3) and is reported as
  *     `A8_VERDICT_SELF_DECLARED` when a non-QA run self-declares it.
+ *
+ * R9/R10 (t_75180b28, QA_SIGN_OFF_GATE.md §5.9): a **code** card — one a PR
+ * references, one with a pushed branch named after it, or one whose body says
+ * `Deliverable: code` — completes only when a linked PR is merged into the
+ * default branch (R9_PR_NOT_MERGED) and every required check of that branch's
+ * protection is green on the merge commit (R10_MERGE_CI_NOT_GREEN). Both facts
+ * are read from GitHub through `gh` at check time, never from the card. When
+ * GitHub cannot be read the result is the advisory A11_CI_STATE_UNVERIFIABLE,
+ * never a violation. Extra audit/check flags: --gh-repo OWNER/NAME,
+ * --no-github, --pr-epoch-iso ISO.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -602,6 +612,346 @@ function findException(board, task) {
   return { reason: (m[1] || "").slice(0, 200), author: c.author };
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// R9 / R10 — code delivered means: PR merged into master, and the required CI
+// checks green on the merge commit, read from GitHub at check time
+// (t_75180b28; QA_SIGN_OFF_GATE.md §5.9).
+//
+// Why a mechanical check: completion summaries kept claiming "all CI green"
+// while required checks were red on the PR (2026-09-30), and a branch was
+// pushed with no PR at all (audit t_8577a5a9). The gate never reads the card's
+// own summary for this rule — only GitHub.
+//
+// Network failure is never a violation: when GitHub cannot be read (offline,
+// `gh` missing/unauthenticated, rate limit, protection unreadable) the gate
+// emits A11_CI_STATE_UNVERIFIABLE and lets the other rules decide, so a card
+// never becomes uncompletable because the network is down (architect decision,
+// t_75180b28 comment of 2026-10-05 12:30).
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Cards completed before this instant are outside R9/R10 (the audit skips them). */
+export const PR_RULE_EPOCH_ISO = "2026-10-06T00:00:00Z";
+
+/** Repo the board's code cards ship to, when it cannot be read from the checkout. */
+export const DEFAULT_GH_REPO = "zeldadil/password-manager";
+
+/** Check-run conclusions GitHub itself accepts for a required check. */
+const GREEN_CONCLUSIONS = new Set(["success", "neutral", "skipped"]);
+
+/** Explicit declaration in the card body: `Deliverable: code` (bold/bullet tolerated). */
+const CODE_DELIVERABLE_RE = /^[ \t]*(?:[-*][ \t]+)?\**deliverable\**[ \t]*:[ \t]*\**[ \t]*code\b/im;
+
+export class GitHubUnavailable extends Error {}
+
+function idMentionRe(taskId) {
+  return new RegExp(`(?:^|[^0-9a-z_])${taskId.replace(/[^0-9a-z_]/gi, "")}(?![0-9a-z])`, "i");
+}
+
+/**
+ * The GitHub reader. Every method throws GitHubUnavailable on any failure, and
+ * every result is memoised for the life of the process (an audit asks for the
+ * PR list once, not once per card).
+ *
+ *   QA_GATE_GITHUB=off             → every call is unavailable (A11)
+ *   QA_GATE_GITHUB_FIXTURE=<file>  → answers come from a JSON fixture (selftest)
+ *   otherwise                      → the `gh` CLI, with a total time budget so the
+ *                                    30 s hook timeout is never reached
+ *                                    (QA_GATE_GH_BUDGET_MS, default 20000)
+ */
+export function makeGitHub({ repo = null, mode = process.env.QA_GATE_GITHUB || "", fixture = process.env.QA_GATE_GITHUB_FIXTURE || "" } = {}) {
+  const memo = new Map();
+  const once = (key, fn) => {
+    if (!memo.has(key)) {
+      try {
+        memo.set(key, { ok: true, value: fn() });
+      } catch (e) {
+        memo.set(key, { ok: false, error: e instanceof GitHubUnavailable ? e : new GitHubUnavailable(e.message) });
+      }
+    }
+    const m = memo.get(key);
+    if (!m.ok) throw m.error;
+    return m.value;
+  };
+
+  if (String(mode).toLowerCase() === "off") {
+    const off = () => {
+      throw new GitHubUnavailable("GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)");
+    };
+    return { repo, source: "off", listPullRequests: off, listBranches: off, defaultBranch: off, requiredChecks: off, commitChecks: off };
+  }
+
+  if (fixture) {
+    let fx;
+    try {
+      fx = JSON.parse(readFileSync(fixture, "utf8"));
+    } catch (e) {
+      throw new BoardError(`GitHub fixture unreadable (${fixture}): ${e.message}`);
+    }
+    const guard = (what) => {
+      if (fx.unreachable) throw new GitHubUnavailable(`${what}: ${fx.unreachable}`);
+      if (fx.errors && fx.errors[what]) throw new GitHubUnavailable(`${what}: ${fx.errors[what]}`);
+    };
+    return {
+      repo: fx.repo || repo,
+      source: `fixture ${fixture}`,
+      listPullRequests: () => once("prs", () => (guard("pull requests"), fx.prs || [])),
+      listBranches: () => once("branches", () => (guard("branches"), fx.branches || [])),
+      defaultBranch: () => once("default", () => (guard("default branch"), fx.default_branch || "master")),
+      requiredChecks: (branch) => once(`req:${branch}`, () => (guard("required checks"), fx.required_checks || [])),
+      commitChecks: (sha) =>
+        once(`checks:${sha}`, () => {
+          guard("commit checks");
+          return { runs: (fx.check_runs || {})[sha] || [], statuses: (fx.statuses || {})[sha] || [] };
+        }),
+    };
+  }
+
+  const budgetMs = Number(process.env.QA_GATE_GH_BUDGET_MS) || 20000;
+  const deadline = Date.now() + budgetMs;
+  const gh = (args) => {
+    const left = deadline - Date.now();
+    if (left <= 500) throw new GitHubUnavailable(`GitHub time budget (${budgetMs} ms) exhausted`);
+    try {
+      return execFileSync("gh", args, {
+        encoding: "utf8",
+        timeout: Math.min(10000, left),
+        maxBuffer: 64 * 1024 * 1024,
+        stdio: ["ignore", "pipe", "pipe"],
+        env: { ...process.env, GH_PROMPT_DISABLED: "1", GH_NO_UPDATE_NOTIFIER: "1", NO_COLOR: "1" },
+      });
+    } catch (e) {
+      if (e.code === "ENOENT") throw new GitHubUnavailable("`gh` CLI not on PATH");
+      const detail = (e.stderr || e.message || "").toString().trim().split("\n")[0].slice(0, 200);
+      throw new GitHubUnavailable(`gh ${args.slice(0, 2).join(" ")} failed: ${detail || (e.signal ? `killed by ${e.signal} (timeout)` : "error")}`);
+    }
+  };
+  const jsonLines = (out) =>
+    out
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => JSON.parse(l));
+  const need = () => {
+    if (!repo) throw new GitHubUnavailable("no GitHub repository resolved (--gh-repo / QA_GATE_GH_REPO / origin remote)");
+    return repo;
+  };
+  return {
+    repo,
+    source: "gh",
+    listPullRequests: () =>
+      once("prs", () =>
+        JSON.parse(
+          gh([
+            "pr", "list", "--repo", need(), "--state", "all", "--limit", "5000",
+            "--json", "number,title,body,state,mergedAt,mergeCommit,baseRefName,headRefName,url",
+          ]),
+        ),
+      ),
+    listBranches: () => once("branches", () => gh(["api", "--paginate", `repos/${need()}/branches?per_page=100`, "--jq", ".[].name"]).split("\n").map((s) => s.trim()).filter(Boolean)),
+    defaultBranch: () => once("default", () => gh(["api", `repos/${need()}`, "--jq", ".default_branch"]).trim() || "master"),
+    requiredChecks: (branch) =>
+      once(`req:${branch}`, () => {
+        const rsc = JSON.parse(gh(["api", `repos/${need()}/branches/${branch}/protection/required_status_checks`]));
+        if (Array.isArray(rsc.checks) && rsc.checks.length) return rsc.checks.map((c) => ({ context: c.context, app_id: c.app_id ?? null }));
+        return (rsc.contexts || []).map((c) => ({ context: c, app_id: null }));
+      }),
+    commitChecks: (sha) =>
+      once(`checks:${sha}`, () => ({
+        runs: jsonLines(
+          gh([
+            "api", "--paginate", `repos/${need()}/commits/${sha}/check-runs?per_page=100`,
+            "--jq", ".check_runs[] | {name, status, conclusion, app_id: .app.id}",
+          ]),
+        ),
+        statuses: jsonLines(gh(["api", `repos/${need()}/commits/${sha}/status`, "--jq", ".statuses[] | {context, state}"])),
+      })),
+  };
+}
+
+/** `owner/name` from a GitHub remote URL (https or ssh), or null. */
+export function parseGitHubSlug(url) {
+  const m = /github\.com[:/]+([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/.exec(String(url || "").trim());
+  return m ? `${m[1]}/${m[2]}` : null;
+}
+
+export function resolveGitHubRepo(argRepo, repoRoot) {
+  if (typeof argRepo === "string" && argRepo) return argRepo;
+  if (process.env.QA_GATE_GH_REPO) return process.env.QA_GATE_GH_REPO;
+  if (repoRoot && existsSync(join(repoRoot, ".git"))) {
+    try {
+      const url = execFileSync("git", ["-C", repoRoot, "remote", "get-url", "origin"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 5000 });
+      const slug = parseGitHubSlug(url);
+      if (slug) return slug;
+    } catch {
+      /* no origin — fall through */
+    }
+  }
+  return DEFAULT_GH_REPO;
+}
+
+/** State of one required check on a commit: "success" | "failure" | "in_progress" | "missing" | … */
+function requiredCheckState(req, checks) {
+  const runs = checks.runs.filter((r) => r.name === req.context && (req.app_id === null || req.app_id === undefined || Number(r.app_id) === Number(req.app_id)));
+  if (runs.length) {
+    const notDone = runs.find((r) => r.status !== "completed");
+    if (notDone) return { green: false, state: notDone.status || "pending" };
+    const bad = runs.find((r) => !GREEN_CONCLUSIONS.has(String(r.conclusion || "").toLowerCase()));
+    if (bad) return { green: false, state: String(bad.conclusion || "no-conclusion").toLowerCase() };
+    return { green: true, state: String(runs[0].conclusion).toLowerCase() };
+  }
+  // Legacy commit statuses only count when the requirement is not bound to an app.
+  if (req.app_id === null || req.app_id === undefined) {
+    const st = checks.statuses.find((s) => s.context === req.context);
+    if (st) return { green: st.state === "success", state: st.state };
+  }
+  return { green: false, state: "missing" };
+}
+
+/**
+ * R9/R10 for one card. Pure with respect to the injected GitHub reader.
+ * Returns `{ violations, advisories, facts }` (facts = the `pr_rule` block).
+ */
+export function evaluatePrRule(task, gh) {
+  const violations = [];
+  const advisories = [];
+  const add = (rule, detail) => violations.push({ rule, detail });
+  const advise = (rule, detail) => advisories.push({ rule, detail });
+  const facts = { in_scope: true, repo: gh.repo || null, applies: null, linked_prs: [], judged_pr: null, required_checks: null, check_states: null };
+  const unverifiable = (step, e) => {
+    facts.unverifiable = `${step}: ${e.message}`;
+    advise(
+      "A11_CI_STATE_UNVERIFIABLE",
+      `could not read ${step} from GitHub (${e.message}) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable`,
+    );
+    return { violations, advisories, facts };
+  };
+
+  const mention = idMentionRe(task.id);
+  let prs;
+  try {
+    prs = gh.listPullRequests();
+  } catch (e) {
+    return unverifiable("the pull-request list", e);
+  }
+  const linked = prs
+    .filter((pr) => [pr.title, pr.body, pr.headRefName].some((s) => typeof s === "string" && mention.test(s)))
+    .map((pr) => ({
+      number: pr.number,
+      state: String(pr.state || "").toUpperCase(),
+      merged: Boolean(pr.mergedAt) || String(pr.state || "").toUpperCase() === "MERGED",
+      merged_at: pr.mergedAt || null,
+      base: pr.baseRefName || null,
+      head: pr.headRefName || null,
+      merge_commit: (pr.mergeCommit && pr.mergeCommit.oid) || null,
+      url: pr.url || null,
+    }));
+  facts.linked_prs = linked;
+
+  if (linked.length === 0) {
+    const declared = CODE_DELIVERABLE_RE.test(task.body || "");
+    let branches;
+    try {
+      branches = gh.listBranches().filter((b) => mention.test(b));
+    } catch (e) {
+      if (!declared) return unverifiable("the branch list", e);
+      branches = [];
+    }
+    facts.pushed_branches = branches;
+    if (!declared && branches.length === 0) {
+      facts.applies = false;
+      facts.reason = "no PR references the card, no pushed branch is named after it, and its body does not declare `Deliverable: code`";
+      return { violations, advisories, facts };
+    }
+    facts.applies = true;
+    const why = branches.length ? `branch(es) ${branches.map((b) => `\`${b}\``).join(", ")} are pushed` : "the card body declares `Deliverable: code`";
+    add(
+      "R9_PR_NOT_MERGED",
+      `no pull request references ${task.id} (PR title, body or head branch), yet ${why} — code is delivered only through a PR merged into master: open the PR with ${task.id} in its body, move the card to review with "PR: #<n>", and let the merger complete it (§5.9)`,
+    );
+    return { violations, advisories, facts };
+  }
+
+  facts.applies = true;
+  let base;
+  try {
+    base = gh.defaultBranch();
+  } catch (e) {
+    return unverifiable("the default branch", e);
+  }
+  facts.default_branch = base;
+  const mergedToBase = linked
+    .filter((p) => p.merged && p.base === base && p.merge_commit)
+    .sort((a, b) => String(b.merged_at || "").localeCompare(String(a.merged_at || "")));
+  if (mergedToBase.length === 0) {
+    const describe = (p) =>
+      p.merged
+        ? `#${p.number} merged into \`${p.base}\`, not \`${base}\``
+        : p.state === "OPEN"
+          ? `#${p.number} is open (not merged)`
+          : `#${p.number} was closed without being merged`;
+    add(
+      "R9_PR_NOT_MERGED",
+      `PR not merged: no pull request linked to ${task.id} is merged into ${base} — ${linked.map(describe).join("; ")}. The card completes after the merge, by the merger (§5.9)`,
+    );
+    return { violations, advisories, facts };
+  }
+
+  const pr = mergedToBase[0];
+  facts.judged_pr = pr.number;
+  facts.merge_commit = pr.merge_commit;
+  for (const p of linked) {
+    if (p !== pr && p.state === "OPEN") {
+      advise("A12_LINKED_PR_OPEN", `PR #${p.number} also references ${task.id} and is still open — not judged (PR #${pr.number} is the merged one); make sure no part of this card's deliverable lives only there`);
+    }
+  }
+
+  let required;
+  try {
+    required = gh.requiredChecks(base);
+  } catch (e) {
+    return unverifiable(`the required status checks of \`${base}\` (branch protection)`, e);
+  }
+  facts.required_checks = required.map((r) => r.context);
+  if (required.length === 0) {
+    return unverifiable(`the required status checks of \`${base}\``, new GitHubUnavailable("branch protection lists no required check"));
+  }
+  let checks;
+  try {
+    checks = gh.commitChecks(pr.merge_commit);
+  } catch (e) {
+    return unverifiable(`the checks of merge commit ${pr.merge_commit.slice(0, 12)}`, e);
+  }
+  const states = required.map((r) => ({ context: r.context, ...requiredCheckState(r, checks) }));
+  facts.check_states = Object.fromEntries(states.map((s) => [s.context, s.state]));
+  const notGreen = states.filter((s) => !s.green);
+  if (notGreen.length) {
+    add(
+      "R10_MERGE_CI_NOT_GREEN",
+      `PR #${pr.number} is merged, but CI is not green on its merge commit ${pr.merge_commit.slice(0, 12)} on ${base}: ${notGreen.map((s) => `${s.context}=${s.state}`).join(", ")} (${required.length} required check(s) read from the ${base} branch protection). Fix master or wait for its run to finish; a cancelled run can be re-run with \`gh run rerun\` (§5.9)`,
+    );
+  }
+  // A13 — the newest merged PR is the one judged (its merge commit contains every
+  // earlier merge of the card), but an earlier merge that landed red must not
+  // vanish: live case, FE-002g/FE-003a code PR merged with secret-scan=failure
+  // on master, then a green evidence PR for the same cards (t_75180b28 evidence).
+  for (const older of mergedToBase.slice(1, 6)) {
+    let oc;
+    try {
+      oc = gh.commitChecks(older.merge_commit);
+    } catch {
+      continue;
+    }
+    const bad = required.map((r) => ({ context: r.context, ...requiredCheckState(r, oc) })).filter((s) => !s.green);
+    if (bad.length) {
+      advise(
+        "A13_EARLIER_MERGE_CI_NOT_GREEN",
+        `earlier PR #${older.number} of this card merged as ${older.merge_commit.slice(0, 12)} with required check(s) not green there: ${bad.map((s) => `${s.context}=${s.state}`).join(", ")} — not a violation (the newest merge, PR #${pr.number}, is judged and contains it), recorded so it is never silent`,
+      );
+    }
+  }
+  return { violations, advisories, facts };
+}
+
 /** Rule ids and meanings are documented in QA_SIGN_OFF_GATE.md §4. */
 export function evaluateCard(board, task, opts = {}) {
   const repoRoot = opts.repo || null;
@@ -822,6 +1172,24 @@ export function evaluateCard(board, task, opts = {}) {
     add("R7_SECURITY_TRACK_SIGNOFF_MISSING", "crypto/bridge/auth card carries no Architect sign-off comment (AR-6)");
   }
 
+  // R9/R10 — code cards: PR merged into master + required CI green on the merge
+  // commit, read from GitHub now (§5.9, t_75180b28). Its own epoch: a card
+  // completed before it is not re-judged (no lookup, no advisory). A §5.6
+  // exception does NOT waive it — it is a fact about the repository, not about
+  // the QA record.
+  const prEpochMs = opts.prEpochMs ?? Date.parse(PR_RULE_EPOCH_ISO);
+  const prInScope = preComplete || task.status !== "done" || (completedMs !== null && completedMs >= prEpochMs);
+  if (!prInScope) {
+    facts.pr_rule = { in_scope: false, reason: `completed before the PR-rule epoch ${new Date(prEpochMs).toISOString()}` };
+  } else if (!opts.github) {
+    facts.pr_rule = { in_scope: true, applies: null, reason: "no GitHub reader supplied to evaluateCard" };
+  } else {
+    const pr = evaluatePrRule(task, opts.github);
+    facts.pr_rule = pr.facts;
+    violations.push(...pr.violations);
+    advisories.push(...pr.advisories);
+  }
+
   // A1 — grandfathered cards never produce violations (unless --strict-history):
   // every rule failure is reported as an advisory instead.
   if (!postEpoch) {
@@ -921,6 +1289,7 @@ function main() {
   const db = typeof args.db === "string" && args.db ? args.db : defaultDbPath();
   const repo = resolveRepo(args.repo);
   const epochMs = typeof args["epoch-iso"] === "string" ? Date.parse(args["epoch-iso"]) : Date.parse(GATE_EPOCH_ISO);
+  const prEpochMs = typeof args["pr-epoch-iso"] === "string" ? Date.parse(args["pr-epoch-iso"]) : Date.parse(PR_RULE_EPOCH_ISO);
 
   if (mode === "hook") return hookMode(db);
 
@@ -934,8 +1303,10 @@ function main() {
   }
 
   let board;
+  let github;
   try {
     board = loadBoard(db);
+    github = makeGitHub({ repo: resolveGitHubRepo(args["gh-repo"], repo), mode: args["no-github"] ? "off" : undefined });
   } catch (e) {
     console.error(`signoff-gate: ${e.message}`);
     process.exit(3);
@@ -950,6 +1321,8 @@ function main() {
     const r = evaluateCard(board, task, {
       repo,
       epochMs,
+      prEpochMs,
+      github,
       preComplete: Boolean(args["pre-complete"]),
       strictHistory: Boolean(args["strict-history"]),
     });
@@ -961,7 +1334,7 @@ function main() {
     process.exit(r.violations.length ? 1 : 0);
   }
 
-  const opts = { repo, epochMs, strictHistory: Boolean(args["strict-history"]) };
+  const opts = { repo, epochMs, prEpochMs, github, strictHistory: Boolean(args["strict-history"]) };
   const results = board.tasks.filter((t) => t.status === "done").map((t) => evaluateCard(board, t, opts));
   const failures = results.filter((r) => r.violations.length > 0);
   if (args.json) {
@@ -1108,18 +1481,32 @@ function hookMode(defaultDb) {
   if (!task) return block(`signoff-gate: task ${taskId} (from ${resolved.source}) is not on the board at ${db}. Failing closed.`);
   let result;
   try {
-    result = evaluateCard(board, task, { repo, epochMs: Date.parse(GATE_EPOCH_ISO), preComplete: true });
+    const github = makeGitHub({ repo: resolveGitHubRepo(null, repo) });
+    result = evaluateCard(board, task, { repo, epochMs: Date.parse(GATE_EPOCH_ISO), preComplete: true, github });
   } catch (e) {
     return block(`signoff-gate: evaluation error (${e.message}). Failing closed.`);
   }
   if (result.violations.length === 0) return allow();
   const lines = result.violations.map((v) => `  - ${v.rule}: ${v.detail}`);
+  const prRules = new Set(["R9_PR_NOT_MERGED", "R10_MERGE_CI_NOT_GREEN"]);
+  const qaGaps = result.violations.some((v) => !prRules.has(v.rule));
+  const prGaps = result.violations.some((v) => prRules.has(v.rule));
   return block(
     [
       `QA sign-off gate blocked this completion of ${taskId} (${result.violations.length} violation(s)):`,
       ...lines,
-      "Record the verdict on the card, then call kanban_complete again:",
-      `  hermes kanban comment ${taskId} --author qa --body "QA-VERDICT: pass — evidence: tests/evidence/${taskId}/README.md"`,
+      ...(qaGaps
+        ? [
+            "Record the verdict on the card, then call kanban_complete again:",
+            `  hermes kanban comment ${taskId} --author qa --body "QA-VERDICT: pass — evidence: tests/evidence/${taskId}/README.md"`,
+          ]
+        : []),
+      ...(prGaps
+        ? [
+            "A code card completes only after its PR is merged into master with green CI on the merge commit (§5.9):",
+            '  the author moves the card to review with "PR: #<n>" (kanban_request_review); the merger completes it after the merge.',
+          ]
+        : []),
       `Policy: QA_SIGN_OFF_GATE.md · re-check: node scripts/qa/signoff-gate.mjs check --task ${taskId} --pre-complete`,
     ].join("\n"),
   );

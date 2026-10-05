@@ -1,0 +1,41 @@
+required (branch protection): unit,integration,install-lockfile,lint-typecheck,e2e,dependency-audit,build,secret-scan
+935b64b752ae  docs(sec): wrap disclosure-policy bullets + add disclose.io   all-required-green
+783be286c612  docs(evidence): correct FE-003g evidence file (t_19128fb2) (  all-required-green
+7b0d3928811b  docs(sec-001): align Purpose with the adopted gate-closure p  all-required-green
+71775191e215  docs(sec): extend disclosure policy with 4 missing elements   all-required-green
+9820b9661a90  security: land the t_b51a1ff3 secret-guard — never merged   all-required-green
+c31f66c1a59c  fix(qa-gate): R2 must only flag superseded invalid verdict t  all-required-green
+3aba97b1dfda  docs(sec-001): close AC-4 sign-off gap by policy (t_816a87b5  all-required-green
+3651470eee7f  docs: durable pre-epoch grandfathering decision (t_4f872624)  all-required-green
+304bde084d34  FE-001j: integration tests for the route table (fail-closed   all-required-green
+882789d8596f  FE-003g: Folder Management — sidebar context menu (#101)    all-required-green
+683437c7a1dc  fix(web): load jest-dom matchers in the integration test lan  all-required-green
+e68ee58a3dfc  FE-003h: Tag Management — create/delete tags, assign/remov  all-required-green
+3497939b1028  docs: add docs/process/lessons-learned.md, project-specific   all-required-green
+08a25a74305a  docs: CLAUDE.md — add Piège n°12, kanban.default_assigne  all-required-green
+cc91b74703f3  docs: ADR-007 — accept Option B (client-side key derivatio  all-required-green
+2d50a9c7a2f0  docs: CLAUDE.md — add Piège n°11, hermes kanban block on  all-required-green
+5fb81db6fbdd  ADR-007: vault key client availability (ADR-002 §4.2 FLAG,   all-required-green
+4013bb3b09cb  FE-003c: Vault search bar (debounced, filter[search] query)   all-required-green
+e4f84e9f6c2e  docs: QA evidence for t_aca6ed13 (FE-003b Sidebar) (#91)      all-required-green
+02f4c2c51f24  FE-003b: Sidebar — folder tree (expand/collapse, drag-drop  all-required-green
+cf22e2d5ef08  docs: QA evidence for FE-002g/FE-002h/FE-003a (t_63323ce5/t_  all-required-green
+09b91f34befd  FE-002g + FE-003a: Integration tests + Vault dashboard, unta  secret-scan=failure 
+914dc8e3080c  docs: correct FE-002c/d/e evidence — record the actual mer  all-required-green
+aa4200ab5138  FE-002c: Auto-lock banner + lock button (#68)                 all-required-green
+6ae85df44d62  FE-001k-fu (t_782802ac): fix the converse route-coverage spe  all-required-green
+ab067e4557d3  docs: QA evidence for t_e4341d18 (BE-003k security tests) (#  all-required-green
+3ddf0a67bb96  BE-003k: Security tests — tampered ciphertext, unauthorize  all-required-green
+58f44e00a4e1  docs: QA evidence for t_f4f3ec16 (BE-003j integration test c  all-required-green
+b561d15de797  BE-003j: Integration test coverage audit — resource lifecy  all-required-green
+19b48d74151e  docs: QA evidence for t_a7b64b39 (BE-003i unit test coverage  all-required-green
+2ccd22efed3d  BE-003i: Unit test coverage audit — encryption roundtrip,   all-required-green
+b8914c1486c0  docs: QA evidence for t_d696f175 (BE-003h search endpoint) (  all-required-green
+443eb1bafb1d  BE-003h: Search endpoint — GET /resources?filter[search]=.  all-required-green
+0d369a291bb2  docs: QA evidence for t_d136be82 (BE-003g folder permission   all-required-green
+266e30ba2cb8  BE-003g: Folder permission mask propagation on resource crea  all-required-green
+9c1f75d7ba85  docs: QA evidence for t_03612cd7 (BE-003f permission enforce  all-required-green
+0ff6c956de5b  BE-003f: permission-based authorization enforcement (folders  all-required-green
+5b019aa62ead  docs: QA evidence for t_55c28180 (BE-003e tag CRUD) (#72)     all-required-green
+bd58723e26ed  docs: QA evidence for t_b51bf4b9 (BE-003c secret schema) (#7  all-required-green
+15be4de13ae0  BE-003e: Tag CRUD — flat, many-to-many via resource_tags (  all-required-green

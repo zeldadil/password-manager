@@ -16,6 +16,7 @@ Stated exactly, one card may only complete when **all** of the following hold:
 2. **Evidence is attached to the card** — a Kanban attachment, a CI run URL, or a committed path that actually exists in the repo (`tests/evidence/<task-id>/…`).
 3. For **crypto / bridge / auth cards** the Architect half of the AR-6 sign-off is recorded too (§5.5).
 4. The verdict is **terminal-consistent** (`fail`/`blocked` never sits on a `done` card) and, for `pass-with-conditions`, its conditions are tracked.
+5. For a **code card**, a linked pull request is **merged into `master`** and every required CI check is **green on its merge commit**, read from GitHub at check time (§5.9, `t_75180b28`).
 
 The gate is mechanical: `scripts/qa/signoff-gate.mjs` evaluates it, a Hermes `pre_tool_call` shell hook **blocks `kanban_complete`** while a rule fails, and the same script audits the whole board on demand.
 
@@ -82,6 +83,8 @@ were passing on a non-QA record now surface as `R1` failures rather than passing
 | `R6_CONDITIONS_UNTRACKED` | `pass-with-conditions` with no follow-up card id / issue link / follow-up item | enumerate the conditions and the card or issue that tracks each one |
 | `R7_SECURITY_TRACK_SIGNOFF_MISSING` | crypto/bridge/auth card (security Test Type + crypto-bridge keyword heuristic) with no Architect sign-off comment | Architect reviews and comments (any of `signed off`, `approved`, `ARCH-VERDICT: …`) |
 | `R8_DEFERRAL_TARGET_INVALID` | deferral names a missing card, a non-QA card, or a QA card that is `done` without verdict + evidence | defer to a real `qa`-assigned card that carries its own verdict + evidence |
+| `R9_PR_NOT_MERGED` | code card (§5.9) with no linked PR merged into `master`: PR open, closed unmerged, merged into another branch, or no PR at all for a pushed branch / `Deliverable: code` card. Read from GitHub, never from the card | open/merge the PR; the author moves the card to `review` with `PR: #<n>`, the merger completes it after the merge (§5.9) |
+| `R10_MERGE_CI_NOT_GREEN` | the newest linked PR merged into `master` has a required check (from `master`'s branch protection) that is not green on its merge commit — failed, cancelled, still running, or never ran | fix `master`, wait for its run, or re-run a cancelled run (`gh run rerun`) |
 | `A1_HISTORY_UNGATED` | card completed **before** the gate epoch (grandfathered) | advisory only; `--strict-history` turns it into a failure for retrofit audits |
 | `A2_DEFERRAL_OPEN` | deferral target still open | audit tracks it until the QA card lands |
 | `A3_EVIDENCE_UNVERIFIED` | evidence path could not be checked (no repo root available) | report-only |
@@ -91,6 +94,9 @@ were passing on a non-QA record now surface as `R1` failures rather than passing
 | `A7_VERDICT_AUTHOR_IGNORED` | a `QA-VERDICT: <token>` (or `deferred`) comment written by a profile other than `qa` — **discounted, not a verdict** (§3, `t_338f47fd`) | report-only — it does not satisfy `R1`, so the card must record its verdict from the `qa` profile; the advisory is what tells you the comment you are looking at is not the one the gate reads |
 | `A8_VERDICT_SELF_DECLARED` | the operative verdict comes from the run metadata of a **non-`qa`** run — accepted per §3 (the one author-independent source) | report-only — a self-declared verdict must never be invisible; the card should still carry a QA review |
 | `X1_EXCEPTION` | a recorded `qa-signoff-exception:` marker (§5.6) | report-only — exceptions stay visible in every audit |
+| `A11_CI_STATE_UNVERIFIABLE` | GitHub could not be read for `R9`/`R10` (offline, `gh` missing/unauthenticated, rate limit, time budget, branch protection unreadable/empty) | report-only — **never** a violation (§5.9); re-run the check when GitHub is reachable |
+| `A12_LINKED_PR_OPEN` | the card's merged PR is judged green, but another PR referencing the card is still open | report-only — make sure no part of the deliverable lives only in the open PR |
+| `A13_EARLIER_MERGE_CI_NOT_GREEN` | an earlier merged PR of the card landed with a non-green required check on `master` (the newest merge is judged) | report-only — recorded so a red merge is never silent |
 
 **Fail closed only on genuinely unverifiable input** (added 2026-09-17, `t_5455942d`). The gate blocks when it cannot
 establish the facts it needs (no resolvable task id, unreadable board, unparseable payload, a violation it *can*
@@ -181,7 +187,7 @@ The gate treats a comment authored by `architect` containing `signed off` / `app
 hermes kanban comment <task-id> --author qa --body "qa-signoff-exception: <reason> (approved by <who>, expires <when>)"
 ```
 
-An exception marker bypasses `R1`–`R8` for that card and is reported as `X1_EXCEPTION` in **every** audit, so it cannot be forgotten. Exceptions are for incidents and hotfixes, not for routine work.
+An exception marker bypasses `R1`–`R8` for that card and is reported as `X1_EXCEPTION` in **every** audit, so it cannot be forgotten. It never bypasses `R9`/`R10` (§5.9). Exceptions are for incidents and hotfixes, not for routine work.
 
 ---
 
@@ -260,16 +266,92 @@ measured scan finds 0 such matches on the live board. Record a new gate defect i
 
 ---
 
+### 5.9 Code cards: PR merged into master, CI green on the merge commit (`R9`/`R10`, `t_75180b28`)
+
+**Policy (decided 2026-10-05, architect answers on `t_75180b28`).** A card whose deliverable is code completes only
+when **(a)** a pull request linked to it is **merged into `master`** — not open, not closed unmerged, not merged into
+a stacked branch — and **(b)** every **required** status check is **green on that PR's merge commit on `master`**.
+Both facts are read from GitHub through `gh` **at check time**; the card's own summary, comments and run metadata are
+never consulted for them. *Why:* completion summaries claimed "all CI green" while required checks were red on the PR
+(2026-09-30), and a branch was pushed without any PR at all (audit `t_8577a5a9`, 12 branches) — a written rule did not
+stop either.
+
+**Which cards are code cards.** A card is judged by this rule when any of these holds, otherwise it is out of scope
+(`facts.pr_rule.applies = false`, no finding):
+
+1. a pull request (any state) carries the card id in its **body, title or head-branch name** — the *linked* PRs;
+2. a **pushed branch** on GitHub carries the card id in its name, and no PR links the card → `R9` (pushed, never
+   opened as a PR);
+3. the card body declares `Deliverable: code` (bold/bullet tolerated) and no PR links the card → `R9`. Architect:
+   add this line to code cards whose branch name will not carry the id.
+
+**How the linked PRs are judged.**
+
+| Situation | Result |
+|---|---|
+| no linked PR is merged into the default branch (`master`) | `R9_PR_NOT_MERGED` — the message lists every linked PR with its state: open, closed without being merged, or merged into a branch other than `master` |
+| the **newest** merged-to-`master` linked PR has a required check that is not `success`/`neutral`/`skipped` on its merge commit (`failure`, `cancelled`, `in_progress`, `queued`, or `missing` — never ran) | `R10_MERGE_CI_NOT_GREEN` — names the PR number, the merge commit and each failing check with its state |
+| a merged PR is judged green while another linked PR is still open | allowed + `A12_LINKED_PR_OPEN` (make sure no part of the deliverable lives only there) |
+| an **earlier** merged linked PR landed with a non-green required check | allowed + `A13_EARLIER_MERGE_CI_NOT_GREEN` — the newest merge commit is judged because it contains every earlier merge of the card; the red one is recorded, never silent |
+| GitHub cannot be read — `gh` missing or unauthenticated, network down, rate limit, time budget exhausted, branch protection unreadable or empty | `A11_CI_STATE_UNVERIFIABLE` — **advisory, never a violation**, so no card becomes uncompletable offline. A partial outage only disarms the step it hit: with the PR list readable but the protection not, `R9` is still enforced and only `R10` degrades to `A11` |
+
+- **Required checks come from the branch protection of `master`** (`GET …/branches/master/protection/required_status_checks`),
+  never from a hard-coded list — it has changed before (8 required today, 10 running, `sast` and Semgrep are not
+  required). A check bound to an app id must come from that app; an unbound one may also be a legacy commit status.
+- **The `§5.6` exception does not waive `R9`/`R10`**: they are facts about the repository, not about the QA record.
+- **Repository**: `--gh-repo OWNER/NAME` → `$QA_GATE_GH_REPO` → the checkout's `origin` remote → `zeldadil/password-manager`
+  (a worker's scratch workspace is not a git checkout, so the hook relies on the last fallback).
+- **Time budget**: all GitHub reads of one run share `QA_GATE_GH_BUDGET_MS` (default 20 000 ms, each call ≤ 10 s), far
+  inside the hook's 30 s timeout; a full live lookup measured 2–7 s (`tests/evidence/t_75180b28/degradation.txt`).
+- **Effective date**: `PR_RULE_EPOCH_ISO = 2026-10-06T00:00:00Z` (override `--pr-epoch-iso`). Every pre-completion check
+  and every card completed at/after it is judged; earlier `done` cards are not looked up at all (`facts.pr_rule.in_scope = false`).
+- **Switch off** for an offline run: `--no-github` or `QA_GATE_GITHUB=off` (every in-scope card then reports `A11`).
+  The selftest uses `QA_GATE_GITHUB_FIXTURE=<json>` and never calls the network.
+
+**The normative completion path for a code card** (architect, Q2) — *the merger completes the card, never the author*:
+
+1. the author pushes its branch, opens the PR **with the card id in the PR body**, and moves the card to `review`
+   (`kanban_request_review`) with `PR: #<n>` in the summary or a comment — not `kanban_complete`;
+2. `qa` records its `QA-VERDICT:` on the card;
+3. the **merger** (the architect, in practice) merges, waits for the `master` CI run of the merge commit, checks the
+   content on master with `git fetch && git show origin/master:<file>` (not `gh pr view`), then completes the card
+   **citing the merge commit hash**. The hook re-checks `R9`/`R10` at that moment.
+
+Side effect, intended: no agent closes its own code card, which also closes the self-signature path.
+
+**The CLI path (`hermes kanban complete`)** bypasses the `pre_tool_call` hook (it is not the `kanban_complete` tool).
+It is **not wrapped**: `hermes_cli` is code outside this repository, a patch would be lost on the next Hermes update and
+could not be tested in this CI. The path is documented as a **human override**, reserved for the human (Adil) and the
+architect's integration role — and it is **not silent**: the board **audit applies `R9`/`R10` to every card completed
+at/after the rule epoch**, so a card closed through the CLI with an unmerged PR or a red merge commit is reported as a
+FAIL by the next audit (`qa-signoff-audit.yml`, CI-001h). Agents use the CLI too (the architect confirmed it on
+`t_75180b28`), so the audit — not the CLI — is the enforcement point for that path; anyone using it should run
+`node scripts/qa/signoff-gate.mjs check --task <id> --pre-complete --repo <clone>` first.
+
+**Known limits (stated, not hidden).**
+
+- *Incidental mentions link a PR.* A PR body that merely mentions another card (a fixture, an audit reference) links
+  that card. Harmless once the card's own PR is merged (newest merged wins; an open extra is `A12`), but while the card
+  has no merged PR such a mention yields `R9` naming the foreign PR — the message shows which PR it is.
+- *Cancelled master runs.* `ci.yml` uses `concurrency: ci-<workflow>-<ref>` with `cancel-in-progress: true`, so two
+  merges in quick succession cancel the first merge commit's `master` run → `R10 …=cancelled` for that card. Re-run it
+  (`gh run rerun <id>`); §10 item 11 asks whether `master` pushes should stop cancelling.
+- *Token rights.* Reading branch protection needs admin read on the repository: the owner token used on the host has
+  it; a GitHub-hosted `GITHUB_TOKEN` does not, so an audit run there reports `A11` for `R10` (the audit already needs a
+  self-hosted runner for the board, CI-001h).
+
+---
+
 ## 6. Enforcement tooling
 
 All paths are relative to the repo root.
 
 | Command | Purpose |
 |---|---|
-| `node scripts/qa/signoff-gate.mjs audit` | whole board; exit 1 while any enforced card fails; `--json`, `--repo DIR`, `--epoch-iso ISO`, `--strict-history` |
+| `node scripts/qa/signoff-gate.mjs audit` | whole board; exit 1 while any enforced card fails; `--json`, `--repo DIR`, `--epoch-iso ISO`, `--strict-history`; `R9`/`R10` flags: `--gh-repo OWNER/NAME`, `--pr-epoch-iso ISO`, `--no-github` |
 | `node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx [--pre-complete]` | one card; `--pre-complete` evaluates a card that is not `done` yet (exactly what the hook does) |
 | `echo '<payload>' \| node scripts/qa/signoff-gate.mjs hook` | hook entry point: `{}` + exit 0 = allow, `{"decision":"block",…}` + exit 2 = block |
-| `node scripts/qa/signoff-gate.selftest.mjs` | 90-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d`, `t_58280940`, `t_99e408c5`, `t_338f47fd` and `t_df8e644a` — cited-file-name — regressions are covered) |
+| `node scripts/qa/signoff-gate.selftest.mjs` | 118-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d`, `t_58280940`, `t_99e408c5`, `t_338f47fd`, `t_df8e644a` — cited-file-name — and `t_c015bda7` regressions are covered; `t_75180b28` adds 25 `R9`/`R10`/`A11`–`A13` cases on a JSON GitHub fixture, no network) |
 | `scripts/qa/hooks/install-signoff-gate.sh --all [--apply]` | install / refresh the hook in every profile (dry-run by default, config backed up) |
 | `scripts/qa/hooks/verify-signoff-gate.sh --all --live --fixture-db … --fixture-noncompliant … --fixture-compliant …` | verify wiring, consent, hash, `hermes hooks doctor`, and fire both paths live |
 
@@ -337,6 +419,8 @@ deliberate runtime-scoping behaviour and must not be undone for the gate's conve
 Enforcement starts at **`2026-09-17T15:00:00Z`** (`GATE_EPOCH_ISO` in `scripts/qa/signoff-gate.mjs`; override with `--epoch-iso`). Cards already `done` before that instant are **grandfathered**: the audit lists them with `A1_HISTORY_UNGATED` advisories but does not fail the run.
 
 Grandfathering is not an amnesty: `node scripts/qa/signoff-gate.mjs audit --strict-history` reports the full pre-epoch backlog (26 cards at activation) so it can be retrofitted by decision rather than by habit.
+
+`R9`/`R10` (§5.9) have their own effective date, **`2026-10-06T00:00:00Z`** (`PR_RULE_EPOCH_ISO`; override with `--pr-epoch-iso`): cards completed earlier are not looked up on GitHub at all. Measured before activation with the epoch moved back to `2026-09-25`: 34 cards in scope, 18 of them code cards, **0** `R9`/`R10` failures (`tests/evidence/t_75180b28/audit-epoch-0925.txt`).
 
 ---
 
@@ -443,6 +527,9 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 7 | Hermes-core observation (payload, not a repo defect): the `pre_tool_call` payload's `extra.task_id` is the *session id* (`agent/inline_tool_executors.py::tool_hook_ids` → `effective_task_id`), and the kanban identity keys are scrubbed from hook subprocesses (`agent/delegation_context.py::scrub_kanban_env`). The gate now compensates from the worker's location §6.4; do **not** "fix" this by un-scrubbing the identity keys — that scrub is deliberate runtime scoping | `architect` (record only) |
 | 8 | Run-metadata `verdict` is the one author-independent verdict source, kept deliberately by `t_338f47fd` (AC 1c: "run-metadata sources keep their current behaviour"), so a non-QA run still satisfies `R1` by self-declaring; `A8_VERDICT_SELF_DECLARED` makes it visible. Decide whether `R1` should also reject a non-`qa` run's metadata — one live card depends on it today (`t_710ed14c`, an `architect` run), so the decision needs that card's QA review first | `qa` (gate lane) |
 | 9 | Prose verdict records that are **not** colon-separated are no longer read at all (§5.8, `t_df8e644a`): the live em-dash form `QA-001g verdict — pass-with-conditions` (`t_78b46688`, whose card keeps a run-metadata verdict, so no outcome changed) and any `verdict — <token>` form. Re-admit one only with a path guard (a match whose span is part of a path/file name stays inert) rather than by re-widening the separator, and only with its own regression cases. Measured cost of the narrowing: 1 live comment; the failure direction is `R1`, never a silent pass | `qa` (gate lane) |
+| 10 | `R9`/`R10` rollout (§5.9): after the merge, re-install the hook in all 7 profiles (`install-signoff-gate.sh --all --apply` + verifier) and confirm `gh auth status` succeeds **in the hook environment** of each profile — without it every completion only gets `A11`, i.e. the rule is silently advisory. The scheduled audit needs a `gh` token with admin read for branch protection (a GitHub-hosted `GITHUB_TOKEN` cannot read it) | `qa` (install) + `architect` (runner/token) |
+| 11 | `ci.yml` cancels an in-progress `master` run when the next merge lands (`concurrency … cancel-in-progress: true`), which leaves a merge commit with `cancelled` required checks → `R10` until re-run. Decide whether `push` runs on `master` should stop cancelling (e.g. `cancel-in-progress: ${{ github.event_name == 'pull_request' }}`); `ci.yml` is a collision hotspot, so this is a decision, not a silent edit | `architect` |
+| 12 | Linking is by mention (card id in PR body/title/head branch): an incidental mention links a foreign PR (live: PR #114's fixture quotes `t_75180b28`). Harmless once the card's own PR is merged; if it causes a false `R9`, consider requiring a structured `Task: t_xxxxxxxx` line in the PR template instead | `architect` |
 
 ---
 
@@ -456,3 +543,4 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 2026-09-18 | `t_99e408c5` — **§5.7 claim vs citation**: `R5` resolves only the paths the operative verdict *claims* (inside an `Evidence:`/`Artifacts:` label, or outside code spans/fences when it carries no label); a path the verdict merely quotes about another card is a citation reported as `A6_EVIDENCE_CITED`, so a card can report a broken evidence pointer elsewhere without failing on it. Evidence pointers now carry `scope` (`claim`/`citation`/`history`) in the `--json` facts; a cited path that exists in the repo no longer emits `A4`. Claimed-but-missing evidence still fails `R5` in every shape. Selftest 58 → 66 cases; hook re-installed in all 7 profiles (see `tests/evidence/t_99e408c5/`) |
 | 2026-09-18 | `t_338f47fd` — **§3 author rule**: a *comment* records a verdict only when the `qa` profile wrote it. `VERDICT_MARKER_RE` was matched without any author check, so one `QA-VERDICT: <token>` comment from `architect`/`frontend`/`dashboard` satisfied `R1`/`R2`/`R3` and cleared the fail-closed completion hook (reproduced on `0af4a453` and the installed `28b0b771`). The marker path and the deferral marker now require a `qa` author; a discounted record is reported as `A7_VERDICT_AUTHOR_IGNORED` instead of being dropped, and a non-QA run-metadata verdict — still accepted, the one documented author-independent source — is reported as `A8_VERDICT_SELF_DECLARED`. Run metadata and the loose `verdict: …` path keep their behaviour (§10 item 8). Selftest 66 → 81 cases; live-board A/B, the reported fixture replay and the re-install are in `tests/evidence/t_338f47fd/` |
 | 2026-09-19 | `t_df8e644a` — **§5.8 loose path is colon-only** (the residual half of `t_c3cb6842`): `VERDICT_LOOSE_RE` accepted `-`/`—` as separators, so a `qa` comment that merely *cited* the evidence file name `tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md` was read as the token `rotation` → `R2_QA_VERDICT_INVALID` (reproduced on the live board, `qa` comment 49 on `t_80fc0326`). The loose path now uses the marker's separator and nothing else; the marker's leading boundary and any code-span/fence exclusion were deliberately **not** added (§5.8 records why — the first would break `**QA-VERDICT: pass**`, the second is §10 item 5's open detection question). Measured: loose matches on `qa` comments 14 → 12, path-shaped 1 → 0, `t_80fc0326` `R2`×3 → `R2`×2 with both genuine `"CHANGES"` rows kept and no other card's violation set changed; one em-dash prose record narrowed (§10 item 9). Selftest 81 → 90 cases (9 cases named after this card: three citation shapes, the masked-record shape, the live shape, and three anti-degradation controls). A/B, the RED/GREEN selftest pair and the re-install transcript are in `tests/evidence/t_df8e644a/` |
+| 2026-10-05 | `t_75180b28` — **§5.9 code cards: PR merged + merge-commit CI green** (`R9_PR_NOT_MERGED`, `R10_MERGE_CI_NOT_GREEN`; advisories `A11_CI_STATE_UNVERIFIABLE`, `A12_LINKED_PR_OPEN`, `A13_EARLIER_MERGE_CI_NOT_GREEN`). A card linked to a PR (id in PR body/title/head branch), with a pushed branch named after it, or declaring `Deliverable: code` completes only when a linked PR is merged into `master` and every required check of `master`'s branch protection is green on the merge commit — read from GitHub via `gh` at check time, never from the card. GitHub unreachable → `A11`, never a violation; the §5.6 exception does not waive it; own epoch `2026-10-06T00:00:00Z`; applied in `check --pre-complete`, the hook **and** the audit (the after-the-fact control for the unwrapped `hermes kanban complete` path, architect Q1). Normative completion path: author → `review` with `PR: #<n>`, `qa` verdict, the merger completes citing the merge hash (architect Q2). Selftest 93 → 118 cases (RED against the branch-point gate: the 22 rule cases fail, 3 allow-controls and all 93 earlier cases pass). Live checks, degradation runs, the pre-activation audit and the master-CI history are in `tests/evidence/t_75180b28/` |
