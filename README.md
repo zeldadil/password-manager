@@ -45,7 +45,9 @@ architecture/adr/         # Architecture Decision Records
 
 ## Quick start
 
-Prerequisites: Node.js >= 20, pnpm >= 9.
+Prerequisites: Node.js 22 (pinned in [`.nvmrc`](.nvmrc), matching `NODE_VERSION` in CI; `engines.node` is `>=22 <23`), pnpm >= 9.
+
+The web test suites fail on Node 26 (jsdom's `AbortSignal` conflicts with the `undici`-backed global `fetch`; Node 23–25 untested), so use the pinned version: `nvm use` (or `fnm use`) reads `.nvmrc`. `pnpm install` refuses to run on an unsupported Node version (`ERR_PNPM_UNSUPPORTED_ENGINE`, enforced by `engine-strict=true` in `.npmrc`).
 
 ```bash
 pnpm install
