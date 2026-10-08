@@ -1,0 +1,18 @@
+{
+  "github": "live",
+  "counts_keys": [
+    "done_cards",
+    "enforced",
+    "failures",
+    "grandfathered"
+  ],
+  "counts": {
+    "done_cards": 137,
+    "enforced": 110,
+    "failures": 31,
+    "grandfathered": 27
+  },
+  "has_a11_counter": false,
+  "a11_cards": [],
+  "a11_total": 0
+}
