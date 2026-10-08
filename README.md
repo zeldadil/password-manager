@@ -59,7 +59,12 @@ architecture/adr/         # Architecture Decision Records
 
 ## Prerequisites
 
-- **Node.js 22** (pinned in [`.nvmrc`](.nvmrc), matching `NODE_VERSION` in CI; `engines.node` is `>=22 <23`). The web test suites fail on Node 26 (jsdom's `AbortSignal` conflicts with the `undici`-backed global `fetch`; Node 23–25 untested), so use the pinned version: `nvm use` (or `fnm use`) reads `.nvmrc`.
+- **Node.js 22** (pinned in [`.nvmrc`](.nvmrc), matching `NODE_VERSION` in CI;
+  `engines.node` is `>=22 <23`). The web test suites fail on Node 26 (jsdom's
+  `AbortSignal` conflicts with the `undici`-backed global `fetch`; Node 23–25 untested),
+  so use the pinned version: `nvm use` (or `fnm use`) reads `.nvmrc`. `pnpm install`
+  refuses to run on an unsupported Node version (`ERR_PNPM_UNSUPPORTED_ENGINE`,
+  enforced by `engine-strict=true` in `.npmrc`).
 - **pnpm >= 9** (the repo is pinned to `pnpm@9.12.0` via `packageManager`).
 - **Git** for cloning the repository.
 - **Firefox** (recent release) if you plan to work on the WebExtension. The extension
@@ -77,8 +82,6 @@ architecture/adr/         # Architecture Decision Records
 ## Quick start
 
 A fresh-machine walkthrough that takes under 10 minutes.
-
-`pnpm install` refuses to run on an unsupported Node version (`ERR_PNPM_UNSUPPORTED_ENGINE`, enforced by `engine-strict=true` in `.npmrc`).
 
 ```bash
 # 1. Clone
