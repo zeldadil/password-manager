@@ -352,9 +352,11 @@ FAIL by the next audit (`qa-signoff-audit.yml`, CI-001h). Agents use the CLI too
 - *Incidental mentions link a PR.* A PR body that merely mentions another card (a fixture, an audit reference) links
   that card. Harmless once the card's own PR is merged (newest merged wins; an open extra is `A12`), but while the card
   has no merged PR such a mention yields `R9` naming the foreign PR — the message shows which PR it is.
-- *Cancelled master runs.* `ci.yml` uses `concurrency: ci-<workflow>-<ref>` with `cancel-in-progress: true`, so two
-  merges in quick succession cancel the first merge commit's `master` run → `R10 …=cancelled` for that card. Re-run it
-  (`gh run rerun <id>`); §10 item 11 asks whether `master` pushes should stop cancelling.
+- *Cancelled master runs.* Until `t_694c9e37`, `ci.yml` used `concurrency: ci-<workflow>-<ref>` with
+  `cancel-in-progress: true`, so two merges in quick succession cancelled the first merge commit's `master` run →
+  `R10 …=cancelled` for that card. Since `t_694c9e37` a run on the default branch is never cancelled (per-run group,
+  `cancel-in-progress` false; PR runs still cancel each other). A `cancelled` merge commit predating the fix (or a run
+  cancelled by hand) is still re-run with `gh run rerun <id>`.
 - *Token rights.* Reading branch protection needs admin read on the repository: the owner token used on the host has
   it; a GitHub-hosted `GITHUB_TOKEN` does not, so an audit run there reports `A11` for `R10` (the audit already needs a
   self-hosted runner for the board, CI-001h).
@@ -547,7 +549,7 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 8 | Run-metadata `verdict` is the one author-independent verdict source, kept deliberately by `t_338f47fd` (AC 1c: "run-metadata sources keep their current behaviour"), so a non-QA run still satisfies `R1` by self-declaring; `A8_VERDICT_SELF_DECLARED` makes it visible. Decide whether `R1` should also reject a non-`qa` run's metadata — one live card depends on it today (`t_710ed14c`, an `architect` run), so the decision needs that card's QA review first | `qa` (gate lane) |
 | 9 | Prose verdict records that are **not** colon-separated are no longer read at all (§5.8, `t_df8e644a`): the live em-dash form `QA-001g verdict — pass-with-conditions` (`t_78b46688`, whose card keeps a run-metadata verdict, so no outcome changed) and any `verdict — <token>` form. Re-admit one only with a path guard (a match whose span is part of a path/file name stays inert) rather than by re-widening the separator, and only with its own regression cases. Measured cost of the narrowing: 1 live comment; the failure direction is `R1`, never a silent pass | `qa` (gate lane) |
 | 10 | `R9`/`R10` rollout (§5.9): after the merge, re-install the hook in all 7 profiles (`install-signoff-gate.sh --all --apply` + verifier) and confirm `gh auth status` succeeds **in the hook environment** of each profile — without it every completion only gets `A11`, i.e. the rule is silently advisory. The scheduled audit needs a `gh` token with admin read for branch protection (a GitHub-hosted `GITHUB_TOKEN` cannot read it) | `qa` (install) + `architect` (runner/token) |
-| 11 | `ci.yml` cancels an in-progress `master` run when the next merge lands (`concurrency … cancel-in-progress: true`), which leaves a merge commit with `cancelled` required checks → `R10` until re-run. Decide whether `push` runs on `master` should stop cancelling (e.g. `cancel-in-progress: ${{ github.event_name == 'pull_request' }}`); `ci.yml` is a collision hotspot, so this is a decision, not a silent edit | `architect` |
+| 11 | `ci.yml` cancels an in-progress `master` run when the next merge lands (`concurrency … cancel-in-progress: true`), which leaves a merge commit with `cancelled` required checks → `R10` until re-run. Decide whether `push` runs on `master` should stop cancelling (e.g. `cancel-in-progress: ${{ github.event_name == 'pull_request' }}`); `ci.yml` is a collision hotspot, so this is a decision, not a silent edit. **Decided and closed (`t_694c9e37`, card created by `architect`):** on the default branch the group is per run and `cancel-in-progress` is false; PR runs keep cancelling each other — evidence in `tests/evidence/t_694c9e37/` | `architect` |
 | 12 | Linking is by mention (card id in PR body/title/head branch): an incidental mention links a foreign PR (live: PR #114's fixture quotes `t_75180b28`). Harmless once the card's own PR is merged; if it causes a false `R9`, consider requiring a structured `Task: t_xxxxxxxx` line in the PR template instead | `architect` |
 
 ---
