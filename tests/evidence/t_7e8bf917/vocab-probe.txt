@@ -1,0 +1,28 @@
+ok   head branch qa/<id>-x → link
+ok   head branch feature/<id> → link
+ok   Closes <id> → link
+ok   Closes: <id> (colon optional) → link
+ok   closes <id> (case-insensitive) → link
+ok   Card: <id> → link
+ok   Card <id> (no colon) is not a declaration → mention
+ok   Task: <id> → link
+ok   Task <id> (no colon) is not a declaration → mention
+ok   - **Task:** <id> → link
+ok   + Closes <id> (plus bullet) → link
+ok      Closes <id> (3 spaces) → link
+ok   Task: t_a (BE-1), <id> (BE-2) → link
+ok   Task: t_a and <id> → link
+ok   Card: t_a; <id> → link
+ok   Closes t_a & <id> → link
+ok   Closes the gap found in <id> → mention
+ok   > Closes <id> (block quote) → mention
+ok   fenced Closes <id> → mention
+ok   tilde-fenced Closes <id> → mention
+ok   inline span `Closes <id>` → mention
+ok   indented code block → mention
+ok   id in title only → mention
+ok   prose mention → mention
+ok   longer id is not the card → null
+declaredCardIds sample: ["t_aaaaaaaa","t_7e8bf917"]
+
+25/25 vocabulary claims hold

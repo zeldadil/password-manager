@@ -1,0 +1,10 @@
+PR×card pairs with the id in the PR title: 47
+of which NOT linked under the declarative rule: 7
+  #24 MERGED t_c3cb6842 head=fix/verdict-marker-regex → A14 (title+body)
+  #33 CLOSED t_c3cb6842 head=qa/t_d20787de-retro-verify → A14 (title+body)
+  #39 MERGED t_c3cb6842 head=qa/t_d20787de-retro-verify → A14 (title)
+  #85 MERGED t_782802ac head=fe001k-fu-fix-converse-coverage → A14 (title+body)
+  #106 MERGED t_8577a5a9 head=restore/t_b51a1ff3-secret-guard → A14 (title+body)
+  #108 CLOSED t_cbaa9f7d head=feat/t_4ccd2652-integration-tests → A14 (title)
+  #109 MERGED t_cbaa9f7d head=docs/security-policy-disclose → A14 (title)
+of those, body uses a "## Task" heading + id on the next line: #108, #109

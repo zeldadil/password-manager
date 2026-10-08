@@ -800,7 +800,8 @@ const run = (name, conclusion, status = "completed") => ({ name, status, conclus
 const merged = (number, task, oid, extra = {}) => ({
   number,
   title: `fixture PR ${number}`,
-  body: `Implements ${task}.`,
+  // A declarative line (§5.9, t_7e8bf917): a prose mention no longer links.
+  body: `Implements the card.\n\nCloses ${task}`,
   state: "MERGED",
   mergedAt: `2026-10-06T10:${String(number % 60).padStart(2, "0")}:00Z`,
   mergeCommit: { oid },
@@ -829,7 +830,7 @@ const GH_FIXTURE = {
     merged(905, PR_WRONG_BASE, sha("c"), { baseRefName: "feature/parent" }),
     merged(906, PR_PENDING, sha("d")),
     merged(907, PR_GREEN_PLUS_OPEN, sha("e")),
-    open(908, PR_GREEN_PLUS_OPEN, { body: `Follow-up for ${PR_GREEN_PLUS_OPEN}.` }),
+    open(908, PR_GREEN_PLUS_OPEN, { body: `Follow-up.\n\nCard: ${PR_GREEN_PLUS_OPEN}` }),
     // A longer id that merely starts with PR_NOT_CODE must not link to it.
     open(909, `${PR_NOT_CODE}9`),
     open(910, PR_EXCEPTION),
@@ -858,6 +859,50 @@ writeFileSync(GH_DOWN, JSON.stringify({ repo: "fixture-owner/fixture-repo", unre
 writeFileSync(
   GH_NO_PROTECTION,
   JSON.stringify({ ...GH_FIXTURE, errors: { "required checks": "HTTP 403: Resource not accessible by integration" } }),
+);
+
+// ── t_7e8bf917 fixtures: a PR links a card only by declaration ──────────────
+// Before this fix any mention of the id in a PR title/body/head linked the PR:
+// live, PR #114 (which only quotes t_75180b28 in a fixture) was named by R9 on
+// t_75180b28, and a merged PR that merely mentions a card satisfied R9 for it.
+// Declarative = head branch named after the card, or a body line
+// `Closes <id>` / `Card: <id>` / `Task: <id>` outside code; any other mention is
+// the advisory A14_PR_MENTIONS_CARD — never a link, never R9 either way.
+const DECLARED_CODE = "**Test Types:** unit\n**Deliverable:** code";
+const LK_PROSE_MERGED = prCard("FE-960a code card: the only merged PR mentions it in prose", { body: DECLARED_CODE });
+const LK_PROSE_OPEN = prCard("DOC-960b an open foreign PR mentions the card in prose (live #114 shape)");
+const LK_CLOSES = prCard("FE-960c merged PR declares `Closes <id>`");
+const LK_FENCE = prCard("FE-960d the only PR quotes `Closes <id>` inside a code fence / span", { body: DECLARED_CODE });
+const LK_HEAD = prCard("FE-960e merged PR whose head branch is named after the card, no id in body");
+const LK_TASK_BOLD = prCard("FE-960f merged PR declares `- **Task:** <id>` in a list of ids");
+const LK_CLOSES_PROSE = prCard("FE-960g `Closes` followed by prose, the id later on the line / in a quote", { body: DECLARED_CODE });
+const LK_OWN_PLUS_FOREIGN = prCard("FE-960h own merged PR + a foreign open PR that mentions the card");
+const LK_TITLE_ONLY = prCard("FE-960i merged PR names the card only in its title", { body: DECLARED_CODE });
+const GH_LINK = join(root, "gh-link.json");
+writeFileSync(
+  GH_LINK,
+  JSON.stringify(
+    {
+      ...GH_FIXTURE,
+      prs: [
+        merged(921, LK_PROSE_MERGED, sha("b"), { body: `Follow-up raised during the review of ${LK_PROSE_MERGED}; ships nothing for it.` }),
+        open(922, LK_PROSE_OPEN, { body: `Fixes the exception key. The fixture quotes the comment of ${LK_PROSE_OPEN} verbatim.`, headRefName: "qa/t_0000aaaa-exception" }),
+        merged(923, LK_CLOSES, sha("b"), { body: `Summary of the change.\n\nCloses ${LK_CLOSES}` }),
+        merged(924, LK_FENCE, sha("b"), {
+          body: `How to link:\n\n\`\`\`\nCloses ${LK_FENCE}\n\`\`\`\n\nor inline: \`Closes ${LK_FENCE}\`\n\n    Task: ${LK_FENCE}\n`,
+        }),
+        merged(925, LK_HEAD, sha("b"), { body: "No id here.", headRefName: `qa/${LK_HEAD}-declarative-link` }),
+        merged(926, LK_TASK_BOLD, sha("b"), { body: `Two cards.\n\n- **Task:** t_0000bbbb (BE-1), **${LK_TASK_BOLD}** (BE-2)` }),
+        merged(927, LK_CLOSES_PROSE, sha("b"), { body: `Closes the gap found in ${LK_CLOSES_PROSE}.\n\n> Closes ${LK_CLOSES_PROSE}` }),
+        merged(928, LK_OWN_PLUS_FOREIGN, sha("b"), { body: "Own PR.", headRefName: `feature/${LK_OWN_PLUS_FOREIGN}` }),
+        open(929, LK_OWN_PLUS_FOREIGN, { body: `Unrelated fix; see ${LK_OWN_PLUS_FOREIGN} for context.`, headRefName: "fix/other" }),
+        merged(930, LK_TITLE_ONLY, sha("b"), { title: `feat: something (${LK_TITLE_ONLY})`, body: "No declaration." }),
+      ],
+      branches: ["master"],
+    },
+    null,
+    2,
+  ),
 );
 
 // ── fixture git repo: evidence committed on an earlier ref (A4 case) ────────
@@ -1903,6 +1948,103 @@ console.log("\n6. PR merged into master + required CI green on the merge commit 
   check("hook: merged PR with green CI → {} + exit 0", h.code === 0 && h.out.trim() === "{}", `exit=${h.code} out=${h.out.slice(0, 200)}`);
   h = hook(PR_OPEN, GH_DOWN);
   check("hook: GitHub unreachable → allowed (A11 is advisory, never a block)", h.code === 0 && h.out.trim() === "{}", `exit=${h.code} out=${h.out.slice(0, 200)}`);
+}
+
+console.log("\n7. A PR links a card only by declaration — head branch or `Closes`/`Card:`/`Task:` line (§5.9, t_7e8bf917):");
+{
+  const prCheck = (taskId, fixture = GH_LINK) => {
+    const r = runGate(["check", "--task", taskId, "--db", db, "--repo", repo, "--pre-complete", "--json"], "", { QA_GATE_GITHUB_FIXTURE: fixture });
+    let parsed = null;
+    try {
+      parsed = JSON.parse(r.out);
+    } catch {
+      parsed = null;
+    }
+    const v = parsed ? parsed.violations : [];
+    const a = parsed ? parsed.advisories : [];
+    return {
+      code: r.code,
+      out: r.out,
+      rules: v.map((x) => x.rule),
+      adv: a.map((x) => x.rule),
+      detail: (rule) => (v.find((x) => x.rule === rule) || a.find((x) => x.rule === rule) || {}).detail || "",
+      pr: parsed ? parsed.facts.pr_rule : null,
+    };
+  };
+  const show = (r) => `exit=${r.code} rules=[${r.rules.join(",")}] adv=[${r.adv.join(",")}] pr=${JSON.stringify(r.pr).slice(0, 300)}`;
+  const linkedNums = (r) => (r.pr && Array.isArray(r.pr.linked_prs) ? r.pr.linked_prs.map((p) => p.number) : null);
+  const mentionNums = (r) => (r.pr && Array.isArray(r.pr.mentioning_prs) ? r.pr.mentioning_prs.map((p) => p.number) : null);
+
+  // AC 3 — the four cases the card names.
+  let r = prCheck(LK_PROSE_MERGED);
+  check(
+    "(1) prose mention only → no link: a merged PR #921 that merely mentions the card does NOT satisfy R9 (Deliverable: code → R9) and is reported as A14_PR_MENTIONS_CARD",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && JSON.stringify(linkedNums(r)) === "[]" && r.adv.includes("A14_PR_MENTIONS_CARD") && /#921/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  r = prCheck(LK_CLOSES);
+  check(
+    "(2) `Closes <id>` line in the body → linked: PR #923 judged, allowed, no A14",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.judged_pr === 923 && JSON.stringify(linkedNums(r)) === "[923]" && !r.adv.includes("A14_PR_MENTIONS_CARD"),
+    show(r),
+  );
+  r = prCheck(LK_FENCE);
+  check(
+    "(3) `Closes <id>` / `Task: <id>` only inside a code fence, an inline code span or an indented code block → no link (R9 on the Deliverable: code card) + A14 naming #924",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && JSON.stringify(linkedNums(r)) === "[]" && /#924/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  r = prCheck(LK_HEAD);
+  check(
+    "(4) head branch named after the card (id absent from title and body) → linked: PR #925 judged, allowed",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.judged_pr === 925 && r.pr.linked_prs[0] && r.pr.linked_prs[0].link === "head-branch",
+    show(r),
+  );
+
+  // AC 4 at fixture level — the live #114 shape on t_75180b28.
+  r = prCheck(LK_PROSE_OPEN);
+  check(
+    "live #114 shape: an open foreign PR (#922) that quotes the card in prose → not linked, no R9 naming it, card out of scope; A14 keeps it visible",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.applies === false && JSON.stringify(linkedNums(r)) === "[]" && JSON.stringify(mentionNums(r)) === "[922]" && /#922/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  r = prCheck(LK_OWN_PLUS_FOREIGN);
+  check(
+    "own merged PR (#928, head branch) + foreign open PR mentioning the card (#929) → allowed, A14 for #929 and NO A12 (it is not linked)",
+    r.code === 0 && r.rules.length === 0 && r.pr.judged_pr === 928 && JSON.stringify(linkedNums(r)) === "[928]" && !r.adv.includes("A12_LINKED_PR_OPEN") && /#929/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+
+  // Shapes around the vocabulary.
+  r = prCheck(LK_TASK_BOLD);
+  check(
+    "`- **Task:** t_a (BE-1), **<id>** (BE-2)` — bold bullet, list of ids → linked (#926 judged)",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.judged_pr === 926 && r.pr.linked_prs[0].link === "body-declaration",
+    show(r),
+  );
+  r = prCheck(LK_CLOSES_PROSE);
+  check(
+    "`Closes the gap found in <id>.` and a quoted `> Closes <id>` → not a declaration (R9 + A14 for #927)",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && JSON.stringify(linkedNums(r)) === "[]" && /#927/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  r = prCheck(LK_TITLE_ONLY);
+  check(
+    "id only in the PR title (`feat: … (<id>)`) → not a link (R9 + A14 for #930)",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && /#930/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  check(
+    "the R9 message tells the author how to declare the link (`Closes <id>` / head branch)",
+    /Closes/.test(r.detail("R9_PR_NOT_MERGED")) && /head branch/.test(r.detail("R9_PR_NOT_MERGED")),
+    r.detail("R9_PR_NOT_MERGED"),
+  );
+  r = prCheck(PR_NOT_CODE, GH_PRS);
+  check(
+    "a longer id (#909 `Closes <id>9`) is neither a link nor a mention → no A14",
+    r.code === 0 && r.pr && r.pr.applies === false && !r.adv.includes("A14_PR_MENTIONS_CARD"),
+    show(r),
+  );
 }
 
 console.log(`\n${cases - failures.length}/${cases} cases passed`);

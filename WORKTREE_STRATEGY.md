@@ -95,7 +95,9 @@ git push -u origin feature/<task-id>
 
 1. Agent finishes work in the worktree, commits, and pushes the branch.
 2. Agent creates a PR from `feature/<task-id>` → `master`.
-3. PR title and body reference the Kanban task ID and ARC code.
+3. PR title and body reference the Kanban task ID and ARC code, and the body carries a **`Closes <task-id>`** line on
+   its own (outside code) — the QA gate links a PR to a card only by that line or by a head branch named after the card;
+   a mention in the title or prose does not link (`QA_SIGN_OFF_GATE.md` §5.9, `t_7e8bf917`).
 4. CI runs the required status checks (see section 6).
 5. On merge, the branch is deleted (GitHub setting: "Automatically delete head branches").
 6. Agent removes the local worktree: `git worktree remove .worktrees/<task-id>`.

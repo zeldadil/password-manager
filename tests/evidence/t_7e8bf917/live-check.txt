@@ -1,0 +1,43 @@
+# date: 2026-10-08T21:03:35Z
+# node: v22.23.3
+# after  = qa/t_7e8bf917-declarative-pr-link @ d612272 (+ working tree)
+# before = d612272 (origin/master)
+# board  = /home/sap/.hermes/kanban.db (read-only)
+
+## t_75180b28 — before
+applies: true  judged_pr: 116
+linked_prs:     #116 MERGED merged head=qa/t_75180b28-pr-merged-rule | #114 MERGED merged head=qa/t_b8001b55-exception-allowlist
+mentioning_prs: (field absent)
+other (non-§5.9) violations: none
+
+## t_75180b28 — after
+applies: true  judged_pr: 116
+linked_prs:     #116 MERGED merged head=qa/t_75180b28-pr-merged-rule link=head-branch
+mentioning_prs: #114 MERGED merged head=qa/t_b8001b55-exception-allowlist mentioned_in=body
+advisory  A14_PR_MENTIONS_CARD: PR #114 (merged; body) mentions t_75180b28 without declaring it — not linked: neither counted for nor against §5.9. If one of them delivers this card, add a `Closes t_75180b28` line to its body (or name its head branch after the card)
+other (non-§5.9) violations: none
+
+## t_b8001b55 — before
+applies: true  judged_pr: 116
+linked_prs:     #116 MERGED merged head=qa/t_75180b28-pr-merged-rule | #114 MERGED merged head=qa/t_b8001b55-exception-allowlist
+mentioning_prs: (field absent)
+other (non-§5.9) violations: none
+
+## t_b8001b55 — after
+applies: true  judged_pr: 114
+linked_prs:     #114 MERGED merged head=qa/t_b8001b55-exception-allowlist link=head-branch
+mentioning_prs: #116 MERGED merged head=qa/t_75180b28-pr-merged-rule mentioned_in=body
+advisory  A14_PR_MENTIONS_CARD: PR #116 (merged; body) mentions t_b8001b55 without declaring it — not linked: neither counted for nor against §5.9. If one of them delivers this card, add a `Closes t_b8001b55` line to its body (or name its head branch after the card)
+other (non-§5.9) violations: none
+
+## t_7e8bf917 — before
+applies: false  judged_pr: null
+linked_prs:     (none)
+mentioning_prs: (field absent)
+other (non-§5.9) violations: R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+
+## t_7e8bf917 — after
+applies: false  judged_pr: null
+linked_prs:     (none)
+mentioning_prs: (none)
+other (non-§5.9) violations: R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING

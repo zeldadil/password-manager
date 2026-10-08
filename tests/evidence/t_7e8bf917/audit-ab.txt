@@ -1,0 +1,11 @@
+before audit exit=1
+after audit exit=1
+cards judged by §5.9 (in_scope) in either run: 4; outcome changed: 2
+cards audited — before: 137, after: 137; cards with ≥1 violation — before: 31, after: 31
+cards whose violation set differs between the runs (any rule): none
+audit exit summary — before: null
+audit exit summary — after:  null
+same    t_65c5a636  before: applies=true linked=[118] judged=118 R9/R10=[]  →  after: applies=true linked=[118] judged=118 R9/R10=[] A14=[]
+CHANGED t_75180b28  before: applies=true linked=[114,116] judged=116 R9/R10=[]  →  after: applies=true linked=[116] judged=116 R9/R10=[] A14=[114]
+same    t_7e1cea21  before: applies=true linked=[117] judged=117 R9/R10=[]  →  after: applies=true linked=[117] judged=117 R9/R10=[] A14=[]
+CHANGED t_cbaa9f7d  before: applies=true linked=[108,109,112] judged=112 R9/R10=[]  →  after: applies=true linked=[112] judged=112 R9/R10=[] A14=[108,109]
