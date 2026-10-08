@@ -18,7 +18,7 @@
  * Usage: node scripts/qa/signoff-gate.selftest.mjs [--keep]
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -179,6 +179,82 @@ const EXCEPTION = card({
   body: "**Test Types:** unit",
   comments: [qaVerdict("qa-signoff-exception: hotfix under incident INC-001, QA verdict waived for 24h")],
 });
+
+// ── t_b8001b55: who may record an exception, and where it never applies ─────
+// Before the fix, findException displayed the author but never checked it, took
+// a key quoted in a code span for a real exception, and let any exception waive
+// R7 on a crypto/bridge/auth card.
+const EXC_REASON = "qa-signoff-exception: hotfix under incident INC-002, QA verdict waived for 24h";
+
+// (1) a non-allowed author — a named executing profile, and the anonymous
+// `worker`, which names no profile at all — is ignored: R1 and R4 still fire.
+const EXC_BY_BACKEND = card({
+  title: "BE-910a exception recorded by an executing profile",
+  body: "**Test Types:** unit",
+  comments: [{ author: "backend", body: EXC_REASON }],
+});
+const EXC_BY_WORKER = card({
+  title: "BE-910b exception recorded by the anonymous worker author",
+  body: "**Test Types:** unit",
+  comments: [{ author: "worker", body: EXC_REASON }],
+});
+
+// (2) a key inside a code span / fence is a quotation. The first fixture is the
+// live record that exposed the defect: comment 551 on t_75180b28, verbatim
+// (architect, reporting this bug) — the gate turned its backtick quote into that
+// card's operative X1_EXCEPTION.
+const LIVE_551 = readFileSync(join(HERE, "fixtures", "t_75180b28-comment-551.md"), "utf8");
+const EXC_QUOTED_LIVE = card({
+  title: "BE-911a defect report that quotes the exception key (live t_75180b28 #551)",
+  body: "**Test Types:** unit",
+  status: "triage",
+  completed: null,
+  comments: [{ author: "architect", body: LIVE_551 }],
+});
+const EXC_QUOTED_FENCE = card({
+  title: "BE-911b exception key quoted in a fenced block",
+  body: "**Test Types:** unit",
+  comments: [{ author: "architect", body: "The recording command is:\n\n```\nhermes kanban comment t_x --body \"qa-signoff-exception: <reason>\"\n```\n\nnot used here." }],
+});
+// Non-vacuity of the quote rule: the same comment quotes the key AND records a
+// real one below — the real one is operative (the scan is per occurrence).
+const EXC_QUOTED_THEN_REAL = card({
+  title: "BE-911c comment quotes the key, then records a real exception",
+  body: "**Test Types:** unit",
+  comments: [{ author: "architect", body: `The marker is \`qa-signoff-exception: <reason>\`.\n\n${EXC_REASON}` }],
+});
+// Ordering: a refused record first must not shadow an allowed one after it
+// (the old `.find()` kept the first match, irrevocably).
+const EXC_REFUSED_THEN_ALLOWED = card({
+  title: "BE-911d refused exception, then an allowed one",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "frontend", body: EXC_REASON },
+    { author: "architect", body: EXC_REASON },
+  ],
+});
+
+// (3) security-track card: even the most privileged authors cannot waive AR-6 —
+// R7 AND R1 must still fire (and R4: an exception that waives nothing leaves
+// the evidence requirement standing).
+const EXC_SECURITY = card({
+  title: "BE-912 crypto card closed by exception",
+  body: "**Test Types:** unit, security\nImplements the packages/crypto AEAD wrapper and vault key loading.",
+  comments: [
+    { author: "dashboard", body: EXC_REASON },
+    { author: "architect", body: EXC_REASON },
+    { author: "qa", body: EXC_REASON },
+  ],
+});
+
+// (4) non-vacuity: every allowed author still records a valid exception on a
+// non-security card (architect is the case named in the card).
+const EXC_ALLOWED = Object.fromEntries(
+  ["architect", "qa", "human", "dashboard", "user"].map((author) => [
+    author,
+    card({ title: `BE-913 exception recorded by ${author}`, body: "**Test Types:** unit", comments: [{ author, body: EXC_REASON }] }),
+  ]),
+);
 
 // ── Path B: violations ──────────────────────────────────────────────────────
 const NO_VERDICT = card({ title: "BE-901 no QA verdict and no evidence", body: "**Test Types:** unit" });
@@ -1276,6 +1352,114 @@ console.log("\n1e. t_df8e644a regressions (a cited file name must not read as a 
       !advisoryRules(masked).includes("A9_VERDICT_SUPERSEDED"),
     `exit=${masked.code} rules=[${violationRules(masked).join(",")}] adv=[${advisoryRules(masked).join(",")}]`,
   );
+}
+
+console.log("\n1f. t_b8001b55 regressions (qa-signoff-exception: author allowlist, quotes, security track):");
+{
+  const a10 = (res) => (res.parsed ? res.parsed.advisories.filter((a) => a.rule === "A10_EXCEPTION_IGNORED") : []);
+  const why = (res) => (res.parsed ? (res.parsed.facts.exceptions_ignored || []).map((x) => x.why) : []);
+  const op = (res) => (res.parsed ? res.parsed.facts.exception : undefined);
+
+  // (1) non-allowed authors are ignored, with an advisory — the waiver is gone.
+  for (const [label, tid, author] of [
+    ["an executing profile (backend)", EXC_BY_BACKEND, "backend"],
+    ["the anonymous `worker` author", EXC_BY_WORKER, "worker"],
+  ]) {
+    const r = gateJson(tid);
+    check(
+      `(1) exception by ${label} → ignored: R1 + R4 fire, A10(author), no X1`,
+      r.code === 1 &&
+        violationRules(r).includes("R1_QA_VERDICT_MISSING") &&
+        violationRules(r).includes("R4_EVIDENCE_MISSING") &&
+        op(r) === null &&
+        why(r).join() === "author" &&
+        a10(r).some((a) => a.detail.includes(`"${author}"`)) &&
+        !advisoryRules(r).includes("X1_EXCEPTION"),
+      `exit=${r.code} rules=[${violationRules(r).join(",")}] adv=[${advisoryRules(r).join(",")}] why=[${why(r).join(",")}]`,
+    );
+  }
+  const w = gateJson(EXC_BY_WORKER);
+  check(
+    "(1) the `worker` refusal says it names no profile",
+    a10(w).some((a) => /names no profile/.test(a.detail)),
+    `adv=${JSON.stringify(a10(w).map((a) => a.detail))}`,
+  );
+
+  // (2) a quoted key is a citation, not an exception — the live #551 record first.
+  for (const [label, tid] of [
+    ["live t_75180b28 #551 (backtick quotes, architect)", EXC_QUOTED_LIVE],
+    ["fenced block (architect)", EXC_QUOTED_FENCE],
+  ]) {
+    const r = gateJson(tid);
+    check(
+      `(2) key quoted in ${label} → ignored: R1 fires, A10(quoted), no X1`,
+      r.code === 1 &&
+        violationRules(r).includes("R1_QA_VERDICT_MISSING") &&
+        op(r) === null &&
+        why(r).join() === "quoted" &&
+        !advisoryRules(r).includes("X1_EXCEPTION"),
+      `exit=${r.code} rules=[${violationRules(r).join(",")}] adv=[${advisoryRules(r).join(",")}] why=[${why(r).join(",")}]`,
+    );
+  }
+  const qr = gateJson(EXC_QUOTED_THEN_REAL);
+  check(
+    "(2) non-vacuity: a quote plus a real key in the same comment → the real one is operative",
+    qr.code === 0 &&
+      violationRules(qr).length === 0 &&
+      op(qr) && /INC-002/.test(op(qr).reason) &&
+      advisoryRules(qr).includes("X1_EXCEPTION") &&
+      why(qr).length === 0,
+    `exit=${qr.code} rules=[${violationRules(qr).join(",")}] exc=${JSON.stringify(op(qr))}`,
+  );
+  const ra = gateJson(EXC_REFUSED_THEN_ALLOWED);
+  check(
+    "(2) a refused record first does not shadow a later allowed one (no first-match trap)",
+    ra.code === 0 && op(ra) && op(ra).author === "architect" && why(ra).join() === "author",
+    `exit=${ra.code} exc=${JSON.stringify(op(ra))} why=[${why(ra).join(",")}]`,
+  );
+
+  // (3) security track: no author can waive AR-6 — R7 AND R1 still fire.
+  const sec = gateJson(EXC_SECURITY);
+  check(
+    "(3) security-track card with exceptions by dashboard/architect/qa → R7 AND R1 (and R4) still fire",
+    sec.code === 1 &&
+      sec.parsed.facts.security_track === true &&
+      ["R7_SECURITY_TRACK_SIGNOFF_MISSING", "R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"].every((x) => violationRules(sec).includes(x)) &&
+      op(sec) === null &&
+      why(sec).join() === "security-track,security-track,security-track" &&
+      !advisoryRules(sec).includes("X1_EXCEPTION"),
+    `exit=${sec.code} rules=[${violationRules(sec).join(",")}] why=[${why(sec).join(",")}]`,
+  );
+  const secHook = runGate(
+    ["hook", "--db", db],
+    JSON.stringify({
+      hook_event_name: "pre_tool_call",
+      tool_name: "kanban_complete",
+      tool_input: { task_id: EXC_SECURITY, summary: "done" },
+      session_id: "sess_fixture",
+      cwd: repo,
+    }),
+    { HERMES_KANBAN_DB: db, HERMES_HOME: root },
+  );
+  check(
+    "(3) hook mode blocks completing the security-track card despite the exceptions",
+    secHook.code === 2 && /R7_SECURITY_TRACK_SIGNOFF_MISSING/.test(secHook.out),
+    `exit=${secHook.code} out=${secHook.out.slice(0, 200).replace(/\n/g, " ")}`,
+  );
+
+  // (4) non-vacuity: an allowed author on a non-security card still waives.
+  for (const [author, tid] of Object.entries(EXC_ALLOWED)) {
+    const r = gateJson(tid);
+    check(
+      `(4) non-vacuity: exception by ${author} on a non-security card → still valid (0 violations, X1, no A10)`,
+      r.code === 0 &&
+        violationRules(r).length === 0 &&
+        op(r) && op(r).author === author &&
+        advisoryRules(r).includes("X1_EXCEPTION") &&
+        !advisoryRules(r).includes("A10_EXCEPTION_IGNORED"),
+      `exit=${r.code} rules=[${violationRules(r).join(",")}] adv=[${advisoryRules(r).join(",")}]`,
+    );
+  }
 }
 
 console.log("\n2. Rule coverage (every rule must fire on its own non-compliant card):");

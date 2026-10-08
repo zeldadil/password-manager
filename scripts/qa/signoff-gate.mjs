@@ -54,7 +54,12 @@
  *     cleared R1/R2/R3 through the fail-closed completion hook. A discounted marker is
  *     reported as `A7_VERDICT_AUTHOR_IGNORED`; a run-metadata verdict stays
  *     author-independent by design (§3 row 3) and is reported as
- *     `A8_VERDICT_SELF_DECLARED` when a non-QA run self-declares it.
+ *     `A8_VERDICT_SELF_DECLARED` when a non-QA run self-declares it;
+ *   - a `qa-signoff-exception:` is applied only when an allowed author wrote it
+ *     (human/dashboard/user/architect/qa — never `worker`), outside code spans,
+ *     on a non-security-track card (t_b8001b55; QA_SIGN_OFF_GATE.md §5.6). Any
+ *     other exception record is reported as `A10_EXCEPTION_IGNORED` and waives
+ *     nothing; R7 never consults the exception.
  *
  * R9/R10 (t_75180b28, QA_SIGN_OFF_GATE.md §5.9): a **code** card — one a PR
  * references, one with a pushed branch named after it, or one whose body says
@@ -91,6 +96,16 @@ const QA_PROFILES = new Set(["qa"]);
 /** Profiles allowed to record the Architect half of an AR-6 sign-off. */
 const ARCHITECT_PROFILES = new Set(["architect"]);
 
+/**
+ * Authors allowed to record a §5.6 `qa-signoff-exception:` (t_b8001b55). Until
+ * this fix `findException` read `c.author` only to *display* it, so any profile
+ * could waive R1/R4/R7 with one comment — the same omission t_338f47fd closed on
+ * the verdict marker. Humans (`human`, `dashboard`, `user`), `architect` and
+ * `qa` only. `worker` is deliberately absent: it names no profile, so it cannot
+ * be held to an approval (refused with its own advisory wording).
+ */
+const EXCEPTION_AUTHORS = new Set(["human", "dashboard", "user", "architect", "qa"]);
+
 const VERDICT_MARKER_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*:\s*([a-z][a-z-]*)/i;
 // Loose path — colon-only, mirroring the marker above (t_df8e644a, the residual
 // half of t_c3cb6842). While the separator also accepted `-` and `—`, a `qa`
@@ -112,6 +127,9 @@ const VERDICT_LOOSE_RE = /verdict\s*:\s*([a-z][a-z-]*)/i;
 // then judged *that* quote as the card's live deferral target).
 const DEFERRAL_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*[:\-—]+\s*deferred/i;
 const EXCEPTION_RE = /qa[\s_-]*signoff[\s_-]*exception\s*[:\-—]+\s*(\S[^\n]*)/i;
+// Global twin for scanning every occurrence in a comment (t_b8001b55): a body
+// can quote the key in a code span *and* record a real one further down.
+const EXCEPTION_RE_G = new RegExp(EXCEPTION_RE.source, "gi");
 const ARCH_SIGNOFF_RE = /(arch[\s_-]*(verdict|sign[\s_-]*off)|approv|signed[\s_-]*off|LGTM)/i;
 const TASK_ID_RE = /\bt_[0-9a-f]{8}\b/g;
 const TEST_TYPES_RE = /test\s*types\s*:?\**\s*([^\n]+)/i;
@@ -605,11 +623,53 @@ function hasArchitectSignoff(board, task) {
   );
 }
 
-function findException(board, task) {
-  const c = (board.commentsByTask.get(task.id) || []).find((x) => EXCEPTION_RE.test(x.body || ""));
-  if (!c) return null;
-  const m = EXCEPTION_RE.exec(c.body || "");
-  return { reason: (m[1] || "").slice(0, 200), author: c.author };
+/**
+ * The operative §5.6 exception, plus every exception-shaped record the gate
+ * refused (t_b8001b55). A record is refused — reported as A10, never silently —
+ * when:
+ *   - `quoted`: every occurrence of the key in the comment sits inside a code
+ *     span or fenced block. A quote is documentation, not a waiver (same rule as
+ *     deferral markers and evidence pointers, `codeRanges`). Live origin: the
+ *     comment that *reported* this defect on t_75180b28 quoted the key between
+ *     backticks and became that card's operative, irrevocable exception;
+ *   - `author`: the comment was not written by an EXCEPTION_AUTHORS profile;
+ *   - `security-track`: the card is on the crypto/bridge/auth track. AR-6 needs
+ *     an Architect and a QA sign-off there; it is signed, never waived, so no
+ *     exception — whoever wrote it — disarms R1/R4/R7 on such a card.
+ * The first record that survives all three is the operative exception.
+ */
+function findException(board, task, securityTrack) {
+  const ignored = [];
+  let exception = null;
+  for (const c of board.commentsByTask.get(task.id) || []) {
+    const body = c.body || "";
+    const ranges = codeRanges(body);
+    const hits = [...body.matchAll(EXCEPTION_RE_G)];
+    if (hits.length === 0) continue;
+    const live = hits.find((m) => !insideRanges(m.index, ranges));
+    const author = String(c.author || "").trim();
+    const reason = ((live || hits[0])[1] || "").slice(0, 200);
+    let why = null;
+    if (!live) why = "quoted";
+    else if (!EXCEPTION_AUTHORS.has(author)) why = "author";
+    else if (securityTrack) why = "security-track";
+    if (why) ignored.push({ author: c.author, reason, why });
+    else if (!exception) exception = { reason, author: c.author };
+  }
+  return { exception, ignored };
+}
+
+function exceptionIgnoredDetail(x) {
+  const who = `"${x.author ?? ""}"`;
+  if (x.why === "quoted") {
+    return `a qa-signoff-exception key written by ${who} appears only inside a code span/fence — a quotation, not an exception (§5.6) — ignored`;
+  }
+  if (x.why === "author") {
+    const name = String(x.author || "").trim();
+    const id = name === "worker" || name === "" ? " (it names no profile, so no one is accountable for the waiver)" : "";
+    return `a qa-signoff-exception recorded by ${who}${id} is not from an allowed author (${[...EXCEPTION_AUTHORS].join(", ")}) — ignored`;
+  }
+  return `a qa-signoff-exception recorded by ${who} is not applied: this is a security-track card, where AR-6 requires Architect + QA sign-off and exceptions never waive R1/R4/R7 — ignored`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -965,7 +1025,14 @@ export function evaluateCard(board, task, opts = {}) {
   const completedMs = task.completed_at ? Number(task.completed_at) * 1000 : null;
   const postEpoch =
     preComplete || task.status !== "done" || (completedMs !== null && completedMs >= epochMs);
-  const exception = findException(board, task);
+  // Classified before the exception lookup: on a security-track card the
+  // exception is refused outright (t_b8001b55, AR-6 — signed, never waived).
+  const tt = testTypesOf(task);
+  const securityTrack =
+    SECURITY_TRACK_RE.test(`${task.title || ""}\n${task.body || ""}`) &&
+    /security/.test(tt) &&
+    !QA_PROFILES.has(String(task.assignee || "").trim());
+  const { exception, ignored: exceptionsIgnored } = findException(board, task, securityTrack);
 
   const verdicts = collectVerdicts(board, task);
   const valid = verdicts.filter((v) => VERDICTS.has(v.token));
@@ -1032,6 +1099,7 @@ export function evaluateCard(board, task, opts = {}) {
       origin: p.origin,
     })),
     exception,
+    exceptions_ignored: exceptionsIgnored,
     discounted_verdicts: {
       ignored: discounted.ignored,
       self_declared: discounted.selfDeclared,
@@ -1071,6 +1139,11 @@ export function evaluateCard(board, task, opts = {}) {
       `the operative verdict "${sd.token}" comes from the run metadata of a "${sd.author}" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review`,
     );
   }
+
+  // A10 — exception-shaped records the gate refused (t_b8001b55): quoted in
+  // code, written by a non-allowed author, or on a security-track card. Never
+  // silent, so a refused waiver can't be mistaken for an applied one.
+  for (const x of exceptionsIgnored) advise("A10_EXCEPTION_IGNORED", exceptionIgnoredDetail(x));
 
   // R1 — a QA verdict, or a resolvable QA deferral, must exist.
   if (exception) {
@@ -1162,13 +1235,12 @@ export function evaluateCard(board, task, opts = {}) {
   }
 
   // R7 — crypto/bridge/auth cards need the Architect half of the AR-6 sign-off.
-  const tt = testTypesOf(task);
-  const securityTrack =
-    SECURITY_TRACK_RE.test(`${task.title || ""}\n${task.body || ""}`) &&
-    /security/.test(tt) &&
-    !QA_PROFILES.has(String(task.assignee || "").trim());
+  // `securityTrack` is classified at the top of evaluateCard. R7 deliberately
+  // does not consult the exception (t_b8001b55): an Architect signature is
+  // signed, never waived — findException already refuses it on this track, and
+  // this condition holds even if that ever regressed.
   facts.security_track = securityTrack;
-  if (securityTrack && postEpoch && !hasArchitectSignoff(board, task) && !exception) {
+  if (securityTrack && postEpoch && !hasArchitectSignoff(board, task)) {
     add("R7_SECURITY_TRACK_SIGNOFF_MISSING", "crypto/bridge/auth card carries no Architect sign-off comment (AR-6)");
   }
 
