@@ -1,5 +1,5 @@
-QA sign-off gate selftest — fixture board: /home/sap/.hermes/profiles/qa/cache/scratch/signoff-gate-selftest-TcbWKu/board.db
-fixture repo: /home/sap/.hermes/profiles/qa/cache/scratch/signoff-gate-selftest-TcbWKu/repo
+QA sign-off gate selftest — fixture board: /home/sap/.hermes/profiles/qa/cache/scratch/signoff-gate-selftest-SrRHz7/board.db
+fixture repo: /home/sap/.hermes/profiles/qa/cache/scratch/signoff-gate-selftest-SrRHz7/repo
 
 1. Compliant cards (must produce ZERO violations — anti-vacuous control):
   ok   - Path A verdict + repo evidence
