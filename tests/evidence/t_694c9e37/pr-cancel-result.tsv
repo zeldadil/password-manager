@@ -1,0 +1,5 @@
+# generated 2026-10-08T21:04:03Z — CI runs on branch fix/t_694c9e37-ci-master-no-cancel (oldest last)
+run_id	sha	event	conclusion	created_at	updated_at
+37808311412	f69c76b	pull_request	success	2026-10-08T16:22:48Z	2026-10-08T16:25:07Z
+37808208239	444b79f	pull_request	cancelled	2026-10-08T16:21:59Z	2026-10-08T16:23:19Z
+37808172238	541fef0	pull_request	cancelled	2026-10-08T16:21:42Z	2026-10-08T16:22:34Z

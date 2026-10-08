@@ -50,9 +50,27 @@ env:
   NODE_VERSION: "22"
   PNPM_VERSION: "9.12.0"
 
+# t_694c9e37 — never cancel (or drop) a run on the default branch.
+#
+# A run on `master` is the CI verdict of a merge commit: the QA sign-off gate
+# rule R10_MERGE_CI_NOT_GREEN (QA_SIGN_OFF_GATE.md §5.9) reads the required
+# checks on that exact commit, and `cancelled` is not green. With the former
+# `cancel-in-progress: true` on a per-ref group, two merges in quick succession
+# left the first merge commit with `cancelled` required checks → false R10.
+#
+#   - Pull requests / other branches: unchanged. Group = workflow + ref and
+#     cancel-in-progress is true, so a new push to a PR still cancels the
+#     superseded run of that PR.
+#   - Default branch: cancel-in-progress is false AND the group is unique per
+#     run (`run_id`). A false flag alone is not enough: a concurrency group
+#     holds at most one running + one pending run, and a third arrival cancels
+#     the pending one — three quick merges would still cancel the middle one.
+#     A per-run group means every master run starts and finishes on its own.
+#     (A re-run attempt keeps its run_id, but GitHub only allows re-running a
+#     completed run, so it never collides with itself.)
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && format('default-branch-run-{0}', github.run_id) || github.ref }}
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
 jobs:
   install-lockfile:
