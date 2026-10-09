@@ -18,7 +18,7 @@
  * Usage: node scripts/qa/signoff-gate.selftest.mjs [--keep]
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -179,6 +179,82 @@ const EXCEPTION = card({
   body: "**Test Types:** unit",
   comments: [qaVerdict("qa-signoff-exception: hotfix under incident INC-001, QA verdict waived for 24h")],
 });
+
+// ── t_b8001b55: who may record an exception, and where it never applies ─────
+// Before the fix, findException displayed the author but never checked it, took
+// a key quoted in a code span for a real exception, and let any exception waive
+// R7 on a crypto/bridge/auth card.
+const EXC_REASON = "qa-signoff-exception: hotfix under incident INC-002, QA verdict waived for 24h";
+
+// (1) a non-allowed author — a named executing profile, and the anonymous
+// `worker`, which names no profile at all — is ignored: R1 and R4 still fire.
+const EXC_BY_BACKEND = card({
+  title: "BE-910a exception recorded by an executing profile",
+  body: "**Test Types:** unit",
+  comments: [{ author: "backend", body: EXC_REASON }],
+});
+const EXC_BY_WORKER = card({
+  title: "BE-910b exception recorded by the anonymous worker author",
+  body: "**Test Types:** unit",
+  comments: [{ author: "worker", body: EXC_REASON }],
+});
+
+// (2) a key inside a code span / fence is a quotation. The first fixture is the
+// live record that exposed the defect: comment 551 on t_75180b28, verbatim
+// (architect, reporting this bug) — the gate turned its backtick quote into that
+// card's operative X1_EXCEPTION.
+const LIVE_551 = readFileSync(join(HERE, "fixtures", "t_75180b28-comment-551.md"), "utf8");
+const EXC_QUOTED_LIVE = card({
+  title: "BE-911a defect report that quotes the exception key (live t_75180b28 #551)",
+  body: "**Test Types:** unit",
+  status: "triage",
+  completed: null,
+  comments: [{ author: "architect", body: LIVE_551 }],
+});
+const EXC_QUOTED_FENCE = card({
+  title: "BE-911b exception key quoted in a fenced block",
+  body: "**Test Types:** unit",
+  comments: [{ author: "architect", body: "The recording command is:\n\n```\nhermes kanban comment t_x --body \"qa-signoff-exception: <reason>\"\n```\n\nnot used here." }],
+});
+// Non-vacuity of the quote rule: the same comment quotes the key AND records a
+// real one below — the real one is operative (the scan is per occurrence).
+const EXC_QUOTED_THEN_REAL = card({
+  title: "BE-911c comment quotes the key, then records a real exception",
+  body: "**Test Types:** unit",
+  comments: [{ author: "architect", body: `The marker is \`qa-signoff-exception: <reason>\`.\n\n${EXC_REASON}` }],
+});
+// Ordering: a refused record first must not shadow an allowed one after it
+// (the old `.find()` kept the first match, irrevocably).
+const EXC_REFUSED_THEN_ALLOWED = card({
+  title: "BE-911d refused exception, then an allowed one",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "frontend", body: EXC_REASON },
+    { author: "architect", body: EXC_REASON },
+  ],
+});
+
+// (3) security-track card: even the most privileged authors cannot waive AR-6 —
+// R7 AND R1 must still fire (and R4: an exception that waives nothing leaves
+// the evidence requirement standing).
+const EXC_SECURITY = card({
+  title: "BE-912 crypto card closed by exception",
+  body: "**Test Types:** unit, security\nImplements the packages/crypto AEAD wrapper and vault key loading.",
+  comments: [
+    { author: "dashboard", body: EXC_REASON },
+    { author: "architect", body: EXC_REASON },
+    { author: "qa", body: EXC_REASON },
+  ],
+});
+
+// (4) non-vacuity: every allowed author still records a valid exception on a
+// non-security card (architect is the case named in the card).
+const EXC_ALLOWED = Object.fromEntries(
+  ["architect", "qa", "human", "dashboard", "user"].map((author) => [
+    author,
+    card({ title: `BE-913 exception recorded by ${author}`, body: "**Test Types:** unit", comments: [{ author, body: EXC_REASON }] }),
+  ]),
+);
 
 // ── Path B: violations ──────────────────────────────────────────────────────
 const NO_VERDICT = card({ title: "BE-901 no QA verdict and no evidence", body: "**Test Types:** unit" });
@@ -682,6 +758,216 @@ const LOOSE_MISSING_EVIDENCE = card({
   ],
 });
 
+// ── t_75180b28 fixtures: R9/R10, the PR-merged / merge-commit-CI rule ──────
+// GitHub answers come from JSON fixtures (QA_GATE_GITHUB_FIXTURE), never from
+// the network. Every card below carries a valid QA verdict + evidence, so R9 /
+// R10 / A11 / A12 are the only rules that can change between them.
+const PR_DONE_AT = Math.floor(Date.parse("2026-10-07T00:00:00Z") / 1000); // after PR_RULE_EPOCH_ISO
+const PR_DONE_BEFORE_RULE = Math.floor(Date.parse("2026-10-01T00:00:00Z") / 1000); // gate epoch < this < PR-rule epoch
+function prCard(title, extra = {}) {
+  const tid = card({
+    title,
+    body: "**Test Types:** unit",
+    status: "review",
+    completed: null,
+    comments: [qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md")],
+    ...extra,
+  });
+  fixtureFile(`tests/evidence/${tid}/README.md`);
+  return tid;
+}
+const PR_OPEN = prCard("FE-950a code card whose PR is still open");
+const PR_CLOSED = prCard("FE-950b code card whose PR was closed without being merged");
+const PR_MERGED_RED = prCard("FE-950c merged PR, a required check red on the merge commit");
+const PR_MERGED_GREEN = prCard("FE-950d merged PR, every required check green on the merge commit");
+const PR_WRONG_BASE = prCard("FE-950e PR merged into a stacked feature branch, not master");
+const PR_PENDING = prCard("FE-950f merged PR, required checks still running / missing on the merge commit");
+const PR_GREEN_PLUS_OPEN = prCard("FE-950g merged green PR plus a second PR still open");
+const PR_BRANCH_ONLY = prCard("FE-950h branch pushed, no PR ever opened");
+const PR_DECLARED = prCard("FE-950i declares its deliverable as code, no PR", { body: "**Test Types:** unit\n**Deliverable:** code" });
+const PR_NOT_CODE = prCard("DOC-950j no PR, no branch, no declaration");
+const PR_EXCEPTION = prCard("FE-950k open PR plus a recorded sign-off exception", {
+  comments: [
+    qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md"),
+    { author: "architect", body: "qa-signoff-exception: housekeeping waiver for the QA record only" },
+  ],
+});
+const PR_DONE_OPEN = prCard("FE-950l completed through the CLI after the rule epoch, PR still open", { status: "done", completed: PR_DONE_AT });
+const PR_DONE_OLD = prCard("FE-950m completed before the rule epoch, PR still open", { status: "done", completed: PR_DONE_BEFORE_RULE });
+
+const sha = (c) => c.repeat(40);
+const run = (name, conclusion, status = "completed") => ({ name, status, conclusion: status === "completed" ? conclusion : null, app_id: 15368 });
+const merged = (number, task, oid, extra = {}) => ({
+  number,
+  title: `fixture PR ${number}`,
+  // A declarative line (§5.9, t_7e8bf917): a prose mention no longer links.
+  body: `Implements the card.\n\nCloses ${task}`,
+  state: "MERGED",
+  mergedAt: `2026-10-06T10:${String(number % 60).padStart(2, "0")}:00Z`,
+  mergeCommit: { oid },
+  baseRefName: "master",
+  headRefName: `feature/pr-${number}`,
+  url: `https://github.com/fixture-owner/fixture-repo/pull/${number}`,
+  ...extra,
+});
+const open = (number, task, extra = {}) => ({ ...merged(number, task, null), state: "OPEN", mergedAt: null, mergeCommit: null, ...extra });
+const GH_FIXTURE = {
+  repo: "fixture-owner/fixture-repo",
+  default_branch: "master",
+  // Read from branch protection in real life — the gate never hard-codes it.
+  required_checks: [
+    { context: "lint-typecheck", app_id: 15368 },
+    { context: "integration", app_id: null },
+    { context: "build", app_id: 15368 },
+  ],
+  prs: [
+    open(901, PR_OPEN),
+    { ...open(902, PR_CLOSED), state: "CLOSED" },
+    merged(903, PR_MERGED_RED, sha("a")),
+    merged(904, PR_MERGED_GREEN, sha("b")),
+    // An earlier merge of the same card that landed red on master (A13 — reported, judged by the newest).
+    merged(913, PR_MERGED_GREEN, sha("f"), { mergedAt: "2026-10-05T09:00:00Z" }),
+    merged(905, PR_WRONG_BASE, sha("c"), { baseRefName: "feature/parent" }),
+    merged(906, PR_PENDING, sha("d")),
+    merged(907, PR_GREEN_PLUS_OPEN, sha("e")),
+    open(908, PR_GREEN_PLUS_OPEN, { body: `Follow-up.\n\nCard: ${PR_GREEN_PLUS_OPEN}` }),
+    // A longer id that merely starts with PR_NOT_CODE must not link to it.
+    open(909, `${PR_NOT_CODE}9`),
+    open(910, PR_EXCEPTION),
+    open(911, PR_DONE_OPEN),
+    open(912, PR_DONE_OLD),
+  ],
+  branches: ["master", "feature/pr-901", `feature/${PR_BRANCH_ONLY}`],
+  check_runs: {
+    // `sast` is red everywhere but is not a required check: it must not matter.
+    [sha("a")]: [run("lint-typecheck", "success"), run("integration", "failure"), run("build", "success"), run("sast", "failure")],
+    [sha("b")]: [run("lint-typecheck", "success"), run("integration", "success"), run("build", "success"), run("sast", "failure")],
+    [sha("f")]: [run("lint-typecheck", "success"), run("integration", "success"), run("build", "failure")],
+    [sha("d")]: [run("lint-typecheck", "success"), run("integration", null, "in_progress")],
+    // `integration` is satisfied by a legacy commit status (requirement not app-bound).
+    [sha("e")]: [run("lint-typecheck", "success"), run("build", "skipped")],
+  },
+  statuses: { [sha("e")]: [{ context: "integration", state: "success" }] },
+};
+const GH_EMPTY = join(root, "gh-empty.json");
+const GH_PRS = join(root, "gh-prs.json");
+const GH_DOWN = join(root, "gh-unreachable.json");
+const GH_NO_PROTECTION = join(root, "gh-no-protection.json");
+writeFileSync(GH_EMPTY, JSON.stringify({ repo: "fixture-owner/fixture-repo", prs: [], branches: ["master"] }));
+writeFileSync(GH_PRS, JSON.stringify(GH_FIXTURE, null, 2));
+writeFileSync(GH_DOWN, JSON.stringify({ repo: "fixture-owner/fixture-repo", unreachable: "connect ECONNREFUSED 192.0.2.1:443" }));
+writeFileSync(
+  GH_NO_PROTECTION,
+  JSON.stringify({ ...GH_FIXTURE, errors: { "required checks": "HTTP 403: Resource not accessible by integration" } }),
+);
+
+// ── t_339a0d02 fixtures: R10 judges the merge's push run only ───────────────
+// Live case (2026-10-09): on merge commit a48d622 (PR #120) the push run was
+// green; three workflow_dispatch runs started later on the same SHA failed on
+// secret-scan (full-history scan on that event) and R10 read them, so a merged
+// card could not complete. The other way round, a manual run could "repair" a
+// red merge. Check runs carry their check suite; the workflow runs of the SHA
+// say which suite is the `push` one. A re-run of the push run is the same suite
+// with a higher check-run id, so it counts.
+const EV_PUSH_GREEN_DISPATCH_RED = prCard("FE-970a push run green, a later dispatch run red on the same SHA");
+const EV_PUSH_RED_DISPATCH_GREEN = prCard("FE-970b push run red, a later dispatch run green on the same SHA");
+const EV_PUSH_RERUN_GREEN = prCard("FE-970c push run red, then re-run green (same suite, new attempt)");
+const EV_PUSH_RED_ONLY = prCard("FE-970d push run red, nothing else (non-vacuity)");
+const EV_NO_PUSH_RUN = prCard("FE-970e no push run at all, only a green dispatch run");
+const EV_NON_ACTIONS = prCard("FE-970f a required check from another app (no workflow run) plus a green push run");
+const evRun = (name, conclusion, id, suite) => ({ ...run(name, conclusion), id, check_suite_id: suite });
+const evAll = (conclusions, base, suite) =>
+  [
+    ["lint-typecheck", conclusions[0]],
+    ["integration", conclusions[1]],
+    ["build", conclusions[2]],
+  ].map(([n, c], i) => evRun(n, c, base + i, suite));
+const wf = (id, event, suite, attempt = 1) => ({ id, event, check_suite_id: suite, run_attempt: attempt, name: "CI" });
+const GH_EVENT = join(root, "gh-event.json");
+writeFileSync(
+  GH_EVENT,
+  JSON.stringify(
+    {
+      ...GH_FIXTURE,
+      prs: [
+        merged(941, EV_PUSH_GREEN_DISPATCH_RED, sha("1")),
+        merged(942, EV_PUSH_RED_DISPATCH_GREEN, sha("2")),
+        merged(943, EV_PUSH_RERUN_GREEN, sha("3")),
+        merged(944, EV_PUSH_RED_ONLY, sha("4")),
+        merged(945, EV_NO_PUSH_RUN, sha("5")),
+        merged(946, EV_NON_ACTIONS, sha("6")),
+      ],
+      check_runs: {
+        // push suite 11 green; dispatch suite 12 (higher ids, i.e. newer) red on build.
+        [sha("1")]: [...evAll(["success", "success", "success"], 100, 11), ...evAll(["success", "success", "failure"], 200, 12)],
+        // push suite 21 red on integration; dispatch suite 22 (newer) all green.
+        [sha("2")]: [...evAll(["success", "failure", "success"], 100, 21), ...evAll(["success", "success", "success"], 200, 22)],
+        // push suite 31: attempt 1 red on build (id 102), re-run attempt 2 green (id 302), same suite.
+        [sha("3")]: [...evAll(["success", "success", "failure"], 100, 31), evRun("build", "success", 302, 31)],
+        [sha("4")]: evAll(["success", "failure", "success"], 100, 41),
+        [sha("5")]: evAll(["success", "success", "success"], 100, 52),
+        // `build` comes from a check suite that no workflow run owns (another app): judged as before.
+        [sha("6")]: [...evAll(["success", "success", "success"], 100, 61).slice(0, 2), evRun("build", "success", 400, 69)],
+      },
+      statuses: {},
+      workflow_runs: {
+        [sha("1")]: [wf(1001, "push", 11), wf(1002, "workflow_dispatch", 12)],
+        [sha("2")]: [wf(2001, "push", 21), wf(2002, "workflow_dispatch", 22)],
+        [sha("3")]: [wf(3001, "push", 31, 2)],
+        [sha("4")]: [wf(4001, "push", 41)],
+        [sha("5")]: [wf(5002, "workflow_dispatch", 52)],
+        [sha("6")]: [wf(6001, "push", 61)],
+      },
+    },
+    null,
+    2,
+  ),
+);
+
+// ── t_7e8bf917 fixtures: a PR links a card only by declaration ──────────────
+// Before this fix any mention of the id in a PR title/body/head linked the PR:
+// live, PR #114 (which only quotes t_75180b28 in a fixture) was named by R9 on
+// t_75180b28, and a merged PR that merely mentions a card satisfied R9 for it.
+// Declarative = head branch named after the card, or a body line
+// `Closes <id>` / `Card: <id>` / `Task: <id>` outside code; any other mention is
+// the advisory A14_PR_MENTIONS_CARD — never a link, never R9 either way.
+const DECLARED_CODE = "**Test Types:** unit\n**Deliverable:** code";
+const LK_PROSE_MERGED = prCard("FE-960a code card: the only merged PR mentions it in prose", { body: DECLARED_CODE });
+const LK_PROSE_OPEN = prCard("DOC-960b an open foreign PR mentions the card in prose (live #114 shape)");
+const LK_CLOSES = prCard("FE-960c merged PR declares `Closes <id>`");
+const LK_FENCE = prCard("FE-960d the only PR quotes `Closes <id>` inside a code fence / span", { body: DECLARED_CODE });
+const LK_HEAD = prCard("FE-960e merged PR whose head branch is named after the card, no id in body");
+const LK_TASK_BOLD = prCard("FE-960f merged PR declares `- **Task:** <id>` in a list of ids");
+const LK_CLOSES_PROSE = prCard("FE-960g `Closes` followed by prose, the id later on the line / in a quote", { body: DECLARED_CODE });
+const LK_OWN_PLUS_FOREIGN = prCard("FE-960h own merged PR + a foreign open PR that mentions the card");
+const LK_TITLE_ONLY = prCard("FE-960i merged PR names the card only in its title", { body: DECLARED_CODE });
+const GH_LINK = join(root, "gh-link.json");
+writeFileSync(
+  GH_LINK,
+  JSON.stringify(
+    {
+      ...GH_FIXTURE,
+      prs: [
+        merged(921, LK_PROSE_MERGED, sha("b"), { body: `Follow-up raised during the review of ${LK_PROSE_MERGED}; ships nothing for it.` }),
+        open(922, LK_PROSE_OPEN, { body: `Fixes the exception key. The fixture quotes the comment of ${LK_PROSE_OPEN} verbatim.`, headRefName: "qa/t_0000aaaa-exception" }),
+        merged(923, LK_CLOSES, sha("b"), { body: `Summary of the change.\n\nCloses ${LK_CLOSES}` }),
+        merged(924, LK_FENCE, sha("b"), {
+          body: `How to link:\n\n\`\`\`\nCloses ${LK_FENCE}\n\`\`\`\n\nor inline: \`Closes ${LK_FENCE}\`\n\n    Task: ${LK_FENCE}\n`,
+        }),
+        merged(925, LK_HEAD, sha("b"), { body: "No id here.", headRefName: `qa/${LK_HEAD}-declarative-link` }),
+        merged(926, LK_TASK_BOLD, sha("b"), { body: `Two cards.\n\n- **Task:** t_0000bbbb (BE-1), **${LK_TASK_BOLD}** (BE-2)` }),
+        merged(927, LK_CLOSES_PROSE, sha("b"), { body: `Closes the gap found in ${LK_CLOSES_PROSE}.\n\n> Closes ${LK_CLOSES_PROSE}` }),
+        merged(928, LK_OWN_PLUS_FOREIGN, sha("b"), { body: "Own PR.", headRefName: `feature/${LK_OWN_PLUS_FOREIGN}` }),
+        open(929, LK_OWN_PLUS_FOREIGN, { body: `Unrelated fix; see ${LK_OWN_PLUS_FOREIGN} for context.`, headRefName: "fix/other" }),
+        merged(930, LK_TITLE_ONLY, sha("b"), { title: `feat: something (${LK_TITLE_ONLY})`, body: "No declaration." }),
+      ],
+      branches: ["master"],
+    },
+    null,
+    2,
+  ),
+);
+
 // ── fixture git repo: evidence committed on an earlier ref (A4 case) ────────
 const gitRepo = join(root, "gitrepo");
 const refOnlyRel = `tests/evidence/${REF_ONLY}/ref-only.md`;
@@ -753,6 +1039,11 @@ function runGate(args, input, env = {}) {
         HERMES_KANBAN_TASK: "",
         HERMES_KANBAN_WORKSPACE: "",
         HERMES_KANBAN_BRANCH: "",
+        // Hermetic GitHub too (t_75180b28): every case reads an empty, reachable
+        // GitHub fixture unless it passes its own — the selftest never calls `gh`.
+        QA_GATE_GITHUB: "",
+        QA_GATE_GH_REPO: "",
+        QA_GATE_GITHUB_FIXTURE: GH_EMPTY,
         ...env,
       },
       stdio: ["pipe", "pipe", "pipe"],
@@ -1171,6 +1462,114 @@ console.log("\n1e. t_df8e644a regressions (a cited file name must not read as a 
   );
 }
 
+console.log("\n1f. t_b8001b55 regressions (qa-signoff-exception: author allowlist, quotes, security track):");
+{
+  const a10 = (res) => (res.parsed ? res.parsed.advisories.filter((a) => a.rule === "A10_EXCEPTION_IGNORED") : []);
+  const why = (res) => (res.parsed ? (res.parsed.facts.exceptions_ignored || []).map((x) => x.why) : []);
+  const op = (res) => (res.parsed ? res.parsed.facts.exception : undefined);
+
+  // (1) non-allowed authors are ignored, with an advisory — the waiver is gone.
+  for (const [label, tid, author] of [
+    ["an executing profile (backend)", EXC_BY_BACKEND, "backend"],
+    ["the anonymous `worker` author", EXC_BY_WORKER, "worker"],
+  ]) {
+    const r = gateJson(tid);
+    check(
+      `(1) exception by ${label} → ignored: R1 + R4 fire, A10(author), no X1`,
+      r.code === 1 &&
+        violationRules(r).includes("R1_QA_VERDICT_MISSING") &&
+        violationRules(r).includes("R4_EVIDENCE_MISSING") &&
+        op(r) === null &&
+        why(r).join() === "author" &&
+        a10(r).some((a) => a.detail.includes(`"${author}"`)) &&
+        !advisoryRules(r).includes("X1_EXCEPTION"),
+      `exit=${r.code} rules=[${violationRules(r).join(",")}] adv=[${advisoryRules(r).join(",")}] why=[${why(r).join(",")}]`,
+    );
+  }
+  const w = gateJson(EXC_BY_WORKER);
+  check(
+    "(1) the `worker` refusal says it names no profile",
+    a10(w).some((a) => /names no profile/.test(a.detail)),
+    `adv=${JSON.stringify(a10(w).map((a) => a.detail))}`,
+  );
+
+  // (2) a quoted key is a citation, not an exception — the live #551 record first.
+  for (const [label, tid] of [
+    ["live t_75180b28 #551 (backtick quotes, architect)", EXC_QUOTED_LIVE],
+    ["fenced block (architect)", EXC_QUOTED_FENCE],
+  ]) {
+    const r = gateJson(tid);
+    check(
+      `(2) key quoted in ${label} → ignored: R1 fires, A10(quoted), no X1`,
+      r.code === 1 &&
+        violationRules(r).includes("R1_QA_VERDICT_MISSING") &&
+        op(r) === null &&
+        why(r).join() === "quoted" &&
+        !advisoryRules(r).includes("X1_EXCEPTION"),
+      `exit=${r.code} rules=[${violationRules(r).join(",")}] adv=[${advisoryRules(r).join(",")}] why=[${why(r).join(",")}]`,
+    );
+  }
+  const qr = gateJson(EXC_QUOTED_THEN_REAL);
+  check(
+    "(2) non-vacuity: a quote plus a real key in the same comment → the real one is operative",
+    qr.code === 0 &&
+      violationRules(qr).length === 0 &&
+      op(qr) && /INC-002/.test(op(qr).reason) &&
+      advisoryRules(qr).includes("X1_EXCEPTION") &&
+      why(qr).length === 0,
+    `exit=${qr.code} rules=[${violationRules(qr).join(",")}] exc=${JSON.stringify(op(qr))}`,
+  );
+  const ra = gateJson(EXC_REFUSED_THEN_ALLOWED);
+  check(
+    "(2) a refused record first does not shadow a later allowed one (no first-match trap)",
+    ra.code === 0 && op(ra) && op(ra).author === "architect" && why(ra).join() === "author",
+    `exit=${ra.code} exc=${JSON.stringify(op(ra))} why=[${why(ra).join(",")}]`,
+  );
+
+  // (3) security track: no author can waive AR-6 — R7 AND R1 still fire.
+  const sec = gateJson(EXC_SECURITY);
+  check(
+    "(3) security-track card with exceptions by dashboard/architect/qa → R7 AND R1 (and R4) still fire",
+    sec.code === 1 &&
+      sec.parsed.facts.security_track === true &&
+      ["R7_SECURITY_TRACK_SIGNOFF_MISSING", "R1_QA_VERDICT_MISSING", "R4_EVIDENCE_MISSING"].every((x) => violationRules(sec).includes(x)) &&
+      op(sec) === null &&
+      why(sec).join() === "security-track,security-track,security-track" &&
+      !advisoryRules(sec).includes("X1_EXCEPTION"),
+    `exit=${sec.code} rules=[${violationRules(sec).join(",")}] why=[${why(sec).join(",")}]`,
+  );
+  const secHook = runGate(
+    ["hook", "--db", db],
+    JSON.stringify({
+      hook_event_name: "pre_tool_call",
+      tool_name: "kanban_complete",
+      tool_input: { task_id: EXC_SECURITY, summary: "done" },
+      session_id: "sess_fixture",
+      cwd: repo,
+    }),
+    { HERMES_KANBAN_DB: db, HERMES_HOME: root },
+  );
+  check(
+    "(3) hook mode blocks completing the security-track card despite the exceptions",
+    secHook.code === 2 && /R7_SECURITY_TRACK_SIGNOFF_MISSING/.test(secHook.out),
+    `exit=${secHook.code} out=${secHook.out.slice(0, 200).replace(/\n/g, " ")}`,
+  );
+
+  // (4) non-vacuity: an allowed author on a non-security card still waives.
+  for (const [author, tid] of Object.entries(EXC_ALLOWED)) {
+    const r = gateJson(tid);
+    check(
+      `(4) non-vacuity: exception by ${author} on a non-security card → still valid (0 violations, X1, no A10)`,
+      r.code === 0 &&
+        violationRules(r).length === 0 &&
+        op(r) && op(r).author === author &&
+        advisoryRules(r).includes("X1_EXCEPTION") &&
+        !advisoryRules(r).includes("A10_EXCEPTION_IGNORED"),
+      `exit=${r.code} rules=[${violationRules(r).join(",")}] adv=[${advisoryRules(r).join(",")}]`,
+    );
+  }
+}
+
 console.log("\n2. Rule coverage (every rule must fire on its own non-compliant card):");
 expectRule("no verdict, no evidence", NO_VERDICT, "R1_QA_VERDICT_MISSING");
 expectRule("no verdict, no evidence", NO_VERDICT, "R4_EVIDENCE_MISSING");
@@ -1459,6 +1858,318 @@ console.log("\n5. Hook mode (pre_tool_call: kanban_complete):");
   const killed = runGate(["hook", "--db", db], payload(NO_VERDICT), { HERMES_KANBAN_DB: db, HERMES_HOME: root });
   check("kill switch allows completion", killed.code === 0 && killed.out.trim() === "{}", `exit=${killed.code}`);
   rmSync(kill, { force: true });
+}
+
+console.log("\n6. PR merged into master + required CI green on the merge commit (R9/R10, t_75180b28):");
+{
+  const prCheck = (taskId, fixture = GH_PRS, extraArgs = []) => {
+    const r = runGate(["check", "--task", taskId, "--db", db, "--repo", repo, "--pre-complete", "--json", ...extraArgs], "", {
+      QA_GATE_GITHUB_FIXTURE: fixture,
+    });
+    let parsed = null;
+    try {
+      parsed = JSON.parse(r.out);
+    } catch {
+      parsed = null;
+    }
+    const v = parsed ? parsed.violations : [];
+    const a = parsed ? parsed.advisories : [];
+    return {
+      code: r.code,
+      out: r.out,
+      parsed,
+      rules: v.map((x) => x.rule),
+      adv: a.map((x) => x.rule),
+      detail: (rule) => (v.find((x) => x.rule === rule) || a.find((x) => x.rule === rule) || {}).detail || "",
+      pr: parsed ? parsed.facts.pr_rule : null,
+    };
+  };
+  const show = (r) => `exit=${r.code} rules=[${r.rules.join(",")}] adv=[${r.adv.join(",")}] out=${r.out.slice(0, 200).replace(/\n/g, " ")}`;
+  const only = (r, rule) => r.code === 1 && r.rules.length === 1 && r.rules[0] === rule;
+
+  // The four cases the card names (t_75180b28 body).
+  let r = prCheck(PR_OPEN);
+  check("(1) open PR → R9_PR_NOT_MERGED naming PR #901 as open", only(r, "R9_PR_NOT_MERGED") && /#901 is open/.test(r.detail("R9_PR_NOT_MERGED")), show(r));
+  r = prCheck(PR_CLOSED);
+  check(
+    "(2) closed-unmerged PR → R9_PR_NOT_MERGED naming PR #902 as closed without merge",
+    only(r, "R9_PR_NOT_MERGED") && /#902 was closed without being merged/.test(r.detail("R9_PR_NOT_MERGED")),
+    show(r),
+  );
+  r = prCheck(PR_MERGED_RED);
+  check(
+    "(3) merged PR with a red required check → R10_MERGE_CI_NOT_GREEN naming PR #903 and integration=failure (never R9)",
+    only(r, "R10_MERGE_CI_NOT_GREEN") && /PR #903 is merged/.test(r.detail("R10_MERGE_CI_NOT_GREEN")) && /integration=failure/.test(r.detail("R10_MERGE_CI_NOT_GREEN")),
+    show(r),
+  );
+  check("(3b) a red check that is NOT required (sast) is not reported", !/sast/.test(r.detail("R10_MERGE_CI_NOT_GREEN")), r.detail("R10_MERGE_CI_NOT_GREEN"));
+  r = prCheck(PR_MERGED_GREEN);
+  check(
+    "(4) merged PR, all required checks green on the merge commit → allowed (0 violations, PR #904 judged)",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.judged_pr === 904 && Object.values(r.pr.check_states || {}).every((s) => s === "success"),
+    `${show(r)} pr=${JSON.stringify(r.pr)}`,
+  );
+  check(
+    "(4b) the required list comes from the fixture's branch protection, not a hard-coded list",
+    r.pr && JSON.stringify(r.pr.required_checks) === JSON.stringify(["lint-typecheck", "integration", "build"]),
+    JSON.stringify(r.pr && r.pr.required_checks),
+  );
+  check(
+    "(4c) an earlier merge of the same card that landed red (#913, build=failure) → A13 advisory, not a violation",
+    r.code === 0 && r.adv.includes("A13_EARLIER_MERGE_CI_NOT_GREEN") && /#913/.test(r.detail("A13_EARLIER_MERGE_CI_NOT_GREEN")) && /build=failure/.test(r.detail("A13_EARLIER_MERGE_CI_NOT_GREEN")),
+    show(r),
+  );
+
+  // Shapes around the four cases.
+  r = prCheck(PR_WRONG_BASE);
+  check("PR merged into a stacked branch is not merged into master → R9 naming #905 and its base", only(r, "R9_PR_NOT_MERGED") && /#905 merged into `feature\/parent`/.test(r.detail("R9_PR_NOT_MERGED")), show(r));
+  r = prCheck(PR_PENDING);
+  check(
+    "merge-commit CI still running / a required check missing → R10 (in_progress, missing)",
+    only(r, "R10_MERGE_CI_NOT_GREEN") && /integration=in_progress/.test(r.detail("R10_MERGE_CI_NOT_GREEN")) && /build=missing/.test(r.detail("R10_MERGE_CI_NOT_GREEN")),
+    show(r),
+  );
+  r = prCheck(PR_GREEN_PLUS_OPEN);
+  check(
+    "merged green PR + a second open PR → allowed, the open one reported as A12_LINKED_PR_OPEN (#908); skipped + legacy status count as green",
+    r.code === 0 && r.rules.length === 0 && r.adv.includes("A12_LINKED_PR_OPEN") && /#908/.test(r.detail("A12_LINKED_PR_OPEN")) && r.pr.judged_pr === 907,
+    show(r),
+  );
+  r = prCheck(PR_BRANCH_ONLY);
+  check("branch pushed but no PR ever opened → R9 naming the branch", only(r, "R9_PR_NOT_MERGED") && r.detail("R9_PR_NOT_MERGED").includes(`feature/${PR_BRANCH_ONLY}`), show(r));
+  r = prCheck(PR_DECLARED);
+  check("card declares `Deliverable: code`, no PR → R9", only(r, "R9_PR_NOT_MERGED") && /Deliverable: code/.test(r.detail("R9_PR_NOT_MERGED")), show(r));
+  r = prCheck(PR_NOT_CODE);
+  check(
+    "non-code card (no PR, no branch, no declaration; a longer id in PR #909 does not link) → rule does not apply",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.applies === false && r.pr.linked_prs.length === 0,
+    `${show(r)} pr=${JSON.stringify(r.pr)}`,
+  );
+  r = prCheck(PR_EXCEPTION);
+  check("a §5.6 sign-off exception does not waive R9 (repository fact, not a QA record)", r.code === 1 && r.rules.includes("R9_PR_NOT_MERGED") && /#910/.test(r.detail("R9_PR_NOT_MERGED")), show(r));
+
+  // Network degradation: advisory, never a violation (architect constraint).
+  r = prCheck(PR_OPEN, GH_DOWN);
+  check("GitHub unreachable → A11_CI_STATE_UNVERIFIABLE advisory, no violation (open-PR card completes)", r.code === 0 && r.rules.length === 0 && r.adv.includes("A11_CI_STATE_UNVERIFIABLE"), show(r));
+  r = prCheck(PR_MERGED_RED, GH_DOWN);
+  check("GitHub unreachable → red-CI card is not failed either (A11 only)", r.code === 0 && r.rules.length === 0 && r.adv.includes("A11_CI_STATE_UNVERIFIABLE"), show(r));
+  r = prCheck(PR_MERGED_RED, GH_NO_PROTECTION);
+  check(
+    "branch protection unreadable → R10 not evaluated, A11 names the branch protection",
+    r.code === 0 && r.rules.length === 0 && /branch protection/.test(r.detail("A11_CI_STATE_UNVERIFIABLE")),
+    show(r),
+  );
+  r = prCheck(PR_OPEN, GH_NO_PROTECTION);
+  check("branch protection unreadable does not disarm R9 (PR state was readable)", only(r, "R9_PR_NOT_MERGED"), show(r));
+  r = prCheck(PR_OPEN, GH_PRS, ["--no-github"]);
+  check("--no-github → A11, no violation", r.code === 0 && r.rules.length === 0 && r.adv.includes("A11_CI_STATE_UNVERIFIABLE"), show(r));
+
+  // Audit mode: the after-the-fact detection of a CLI completion (architect Q1).
+  const audit = runGate(["audit", "--db", db, "--repo", repo, "--json"], "", { QA_GATE_GITHUB_FIXTURE: GH_PRS });
+  let parsed = null;
+  try {
+    parsed = JSON.parse(audit.out);
+  } catch {
+    parsed = null;
+  }
+  const res = (id) => (parsed ? parsed.results.find((x) => x.facts.task_id === id) : null);
+  const late = res(PR_DONE_OPEN);
+  const old = res(PR_DONE_OLD);
+  check(
+    "audit: a card completed (e.g. via `hermes kanban complete`) after the rule epoch with an open PR → R9 FAIL, exit 1",
+    audit.code === 1 && late && late.violations.some((v) => v.rule === "R9_PR_NOT_MERGED" && /#911/.test(v.detail)),
+    `exit=${audit.code} late=${JSON.stringify(late && late.violations)}`,
+  );
+  check(
+    "audit: a card completed before the rule epoch is not re-judged (no lookup, no R9)",
+    old && old.violations.length === 0 && old.facts.pr_rule && old.facts.pr_rule.in_scope === false,
+    JSON.stringify(old && { v: old.violations, pr: old.facts.pr_rule }),
+  );
+
+  // Hook mode: what an agent actually hits on kanban_complete.
+  const hookPayload = (taskId) =>
+    JSON.stringify({ hook_event_name: "pre_tool_call", tool_name: "kanban_complete", tool_input: { task_id: taskId }, cwd: repo, extra: {} });
+  const hook = (taskId, fixture = GH_PRS) => {
+    const h = runGate(["hook", "--db", db], hookPayload(taskId), { HERMES_KANBAN_DB: db, QA_GATE_GITHUB_FIXTURE: fixture });
+    let d = null;
+    try {
+      d = JSON.parse(h.out.split("\n")[0]);
+    } catch {
+      d = null;
+    }
+    return { code: h.code, out: h.out, reason: d && d.reason ? d.reason : "" };
+  };
+  let h = hook(PR_OPEN);
+  check(
+    "hook: open PR → block (exit 2) with R9, PR #901, and the review→merger path — no misleading 'record the verdict' line",
+    h.code === 2 && /R9_PR_NOT_MERGED/.test(h.reason) && /#901/.test(h.reason) && /merger/.test(h.reason) && !/Record the verdict/.test(h.reason),
+    `exit=${h.code} reason=${h.reason.slice(0, 300).replace(/\n/g, " ")}`,
+  );
+  h = hook(PR_MERGED_RED);
+  check("hook: merged PR with red CI → block with R10 and PR #903", h.code === 2 && /R10_MERGE_CI_NOT_GREEN/.test(h.reason) && /#903/.test(h.reason), `exit=${h.code} reason=${h.reason.slice(0, 200)}`);
+  h = hook(PR_MERGED_GREEN);
+  check("hook: merged PR with green CI → {} + exit 0", h.code === 0 && h.out.trim() === "{}", `exit=${h.code} out=${h.out.slice(0, 200)}`);
+  h = hook(PR_OPEN, GH_DOWN);
+  check("hook: GitHub unreachable → allowed (A11 is advisory, never a block)", h.code === 0 && h.out.trim() === "{}", `exit=${h.code} out=${h.out.slice(0, 200)}`);
+}
+
+console.log("\n7. A PR links a card only by declaration — head branch or `Closes`/`Card:`/`Task:` line (§5.9, t_7e8bf917):");
+{
+  const prCheck = (taskId, fixture = GH_LINK) => {
+    const r = runGate(["check", "--task", taskId, "--db", db, "--repo", repo, "--pre-complete", "--json"], "", { QA_GATE_GITHUB_FIXTURE: fixture });
+    let parsed = null;
+    try {
+      parsed = JSON.parse(r.out);
+    } catch {
+      parsed = null;
+    }
+    const v = parsed ? parsed.violations : [];
+    const a = parsed ? parsed.advisories : [];
+    return {
+      code: r.code,
+      out: r.out,
+      rules: v.map((x) => x.rule),
+      adv: a.map((x) => x.rule),
+      detail: (rule) => (v.find((x) => x.rule === rule) || a.find((x) => x.rule === rule) || {}).detail || "",
+      pr: parsed ? parsed.facts.pr_rule : null,
+    };
+  };
+  const show = (r) => `exit=${r.code} rules=[${r.rules.join(",")}] adv=[${r.adv.join(",")}] pr=${JSON.stringify(r.pr).slice(0, 300)}`;
+  const linkedNums = (r) => (r.pr && Array.isArray(r.pr.linked_prs) ? r.pr.linked_prs.map((p) => p.number) : null);
+  const mentionNums = (r) => (r.pr && Array.isArray(r.pr.mentioning_prs) ? r.pr.mentioning_prs.map((p) => p.number) : null);
+
+  // AC 3 — the four cases the card names.
+  let r = prCheck(LK_PROSE_MERGED);
+  check(
+    "(1) prose mention only → no link: a merged PR #921 that merely mentions the card does NOT satisfy R9 (Deliverable: code → R9) and is reported as A14_PR_MENTIONS_CARD",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && JSON.stringify(linkedNums(r)) === "[]" && r.adv.includes("A14_PR_MENTIONS_CARD") && /#921/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  r = prCheck(LK_CLOSES);
+  check(
+    "(2) `Closes <id>` line in the body → linked: PR #923 judged, allowed, no A14",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.judged_pr === 923 && JSON.stringify(linkedNums(r)) === "[923]" && !r.adv.includes("A14_PR_MENTIONS_CARD"),
+    show(r),
+  );
+  r = prCheck(LK_FENCE);
+  check(
+    "(3) `Closes <id>` / `Task: <id>` only inside a code fence, an inline code span or an indented code block → no link (R9 on the Deliverable: code card) + A14 naming #924",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && JSON.stringify(linkedNums(r)) === "[]" && /#924/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  r = prCheck(LK_HEAD);
+  check(
+    "(4) head branch named after the card (id absent from title and body) → linked: PR #925 judged, allowed",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.judged_pr === 925 && r.pr.linked_prs[0] && r.pr.linked_prs[0].link === "head-branch",
+    show(r),
+  );
+
+  // AC 4 at fixture level — the live #114 shape on t_75180b28.
+  r = prCheck(LK_PROSE_OPEN);
+  check(
+    "live #114 shape: an open foreign PR (#922) that quotes the card in prose → not linked, no R9 naming it, card out of scope; A14 keeps it visible",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.applies === false && JSON.stringify(linkedNums(r)) === "[]" && JSON.stringify(mentionNums(r)) === "[922]" && /#922/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  r = prCheck(LK_OWN_PLUS_FOREIGN);
+  check(
+    "own merged PR (#928, head branch) + foreign open PR mentioning the card (#929) → allowed, A14 for #929 and NO A12 (it is not linked)",
+    r.code === 0 && r.rules.length === 0 && r.pr.judged_pr === 928 && JSON.stringify(linkedNums(r)) === "[928]" && !r.adv.includes("A12_LINKED_PR_OPEN") && /#929/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+
+  // Shapes around the vocabulary.
+  r = prCheck(LK_TASK_BOLD);
+  check(
+    "`- **Task:** t_a (BE-1), **<id>** (BE-2)` — bold bullet, list of ids → linked (#926 judged)",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.judged_pr === 926 && r.pr.linked_prs[0].link === "body-declaration",
+    show(r),
+  );
+  r = prCheck(LK_CLOSES_PROSE);
+  check(
+    "`Closes the gap found in <id>.` and a quoted `> Closes <id>` → not a declaration (R9 + A14 for #927)",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && JSON.stringify(linkedNums(r)) === "[]" && /#927/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  r = prCheck(LK_TITLE_ONLY);
+  check(
+    "id only in the PR title (`feat: … (<id>)`) → not a link (R9 + A14 for #930)",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && /#930/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  check(
+    "the R9 message tells the author how to declare the link (`Closes <id>` / head branch)",
+    /Closes/.test(r.detail("R9_PR_NOT_MERGED")) && /head branch/.test(r.detail("R9_PR_NOT_MERGED")),
+    r.detail("R9_PR_NOT_MERGED"),
+  );
+  r = prCheck(PR_NOT_CODE, GH_PRS);
+  check(
+    "a longer id (#909 `Closes <id>9`) is neither a link nor a mention → no A14",
+    r.code === 0 && r.pr && r.pr.applies === false && !r.adv.includes("A14_PR_MENTIONS_CARD"),
+    show(r),
+  );
+}
+
+console.log("\n8. R10 judges the merge's push run only; manual runs on the same SHA are advisory (§5.9, t_339a0d02):");
+{
+  const evCheck = (taskId) => {
+    const r = runGate(["check", "--task", taskId, "--db", db, "--repo", repo, "--pre-complete", "--json"], "", { QA_GATE_GITHUB_FIXTURE: GH_EVENT });
+    let p = null;
+    try {
+      p = JSON.parse(r.out);
+    } catch {
+      p = null;
+    }
+    const v = p ? p.violations : [];
+    const a = p ? p.advisories : [];
+    return {
+      code: r.code,
+      out: r.out,
+      rules: v.map((x) => x.rule),
+      adv: a.map((x) => x.rule),
+      detail: (rule) => (v.find((x) => x.rule === rule) || a.find((x) => x.rule === rule) || {}).detail || "",
+      pr: p ? p.facts.pr_rule : null,
+    };
+  };
+  const show = (r) => `exit=${r.code} rules=[${r.rules.join(",")}] adv=[${r.adv.join(",")}] out=${r.out.slice(0, 240).replace(/\n/g, " ")}`;
+
+  let r = evCheck(EV_PUSH_GREEN_DISPATCH_RED);
+  check(
+    "(1) push run green + later dispatch run red on the same SHA → no R10, A15 naming build and the dispatch event (live a48d622 shape)",
+    r.code === 0 && r.rules.length === 0 && r.adv.includes("A15_NON_PUSH_RUN_ON_MERGE_COMMIT") && /build/.test(r.detail("A15_NON_PUSH_RUN_ON_MERGE_COMMIT")) && /workflow_dispatch/.test(r.detail("A15_NON_PUSH_RUN_ON_MERGE_COMMIT")),
+    show(r),
+  );
+  check("(1b) the judged states are the push run's (all success)", r.pr && Object.values(r.pr.check_states || {}).every((s) => s === "success"), JSON.stringify(r.pr && r.pr.check_states));
+  r = evCheck(EV_PUSH_RED_DISPATCH_GREEN);
+  check(
+    "(2) push run red + later dispatch run green → R10 integration=failure (a manual run cannot repair a red merge), A15 present",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R10_MERGE_CI_NOT_GREEN" && /integration=failure/.test(r.detail("R10_MERGE_CI_NOT_GREEN")) && r.adv.includes("A15_NON_PUSH_RUN_ON_MERGE_COMMIT"),
+    show(r),
+  );
+  r = evCheck(EV_PUSH_RERUN_GREEN);
+  check(
+    "(3) push run red then re-run green (same suite, newer attempt) → no R10, no A15 (a re-run of the push run is the push run)",
+    r.code === 0 && r.rules.length === 0 && !r.adv.includes("A15_NON_PUSH_RUN_ON_MERGE_COMMIT") && r.pr && r.pr.check_states && r.pr.check_states.build === "success",
+    show(r),
+  );
+  r = evCheck(EV_PUSH_RED_ONLY);
+  check(
+    "(4) non-vacuity: push run red alone → R10 integration=failure, no A15",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R10_MERGE_CI_NOT_GREEN" && /integration=failure/.test(r.detail("R10_MERGE_CI_NOT_GREEN")) && !r.adv.includes("A15_NON_PUSH_RUN_ON_MERGE_COMMIT"),
+    show(r),
+  );
+  r = evCheck(EV_NO_PUSH_RUN);
+  check(
+    "(5) no push run on the merge commit, only a green dispatch run → R10 (fail closed: a manual run never satisfies R10), state no-push-run",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R10_MERGE_CI_NOT_GREEN" && /no-push-run/.test(r.detail("R10_MERGE_CI_NOT_GREEN")),
+    show(r),
+  );
+  r = evCheck(EV_NON_ACTIONS);
+  check(
+    "(6) a required check from a suite no workflow run owns (another app) is judged as before → allowed",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.check_states && r.pr.check_states.build === "success",
+    show(r),
+  );
 }
 
 console.log(`\n${cases - failures.length}/${cases} cases passed`);

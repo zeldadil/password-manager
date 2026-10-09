@@ -1,0 +1,12 @@
+Firing 2 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/backend/agent-hooks/qa-signoff-gate.sh
+      exit=0  elapsed=0.671s
+      stdout: {}
+      parsed: <none — hook contributed nothing to the dispatcher>
+
+  → /home/sap/.hermes/profiles/backend/agent-hooks/secret-guard.sh
+      exit=0  elapsed=0.051s
+      stdout: {}
+      parsed: <none — hook contributed nothing to the dispatcher>
+

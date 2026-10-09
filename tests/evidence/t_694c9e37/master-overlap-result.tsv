@@ -1,0 +1,8 @@
+# generated 2026-10-09T09:30:20Z by qa — AC2 master side: three overlapping CI runs dispatched on master (workflow_dispatch, same ref, same concurrency evaluation as a push)
+run_id	sha	event	conclusion	created_at	updated_at
+37911316599	a48d622	workflow_dispatch	failure	2026-10-09T09:26:48Z	2026-10-09T09:29:01Z
+37911301972	a48d622	workflow_dispatch	failure	2026-10-09T09:26:40Z	2026-10-09T09:28:36Z
+37911287620	a48d622	workflow_dispatch	failure	2026-10-09T09:26:32Z	2026-10-09T09:28:08Z
+# overlap: run 2 created before run 1 ended, run 3 created before run 2 ended; none cancelled.
+# all three concluded failure ONLY on the secret-scan job: workflow_dispatch makes gitleaks scan full history
+# (224 historical findings), while push runs scan the pushed range. Unrelated to concurrency; same sha a48d622 push run 37911279516 = success.

@@ -1,0 +1,9 @@
+{"task":"t_2bb5f1f2","status":"todo","security_track":false,"exception":null,"ignored":[],"violations":["R1_QA_VERDICT_MISSING","R4_EVIDENCE_MISSING"],"adv":[]}
+{"task":"t_33dcad7d","status":"done","security_track":false,"exception":"architect: ` marker — both mechanisms exist and are audit-visible (X1_E","ignored":[],"violations":[],"adv":["X1_EXCEPTION"]}
+{"task":"t_430aa9a3","status":"done","security_track":false,"exception":null,"ignored":[],"violations":[],"adv":[]}
+{"task":"t_75180b28","status":"triage","security_track":false,"exception":"architect: ` n'a aucune contrainte d'auteur","ignored":[],"violations":["R5_EVIDENCE_FILE_MISSING"],"adv":["X1_EXCEPTION"]}
+{"task":"t_80fc0326","status":"done","security_track":false,"exception":"dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT ","ignored":[],"violations":["R2_QA_VERDICT_INVALID","R2_QA_VERDICT_INVALID"],"adv":["X1_EXCEPTION"]}
+{"task":"t_930fddbe","status":"done","security_track":false,"exception":"dashboard: closed by human decision (Ze), duplicate of already-resolved","ignored":[],"violations":[],"adv":["X1_EXCEPTION"]}
+{"task":"t_9b3bdba0","status":"done","security_track":false,"exception":"dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT ","ignored":[],"violations":[],"adv":["X1_EXCEPTION"]}
+{"task":"t_b51a1ff3","status":"done","security_track":false,"exception":"dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT ","ignored":[],"violations":["R2_QA_VERDICT_INVALID","R2_QA_VERDICT_INVALID"],"adv":["X1_EXCEPTION"]}
+{"task":"t_f49d448c","status":"done","security_track":false,"exception":"human: closed by human decision (Ze), bypassing gate defect R8_DEFE","ignored":[],"violations":[],"adv":["X1_EXCEPTION"]}

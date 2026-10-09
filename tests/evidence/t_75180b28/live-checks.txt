@@ -1,0 +1,28 @@
+---- check --task t_19128fb2 --pre-complete
+exit=0
+  t_19128fb2  FE-003g: Folder Management
+      pr_rule: in_scope=true applies=true linked=[#115:open #113:merged→master #102:merged→master #101:merged→master #94:closed] judged=113 merge_commit=783be286c612
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      advisory A12_LINKED_PR_OPEN: PR #115 also references t_19128fb2 and is still open — not judged (PR #113 is the merged one); make sure no part of this card's deliverable lives only there
+---- check --task t_b8001b55 --pre-complete
+exit=1
+  t_b8001b55  SEC-GATE: QA signoff exception — author allowlist, never exempt securi
+      pr_rule: in_scope=true applies=true linked=[#114:open] judged=- merge_commit=-
+      VIOLATION R9_PR_NOT_MERGED: PR not merged: no pull request linked to t_b8001b55 is merged into master — #114 is open (not merged). The card completes after the merge, by the merger (§5.9)
+---- check --task t_75180b28 --pre-complete
+exit=1
+  t_75180b28  QA gate: refuse completion of a code task unless its PR is merged and 
+      pr_rule: in_scope=true applies=true linked=[#114:open] judged=- merge_commit=-
+      other-rule R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: tests/evidence/t_75180b28/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_75180b28/repo; not found on any ref)
+      VIOLATION R9_PR_NOT_MERGED: PR not merged: no pull request linked to t_75180b28 is merged into master — #114 is open (not merged). The card completes after the merge, by the merger (§5.9)
+---- check --task t_cbaa9f7d --pre-complete
+exit=1
+  t_cbaa9f7d  Draft Disclosure Policy section
+      pr_rule: in_scope=true applies=true linked=[#112:merged→master #109:merged→master #108:closed] judged=112 merge_commit=935b64b752ae
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      other-rule R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+---- check --task t_d5e68535 --pre-complete
+exit=0
+  t_d5e68535  QA review: SEC-001 gate policy change (t_816a87b5 option 2) + artifact
+      pr_rule: in_scope=true applies=true linked=[#105:merged→master] judged=105 merge_commit=3aba97b1dfda
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}

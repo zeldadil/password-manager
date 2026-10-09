@@ -1,0 +1,68 @@
+exit=1
+done cards: 132 · in PR-rule scope: 34 · code cards: 18 · R9/R10 failures: 0
+  t_4ccd2652  FE-001j: Integration Tests
+      pr_rule: in_scope=true applies=true linked=[#108:closed #103:merged→master #100:closed] judged=103 merge_commit=304bde084d34
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+  t_63323ce5  FE-002g: Integration Tests
+      pr_rule: in_scope=true applies=true linked=[#89:merged→master #88:merged→master] judged=89 merge_commit=cf22e2d5ef08
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      advisory A13_EARLIER_MERGE_CI_NOT_GREEN: earlier PR #88 of this card merged as 09b91f34befd with required check(s) not green there: secret-scan=failure — not a violation (the newest merge, PR #89, is judged and contains it), recorded so it is never silent
+  t_a9d5cb1b  FE-003a: Vault Dashboard
+      pr_rule: in_scope=true applies=true linked=[#89:merged→master #88:merged→master] judged=89 merge_commit=cf22e2d5ef08
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      advisory A13_EARLIER_MERGE_CI_NOT_GREEN: earlier PR #88 of this card merged as 09b91f34befd with required check(s) not green there: secret-scan=failure — not a violation (the newest merge, PR #89, is judged and contains it), recorded so it is never silent
+  t_aca6ed13  FE-003b: Sidebar
+      pr_rule: in_scope=true applies=true linked=[#91:merged→master #90:merged→master] judged=91 merge_commit=e4f84e9f6c2e
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+  t_f37504f0  FE-003c: Search Bar
+      pr_rule: in_scope=true applies=true linked=[#92:merged→master] judged=92 merge_commit=4013bb3b09cb
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      other-rule R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+      other-rule R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  t_19128fb2  FE-003g: Folder Management
+      pr_rule: in_scope=true applies=true linked=[#115:open #113:merged→master #102:merged→master #101:merged→master #94:closed] judged=113 merge_commit=783be286c612
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      advisory A12_LINKED_PR_OPEN: PR #115 also references t_19128fb2 and is still open — not judged (PR #113 is the merged one); make sure no part of this card's deliverable lives only there
+  t_f666adb9  FE-003h: Tag Management
+      pr_rule: in_scope=true applies=true linked=[#99:merged→master] judged=99 merge_commit=e68ee58a3dfc
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      other-rule R2_QA_VERDICT_INVALID: verdict "pass (qa profile, comment #369) — evidence: tests/evidence/t_f666adb9/README.md" (run-metadata by frontend) is not one of: pass, pass-with-conditions, fail, blocked
+  t_4a892f1d  Scope decision: session-based auth guard for FE-001j's "unauthenticate
+      pr_rule: in_scope=true applies=true linked=[#103:merged→master #100:closed] judged=103 merge_commit=304bde084d34
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      other-rule R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: tests/evidence/t_4a892f1d/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_75180b28/repo; not found on any ref)
+  t_4f872624  QA-001i-fu3: make the pre-epoch grandfathering decision durable + rout
+      pr_rule: in_scope=true applies=true linked=[#104:merged→master #29:merged→master] judged=104 merge_commit=3651470eee7f
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      other-rule R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+  t_816a87b5  SEC-001 AC-4: record the QA half of the Sign-off in architecture/adr/S
+      pr_rule: in_scope=true applies=true linked=[#111:merged→master #105:merged→master #28:merged→master] judged=111 merge_commit=7b0d3928811b
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+  t_d5e68535  QA review: SEC-001 gate policy change (t_816a87b5 option 2) + artifact
+      pr_rule: in_scope=true applies=true linked=[#105:merged→master] judged=105 merge_commit=3aba97b1dfda
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the checks of merge commit 3aba97b1dfda from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  t_4de1f6aa  DECISION: vault key client availability (A1 vs A2 vs B) — resolves ADR
+      pr_rule: in_scope=true applies=true linked=[#96:merged→master] judged=96 merge_commit=cc91b74703f3
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the checks of merge commit cc91b74703f3 from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  t_dd9eb295  SECURITY: unlock.ts self-wrap forces server to reconstruct plaintext v
+      pr_rule: in_scope=true applies=true linked=[#96:merged→master] judged=96 merge_commit=cc91b74703f3
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the checks of merge commit cc91b74703f3 from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  t_e88bcc25  SCOPING: rework BE-002a register/unlock so server stops receiving mast
+      pr_rule: in_scope=true applies=true linked=[#96:merged→master] judged=96 merge_commit=cc91b74703f3
+      other-rule R2_QA_VERDICT_INVALID: verdict "deferred — t_ffc9034d" (run-metadata by architect) is not one of: pass, pass-with-conditions, fail, blocked
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the checks of merge commit cc91b74703f3 from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  t_c7c986c7  RECONCILE: single unified authentication protocol spec (conditions 1 +
+      pr_rule: in_scope=true applies=true linked=[#107:merged→master] judged=107 merge_commit=c31f66c1a59c
+      other-rule R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: /home/sap/.hermes/kanban/workspaces/t_c7c986c7/wt/tests/evidence/t_c7c986c7/verification.md (repo: /home/sap/.hermes/kanban/workspaces/t_75180b28/repo; not found on any ref)
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the checks of merge commit c31f66c1a59c from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  t_069c605b  QA sign-off: t_19128fb2 FE-003g CI fixes
+      pr_rule: in_scope=true applies=true linked=[#115:open #113:merged→master] judged=113 merge_commit=783be286c612
+      check_states: {"unit":"success","integration":"success","install-lockfile":"success","lint-typecheck":"success","e2e":"success","dependency-audit":"success","build":"success","secret-scan":"success"}
+      advisory A12_LINKED_PR_OPEN: PR #115 also references t_069c605b and is still open — not judged (PR #113 is the merged one); make sure no part of this card's deliverable lives only there
+  t_8577a5a9  AUDIT: 12 remote branches pushed but never opened as a PR — classify a
+      pr_rule: in_scope=true applies=true linked=[#106:merged→master] judged=106 merge_commit=9820b9661a90
+      other-rule R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: /home/sap/.hermes/kanus/.hermes/kanban/attachments/t_8577a5a9/README.md (repo: /home/sap/.hermes/kanban/workspaces/t_75180b28/repo; not found on any ref)
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the checks of merge commit 9820b9661a90 from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  t_c015bda7  QA gate bug: R2 blocks a card on a SUPERSEDED invalid verdict token (b
+      pr_rule: in_scope=true applies=true linked=[#107:merged→master] judged=107 merge_commit=c31f66c1a59c
+      advisory A11_CI_STATE_UNVERIFIABLE: could not read the checks of merge commit c31f66c1a59c from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable

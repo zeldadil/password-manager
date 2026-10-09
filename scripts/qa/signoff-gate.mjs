@@ -54,7 +54,34 @@
  *     cleared R1/R2/R3 through the fail-closed completion hook. A discounted marker is
  *     reported as `A7_VERDICT_AUTHOR_IGNORED`; a run-metadata verdict stays
  *     author-independent by design (§3 row 3) and is reported as
- *     `A8_VERDICT_SELF_DECLARED` when a non-QA run self-declares it.
+ *     `A8_VERDICT_SELF_DECLARED` when a non-QA run self-declares it;
+ *   - a `qa-signoff-exception:` is applied only when an allowed author wrote it
+ *     (human/dashboard/user/architect/qa — never `worker`), outside code spans,
+ *     on a non-security-track card (t_b8001b55; QA_SIGN_OFF_GATE.md §5.6). Any
+ *     other exception record is reported as `A10_EXCEPTION_IGNORED` and waives
+ *     nothing; R7 never consults the exception.
+ *
+ * R9/R10 (t_75180b28, QA_SIGN_OFF_GATE.md §5.9): a **code** card — one a PR
+ * declares, one with a pushed branch named after it, or one whose body says
+ * `Deliverable: code` — completes only when a linked PR is merged into the
+ * default branch (R9_PR_NOT_MERGED) and every required check of that branch's
+ * protection is green on the merge commit (R10_MERGE_CI_NOT_GREEN). Both facts
+ * are read from GitHub through `gh` at check time, never from the card. When
+ * GitHub cannot be read the result is the advisory A11_CI_STATE_UNVERIFIABLE,
+ * never a violation. Extra audit/check flags: --gh-repo OWNER/NAME,
+ * --no-github, --pr-epoch-iso ISO.
+ *
+ * A PR is *linked* to a card only by declaration (t_7e8bf917): its head branch
+ * is named after the card, or its body has a `Closes <id>` / `Card: <id>` /
+ * `Task: <id>` line outside code. A mere mention (title, prose, quote, code
+ * span/fence) is the advisory A14_PR_MENTIONS_CARD — never a link, so it can
+ * neither trigger nor satisfy R9.
+ *
+ * R10 judges the run the merge triggered (t_339a0d02): the `push` run on the
+ * merge commit, its newest attempt included. A run on the same SHA from another
+ * event (workflow_dispatch, schedule, …) is never judged; when it disagrees it
+ * is the advisory A15_NON_PUSH_RUN_ON_MERGE_COMMIT. A required check carried
+ * only by non-push runs is `no-push-run` → R10 (fail closed).
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -81,6 +108,16 @@ const QA_PROFILES = new Set(["qa"]);
 /** Profiles allowed to record the Architect half of an AR-6 sign-off. */
 const ARCHITECT_PROFILES = new Set(["architect"]);
 
+/**
+ * Authors allowed to record a §5.6 `qa-signoff-exception:` (t_b8001b55). Until
+ * this fix `findException` read `c.author` only to *display* it, so any profile
+ * could waive R1/R4/R7 with one comment — the same omission t_338f47fd closed on
+ * the verdict marker. Humans (`human`, `dashboard`, `user`), `architect` and
+ * `qa` only. `worker` is deliberately absent: it names no profile, so it cannot
+ * be held to an approval (refused with its own advisory wording).
+ */
+const EXCEPTION_AUTHORS = new Set(["human", "dashboard", "user", "architect", "qa"]);
+
 const VERDICT_MARKER_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*:\s*([a-z][a-z-]*)/i;
 // Loose path — colon-only, mirroring the marker above (t_df8e644a, the residual
 // half of t_c3cb6842). While the separator also accepted `-` and `—`, a `qa`
@@ -102,6 +139,9 @@ const VERDICT_LOOSE_RE = /verdict\s*:\s*([a-z][a-z-]*)/i;
 // then judged *that* quote as the card's live deferral target).
 const DEFERRAL_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*[:\-—]+\s*deferred/i;
 const EXCEPTION_RE = /qa[\s_-]*signoff[\s_-]*exception\s*[:\-—]+\s*(\S[^\n]*)/i;
+// Global twin for scanning every occurrence in a comment (t_b8001b55): a body
+// can quote the key in a code span *and* record a real one further down.
+const EXCEPTION_RE_G = new RegExp(EXCEPTION_RE.source, "gi");
 const ARCH_SIGNOFF_RE = /(arch[\s_-]*(verdict|sign[\s_-]*off)|approv|signed[\s_-]*off|LGTM)/i;
 const TASK_ID_RE = /\bt_[0-9a-f]{8}\b/g;
 const TEST_TYPES_RE = /test\s*types\s*:?\**\s*([^\n]+)/i;
@@ -595,11 +635,567 @@ function hasArchitectSignoff(board, task) {
   );
 }
 
-function findException(board, task) {
-  const c = (board.commentsByTask.get(task.id) || []).find((x) => EXCEPTION_RE.test(x.body || ""));
-  if (!c) return null;
-  const m = EXCEPTION_RE.exec(c.body || "");
-  return { reason: (m[1] || "").slice(0, 200), author: c.author };
+/**
+ * The operative §5.6 exception, plus every exception-shaped record the gate
+ * refused (t_b8001b55). A record is refused — reported as A10, never silently —
+ * when:
+ *   - `quoted`: every occurrence of the key in the comment sits inside a code
+ *     span or fenced block. A quote is documentation, not a waiver (same rule as
+ *     deferral markers and evidence pointers, `codeRanges`). Live origin: the
+ *     comment that *reported* this defect on t_75180b28 quoted the key between
+ *     backticks and became that card's operative, irrevocable exception;
+ *   - `author`: the comment was not written by an EXCEPTION_AUTHORS profile;
+ *   - `security-track`: the card is on the crypto/bridge/auth track. AR-6 needs
+ *     an Architect and a QA sign-off there; it is signed, never waived, so no
+ *     exception — whoever wrote it — disarms R1/R4/R7 on such a card.
+ * The first record that survives all three is the operative exception.
+ */
+function findException(board, task, securityTrack) {
+  const ignored = [];
+  let exception = null;
+  for (const c of board.commentsByTask.get(task.id) || []) {
+    const body = c.body || "";
+    const ranges = codeRanges(body);
+    const hits = [...body.matchAll(EXCEPTION_RE_G)];
+    if (hits.length === 0) continue;
+    const live = hits.find((m) => !insideRanges(m.index, ranges));
+    const author = String(c.author || "").trim();
+    const reason = ((live || hits[0])[1] || "").slice(0, 200);
+    let why = null;
+    if (!live) why = "quoted";
+    else if (!EXCEPTION_AUTHORS.has(author)) why = "author";
+    else if (securityTrack) why = "security-track";
+    if (why) ignored.push({ author: c.author, reason, why });
+    else if (!exception) exception = { reason, author: c.author };
+  }
+  return { exception, ignored };
+}
+
+function exceptionIgnoredDetail(x) {
+  const who = `"${x.author ?? ""}"`;
+  if (x.why === "quoted") {
+    return `a qa-signoff-exception key written by ${who} appears only inside a code span/fence — a quotation, not an exception (§5.6) — ignored`;
+  }
+  if (x.why === "author") {
+    const name = String(x.author || "").trim();
+    const id = name === "worker" || name === "" ? " (it names no profile, so no one is accountable for the waiver)" : "";
+    return `a qa-signoff-exception recorded by ${who}${id} is not from an allowed author (${[...EXCEPTION_AUTHORS].join(", ")}) — ignored`;
+  }
+  return `a qa-signoff-exception recorded by ${who} is not applied: this is a security-track card, where AR-6 requires Architect + QA sign-off and exceptions never waive R1/R4/R7 — ignored`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// R9 / R10 — code delivered means: PR merged into master, and the required CI
+// checks green on the merge commit, read from GitHub at check time
+// (t_75180b28; QA_SIGN_OFF_GATE.md §5.9).
+//
+// Why a mechanical check: completion summaries kept claiming "all CI green"
+// while required checks were red on the PR (2026-09-30), and a branch was
+// pushed with no PR at all (audit t_8577a5a9). The gate never reads the card's
+// own summary for this rule — only GitHub.
+//
+// Network failure is never a violation: when GitHub cannot be read (offline,
+// `gh` missing/unauthenticated, rate limit, protection unreadable) the gate
+// emits A11_CI_STATE_UNVERIFIABLE and lets the other rules decide, so a card
+// never becomes uncompletable because the network is down (architect decision,
+// t_75180b28 comment of 2026-10-05 12:30).
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Cards completed before this instant are outside R9/R10 (the audit skips them). */
+export const PR_RULE_EPOCH_ISO = "2026-10-06T00:00:00Z";
+
+/** Repo the board's code cards ship to, when it cannot be read from the checkout. */
+export const DEFAULT_GH_REPO = "zeldadil/password-manager";
+
+/** Check-run conclusions GitHub itself accepts for a required check. */
+const GREEN_CONCLUSIONS = new Set(["success", "neutral", "skipped"]);
+
+/** Explicit declaration in the card body: `Deliverable: code` (bold/bullet tolerated). */
+const CODE_DELIVERABLE_RE = /^[ \t]*(?:[-*][ \t]+)?\**deliverable\**[ \t]*:[ \t]*\**[ \t]*code\b/im;
+
+export class GitHubUnavailable extends Error {}
+
+function idMentionRe(taskId) {
+  return new RegExp(`(?:^|[^0-9a-z_])${taskId.replace(/[^0-9a-z_]/gi, "")}(?![0-9a-z])`, "i");
+}
+
+// ── Declarative PR → card link (t_7e8bf917, QA_SIGN_OFF_GATE.md §5.9) ────────
+// A PR is linked to a card only when it *declares* it: its head branch is named
+// after the card, or its body carries a line `Closes <id>` / `Card: <id>` /
+// `Task: <id>` outside code. Any other occurrence of the id (title, prose,
+// quote, code) is a *mention*: reported as A14_PR_MENTIONS_CARD, never a link.
+// Live origin: PR #114 only quoted t_75180b28 in a fixture and was named by R9
+// on that card; the same looseness let a merged PR that merely cites a card
+// satisfy R9 without delivering its code.
+
+/** Line opener: optional list bullet, optional bold/italic, keyword, separator. */
+const LINK_DECL_HEAD_RE = /^[ ]{0,3}(?:[-*+][ \t]+)?[*_]{0,2}(closes|card|task)[*_]{0,2}[ \t]*(:?)[ \t]*[*_]{0,2}(?=[ \t]*\S)[ \t]*/i;
+/** One id of the declared list, bold/italic tolerated. */
+const LINK_DECL_ID_RE = /^[*_]{0,2}(t_[0-9a-z]+)[*_]{0,2}(?![0-9a-z_])/i;
+/** Separator between declared ids, after an optional `(label)`: `, ` `; ` ` & ` ` and ` ` + `. */
+const LINK_DECL_SEP_RE = /^(?:[ \t]*\([^()\n]*\))?[ \t]*(?:,|;|&|\+|\band\b)[ \t]*/i;
+
+/**
+ * Body lines that are prose, not code: fenced blocks (``` / ~~~), indented code
+ * blocks (4+ spaces or a tab after a blank line or inside one) and inline code
+ * spans are removed; everything else is kept line by line.
+ */
+function proseLines(body) {
+  const out = [];
+  let fence = null;
+  let prevBlank = true;
+  let inIndented = false;
+  for (const raw of String(body || "").replace(/\r\n?/g, "\n").split("\n")) {
+    const fm = /^[ ]{0,3}(`{3,}|~{3,})/.exec(raw);
+    if (fence) {
+      if (fm && fm[1][0] === fence[0] && fm[1].length >= fence.length && /^[ ]{0,3}[`~]+[ \t]*$/.test(raw)) fence = null;
+      prevBlank = false;
+      continue;
+    }
+    if (fm) {
+      fence = fm[1];
+      prevBlank = false;
+      continue;
+    }
+    const blank = raw.trim() === "";
+    const indented = /^(?: {4}|\t)/.test(raw) && !blank;
+    if (indented && (prevBlank || inIndented)) {
+      inIndented = true;
+      prevBlank = false;
+      continue;
+    }
+    if (!blank) inIndented = false;
+    prevBlank = blank;
+    out.push(raw.replace(/(`+)(?:(?!\1)[\s\S])*?\1/g, " "));
+  }
+  return out;
+}
+
+/** Card ids a PR body declares (lower-cased), per the §5.9 vocabulary. */
+export function declaredCardIds(body) {
+  const ids = new Set();
+  for (const line of proseLines(body)) {
+    const head = LINK_DECL_HEAD_RE.exec(line);
+    if (!head) continue;
+    const keyword = head[1].toLowerCase();
+    // `Card:` / `Task:` need the colon; `Closes` is the GitHub closing-keyword form.
+    if (keyword !== "closes" && !head[2] && !/:/.test(head[0])) continue;
+    let rest = line.slice(head[0].length);
+    let m = LINK_DECL_ID_RE.exec(rest);
+    while (m) {
+      ids.add(m[1].toLowerCase());
+      rest = rest.slice(m[0].length);
+      const sep = LINK_DECL_SEP_RE.exec(rest);
+      if (!sep) break;
+      rest = rest.slice(sep[0].length);
+      m = LINK_DECL_ID_RE.exec(rest);
+    }
+  }
+  return ids;
+}
+
+/**
+ * How `pr` relates to `taskId`: `{ link: "head-branch" | "body-declaration" }`
+ * when it declares the card, `{ mention: [...where] }` when it only mentions it,
+ * or null.
+ */
+export function prCardRelation(pr, taskId) {
+  const mention = idMentionRe(taskId);
+  const head = typeof pr.headRefName === "string" ? pr.headRefName : "";
+  if (head && mention.test(head)) return { link: "head-branch" };
+  if (declaredCardIds(pr.body).has(String(taskId).toLowerCase())) return { link: "body-declaration" };
+  const where = [];
+  if (typeof pr.title === "string" && mention.test(pr.title)) where.push("title");
+  if (typeof pr.body === "string" && mention.test(pr.body)) where.push("body");
+  return where.length ? { mention: where } : null;
+}
+
+/**
+ * The GitHub reader. Every method throws GitHubUnavailable on any failure, and
+ * every result is memoised for the life of the process (an audit asks for the
+ * PR list once, not once per card).
+ *
+ *   QA_GATE_GITHUB=off             → every call is unavailable (A11)
+ *   QA_GATE_GITHUB_FIXTURE=<file>  → answers come from a JSON fixture (selftest)
+ *   otherwise                      → the `gh` CLI, with a total time budget so the
+ *                                    30 s hook timeout is never reached
+ *                                    (QA_GATE_GH_BUDGET_MS, default 20000)
+ */
+export function makeGitHub({ repo = null, mode = process.env.QA_GATE_GITHUB || "", fixture = process.env.QA_GATE_GITHUB_FIXTURE || "" } = {}) {
+  const memo = new Map();
+  const once = (key, fn) => {
+    if (!memo.has(key)) {
+      try {
+        memo.set(key, { ok: true, value: fn() });
+      } catch (e) {
+        memo.set(key, { ok: false, error: e instanceof GitHubUnavailable ? e : new GitHubUnavailable(e.message) });
+      }
+    }
+    const m = memo.get(key);
+    if (!m.ok) throw m.error;
+    return m.value;
+  };
+
+  if (String(mode).toLowerCase() === "off") {
+    const off = () => {
+      throw new GitHubUnavailable("GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)");
+    };
+    return { repo, source: "off", listPullRequests: off, listBranches: off, defaultBranch: off, requiredChecks: off, commitChecks: off };
+  }
+
+  if (fixture) {
+    let fx;
+    try {
+      fx = JSON.parse(readFileSync(fixture, "utf8"));
+    } catch (e) {
+      throw new BoardError(`GitHub fixture unreadable (${fixture}): ${e.message}`);
+    }
+    const guard = (what) => {
+      if (fx.unreachable) throw new GitHubUnavailable(`${what}: ${fx.unreachable}`);
+      if (fx.errors && fx.errors[what]) throw new GitHubUnavailable(`${what}: ${fx.errors[what]}`);
+    };
+    return {
+      repo: fx.repo || repo,
+      source: `fixture ${fixture}`,
+      listPullRequests: () => once("prs", () => (guard("pull requests"), fx.prs || [])),
+      listBranches: () => once("branches", () => (guard("branches"), fx.branches || [])),
+      defaultBranch: () => once("default", () => (guard("default branch"), fx.default_branch || "master")),
+      requiredChecks: (branch) => once(`req:${branch}`, () => (guard("required checks"), fx.required_checks || [])),
+      commitChecks: (sha) =>
+        once(`checks:${sha}`, () => {
+          guard("commit checks");
+          return {
+            runs: (fx.check_runs || {})[sha] || [],
+            statuses: (fx.statuses || {})[sha] || [],
+            // Fixtures written before t_339a0d02 carry no workflow runs: null keeps their meaning (no event split).
+            workflow_runs: fx.workflow_runs ? (fx.workflow_runs[sha] || []) : null,
+          };
+        }),
+    };
+  }
+
+  const budgetMs = Number(process.env.QA_GATE_GH_BUDGET_MS) || 20000;
+  const deadline = Date.now() + budgetMs;
+  const gh = (args) => {
+    const left = deadline - Date.now();
+    if (left <= 500) throw new GitHubUnavailable(`GitHub time budget (${budgetMs} ms) exhausted`);
+    try {
+      return execFileSync("gh", args, {
+        encoding: "utf8",
+        timeout: Math.min(10000, left),
+        maxBuffer: 64 * 1024 * 1024,
+        stdio: ["ignore", "pipe", "pipe"],
+        env: { ...process.env, GH_PROMPT_DISABLED: "1", GH_NO_UPDATE_NOTIFIER: "1", NO_COLOR: "1" },
+      });
+    } catch (e) {
+      if (e.code === "ENOENT") throw new GitHubUnavailable("`gh` CLI not on PATH");
+      const detail = (e.stderr || e.message || "").toString().trim().split("\n")[0].slice(0, 200);
+      throw new GitHubUnavailable(`gh ${args.slice(0, 2).join(" ")} failed: ${detail || (e.signal ? `killed by ${e.signal} (timeout)` : "error")}`);
+    }
+  };
+  const jsonLines = (out) =>
+    out
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .map((l) => JSON.parse(l));
+  const need = () => {
+    if (!repo) throw new GitHubUnavailable("no GitHub repository resolved (--gh-repo / QA_GATE_GH_REPO / origin remote)");
+    return repo;
+  };
+  return {
+    repo,
+    source: "gh",
+    listPullRequests: () =>
+      once("prs", () =>
+        JSON.parse(
+          gh([
+            "pr", "list", "--repo", need(), "--state", "all", "--limit", "5000",
+            "--json", "number,title,body,state,mergedAt,mergeCommit,baseRefName,headRefName,url",
+          ]),
+        ),
+      ),
+    listBranches: () => once("branches", () => gh(["api", "--paginate", `repos/${need()}/branches?per_page=100`, "--jq", ".[].name"]).split("\n").map((s) => s.trim()).filter(Boolean)),
+    defaultBranch: () => once("default", () => gh(["api", `repos/${need()}`, "--jq", ".default_branch"]).trim() || "master"),
+    requiredChecks: (branch) =>
+      once(`req:${branch}`, () => {
+        const rsc = JSON.parse(gh(["api", `repos/${need()}/branches/${branch}/protection/required_status_checks`]));
+        if (Array.isArray(rsc.checks) && rsc.checks.length) return rsc.checks.map((c) => ({ context: c.context, app_id: c.app_id ?? null }));
+        return (rsc.contexts || []).map((c) => ({ context: c, app_id: null }));
+      }),
+    commitChecks: (sha) =>
+      once(`checks:${sha}`, () => ({
+        runs: jsonLines(
+          gh([
+            "api", "--paginate", `repos/${need()}/commits/${sha}/check-runs?per_page=100`,
+            "--jq", ".check_runs[] | {name, status, conclusion, app_id: .app.id, id, check_suite_id: .check_suite.id}",
+          ]),
+        ),
+        statuses: jsonLines(gh(["api", `repos/${need()}/commits/${sha}/status`, "--jq", ".statuses[] | {context, state}"])),
+        // Which check suite is the push run (t_339a0d02): every workflow run of the SHA, with its event.
+        workflow_runs: jsonLines(
+          gh([
+            "api", "--paginate", `repos/${need()}/actions/runs?head_sha=${sha}&per_page=100`,
+            "--jq", ".workflow_runs[] | {id, event, run_attempt, check_suite_id}",
+          ]),
+        ),
+      })),
+  };
+}
+
+/** `owner/name` from a GitHub remote URL (https or ssh), or null. */
+export function parseGitHubSlug(url) {
+  const m = /github\.com[:/]+([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/.exec(String(url || "").trim());
+  return m ? `${m[1]}/${m[2]}` : null;
+}
+
+export function resolveGitHubRepo(argRepo, repoRoot) {
+  if (typeof argRepo === "string" && argRepo) return argRepo;
+  if (process.env.QA_GATE_GH_REPO) return process.env.QA_GATE_GH_REPO;
+  if (repoRoot && existsSync(join(repoRoot, ".git"))) {
+    try {
+      const url = execFileSync("git", ["-C", repoRoot, "remote", "get-url", "origin"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 5000 });
+      const slug = parseGitHubSlug(url);
+      if (slug) return slug;
+    } catch {
+      /* no origin — fall through */
+    }
+  }
+  return DEFAULT_GH_REPO;
+}
+
+/** State of one required check on a commit: "success" | "failure" | "in_progress" | "missing" | "no-push-run" | …
+ *
+ * §5.9 / t_339a0d02 — only the run triggered by the merge counts: the `push`
+ * run on the merge commit. When the reader knows the workflow runs of the SHA
+ * (`checks.workflow_runs`, an array), a check run whose check suite belongs to
+ * a non-push workflow run (workflow_dispatch, schedule, …) is set aside: it is
+ * reported in `manual_state` (advisory A15), never judged. A check run whose
+ * suite no workflow run owns (another app) is judged as before. Within one
+ * suite only the newest check run of a name counts, so a re-run of the push run
+ * (same suite, new attempt) replaces its earlier attempt.
+ */
+function latestPerSuite(runs) {
+  const loose = [];
+  const bySuite = new Map();
+  for (const r of runs) {
+    if (r.check_suite_id === null || r.check_suite_id === undefined || r.id === null || r.id === undefined) {
+      loose.push(r);
+      continue;
+    }
+    const k = String(r.check_suite_id);
+    const cur = bySuite.get(k);
+    if (!cur || Number(r.id) > Number(cur.id)) bySuite.set(k, r);
+  }
+  return loose.concat([...bySuite.values()]);
+}
+
+function splitRunsByEvent(runs, workflowRuns) {
+  if (!Array.isArray(workflowRuns)) return { judged: latestPerSuite(runs), manual: [] };
+  const eventOf = new Map(workflowRuns.filter((w) => w && w.check_suite_id !== undefined && w.check_suite_id !== null).map((w) => [String(w.check_suite_id), String(w.event || "")]));
+  const judged = [];
+  const manual = [];
+  for (const r of runs) {
+    const ev = r.check_suite_id === null || r.check_suite_id === undefined ? undefined : eventOf.get(String(r.check_suite_id));
+    if (ev === undefined || ev === "push") judged.push(r);
+    else manual.push({ ...r, event: ev });
+  }
+  return { judged: latestPerSuite(judged), manual: latestPerSuite(manual) };
+}
+
+const runState = (r) => (r.status !== "completed" ? r.status || "pending" : String(r.conclusion || "no-conclusion").toLowerCase());
+
+function requiredCheckState(req, checks) {
+  const named = checks.runs.filter((r) => r.name === req.context && (req.app_id === null || req.app_id === undefined || Number(r.app_id) === Number(req.app_id)));
+  const { judged: runs, manual } = splitRunsByEvent(named, checks.workflow_runs);
+  let newestManual = null;
+  for (const m of manual) if (!newestManual || Number(m.id) > Number(newestManual.id)) newestManual = m;
+  const manualInfo = newestManual ? { manual_state: runState(newestManual), manual_event: newestManual.event } : {};
+  if (runs.length) {
+    const notDone = runs.find((r) => r.status !== "completed");
+    if (notDone) return { green: false, state: notDone.status || "pending", ...manualInfo };
+    const bad = runs.find((r) => !GREEN_CONCLUSIONS.has(String(r.conclusion || "").toLowerCase()));
+    if (bad) return { green: false, state: String(bad.conclusion || "no-conclusion").toLowerCase(), ...manualInfo };
+    return { green: true, state: String(runs[0].conclusion).toLowerCase(), ...manualInfo };
+  }
+  // Legacy commit statuses only count when the requirement is not bound to an app.
+  if (req.app_id === null || req.app_id === undefined) {
+    const st = checks.statuses.find((s) => s.context === req.context);
+    if (st) return { green: st.state === "success", state: st.state, ...manualInfo };
+  }
+  // Only manual runs carry this check: fail closed, a manual run never satisfies R10.
+  if (newestManual) return { green: false, state: "no-push-run", ...manualInfo };
+  return { green: false, state: "missing" };
+}
+
+/**
+ * R9/R10 for one card. Pure with respect to the injected GitHub reader.
+ * Returns `{ violations, advisories, facts }` (facts = the `pr_rule` block).
+ */
+export function evaluatePrRule(task, gh) {
+  const violations = [];
+  const advisories = [];
+  const add = (rule, detail) => violations.push({ rule, detail });
+  const advise = (rule, detail) => advisories.push({ rule, detail });
+  const facts = { in_scope: true, repo: gh.repo || null, applies: null, linked_prs: [], judged_pr: null, required_checks: null, check_states: null };
+  const unverifiable = (step, e) => {
+    facts.unverifiable = `${step}: ${e.message}`;
+    advise(
+      "A11_CI_STATE_UNVERIFIABLE",
+      `could not read ${step} from GitHub (${e.message}) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable`,
+    );
+    return { violations, advisories, facts };
+  };
+
+  const mention = idMentionRe(task.id);
+  let prs;
+  try {
+    prs = gh.listPullRequests();
+  } catch (e) {
+    return unverifiable("the pull-request list", e);
+  }
+  const shape = (pr, rel) => ({
+    number: pr.number,
+    state: String(pr.state || "").toUpperCase(),
+    merged: Boolean(pr.mergedAt) || String(pr.state || "").toUpperCase() === "MERGED",
+    merged_at: pr.mergedAt || null,
+    base: pr.baseRefName || null,
+    head: pr.headRefName || null,
+    merge_commit: (pr.mergeCommit && pr.mergeCommit.oid) || null,
+    url: pr.url || null,
+    ...(rel.link ? { link: rel.link } : { mentioned_in: rel.mention }),
+  });
+  // Only a declaration links (t_7e8bf917): head branch named after the card, or a
+  // `Closes <id>` / `Card: <id>` / `Task: <id>` body line outside code.
+  const linked = [];
+  const mentioning = [];
+  for (const pr of prs) {
+    const rel = prCardRelation(pr, task.id);
+    if (!rel) continue;
+    (rel.link ? linked : mentioning).push(shape(pr, rel));
+  }
+  facts.linked_prs = linked;
+  facts.mentioning_prs = mentioning;
+  // A14 — a mention is never a link and never a violation, but it stays visible.
+  if (mentioning.length) {
+    const desc = (p) => `#${p.number} (${p.merged ? "merged" : p.state.toLowerCase() || "unknown state"}; ${p.mentioned_in.join(" + ")})`;
+    advise(
+      "A14_PR_MENTIONS_CARD",
+      `PR ${mentioning.map(desc).join(", ")} mention${mentioning.length === 1 ? "s" : ""} ${task.id} without declaring it — not linked: neither counted for nor against §5.9. If one of them delivers this card, add a \`Closes ${task.id}\` line to its body (or name its head branch after the card)`,
+    );
+  }
+
+  if (linked.length === 0) {
+    const declared = CODE_DELIVERABLE_RE.test(task.body || "");
+    let branches;
+    try {
+      branches = gh.listBranches().filter((b) => mention.test(b));
+    } catch (e) {
+      if (!declared) return unverifiable("the branch list", e);
+      branches = [];
+    }
+    facts.pushed_branches = branches;
+    if (!declared && branches.length === 0) {
+      facts.applies = false;
+      facts.reason = "no PR declares the card (head branch named after it, or a `Closes`/`Card:`/`Task:` body line), no pushed branch is named after it, and its body does not declare `Deliverable: code`";
+      return { violations, advisories, facts };
+    }
+    facts.applies = true;
+    const why = branches.length ? `branch(es) ${branches.map((b) => `\`${b}\``).join(", ")} are pushed` : "the card body declares `Deliverable: code`";
+    add(
+      "R9_PR_NOT_MERGED",
+      `no pull request declares ${task.id} (head branch named after the card, or a \`Closes ${task.id}\` / \`Card: ${task.id}\` / \`Task: ${task.id}\` line in its body — a mention in the title or prose does not link)${mentioning.length ? `, only mention(s): ${mentioning.map((p) => `#${p.number}`).join(", ")}` : ""}, yet ${why} — code is delivered only through a PR merged into master: open the PR with \`Closes ${task.id}\` in its body, move the card to review with "PR: #<n>", and let the merger complete it (§5.9)`,
+    );
+    return { violations, advisories, facts };
+  }
+
+  facts.applies = true;
+  let base;
+  try {
+    base = gh.defaultBranch();
+  } catch (e) {
+    return unverifiable("the default branch", e);
+  }
+  facts.default_branch = base;
+  const mergedToBase = linked
+    .filter((p) => p.merged && p.base === base && p.merge_commit)
+    .sort((a, b) => String(b.merged_at || "").localeCompare(String(a.merged_at || "")));
+  if (mergedToBase.length === 0) {
+    const describe = (p) =>
+      p.merged
+        ? `#${p.number} merged into \`${p.base}\`, not \`${base}\``
+        : p.state === "OPEN"
+          ? `#${p.number} is open (not merged)`
+          : `#${p.number} was closed without being merged`;
+    add(
+      "R9_PR_NOT_MERGED",
+      `PR not merged: no pull request linked to ${task.id} is merged into ${base} — ${linked.map(describe).join("; ")}. The card completes after the merge, by the merger (§5.9)`,
+    );
+    return { violations, advisories, facts };
+  }
+
+  const pr = mergedToBase[0];
+  facts.judged_pr = pr.number;
+  facts.merge_commit = pr.merge_commit;
+  for (const p of linked) {
+    if (p !== pr && p.state === "OPEN") {
+      advise("A12_LINKED_PR_OPEN", `PR #${p.number} also declares ${task.id} and is still open — not judged (PR #${pr.number} is the merged one); make sure no part of this card's deliverable lives only there`);
+    }
+  }
+
+  let required;
+  try {
+    required = gh.requiredChecks(base);
+  } catch (e) {
+    return unverifiable(`the required status checks of \`${base}\` (branch protection)`, e);
+  }
+  facts.required_checks = required.map((r) => r.context);
+  if (required.length === 0) {
+    return unverifiable(`the required status checks of \`${base}\``, new GitHubUnavailable("branch protection lists no required check"));
+  }
+  let checks;
+  try {
+    checks = gh.commitChecks(pr.merge_commit);
+  } catch (e) {
+    return unverifiable(`the checks of merge commit ${pr.merge_commit.slice(0, 12)}`, e);
+  }
+  const states = required.map((r) => ({ context: r.context, ...requiredCheckState(r, checks) }));
+  facts.check_states = Object.fromEntries(states.map((s) => [s.context, s.state]));
+  const diverging = states.filter((s) => s.manual_state && s.manual_state !== s.state);
+  if (diverging.length) {
+    facts.manual_check_states = Object.fromEntries(diverging.map((s) => [s.context, `${s.manual_state} (${s.manual_event})`]));
+    advise(
+      "A15_NON_PUSH_RUN_ON_MERGE_COMMIT",
+      `non-push run(s) on merge commit ${pr.merge_commit.slice(0, 12)} of PR #${pr.number} disagree with its push run: ${diverging.map((s) => `${s.context}=${s.manual_state} (${s.manual_event}; push run: ${s.state})`).join(", ")} — not judged: R10 reads only the run the merge triggered (the push run, latest attempt included); a manual run can neither break nor repair it (§5.9, t_339a0d02)`,
+    );
+  }
+  const notGreen = states.filter((s) => !s.green);
+  if (notGreen.length) {
+    add(
+      "R10_MERGE_CI_NOT_GREEN",
+      `PR #${pr.number} is merged, but CI is not green on its merge commit ${pr.merge_commit.slice(0, 12)} on ${base}: ${notGreen.map((s) => `${s.context}=${s.state}`).join(", ")} (${required.length} required check(s) read from the ${base} branch protection). Fix master or wait for its run to finish; a cancelled run can be re-run with \`gh run rerun\` (§5.9)`,
+    );
+  }
+  // A13 — the newest merged PR is the one judged (its merge commit contains every
+  // earlier merge of the card), but an earlier merge that landed red must not
+  // vanish: live case, FE-002g/FE-003a code PR merged with secret-scan=failure
+  // on master, then a green evidence PR for the same cards (t_75180b28 evidence).
+  for (const older of mergedToBase.slice(1, 6)) {
+    let oc;
+    try {
+      oc = gh.commitChecks(older.merge_commit);
+    } catch {
+      continue;
+    }
+    const bad = required.map((r) => ({ context: r.context, ...requiredCheckState(r, oc) })).filter((s) => !s.green);
+    if (bad.length) {
+      advise(
+        "A13_EARLIER_MERGE_CI_NOT_GREEN",
+        `earlier PR #${older.number} of this card merged as ${older.merge_commit.slice(0, 12)} with required check(s) not green there: ${bad.map((s) => `${s.context}=${s.state}`).join(", ")} — not a violation (the newest merge, PR #${pr.number}, is judged and contains it), recorded so it is never silent`,
+      );
+    }
+  }
+  return { violations, advisories, facts };
 }
 
 /** Rule ids and meanings are documented in QA_SIGN_OFF_GATE.md §4. */
@@ -615,7 +1211,14 @@ export function evaluateCard(board, task, opts = {}) {
   const completedMs = task.completed_at ? Number(task.completed_at) * 1000 : null;
   const postEpoch =
     preComplete || task.status !== "done" || (completedMs !== null && completedMs >= epochMs);
-  const exception = findException(board, task);
+  // Classified before the exception lookup: on a security-track card the
+  // exception is refused outright (t_b8001b55, AR-6 — signed, never waived).
+  const tt = testTypesOf(task);
+  const securityTrack =
+    SECURITY_TRACK_RE.test(`${task.title || ""}\n${task.body || ""}`) &&
+    /security/.test(tt) &&
+    !QA_PROFILES.has(String(task.assignee || "").trim());
+  const { exception, ignored: exceptionsIgnored } = findException(board, task, securityTrack);
 
   const verdicts = collectVerdicts(board, task);
   const valid = verdicts.filter((v) => VERDICTS.has(v.token));
@@ -682,6 +1285,7 @@ export function evaluateCard(board, task, opts = {}) {
       origin: p.origin,
     })),
     exception,
+    exceptions_ignored: exceptionsIgnored,
     discounted_verdicts: {
       ignored: discounted.ignored,
       self_declared: discounted.selfDeclared,
@@ -721,6 +1325,11 @@ export function evaluateCard(board, task, opts = {}) {
       `the operative verdict "${sd.token}" comes from the run metadata of a "${sd.author}" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review`,
     );
   }
+
+  // A10 — exception-shaped records the gate refused (t_b8001b55): quoted in
+  // code, written by a non-allowed author, or on a security-track card. Never
+  // silent, so a refused waiver can't be mistaken for an applied one.
+  for (const x of exceptionsIgnored) advise("A10_EXCEPTION_IGNORED", exceptionIgnoredDetail(x));
 
   // R1 — a QA verdict, or a resolvable QA deferral, must exist.
   if (exception) {
@@ -812,14 +1421,31 @@ export function evaluateCard(board, task, opts = {}) {
   }
 
   // R7 — crypto/bridge/auth cards need the Architect half of the AR-6 sign-off.
-  const tt = testTypesOf(task);
-  const securityTrack =
-    SECURITY_TRACK_RE.test(`${task.title || ""}\n${task.body || ""}`) &&
-    /security/.test(tt) &&
-    !QA_PROFILES.has(String(task.assignee || "").trim());
+  // `securityTrack` is classified at the top of evaluateCard. R7 deliberately
+  // does not consult the exception (t_b8001b55): an Architect signature is
+  // signed, never waived — findException already refuses it on this track, and
+  // this condition holds even if that ever regressed.
   facts.security_track = securityTrack;
-  if (securityTrack && postEpoch && !hasArchitectSignoff(board, task) && !exception) {
+  if (securityTrack && postEpoch && !hasArchitectSignoff(board, task)) {
     add("R7_SECURITY_TRACK_SIGNOFF_MISSING", "crypto/bridge/auth card carries no Architect sign-off comment (AR-6)");
+  }
+
+  // R9/R10 — code cards: PR merged into master + required CI green on the merge
+  // commit, read from GitHub now (§5.9, t_75180b28). Its own epoch: a card
+  // completed before it is not re-judged (no lookup, no advisory). A §5.6
+  // exception does NOT waive it — it is a fact about the repository, not about
+  // the QA record.
+  const prEpochMs = opts.prEpochMs ?? Date.parse(PR_RULE_EPOCH_ISO);
+  const prInScope = preComplete || task.status !== "done" || (completedMs !== null && completedMs >= prEpochMs);
+  if (!prInScope) {
+    facts.pr_rule = { in_scope: false, reason: `completed before the PR-rule epoch ${new Date(prEpochMs).toISOString()}` };
+  } else if (!opts.github) {
+    facts.pr_rule = { in_scope: true, applies: null, reason: "no GitHub reader supplied to evaluateCard" };
+  } else {
+    const pr = evaluatePrRule(task, opts.github);
+    facts.pr_rule = pr.facts;
+    violations.push(...pr.violations);
+    advisories.push(...pr.advisories);
   }
 
   // A1 — grandfathered cards never produce violations (unless --strict-history):
@@ -921,6 +1547,7 @@ function main() {
   const db = typeof args.db === "string" && args.db ? args.db : defaultDbPath();
   const repo = resolveRepo(args.repo);
   const epochMs = typeof args["epoch-iso"] === "string" ? Date.parse(args["epoch-iso"]) : Date.parse(GATE_EPOCH_ISO);
+  const prEpochMs = typeof args["pr-epoch-iso"] === "string" ? Date.parse(args["pr-epoch-iso"]) : Date.parse(PR_RULE_EPOCH_ISO);
 
   if (mode === "hook") return hookMode(db);
 
@@ -934,8 +1561,10 @@ function main() {
   }
 
   let board;
+  let github;
   try {
     board = loadBoard(db);
+    github = makeGitHub({ repo: resolveGitHubRepo(args["gh-repo"], repo), mode: args["no-github"] ? "off" : undefined });
   } catch (e) {
     console.error(`signoff-gate: ${e.message}`);
     process.exit(3);
@@ -950,6 +1579,8 @@ function main() {
     const r = evaluateCard(board, task, {
       repo,
       epochMs,
+      prEpochMs,
+      github,
       preComplete: Boolean(args["pre-complete"]),
       strictHistory: Boolean(args["strict-history"]),
     });
@@ -961,7 +1592,7 @@ function main() {
     process.exit(r.violations.length ? 1 : 0);
   }
 
-  const opts = { repo, epochMs, strictHistory: Boolean(args["strict-history"]) };
+  const opts = { repo, epochMs, prEpochMs, github, strictHistory: Boolean(args["strict-history"]) };
   const results = board.tasks.filter((t) => t.status === "done").map((t) => evaluateCard(board, t, opts));
   const failures = results.filter((r) => r.violations.length > 0);
   if (args.json) {
@@ -1108,18 +1739,32 @@ function hookMode(defaultDb) {
   if (!task) return block(`signoff-gate: task ${taskId} (from ${resolved.source}) is not on the board at ${db}. Failing closed.`);
   let result;
   try {
-    result = evaluateCard(board, task, { repo, epochMs: Date.parse(GATE_EPOCH_ISO), preComplete: true });
+    const github = makeGitHub({ repo: resolveGitHubRepo(null, repo) });
+    result = evaluateCard(board, task, { repo, epochMs: Date.parse(GATE_EPOCH_ISO), preComplete: true, github });
   } catch (e) {
     return block(`signoff-gate: evaluation error (${e.message}). Failing closed.`);
   }
   if (result.violations.length === 0) return allow();
   const lines = result.violations.map((v) => `  - ${v.rule}: ${v.detail}`);
+  const prRules = new Set(["R9_PR_NOT_MERGED", "R10_MERGE_CI_NOT_GREEN"]);
+  const qaGaps = result.violations.some((v) => !prRules.has(v.rule));
+  const prGaps = result.violations.some((v) => prRules.has(v.rule));
   return block(
     [
       `QA sign-off gate blocked this completion of ${taskId} (${result.violations.length} violation(s)):`,
       ...lines,
-      "Record the verdict on the card, then call kanban_complete again:",
-      `  hermes kanban comment ${taskId} --author qa --body "QA-VERDICT: pass — evidence: tests/evidence/${taskId}/README.md"`,
+      ...(qaGaps
+        ? [
+            "Record the verdict on the card, then call kanban_complete again:",
+            `  hermes kanban comment ${taskId} --author qa --body "QA-VERDICT: pass — evidence: tests/evidence/${taskId}/README.md"`,
+          ]
+        : []),
+      ...(prGaps
+        ? [
+            "A code card completes only after its PR is merged into master with green CI on the merge commit (§5.9):",
+            '  the author moves the card to review with "PR: #<n>" (kanban_request_review); the merger completes it after the merge.',
+          ]
+        : []),
       `Policy: QA_SIGN_OFF_GATE.md · re-check: node scripts/qa/signoff-gate.mjs check --task ${taskId} --pre-complete`,
     ].join("\n"),
   );
