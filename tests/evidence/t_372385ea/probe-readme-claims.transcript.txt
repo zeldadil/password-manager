@@ -1,16 +1,16 @@
-repo HEAD: a48d62227f17f438cfc3728982c5bb639721fbb1  node: v22.23.3
+repo HEAD: 79e3242cd6f1fd0d002d40248bf1e0559c7c8a7f  node: v22.23.3
 === P1 env-file loaders (dotenv / --env-file / loadEnvFile / .env.local) in api src + package scripts
 P1: no match (nothing loads .env.local for the API)
 api dev script: tsx watch src/index.ts
 === P2 better-sqlite3 with DATABASE_URL=file:./dev.db
 install exit=0
-/home/sap/.hermes/kanban/workspaces/t_372385ea/repo/node_modules/.pnpm/better-sqlite3@9.6.0/node_modules/better-sqlite3/lib/database.js:65
+/home/sap/.hermes/kanban/workspaces/t_372385ea/fresh/node_modules/.pnpm/better-sqlite3@9.6.0/node_modules/better-sqlite3/lib/database.js:65
 		throw new TypeError('Cannot open database because the directory does not exist');
 		^
 
 TypeError: Cannot open database because the directory does not exist
-    at new Database (/home/sap/.hermes/kanban/workspaces/t_372385ea/repo/node_modules/.pnpm/better-sqlite3@9.6.0/node_modules/better-sqlite3/lib/database.js:65:9)
-    at Object.<anonymous> (/home/sap/.hermes/kanban/workspaces/t_372385ea/repo/apps/services/api/qa-probe.cjs:3:12)
+    at new Database (/home/sap/.hermes/kanban/workspaces/t_372385ea/fresh/node_modules/.pnpm/better-sqlite3@9.6.0/node_modules/better-sqlite3/lib/database.js:65:9)
+    at Object.<anonymous> (/home/sap/.hermes/kanban/workspaces/t_372385ea/fresh/apps/services/api/qa-probe.cjs:3:12)
     at Module._compile (node:internal/modules/cjs/loader:1781:14)
     at Object..js (node:internal/modules/cjs/loader:1913:10)
     at Module.load (node:internal/modules/cjs/loader:1505:32)
@@ -26,7 +26,7 @@ probe exit=1
 TypeError: Cannot open database because the directory does not exist
 (end P2b)
 === P2c same entry point with the documented default (DATABASE_URL unset) for contrast
-{"level":30,"time":1791538242235,"pid":39510,"hostname":"ai-server","msg":"Server listening at http://127.0.0.1:39118"}
+{"level":30,"time":1791584103697,"pid":13426,"hostname":"ai-server","msg":"Server listening at http://127.0.0.1:39118"}
 [api] @password-manager/api v0.1.0 listening at http://127.0.0.1:39118 (development)
 (timeout 124 = still running = started fine)
 === P3 master password in API request bodies / web client
