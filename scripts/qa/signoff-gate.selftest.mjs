@@ -2172,6 +2172,206 @@ console.log("\n8. R10 judges the merge's push run only; manual runs on the same 
   );
 }
 
+console.log("\n9. The audit counts and surfaces A11; --fail-on-a11 turns it red (t_b102b100, §5.9):");
+{
+  const SUMMARY = join(HERE, "signoff-audit-summary.mjs");
+  // Two compliant cards completed after the PR-rule epoch: valid QA verdict +
+  // evidence, no PR, no branch, no `Deliverable: code`. With a reachable
+  // GitHub they are simply out of R9/R10 scope (no A11); with an unreachable
+  // GitHub each carries A11 and nothing else — the "A11-only board".
+  const a11Cards = [
+    { tid: "t_a11a0001", title: "FE-970a A11-only: 100% compliant, title has a colon, a comma and a percent sign" },
+    { tid: "t_a11a0002", title: "FE-970b A11-only second card" },
+  ].map((c) => ({
+    ...c,
+    body: "**Test Types:** unit",
+    assignee: "frontend",
+    status: "done",
+    completed: PR_DONE_AT,
+    comments: [qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md")],
+    runs: [],
+    attachments: [],
+  }));
+  for (const c of a11Cards) fixtureFile(`tests/evidence/${c.tid}/README.md`);
+  const miniDb = join(root, "board-a11.db");
+  execFileSync("sqlite3", [miniDb], { input: [BOARD_SQL, ...a11Cards.map(taskRowSQL)].join("\n") });
+  const ids = a11Cards.map((c) => c.tid);
+
+  const audit = (fixture, extra = []) => {
+    const jsonOut = join(root, `audit-${cases}.json`);
+    const t = runGate(["audit", "--db", miniDb, "--repo", repo, "--json-out", jsonOut, ...extra], "", { QA_GATE_GITHUB_FIXTURE: fixture });
+    let doc = null;
+    try {
+      doc = JSON.parse(readFileSync(jsonOut, "utf8"));
+    } catch {
+      doc = null;
+    }
+    return { code: t.code, out: t.out, doc, jsonOut };
+  };
+
+  // AC 2 — A11-only board: green without the flag, red with it.
+  const offA11 = audit(GH_DOWN);
+  check(
+    "A11-only board, no flag → exit 0 (exit behaviour unchanged), but the header counts `A11 … : 2` and names both cards",
+    offA11.code === 0 && /A11 \(CI state unverifiable[^)]*\): 2 {2}· {2}cards: t_a11a0001, t_a11a0002/.test(offA11.out) && !/--fail-on-a11/.test(offA11.out),
+    `exit=${offA11.code} out=${offA11.out.slice(0, 400)}`,
+  );
+  check(
+    "A11-only board: an `ok` card carrying A11 is tagged on its own line (no bare `ok`)",
+    ids.every((id) => new RegExp(`^ {2}ok {3}${id} .*\\[A11: CI state unverified`, "m").test(offA11.out)),
+    offA11.out.slice(0, 600),
+  );
+  const onA11 = audit(GH_DOWN, ["--fail-on-a11"]);
+  check(
+    "A11-only board + --fail-on-a11 → exit 1, header says `--fail-on-a11: FAIL`, still 0 card violations (A11 is not a violation)",
+    onA11.code === 1 && /--fail-on-a11: FAIL/.test(onA11.out) && onA11.doc && onA11.doc.counts.failures === 0 && onA11.doc.results.every((r) => r.violations.length === 0),
+    `exit=${onA11.code} out=${onA11.out.slice(0, 300)}`,
+  );
+
+  // AC 1 — --json exposes counts.a11 and the list of ids.
+  const js = runGate(["audit", "--db", miniDb, "--repo", repo, "--json"], "", { QA_GATE_GITHUB_FIXTURE: GH_DOWN });
+  let jd = null;
+  try {
+    jd = JSON.parse(js.out);
+  } catch {
+    jd = null;
+  }
+  check(
+    "--json: counts.a11 = 2, a11_task_ids = both ids, ok = true and fail_on_a11 = false without the flag",
+    js.code === 0 && jd && jd.counts.a11 === 2 && JSON.stringify(jd.a11_task_ids) === JSON.stringify(ids) && jd.ok === true && jd.fail_on_a11 === false,
+    `exit=${js.code} ${jd ? JSON.stringify({ counts: jd.counts, ids: jd.a11_task_ids, ok: jd.ok }) : js.out.slice(0, 200)}`,
+  );
+  check(
+    "--json-out writes the same document as --json (counts + ids), and ok = false under --fail-on-a11",
+    offA11.doc && jd && JSON.stringify(offA11.doc.counts) === JSON.stringify(jd.counts) && JSON.stringify(offA11.doc.a11_task_ids) === JSON.stringify(jd.a11_task_ids) && onA11.doc && onA11.doc.ok === false && onA11.doc.fail_on_a11 === true,
+    JSON.stringify({ off: offA11.doc && offA11.doc.counts, on: onA11.doc && { ok: onA11.doc.ok, f: onA11.doc.fail_on_a11 } }),
+  );
+
+  // Non-vacuity — the SAME board with GitHub reachable: no A11, green both ways.
+  const offClean = audit(GH_EMPTY);
+  const onClean = audit(GH_EMPTY, ["--fail-on-a11"]);
+  check(
+    "board without A11 (same cards, GitHub reachable) → exit 0 without the flag, `A11 … : 0`",
+    offClean.code === 0 && /A11 \(CI state unverifiable[^)]*\): 0\b/.test(offClean.out) && offClean.doc && offClean.doc.counts.a11 === 0 && offClean.doc.a11_task_ids.length === 0,
+    `exit=${offClean.code} out=${offClean.out.slice(0, 300)}`,
+  );
+  check(
+    "board without A11 + --fail-on-a11 → exit 0 (`--fail-on-a11: pass`), no card tagged A11",
+    onClean.code === 0 && /--fail-on-a11: pass/.test(onClean.out) && !/\[A11:/.test(onClean.out),
+    `exit=${onClean.code} out=${onClean.out.slice(0, 300)}`,
+  );
+
+  // The flag never masks or replaces a real violation: main fixture board.
+  const mainOff = runGate(["audit", "--db", db, "--repo", repo, "--json"], "", { QA_GATE_GITHUB_FIXTURE: GH_PRS });
+  let mainDoc = null;
+  try {
+    mainDoc = JSON.parse(mainOff.out);
+  } catch {
+    mainDoc = null;
+  }
+  check(
+    "fixture board with violations and GitHub readable → still exit 1, counts.a11 = 0 (A11 counts only what GitHub could not answer)",
+    mainOff.code === 1 && mainDoc && mainDoc.counts.a11 === 0 && mainDoc.counts.failures >= 10,
+    `exit=${mainOff.code} counts=${mainDoc && JSON.stringify(mainDoc.counts)}`,
+  );
+
+  // The flags are audit-only; the per-card check and the hook never fail on A11.
+  const chk = runGate(["check", "--task", ids[0], "--db", miniDb, "--repo", repo, "--fail-on-a11"], "", { QA_GATE_GITHUB_FIXTURE: GH_DOWN });
+  check("check --fail-on-a11 → refused (exit 3): a per-card check never fails on A11", chk.code === 3 && /audit` only/.test(chk.out), `exit=${chk.code} out=${chk.out.slice(0, 200)}`);
+  const hk = runGate(
+    ["hook", "--db", miniDb],
+    JSON.stringify({ hook_event_name: "pre_tool_call", tool_name: "kanban_complete", tool_input: { task_id: ids[0] }, cwd: repo, extra: {} }),
+    { HERMES_KANBAN_DB: miniDb, QA_GATE_GITHUB_FIXTURE: GH_DOWN },
+  );
+  check("hook on an A11-only card → still allowed ({} + exit 0)", hk.code === 0 && hk.out.trim() === "{}", `exit=${hk.code} out=${hk.out.slice(0, 200)}`);
+
+  // AC 3 — the workflow's summary/annotation step (scripts/qa/signoff-audit-summary.mjs).
+  const summarize = (jsonPath) => {
+    const sumFile = join(root, `summary-${cases}.md`);
+    writeFileSync(sumFile, "");
+    let code = 0;
+    let out = "";
+    try {
+      out = execFileSync("node", [SUMMARY, "--json", jsonPath, "--summary-out", sumFile], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    } catch (e) {
+      code = e.status === undefined ? -1 : e.status;
+      out = `${e.stdout || ""}${e.stderr || ""}`;
+    }
+    return { code, out, md: readFileSync(sumFile, "utf8") };
+  };
+  const s1 = summarize(onA11.jsonOut);
+  const warnings = s1.out.split("\n").filter((l) => l.startsWith("::warning "));
+  check(
+    "summary: ONE `Bypasses and degradations` block — A11 row with counter 2, `yes — red (--fail-on-a11)`, both cards; then a per-card table with the A11 detail",
+    s1.code === 0 &&
+      (s1.md.match(/^### Bypasses and degradations$/gm) || []).length === 1 &&
+      /^\| `A11_CI_STATE_UNVERIFIABLE` — CI state unverifiable — R9\/R10 not evaluated \| 2 \| \*\*yes — red\*\* \(`--fail-on-a11`\) \| `t_a11a0001`, `t_a11a0002` \|$/m.test(s1.md) &&
+      /^#### `A11_CI_STATE_UNVERIFIABLE`: 2$/m.test(s1.md) &&
+      ids.every((id) => new RegExp(`^\\| \`${id}\` \\| .* \\| .*GitHub.* \\|$`, "m").test(s1.md)),
+    `exit=${s1.code} md=${s1.md.slice(0, 700)}`,
+  );
+  check(
+    "annotations: exactly one ::warning:: per A11 card, each naming its card",
+    warnings.length === 2 && ids.every((id, i) => warnings[i].includes(`A11 CI state unverifiable%3A ${id}`) && warnings[i].includes(`::${id} `)),
+    s1.out.slice(0, 400),
+  );
+  check(
+    "annotations: workflow-command escaping (`:` in the title property → %3A, `%` in the message → %25) — no raw delimiter can split the command",
+    (warnings[0] || "").startsWith("::warning title=A11 CI state unverifiable%3A t_a11a0001::t_a11a0001 FE-970a A11-only: 100%25 compliant, title has") &&
+      !/[\r\n]/.test(warnings[0] || ""),
+    warnings[0] || "(none)",
+  );
+  const s1off = summarize(offA11.jsonOut);
+  check(
+    "summary without the flag: same A11 row, but `no (--fail-on-a11 off)` — the summary never claims a colour the exit code does not have",
+    s1off.code === 0 && /^\| `A11_CI_STATE_UNVERIFIABLE` — .* \| 2 \| no \(`--fail-on-a11` off\) \| /m.test(s1off.md) && !/yes — red/.test(s1off.md),
+    s1off.md.slice(0, 500),
+  );
+  const s2 = summarize(onClean.jsonOut);
+  check(
+    "summary on the board without A11: A11 row counter 0 (`no (--fail-on-a11 on, count 0)`), no per-card table, no annotation (non-vacuity)",
+    s2.code === 0 && /^\| `A11_CI_STATE_UNVERIFIABLE` — .* \| 0 \| no \(`--fail-on-a11` on, count 0\) \| — \|$/m.test(s2.md) && !/^####/m.test(s2.md) && !/::warning/.test(s2.out),
+    `exit=${s2.code} md=${s2.md.slice(0, 400)} out=${s2.out.slice(0, 200)}`,
+  );
+  const s3 = summarize(join(root, "no-such-audit.json"));
+  check(
+    "summary when the audit wrote no JSON → says `not available` + a warning, never a reassuring 0",
+    s3.code === 0 && /^### Bypasses and degradations: not available$/m.test(s3.md) && !/\| 0 \|/.test(s3.md) && /::warning title=Bypasses and degradations not available::/.test(s3.out),
+    `exit=${s3.code} md=${s3.md.slice(0, 200)}`,
+  );
+  const legacy = join(root, "audit-legacy.json");
+  writeFileSync(legacy, JSON.stringify({ ok: true, counts: { failures: 0 }, results: [] }));
+  const s4 = summarize(legacy);
+  check(
+    "summary on a document with no `degradations` block (older gate) → `not available`, never 0",
+    s4.code === 0 && /: not available$/m.test(s4.md) && /no `degradations` block/.test(s4.md) && /::warning /.test(s4.out),
+    s4.md.slice(0, 200),
+  );
+
+  // The block is generic (architect design note shared with t_5b5b61e2): the
+  // text report and the JSON carry it as one block of typed entries.
+  check(
+    "text report: ONE `bypasses & degradations` block in the header, before the per-card lines",
+    (offA11.out.match(/^ {2}bypasses & degradations /gm) || []).length === 1 && offA11.out.indexOf("bypasses & degradations") < offA11.out.indexOf("  ok   "),
+    offA11.out.slice(0, 400),
+  );
+  const dA = onA11.doc && Array.isArray(onA11.doc.degradations) ? onA11.doc.degradations.find((d) => d.key === "a11") : null;
+  check(
+    "--json: `degradations[]` carries the A11 entry (rule, count, task_ids, fails_audit) consistent with counts.a11 / a11_task_ids, and per-card details",
+    dA && dA.rule === "A11_CI_STATE_UNVERIFIABLE" && dA.count === 2 && dA.fails_audit === true && dA.fail_flag === "--fail-on-a11" &&
+      JSON.stringify(dA.task_ids) === JSON.stringify(onA11.doc.a11_task_ids) && dA.cards.length === 2 && dA.cards.every((c) => /GitHub/.test(c.detail)),
+    JSON.stringify(dA).slice(0, 400),
+  );
+  const dOff = offA11.doc && offA11.doc.degradations.find((d) => d.key === "a11");
+  check("--json without the flag: A11 entry has fails_audit = false, fail_flag_on = false", dOff && dOff.count === 2 && dOff.fails_audit === false && dOff.fail_flag_on === false, JSON.stringify(dOff).slice(0, 300));
+
+  // The switch takes no value: `--fail-on-a11 false` must not read as "on".
+  const val = runGate(["audit", "--db", miniDb, "--repo", repo, "--fail-on-a11", "false"], "", { QA_GATE_GITHUB_FIXTURE: GH_DOWN });
+  check("`--fail-on-a11 false` → refused (exit 3), never silently on", val.code === 3 && /takes no value/.test(val.out), `exit=${val.code} out=${val.out.slice(0, 200)}`);
+  const jn = runGate(["audit", "--db", miniDb, "--repo", repo, "--json-out"], "", { QA_GATE_GITHUB_FIXTURE: GH_DOWN });
+  check("`--json-out` without a path → refused (exit 3)", jn.code === 3 && /requires a file path/.test(jn.out), `exit=${jn.code} out=${jn.out.slice(0, 200)}`);
+}
+
 console.log(`\n${cases - failures.length}/${cases} cases passed`);
 if (failures.length) {
   console.log("\nFAILED CASES:");
