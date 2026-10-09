@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Password Manager",
+  "version": "0.1.0",
+  "description": "Firefox extension for the self-hosted Password Manager: controlled credential capture and autofill.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["https://api.example.test/*"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none';"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "password-manager@example.test"
+    }
+  }
+}

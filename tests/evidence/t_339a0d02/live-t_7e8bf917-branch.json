@@ -1,0 +1,109 @@
+{
+  "mode": "check",
+  "db": "/home/sap/.hermes/kanban.db",
+  "repo": "/home/sap/.hermes/profiles/qa/cache/scratch/wt-339",
+  "task_id": "t_7e8bf917",
+  "violations": [],
+  "advisories": [
+    {
+      "rule": "A9_VERDICT_SUPERSEDED",
+      "detail": "off-vocabulary verdict \"pass-with-conditions (author self-check, comment 596)\" by qa superseded by a later valid \"pass-with-conditions\" by qa — not a violation, recorded for the audit trail"
+    },
+    {
+      "rule": "A15_NON_PUSH_RUN_ON_MERGE_COMMIT",
+      "detail": "non-push run(s) on merge commit a48d62227f17 of PR #120 disagree with its push run: secret-scan=failure (workflow_dispatch; push run: success) — not judged: R10 reads only the run the merge triggered (the push run, latest attempt included); a manual run can neither break nor repair it (§5.9, t_339a0d02)"
+    }
+  ],
+  "facts": {
+    "task_id": "t_7e8bf917",
+    "title": "QA gate: R9 lie une carte à toute PR qui mentionne son id — exiger un lien déclaratif (Closes/branche), pas une mention",
+    "assignee": "architect",
+    "status": "review",
+    "completed_at": null,
+    "post_epoch": true,
+    "verdict": "pass-with-conditions",
+    "invalid_verdicts": [],
+    "deferral": null,
+    "evidence": [
+      {
+        "kind": "path",
+        "value": "scripts/qa/signoff-gate.mjs",
+        "exists": true,
+        "operative": true,
+        "scope": "claim",
+        "via_ref": null,
+        "origin": "marker-comment-comment"
+      },
+      {
+        "kind": "dir",
+        "value": "tests/evidence/t_7e8bf917",
+        "exists": true,
+        "operative": false,
+        "scope": "history",
+        "via_ref": null,
+        "origin": "marker-comment-comment"
+      },
+      {
+        "kind": "path",
+        "value": "scripts/qa/signoff-gate.selftest.mjs",
+        "exists": true,
+        "operative": true,
+        "scope": "claim",
+        "via_ref": null,
+        "origin": "marker-comment-comment"
+      }
+    ],
+    "exception": null,
+    "exceptions_ignored": [],
+    "discounted_verdicts": {
+      "ignored": [],
+      "self_declared": []
+    },
+    "security_track": false,
+    "pr_rule": {
+      "in_scope": true,
+      "repo": "zeldadil/password-manager",
+      "applies": true,
+      "linked_prs": [
+        {
+          "number": 120,
+          "state": "MERGED",
+          "merged": true,
+          "merged_at": "2026-10-09T09:26:24Z",
+          "base": "master",
+          "head": "qa/t_7e8bf917-declarative-pr-link",
+          "merge_commit": "a48d62227f17f438cfc3728982c5bb639721fbb1",
+          "url": "https://github.com/zeldadil/password-manager/pull/120",
+          "link": "head-branch"
+        }
+      ],
+      "judged_pr": 120,
+      "required_checks": [
+        "unit",
+        "integration",
+        "install-lockfile",
+        "lint-typecheck",
+        "e2e",
+        "dependency-audit",
+        "build",
+        "secret-scan"
+      ],
+      "check_states": {
+        "unit": "success",
+        "integration": "success",
+        "install-lockfile": "success",
+        "lint-typecheck": "success",
+        "e2e": "success",
+        "dependency-audit": "success",
+        "build": "success",
+        "secret-scan": "success"
+      },
+      "mentioning_prs": [],
+      "default_branch": "master",
+      "merge_commit": "a48d62227f17f438cfc3728982c5bb639721fbb1",
+      "manual_check_states": {
+        "secret-scan": "failure (workflow_dispatch)"
+      }
+    }
+  }
+}

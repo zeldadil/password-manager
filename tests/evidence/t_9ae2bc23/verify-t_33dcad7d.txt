@@ -1,0 +1,43 @@
+== fresh mirror: 163 refs (incl. refs/pull/*), master=4eac8e17d1908fe9fa49f0d625fe95e081dbca74
+== claim: decision artifact docs/decisions/qa-signoff-gate-followups-t_33dcad7d.md committed
+   commits touching it on ANY ref: [0]
+   commits touching tests/evidence/t_33dcad7d/ on ANY ref: [0]
+   card attachments dir: ls: cannot access '/home/sap/.hermes/kanban/attachments/t_33dcad7d': No such file or directory
+   attachment rows on the board: 0
+   path named in its completion artifacts exists? yes
+== claim: pre-epoch grandfathering 'recorded in PROJECT_BRIEF.md §9' (card completed 2026-09-17)
+   commits on master adding 'grandfather' to PROJECT_BRIEF.md (oldest first):
+     3651470 2026-10-02 docs: durable pre-epoch grandfathering decision (t_4f872624) (#104)
+   PROJECT_BRIEF.md 'grandfather' lines on master:
+     174:### Pre-epoch grandfathering decision (QA-001i item 2, 2026-09-30)
+     176:- **Decision:** 27 pre-epoch done cards are grandfathered under the QA sign-off gate (epoch `2026-09-17T15:00:00Z`). The count is **27, not 26** — the boa
+     177:- **Disposition:** retro-verify 3 (B-cards) / record-repair 3 (C-cards) / grandfather 21 (A-cards). No blanket retrofit (would fabricate verdicts for work Q
+     178:- **Rule applied (per card):** B (retro-verify) — `t_9840ccdd` (SEC-001, the only pre-epoch card R7 flags as security-track), `t_3ca45da2` (ADR-002, the c
+     179:- **Audit command (re-runnable):** `node scripts/qa/signoff-gate.mjs audit --db ~/.hermes/kanban.db --repo <clone> [--strict-history]`. Default audit: 6 pos
+     180:- **Grandfathering is not amnesty:** `A1_HISTORY_UNGATED` advisories stay visible on every audit run (`QA_SIGN_OFF_GATE.md` §7); the 3 B-cards must be retr
+     182:- **Durable record:** `docs/decisions/pre-epoch-grandfathering-t_4f872624.md`.
+== decision 1 (CI wiring -> child t_ea0783c5): workflow on master
+     6cbfb38 2026-09-19 CI-001h: wire the QA sign-off gate board audit as a scheduled CI job (#17)
+     run 37328093486 schedule cancelled 2026-10-05T14:51:22Z
+     run 36433392305 schedule cancelled 2026-09-28T14:05:51Z
+     run 35602519913 schedule cancelled 2026-09-21T12:56:54Z
+== decision 3 (R7 'correct and complete, no keyword changes'): regex probe on master
+     SECURITY_TRACK_RE = /\b(packages\/crypto|crypto[\s-]*(primitive|implementation|boundary|module|package)|KDF|AEAD|Argon2id|vault[\s-]*key|bridge[\s-]*protocol|bridge[\s-]*message|autofill)\b/i
+     MATCH     "autofill"  (control: bare word)
+     no match  "AUTOFILL_REQUEST"  (ADR-005 §2.1 message name)
+     no match  "AUTOFILL_RESPONSE"  (ADR-005 §2.1 message name)
+     MATCH     "vault key"  (control: spaced)
+     MATCH     "vaultKey"  (ADR-002 §5.2/§5.3 identifier)
+     no match  "nonce reuse"  (ADR-002 §5.3 Decision 4)
+     no match  "sender.origin validation"  (ADR-005 §3 / §9.3)
+     no match  "AES-256-GCM"  (ADR-002 §5.3 Decision 2)
+== successor cards that took over t_33dcad7d's open scope (board, read-only)
+     t_ea0783c5 done architect CI-001h: wire QA sign-off gate board audit as a scheduled CI job (qa)
+     t_527d4720 done architect CI-001h follow-up: board transport for the scheduled QA sign-off audit (hosted runner cannot see ~/.
+     t_7dd3b960 done qa QA-001i — close gate-tooling §10 open items (audit CI, pre-epoch backlog, R7)
+     t_4f872624 done architect QA-001i-fu3: make the pre-epoch grandfathering decision durable + route the 6 post-epoch audit gaps
+     t_18230e85 done architect QA-001i-fu4: ARCH decision — R7 security-track classification v2 (scope-driven) + the AR-6/bridge qu
+     t_75799b2e todo qa QA-001i-fu5: implement R7 v2 (scope-driven classification) + selftest cases + re-install the gate in
+     t_90a4bd73 blocked qa QA-001i-fu5a: implementer R7 v2 (classification scope-driven) + selftests non-vacuite + table audit 
+     t_f10ca03c todo qa QA-001i-fu5b: reinstaller le gate R7 v2 dans les 7 profils + verification SHA-256
+== qa-authored comments on t_33dcad7d: 0

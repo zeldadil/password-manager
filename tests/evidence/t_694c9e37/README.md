@@ -43,7 +43,7 @@ Result collected with `pr-cancel-result.sh <branch>` → `pr-cancel-result.tsv`:
 These PR runs executed the *new* `ci.yml` (a `pull_request` run uses the PR's workflow file),
 so this exercises the PR branch of the new expression, not the old config.
 
-### Master side — overlapping master runs all complete: pending merge of PR #119
+### Master side — overlapping master runs all complete: PASS (observed 2026-10-09)
 
 Can only be observed once the fix is on `master`. Procedure: `master-overlap-test.sh <merge_sha>`
 waits for the push run of the merge commit to be in progress, then dispatches two more CI runs
@@ -52,7 +52,17 @@ three overlapping master runs, none `cancelled`. Result to be recorded in
 `master-overlap-result.tsv` with `master-cancelled-history.sh` (lists every attempt, so a
 `cancelled` attempt hidden behind a re-run stays visible).
 
+**Result (qa, 2026-10-09): PASS (observed).** After the merge (`e86e328`, master now `a48d622`), three
+`workflow_dispatch` runs were started on `master` 8 s apart (`37911287620`, `37911301972`, `37911316599`) while the
+push run of `a48d622` (`37911279516`) was still in progress: four overlapping master runs, **none cancelled**
+(`master-overlap-result.tsv`). Under the old config each would have cancelled the previous one.
+
+The three dispatch runs concluded `failure` on one job only, `secret-scan`: on `workflow_dispatch` gitleaks scans the
+full history (224 historical findings, mostly synthetic test fixtures plus the already-handled 2026-09 Telegram
+incident), while a push run scans only the pushed range. The push run of the same commit is `success`. This is
+unrelated to concurrency and is reported separately.
+
 ## Evidence of no `cancelled` master run after the fix (AC3)
 
-Pending: `master-history-after.tsv`, produced after the merge with
-`master-cancelled-history.sh`.
+`master-history-after.tsv` (qa, 2026-10-09): every master run attempt since the fix merge `e86e328` — 6 runs,
+**0 `cancelled`** (attempt numbers included, so a cancelled attempt hidden behind a re-run would show).

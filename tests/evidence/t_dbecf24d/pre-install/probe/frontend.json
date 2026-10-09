@@ -1,0 +1,38 @@
+{
+  "profile": "frontend",
+  "probe": "inside the real pre_tool_call hook subprocess (hermes hooks test → <profile>/agent-hooks/qa-signoff-gate.sh)",
+  "env": {
+    "HOME": "/home/sap",
+    "HERMES_HOME": "/home/sap/.hermes/profiles/frontend",
+    "HERMES_KANBAN_DB": "/home/sap/.hermes/profiles/qa/cache/scratch/t_dbecf24d-pre-install/board-snapshot.db",
+    "QA_GATE_GITHUB": null,
+    "GH_TOKEN_set": false,
+    "GITHUB_TOKEN_set": false,
+    "gh_path": "/usr/bin/gh",
+    "node": "v26.7.0"
+  },
+  "gh_auth_status": {
+    "exit": 0,
+    "lines": [
+      "✓ Logged in to github.com account zeldadil (/home/sap/.config/gh/hosts.yml)"
+    ]
+  },
+  "installed_gate": {
+    "path": "/home/sap/.hermes/profiles/frontend/agent-hooks/signoff-gate.mjs",
+    "sha256": "18e8d6fd450799dd7129852587675b9d2db2c2e1e62328154203ed0ac6969650"
+  },
+  "gate_check": {
+    "task": "t_20f78461",
+    "exit": 1,
+    "rules": {
+      "violations": [
+        "R1_QA_VERDICT_MISSING"
+      ],
+      "advisories": [],
+      "r9_detail": null,
+      "a11_detail": null,
+      "pr_rule": null
+    },
+    "parseError": null
+  }
+}

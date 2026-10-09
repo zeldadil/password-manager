@@ -1,0 +1,14 @@
+QA-VERDICT: pass-with-conditions — this is a retro-verification done on 2026-10-09 from card t_9ae2bc23, not a sign-off recorded when the card completed. Before today this card had no qa-authored comment. It passed the old gate only because of quoted keys in comments #30-#33. The fixed gate (bd62d76) refuses those quotes and flags R1.
+
+I checked what is actually on origin/master (4eac8e1), using a fresh mirror clone, not the closing comments:
+1. CI wiring decision: sound. Child t_ea0783c5 landed qa-signoff-audit.yml (6cbfb38). The scheduled runs are all cancelled; that is outside this card and tracked in t_30d7dff5 / t_8a64c3dd.
+2. Pre-epoch grandfathering: the decision is sound, but the closing claims were false. `docs/decisions/qa-signoff-gate-followups-t_33dcad7d.md` is in 0 commits on any ref (it exists only untracked in a local worktree), the card has 0 attachments, and PROJECT_BRIEF.md first got the record in 3651470 (2026-10-02, t_4f872624). This is now fixed on master by t_4f872624.
+3. R7 "correct and complete, no keyword changes": refuted. The master regex still misses AUTOFILL_REQUEST / AUTOFILL_RESPONSE, nonce, sender.origin and AES-256-GCM. This is superseded by decision t_18230e85.
+4. Non-default boards: the decision stands.
+5. The architect sign-off on TEST_STRATEGY §12 row 2 is the architect's own act. Its stated basis is item 3.
+
+The card as closed would not have earned a pass. On master today, items 1, 2 and 4 hold through successor cards. Condition still open: R7 v2 implementation, tracked by t_90a4bd73 (with t_75799b2e and t_f10ca03c). Reopening this card would duplicate scope that other cards already own. I am not reopening it; that decision belongs to architect/human.
+
+Evidence: tests/evidence/t_9ae2bc23/README.md
+
+The evidence is on branch test/t_9ae2bc23-quoted-exception-sweep, commit 0b1cd41. Full transcripts are in the same directory (verify-t_33dcad7d.txt, analysis.txt).
