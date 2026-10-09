@@ -1,22 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Firefox Extension",
-  "version": "1.0.0",
-  "description": "Minimal MV3 Firefox extension",
-  "permissions": ["activeTab", "scripting", "storage", "https://api.example.test/*"],
+  "name": "Password Manager",
+  "version": "0.1.0",
+  "description": "Firefox extension for the self-hosted Password Manager: controlled credential capture and autofill.",
+  "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://api.example.test/*"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none';"
   },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "action": {
-    "default_icon": "icons/icon48.png",
-    "default_popup": "popup.html"
-  },
-  "icons": {
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "password-manager@example.test"
+    }
   }
 }
