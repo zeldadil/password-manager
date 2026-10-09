@@ -25,7 +25,8 @@
  *
  * Usage:
  *   node scripts/qa/signoff-gate.mjs audit  [--db PATH] [--repo PATH] [--epoch-iso ISO]
- *                                           [--strict-history] [--json]
+ *                                           [--strict-history] [--json] [--json-out FILE]
+ *                                           [--fail-on-a11]
  *   node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx [--pre-complete] [--json]
  *   echo '<pre_tool_call payload>' | node scripts/qa/signoff-gate.mjs hook
  *
@@ -82,9 +83,20 @@
  * event (workflow_dispatch, schedule, …) is never judged; when it disagrees it
  * is the advisory A15_NON_PUSH_RUN_ON_MERGE_COMMIT. A required check carried
  * only by non-push runs is `no-push-run` → R10 (fail closed).
+ *
+ * A11 is counted and surfaced by `audit` (t_b102b100, QA_SIGN_OFF_GATE.md §5.9):
+ * the report header carries an A11 counter and the list of cards, an `ok` card
+ * that carries one is tagged, and `--json` exposes `counts.a11` and
+ * `a11_task_ids`. A11 stays an advisory per card (a GitHub outage must never
+ * make a card uncompletable); the *audit* turns red on it only with
+ * `--fail-on-a11` (exit 1), which the scheduled workflow passes — an audit that
+ * runs with GitHub and still gets A11 is a real degradation (token, branch
+ * protection, time budget). Without the flag the exit code is unchanged.
+ * `--json-out FILE` writes the `--json` document to FILE as well, so one
+ * evaluation yields both the text report and the machine-readable one.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
@@ -1510,27 +1522,100 @@ function resolveRepo(argRepo) {
   return existsSync(join(cwd, ".git")) ? cwd : null;
 }
 
+/** Rule id of the "GitHub could not be read" advisory (§5.9). */
+export const A11_RULE = "A11_CI_STATE_UNVERIFIABLE";
+
+/**
+ * "Bypasses and degradations" — ONE block of the audit report, one entry per
+ * type (t_b102b100; architect design note on the card, shared with
+ * t_5b5b61e2). Each type is counted and its cards listed on every audit, so a
+ * board whose only problem is "GitHub was not read" (or, later, "an exception
+ * waived the rules") never looks silently green. A type never turns a card
+ * into a violation; whether it may turn the *audit* red is the type's own
+ * `failsAudit(opts)`:
+ *   - A11 → only with `--fail-on-a11` (§5.9: a GitHub outage must never make a
+ *     card uncompletable, but a scheduled audit that runs WITH GitHub and
+ *     still gets A11 is a real degradation);
+ *   - t_5b5b61e2 adds the sign-off exceptions and the CLI bypasses here, with
+ *     `failsAudit: () => false` (an exception never fails the audit).
+ * `detail(r)` returns the per-card detail string, or null when the card does
+ * not carry the type.
+ */
+export const DEGRADATION_TYPES = [
+  {
+    key: "a11",
+    rule: A11_RULE,
+    label: "CI state unverifiable — R9/R10 not evaluated",
+    tag: "A11: CI state unverified — §5.9 not evaluated",
+    annotation: "A11 CI state unverifiable",
+    failFlag: "--fail-on-a11",
+    failsAudit: (opts) => Boolean(opts.failOnA11),
+    detail: (r) => {
+      const a = r.advisories.find((x) => x.rule === A11_RULE);
+      return a ? a.detail : null;
+    },
+  },
+];
+
+/** Evaluated "bypasses and degradations" block, in DEGRADATION_TYPES order (JSON-safe). */
+export function degradations(results, opts = {}) {
+  return DEGRADATION_TYPES.map((t) => {
+    const cards = [];
+    for (const r of results) {
+      const detail = t.detail(r);
+      if (detail !== null && detail !== undefined) cards.push({ task_id: r.facts.task_id, title: r.facts.title || "", detail });
+    }
+    const flagOn = t.failsAudit(opts);
+    return {
+      key: t.key,
+      rule: t.rule,
+      label: t.label,
+      annotation: t.annotation,
+      count: cards.length,
+      task_ids: cards.map((c) => c.task_id),
+      fail_flag: t.failFlag || null,
+      fail_flag_on: flagOn,
+      fails_audit: flagOn && cards.length > 0,
+      cards,
+    };
+  });
+}
+
 function renderReport(results, opts, out) {
   const enforced = results.filter((r) => r.facts.post_epoch);
   const history = results.filter((r) => !r.facts.post_epoch);
   const failed = results.filter((r) => r.violations.length > 0);
   const enforcedFailed = enforced.filter((r) => r.violations.length > 0);
+  const block = opts.degradations || degradations(results, opts);
+  // Per-card tag: a card carrying a degradation is never a bare `ok`.
+  const tagged = new Map();
+  for (const d of block) {
+    const t = DEGRADATION_TYPES.find((x) => x.key === d.key);
+    for (const id of d.task_ids) tagged.set(id, `${tagged.get(id) || ""}  [${t ? t.tag : d.key}]`);
+  }
+  const degTag = (r) => tagged.get(r.facts.task_id) || "";
   out(`QA sign-off gate — ${opts.mode} (db: ${opts.db}, epoch: ${new Date(opts.epochMs).toISOString()})`);
   out(`  enforced (done at/after epoch or pre-complete): ${enforced.length}  ·  pass: ${enforced.length - enforcedFailed.length}  ·  FAIL: ${enforcedFailed.length}`);
+  out(`  bypasses & degradations (counted on every audit — never a card violation):`);
+  for (const d of block) {
+    const cards = d.count ? `  ·  cards: ${d.task_ids.join(", ")}` : "";
+    const flag = d.fail_flag && d.fail_flag_on ? `  ·  ${d.fail_flag}: ${d.fails_audit ? "FAIL" : "pass"}` : "";
+    out(`    ${d.key.toUpperCase()} (${d.label}): ${d.count}${cards}${flag}`);
+  }
   for (const r of failed) {
-    out(`  FAIL ${fmtCard(r.facts)}${r.facts.status !== "done" ? ` [${r.facts.status}]` : ""}`);
+    out(`  FAIL ${fmtCard(r.facts)}${r.facts.status !== "done" ? ` [${r.facts.status}]` : ""}${degTag(r)}`);
     for (const v of r.violations) out(`        ${v.rule}: ${v.detail}`);
     for (const a of r.advisories) if (a.rule !== "A1_HISTORY_UNGATED") out(`        warn ${a.rule}: ${a.detail}`);
   }
   for (const r of enforced.filter((x) => x.violations.length === 0)) {
-    out(`  ok   ${fmtCard(r.facts)}`);
+    out(`  ok   ${fmtCard(r.facts)}${degTag(r)}`);
     for (const a of r.advisories) if (a.rule !== "A1_HISTORY_UNGATED") out(`        warn ${a.rule}: ${a.detail}`);
   }
   if (history.length) {
     out(`  grandfathered (done before epoch — advisory only): ${history.length}`);
     for (const r of history.slice(0, 10)) {
       const notes = r.advisories.filter((a) => a.rule === "A1_HISTORY_UNGATED").map((a) => a.detail);
-      out(`      warn ${r.facts.task_id}  ${notes.join("; ") || "no verdict/evidence recorded"}`);
+      out(`      warn ${r.facts.task_id}  ${notes.join("; ") || "no verdict/evidence recorded"}${degTag(r)}`);
     }
     if (history.length > 10) out(`      … and ${history.length - 10} more (use --json for the full list)`);
   }
@@ -1558,6 +1643,14 @@ function main() {
   if (mode !== "audit" && mode !== "check") {
     console.error(`signoff-gate: unknown mode "${mode}" (expected audit | check | hook)`);
     process.exit(3);
+  }
+  // Board-level flags (t_b102b100): refuse them on `check` instead of silently
+  // ignoring them — a per-card check never fails on A11 (§5.9).
+  for (const flag of ["fail-on-a11", "json-out"]) {
+    if (mode === "check" && args[flag] !== undefined) {
+      console.error(`signoff-gate: --${flag} applies to \`audit\` only`);
+      process.exit(3);
+    }
   }
 
   let board;
@@ -1593,33 +1686,55 @@ function main() {
   }
 
   const opts = { repo, epochMs, prEpochMs, github, strictHistory: Boolean(args["strict-history"]) };
+  // A bare switch: `--fail-on-a11 false` must not read as "on" (t_b102b100).
+  if (args["fail-on-a11"] !== undefined && args["fail-on-a11"] !== true) {
+    console.error(`signoff-gate: --fail-on-a11 takes no value (got "${args["fail-on-a11"]}")`);
+    process.exit(3);
+  }
+  const failOnA11 = args["fail-on-a11"] === true;
   const results = board.tasks.filter((t) => t.status === "done").map((t) => evaluateCard(board, t, opts));
   const failures = results.filter((r) => r.violations.length > 0);
-  if (args.json) {
-    console.log(
-      JSON.stringify(
-        {
-          mode,
-          db,
-          repo,
-          epoch: new Date(epochMs).toISOString(),
-          ok: failures.length === 0,
-          counts: {
-            done_cards: results.length,
-            enforced: results.filter((r) => r.facts.post_epoch).length,
-            failures: failures.length,
-            grandfathered: results.filter((r) => !r.facts.post_epoch).length,
-          },
-          results,
-        },
-        null,
-        2,
-      ),
-    );
-  } else {
-    renderReport(results, { mode, db, epochMs }, (s) => console.log(s));
+  const block = degradations(results, { failOnA11 });
+  const a11 = block.find((d) => d.key === "a11");
+  // Exit 1 on violations (unchanged); also when a degradation type is allowed
+  // to fail the audit and fired — today only A11 under --fail-on-a11
+  // (t_b102b100). A degradation never becomes a card violation.
+  const red = failures.length > 0 || block.some((d) => d.fails_audit);
+  const doc = {
+    mode,
+    db,
+    repo,
+    epoch: new Date(epochMs).toISOString(),
+    ok: !red,
+    fail_on_a11: failOnA11,
+    counts: {
+      done_cards: results.length,
+      enforced: results.filter((r) => r.facts.post_epoch).length,
+      failures: failures.length,
+      grandfathered: results.filter((r) => !r.facts.post_epoch).length,
+      a11: a11.count,
+    },
+    a11_task_ids: a11.task_ids,
+    degradations: block,
+    results,
+  };
+  if (typeof args["json-out"] === "string" && args["json-out"]) {
+    try {
+      writeFileSync(args["json-out"], `${JSON.stringify(doc, null, 2)}\n`);
+    } catch (e) {
+      console.error(`signoff-gate: cannot write --json-out ${args["json-out"]}: ${e.message}`);
+      process.exit(3);
+    }
+  } else if (args["json-out"] !== undefined) {
+    console.error("signoff-gate: --json-out requires a file path");
+    process.exit(3);
   }
-  process.exit(failures.length ? 1 : 0);
+  if (args.json) {
+    console.log(JSON.stringify(doc, null, 2));
+  } else {
+    renderReport(results, { mode, db, epochMs, failOnA11, degradations: block }, (s) => console.log(s));
+  }
+  process.exit(red ? 1 : 0);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -135,7 +135,14 @@ jobs:
           STRICT_HISTORY: ${{ inputs.strict_history }}
         run: |
           set -uo pipefail
-          args=(audit --repo "$GITHUB_WORKSPACE" --db "$BOARD_DB")
+          # --fail-on-a11 (t_b102b100, QA_SIGN_OFF_GATE.md §5.9): this audit runs
+          # WITH GitHub, so an A11_CI_STATE_UNVERIFIABLE here is a real
+          # degradation (token, branch-protection read, time budget) and turns
+          # the run red. A11 stays a per-card advisory everywhere else.
+          # --json-out: the same evaluation, machine-readable, for the
+          # "Bypasses and degradations" summary + annotations below (no second
+          # GitHub pass).
+          args=(audit --repo "$GITHUB_WORKSPACE" --db "$BOARD_DB" --fail-on-a11 --json-out "$RUNNER_TEMP/qa-signoff-audit.json")
           if [ "$STRICT_HISTORY" = "true" ]; then
             args+=(--strict-history)
           fi
@@ -153,7 +160,9 @@ jobs:
         if: always()
         with:
           name: qa-signoff-audit
-          path: ${{ runner.temp }}/qa-signoff-audit.txt
+          path: |
+            ${{ runner.temp }}/qa-signoff-audit.txt
+            ${{ runner.temp }}/qa-signoff-audit.json
           if-no-files-found: warn
           retention-days: 30
 
@@ -176,6 +185,17 @@ jobs:
             echo "| event | $GH_EVENT_NAME |"
             echo "| board | $board_shown |"
             echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          # "Bypasses and degradations" block (t_b102b100): one counter + card
+          # list per type (A11 today; exceptions / CLI bypasses come with
+          # t_5b5b61e2) in the summary, one ::warning:: annotation per card on
+          # stdout. Only when the audit ran: the "AUDIT NOT RUN" branch below
+          # already says nothing was counted. A missing JSON is reported as
+          # "not available" by the script itself, never as 0.
+          if [ -f "$RUNNER_TEMP/qa-signoff-audit.txt" ]; then
+            node scripts/qa/signoff-audit-summary.mjs --json "$RUNNER_TEMP/qa-signoff-audit.json" || echo "::error title=Degradations summary failed::scripts/qa/signoff-audit-summary.mjs could not read the audit JSON"
+          fi
+          {
             if [ -f "$RUNNER_TEMP/qa-signoff-audit.txt" ]; then
               audit_exit="$(cat "$RUNNER_TEMP/qa-signoff-audit.exit" 2>/dev/null || echo '?')"
               echo "### Audit report (exit code $audit_exit)"

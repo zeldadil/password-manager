@@ -1,0 +1,374 @@
+## QA sign-off gate — board audit
+
+| field | value |
+|---|---|
+| ref | refs/heads/master |
+| event | workflow_dispatch |
+| board | <scratch>/board-snapshot.db |
+
+### Bypasses and degradations
+
+Counted on every audit. A degradation is **never** a card violation; it says what this audit could not check or what was waived.
+
+| type | count | fails this audit? | cards |
+|---|---|---|---|
+| `A11_CI_STATE_UNVERIFIABLE` — CI state unverifiable — R9/R10 not evaluated | 8 | **yes — red** (`--fail-on-a11`) | `t_65c5a636`, `t_cbaa9f7d`, `t_75180b28`, `t_46c18784`, `t_9ae2bc23`, `t_7e1cea21`, `t_694c9e37`, `t_d2f1155c` |
+
+#### `A11_CI_STATE_UNVERIFIABLE`: 8
+
+| card | title | detail |
+|---|---|---|
+| `t_65c5a636` | Write Project Overview, Prerequisites, and Quick Start content | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_cbaa9f7d` | Draft Disclosure Policy section | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_75180b28` | QA gate: refuse completion of a code task unless its PR is merged and CI was green on the merge commit | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_46c18784` | FE-003g-evidence-fix: corriger la preuve fabriquee de tests/evidence/t_19128fb2/README.md (condition du verdict #502) | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_9ae2bc23` | SEC-GATE audit: done cards that passed only on a QUOTED exception key (t_33dcad7d + sweep) | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_7e1cea21` | TOOL-001: pin Node to the CI version (.nvmrc + tighten engines + README) | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_694c9e37` | CI: ne pas annuler les runs en cours sur master (checks `cancelled` sur un commit de merge font échouer R10 à tort) | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_d2f1155c` | Review + merge PR #119 (t_694c9e37: ci.yml never cancels default-branch runs) | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+
+### Audit report (exit code 1)
+
+```text
+QA sign-off gate — audit (db: <scratch>/board-snapshot.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 114  ·  pass: 85  ·  FAIL: 29
+  bypasses & degradations (counted on every audit — never a card violation):
+    A11 (CI state unverifiable — R9/R10 not evaluated): 8  ·  cards: t_65c5a636, t_cbaa9f7d, t_75180b28, t_46c18784, t_9ae2bc23, t_7e1cea21, t_694c9e37, t_d2f1155c  ·  --fail-on-a11: FAIL
+  FAIL t_7918f010  BE-001f: Error Handler + Secret Scanning CI @backend
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  FAIL t_cc570a8b  BE-001h: Integration Tests @backend
+        R2_QA_VERDICT_INVALID: verdict "pass (qa profile, comment 205)" (run-metadata by backend) is not one of: pass, pass-with-conditions, fail, blocked
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A6_EVIDENCE_CITED: evidence tests/be001h.integration.test.ts is only cited in the operative verdict (outside its §5.7 evidence label, or inside a code span) — not claimed as this card's evidence, report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence /openapi.json named in a superseded verdict/handoff is absent from this checkout — report only
+  FAIL t_f9d4d3bb  DOC-001a: Write comprehensive README.md with overview, architecture diagram, prerequisites, and quick start @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  FAIL t_f37504f0  FE-003c: Search Bar @frontend
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  FAIL t_f666adb9  FE-003h: Tag Management @frontend
+        R2_QA_VERDICT_INVALID: verdict "pass (qa profile, comment #369) — evidence: tests/evidence/t_f666adb9/README.md" (run-metadata by frontend) is not one of: pass, pass-with-conditions, fail, blocked
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  FAIL t_80fc0326  P0 follow-up: complete the public-repo purge of the leaked Telegram token (22/28 branch tips still expose it) @architect
+        R2_QA_VERDICT_INVALID: verdict "CHANGES" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+        R2_QA_VERDICT_INVALID: verdict "CHANGES" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass-with-conditions` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn X1_EXCEPTION: QA sign-off exception recorded by dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. This card was a P0 security incident (public credential leak); the credential was confirmed dead via provider API (Telegram getMe -
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_b51a1ff3/reproduce-review.sh named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt named in a superseded verdict/handoff is absent from this checkout — report only
+  FAIL t_b51a1ff3  Security process: prevent secrets in Kanban comments/evidence (live credential was pasted on t_0af5aa3e) + rotation decision for that value @architect
+        R2_QA_VERDICT_INVALID: verdict "changes" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+        R2_QA_VERDICT_INVALID: verdict "changes" (qa-comment by qa) is not one of: pass, pass-with-conditions, fail, blocked
+        warn X1_EXCEPTION: QA sign-off exception recorded by dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. Deliverable 3 (rotation decision) and the B1 guard-install claim were both independently verified by a human: sha256 of agent-hooks
+  FAIL t_76ec1e22  Create ADR index and ADR-001 through ADR-005 @docs
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  FAIL t_08b05087  Write synthetic-examples-only documentation policy @docs
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  FAIL t_56490bf2  Add markdownlint to CI with project config @docs
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  FAIL t_c4eb81f1  Add Vale style linting to CI @docs
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  FAIL t_d7c21957  Add automated link checking to CI @docs
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  FAIL t_e2468413  Validate diagram rendering in CI @docs
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  FAIL t_4a892f1d  Scope decision: session-based auth guard for FE-001j's "unauthenticated → /login" AC (none exists) @qa
+        R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: tests/evidence/t_4a892f1d/README.md (repo: <repo>; not found on any ref)
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_4e1b6937/qa/review-verdict.md named in a superseded verdict/handoff is absent from this checkout — report only
+  FAIL t_4f872624  QA-001i-fu3: make the pre-epoch grandfathering decision durable + route the 6 post-epoch audit gaps @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  FAIL t_65c5a636  Write Project Overview, Prerequisites, and Quick Start content @architect  [A11: CI state unverified — §5.9 not evaluated]
+        R3_VERDICT_NOT_TERMINAL: card is done but its latest QA verdict is "fail"
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "docs" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_372385ea/README.md is not in this checkout but exists in the repo at b067aebf39bb73ef37024384a7cdf78df46e347e — accepted
+        warn A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  FAIL t_18a945c2  Draft Threat Model Summary section @docs
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+        warn A2_DEFERRAL_OPEN: QA verdict deferred to t_00457c72 (qa, status=blocked) — audit tracks it until it lands
+  FAIL t_fe0be554  Draft Crypto Decisions Summary section @docs
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+        warn A2_DEFERRAL_OPEN: QA verdict deferred to t_00457c72 (qa, status=blocked) — audit tracks it until it lands
+  FAIL t_92a0d0eb  QA-002c: verify BE-002c lock+status tests + evidence @qa
+        R6_CONDITIONS_UNTRACKED: pass-with-conditions verdict names no follow-up card id, issue/PR link, or follow-up item
+  FAIL t_ecbcafe1  QA-002g: Verify BE-002g Integration Tests @qa
+        R2_QA_VERDICT_INVALID: verdict "PASS — all 3 acceptance criteria independently verified" (run-metadata by qa) is not one of: pass, pass-with-conditions, fail, blocked
+  FAIL t_f59c6bee  QA sign-off: FE-002h a11y Tests verdict @qa
+        R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: tests/evidence/t_f59c6bee/README.md (repo: <repo>; not found on any ref)
+  FAIL t_e88bcc25  SCOPING: rework BE-002a register/unlock so server stops receiving master password (Option B, condition 3) @architect
+        R2_QA_VERDICT_INVALID: verdict "deferred — t_ffc9034d" (run-metadata by architect) is not one of: pass, pass-with-conditions, fail, blocked
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  FAIL t_6b1528aa  QA sign-off: architect's HKDF key-separation design (t_7c0ce425) @qa
+        R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: tests/evidence/t_6b1528aa/README.md (repo: <repo>; not found on any ref)
+  FAIL t_42ecc3e6  FOLLOW-UP: answer 2 specific threat-model questions on t_e88bcc25's scoping plan @architect
+        R2_QA_VERDICT_INVALID: verdict "deferred — t_a22900df" (run-metadata by architect) is not one of: pass, pass-with-conditions, fail, blocked
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  FAIL t_c7c986c7  RECONCILE: single unified authentication protocol spec (conditions 1 + 3) @architect
+        R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: /home/sap/.hermes/kanban/workspaces/t_c7c986c7/wt/tests/evidence/t_c7c986c7/verification.md (repo: <repo>; not found on any ref)
+        warn A9_VERDICT_SUPERSEDED: off-vocabulary verdict "confirm" by qa superseded by a later valid "pass" by qa — not a violation, recorded for the audit trail
+  FAIL t_aeccec51  RESPEC: unified auth protocol (registration, 2-step unlock, stored fields, DB-leak statement) @architect
+        R2_QA_VERDICT_INVALID: verdict "pass (independent, verbatim quotes from §3.1.1 and §5)" (run-metadata by architect) is not one of: pass, pass-with-conditions, fail, blocked
+  FAIL t_8577a5a9  AUDIT: 12 remote branches pushed but never opened as a PR — classify and route each @architect
+        R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: /home/sap/.hermes/kanus/.hermes/kanban/attachments/t_8577a5a9/README.md (repo: <repo>; not found on any ref)
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass-with-conditions` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass-with-conditions` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A5_EVIDENCE_SUPERSEDED: evidence /home/sap/.hermes/profiles/architect/cache/scratch/branch-classification.md named in a superseded verdict/handoff is absent from this checkout — report only
+  FAIL t_ce76ba78  QA-001 password-change RESPEC (t_8f551794): verify no master pw / vault key in requests @qa
+        R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: /home/sap/.hermes/kanban/workspaces/t_ce76ba78/QA-001-verdict.md (repo: <repo>; not found on any ref)
+  FAIL t_15897ff9  HUMAN GATE: merge admin de PR #106 (secret-guard t_b51a1ff3) — enforce_admins bloque tout agent @architect
+        R5_EVIDENCE_FILE_MISSING: evidence file claimed by the operative verdict (§5.7) does not exist: /home/sap/.hermes/kanban/attachments/t_8577a5a9/README.md (repo: <repo>; not found on any ref)
+  ok   t_143990ec  BE-001e: Query Middleware (include/filter/pagination) @qa
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_f93d4d46  BE-001g: Unit Tests @qa
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/migration.test.ts named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/envelope.test.ts named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/query.test.ts named in a superseded verdict/handoff is absent from this checkout — report only
+  ok   t_f49d448c  FE-001h: Lint/Type Config + CI @frontend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "dashboard" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "human" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn X1_EXCEPTION: QA sign-off exception recorded by human: closed by human decision (Ze), bypassing gate defect R8_DEFERRAL_TARGET_INVALID (tracked separately at t_58280940 — stale architect deferral marker blocks even with a valid QA-VERDICT: pass present, c
+  ok   t_4e1b6937  FE-001i: Unit Tests @qa
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_4e1b6937/qa/round2 named in a superseded verdict/handoff is absent from this checkout — report only
+  ok   t_4ccd2652  FE-001j: Integration Tests @frontend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_cdd23d35  FE-001k: a11y Tests @qa
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_cdd23d35/qa-review/README.md named in a superseded verdict/handoff is absent from this checkout — report only
+  ok   t_16f8ad84  BE-002a: Registration + KDF + Vault Key Storage @qa
+  ok   t_4d0c8439  BE-002b: Unlock Endpoint @backend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_bc53fc06  BE-002c: Lock Endpoint + Session Validation @backend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_33b8bbd3  BE-002d: Session Lifetime (Auto-lock, Rotation, Restart) @backend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_4278a1dc  BE-002e: Wrong-password Handling @backend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_91964616  BE-002f: Unit Tests @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_516a7fcc  BE-002g: Integration Tests @backend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass-with-conditions` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_8d52bcc9  BE-002h: Security Tests @qa
+        warn A9_VERDICT_SUPERSEDED: off-vocabulary verdict "APPROVED" by qa superseded by a later valid "pass" by qa — not a violation, recorded for the audit trail
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "backend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A5_EVIDENCE_SUPERSEDED: evidence /home/sap/password-manager/apps/services/api/tests/evidence/t_8d52bcc9/README.md named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A4_EVIDENCE_OFF_TREE: operative evidence apps/services/api/tests/evidence/t_8d52bcc9/README.md is not in this checkout but exists in the repo at 86ac385d69d89149bd80740cf55efd6a99320eb0 — accepted
+  ok   t_fe3b76ea  BE-003a: Vault Encryption @qa
+  ok   t_ddd8fb1e  BE-003b: Resource CRUD API + Schema @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_b51bf4b9  BE-003c: Secret Schema @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_b6f633c3  BE-003d: Folder CRUD + Tree + Permission Mask @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_55c28180  BE-003e: Tag CRUD @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_03612cd7  BE-003f: Permission Model + Enforcement Middleware @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_d136be82  BE-003g: Folder Permission Mask Propagation @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_d696f175  BE-003h: Search Endpoint @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_a7b64b39  BE-003i: Unit Tests @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_f4f3ec16  BE-003j: Integration Tests @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_e4341d18  BE-003k: Security Tests @backend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "backend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_3b58b7ef  FE-002a: Login Page @qa
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_fdd2548e  FE-002b: Unlock Page @qa
+  ok   t_12f540bf  FE-002c: Lock Button + Auto-lock Banner @frontend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_b037ed46  FE-002d: Error States + No Leakage @frontend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_7f8643d9  FE-002e: Accessibility @frontend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "frontend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_5fb75e7b  FE-002f: Unit Tests @frontend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "frontend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_5fb75e7b/README.md is not in this checkout but exists in the repo at c19403aad3b33cea0360c9733669b43a7f3a4cac — accepted
+  ok   t_63323ce5  FE-002g: Integration Tests @frontend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "frontend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_a526419e  FE-002h: a11y Tests @frontend
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_a9d5cb1b  FE-003a: Vault Dashboard @frontend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "frontend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_aca6ed13  FE-003b: Sidebar @frontend
+  ok   t_19128fb2  FE-003g: Folder Management @qa
+        warn A9_VERDICT_SUPERSEDED: off-vocabulary verdict "the" by qa superseded by a later valid "pass" by qa — not a violation, recorded for the audit trail
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_930fddbe  SEC: purge leaked Telegram bot token from git history (public repo) @architect
+        warn X1_EXCEPTION: QA sign-off exception recorded by dashboard: closed by human decision (Ze), duplicate of already-resolved incident t_80fc0326/t_9b3bdba0/t_b51a1ff3, verified independently on all 5 AC-named branches, 0 hits.  Closing as done. This unblocks paren
+  ok   t_0af5aa3e  P0: rotate + purge leaked Telegram bot token (public git history) @qa
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_0af5aa3e/QA-VERDICT.md named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_0af5aa3e/gitrepo-post-purge-state.md named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md named in a superseded verdict/handoff is absent from this checkout — report only
+  ok   t_33dcad7d  QA-001h follow-ups: sign-off gate — CI wiring decision + pre-epoch retrofit + R7 mapping sign-off @architect
+        warn A10_EXCEPTION_IGNORED: a qa-signoff-exception key written by "architect" appears only inside a code span/fence — a quotation, not an exception (§5.6) — ignored
+        warn A10_EXCEPTION_IGNORED: a qa-signoff-exception key written by "architect" appears only inside a code span/fence — a quotation, not an exception (§5.6) — ignored
+        warn A10_EXCEPTION_IGNORED: a qa-signoff-exception key written by "architect" appears only inside a code span/fence — a quotation, not an exception (§5.6) — ignored
+        warn A10_EXCEPTION_IGNORED: a qa-signoff-exception key written by "architect" appears only inside a code span/fence — a quotation, not an exception (§5.6) — ignored
+        warn A6_EVIDENCE_CITED: evidence docs/decisions/qa-signoff-gate-followups-t_33dcad7d.md is only cited in the operative verdict (outside its §5.7 evidence label, or inside a code span) — not claimed as this card's evidence, report only
+  ok   t_ea0783c5  CI-001h: wire QA sign-off gate board audit as a scheduled CI job (qa) @architect
+  ok   t_527d4720  CI-001h follow-up: board transport for the scheduled QA sign-off audit (hosted runner cannot see ~/.hermes/kanban.db) @architect
+        warn A9_VERDICT_SUPERSEDED: off-vocabulary verdict "pass (comment 42)" by architect superseded by a later valid "pass" by qa — not a violation, recorded for the audit trail
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_e348e0b7  P0 follow-up: master secret-scan is a false negative — add full-history credential verification (truffleHog) to master CI @architect
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_28951254  P0 follow-up: propagate the ROTATED Telegram token to all 7 profiles' .env (agent Telegram channel is DOWN) @architect
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_5455942d  QA gate defect: signoff-gate hook blocks legitimate kanban_complete (resolves session id instead of task id, fails closed) @qa
+  ok   t_c3cb6842  P1 gate-defect follow-up: review + verify signoff-gate.mjs regex fix (t_5455942d) from ROTATION false-positive @qa
+  ok   t_9b3bdba0  P0 SECINCIDENT: LIVE rotated Telegram token committed in cleartext on public branch fix/telegram-token-rotation-t_28951254 (scripts/qa/secret-guard.selftest.mjs:41) @architect
+        warn X1_EXCEPTION: QA sign-off exception recorded by dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. This is the P0 child of t_80fc0326 (live rotated token in scripts/qa/secret-guard.selftest.mjs on fix/telegram-token-rotation-t_289
+  ok   t_58280940  QA: gate R8 false positive blocks t_f49d448c (stale deferral marker, comment 92) + formal verdict @qa
+  ok   t_28f60dc1  ARCH: land the QA sign-off gate tooling on master (policy + selftest + installer/verifier) — root cause of recurring gate P1s @architect
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_7dd3b960  QA-001i — close gate-tooling §10 open items (audit CI, pre-epoch backlog, R7) @qa
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_28f60dc1/README.md named in a superseded verdict/handoff is absent from this checkout — report only
+  ok   t_2162d273  Scope decision: which FE card wires the theme toggle control / data-theme writer + sidebar collapse @architect
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_4242bee8  QA-001i-fu1: pre-epoch retrofit — retro-verify 3 security/normative cards + repair 3 stale evidence records @qa
+  ok   t_710ed14c  QA-001i-fu2: board-audit CI spec compliance (fetch-depth, gate revision, first scheduled run) @architect
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass-with-conditions` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass-with-conditions" comes from the run metadata of a "architect" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_18230e85  QA-001i-fu4: ARCH decision — R7 security-track classification v2 (scope-driven) + the AR-6/bridge question @architect
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_99e408c5  QA-001i-fu6 (P1 gate defect): R5 fails a card for a path it merely quotes about another card (operative verdict, no code-span exclusion) @qa
+  ok   t_816a87b5  SEC-001 AC-4: record the QA half of the Sign-off in architecture/adr/SEC-001-threat-model.md §5 (or decide the gate closes on the Architect signature alone) @architect
+  ok   t_d5e68535  QA review: SEC-001 gate policy change (t_816a87b5 option 2) + artifact sign-off @qa
+        warn A6_EVIDENCE_CITED: evidence tests/evidence/t_d5e68535/README.md is only cited in the operative verdict (outside its §5.7 evidence label, or inside a code span) — not claimed as this card's evidence, report only
+  ok   t_338f47fd  P1 gate defect: VERDICT_MARKER_RE has no author check — any profile can record a terminal QA verdict and clear the gate (reproduced on 0af4a453 and 28b0b771, hook included) @qa
+  ok   t_d20787de  P1 gate follow-up: retro-verify the 5 cards whose verdict rested on a non-QA record (t_338f47fd §3 author rule) @qa
+  ok   t_782802ac  FE-001k-fu: make the a11y sweep's route coverage self-checking (+ two false doc/spec claims) @frontend
+        warn A8_VERDICT_SELF_DECLARED: the operative verdict "pass" comes from the run metadata of a "frontend" run — accepted per §3 (the one author-independent source), but it is a self-declaration, not a QA review
+  ok   t_5b4429c9  Generate Architecture Diagram using architecture-diagram skill @qa
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_cbaa9f7d  Draft Disclosure Policy section @docs  [A11: CI state unverified — §5.9 not evaluated]
+        warn A2_DEFERRAL_OPEN: QA verdict deferred to t_00457c72 (qa, status=blocked) — audit tracks it until it lands
+        warn A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  ok   t_df8e644a  P1 gate lane: VERDICT_LOOSE_RE still parses a cited file name as a verdict token (residual half of t_c3cb6842; keeps t_80fc0326 red on a false positive) @qa
+        warn A5_EVIDENCE_SUPERSEDED: evidence /home/sap/password-manager-check/.worktrees/t_df8e644a/tests/evidence/t_df8e644a/scripts/probe-loose-path.mjs named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence /home/sap/password-manager-check/.worktrees/t_df8e644a/tests/evidence/t_df8e644a/scripts/audit-ab.mjs named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A5_EVIDENCE_SUPERSEDED: evidence /home/sap/password-manager-check/.worktrees/t_df8e644a/tests/evidence/t_df8e644a/scripts/make-verify-fixture.sh named in a superseded verdict/handoff is absent from this checkout — report only
+  ok   t_2cc2d094  FE-001l: wire theme toggle control — data-theme is never written from React (gap found in coherence audit, t_2162d273 decision never implemented) @qa
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_48b0458d  QA-002d: Verify BE-002d Session Lifetime Tests + Evidence @qa
+  ok   t_5703dbc9  QA verification: FE-002c review-gap fixes (t_12f540bf) @qa
+  ok   t_51eb9ae5  FE-003a: Vault Dashboard — QA verification @qa
+  ok   t_4de1f6aa  DECISION: vault key client availability (A1 vs A2 vs B) — resolves ADR-007 @qa
+  ok   t_dd9eb295  SECURITY: unlock.ts self-wrap forces server to reconstruct plaintext vault key on every unlock @architect
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_ffc9034d  QA sign-off: architect's scoping plan for BE-002a Option B condition 3 (t_e88bcc25) @qa
+  ok   t_7c0ce425  CONDITION 1: key separation — HKDF-derived auth verifier + encryption key (Option B) @architect
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: deferred` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_99bc64ff  CONDITION 2: browser Argon2id library gate (Option B) @qa
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass-with-conditions` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_a22900df  QA sign-off: architect's threat-model answers on t_e88bcc25's scoping plan (t_42ecc3e6) @qa
+  ok   t_b37ce45a  SPIKE: RFC 9106 test vectors, hash-wasm root-cause, cross-browser Argon2id evidence @architect
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A5_EVIDENCE_SUPERSEDED: evidence /home/sap/.hermes/kanban/attachments/t_b37ce45a/README.md named in a superseded verdict/handoff is absent from this checkout — report only
+  ok   t_069c605b  QA sign-off: t_19128fb2 FE-003g CI fixes @qa
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_069c605b/README.md named in a superseded verdict/handoff is absent from this checkout — report only
+  ok   t_75180b28  QA gate: refuse completion of a code task unless its PR is merged and CI was green on the merge commit @architect  [A11: CI state unverified — §5.9 not evaluated]
+        warn A9_VERDICT_SUPERSEDED: off-vocabulary verdict "none recorded (implementer is qa; self-sign avoided)" by qa superseded by a later valid "pass-with-conditions" by qa — not a violation, recorded for the audit trail
+        warn A9_VERDICT_SUPERSEDED: off-vocabulary verdict "qa" by qa superseded by a later valid "pass-with-conditions" by qa — not a violation, recorded for the audit trail
+        warn A10_EXCEPTION_IGNORED: a qa-signoff-exception key written by "architect" appears only inside a code span/fence — a quotation, not an exception (§5.6) — ignored
+        warn A5_EVIDENCE_SUPERSEDED: evidence tests/evidence/t_75180b28/README.md named in a superseded verdict/handoff is absent from this checkout — report only
+        warn A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  ok   t_bc8335fe  CHECK: argon2-browser maintenance and security status (condition 1 of Ze's library decision) @architect
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "architect" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+  ok   t_8f551794  RESPEC: password-change flow (Option B: no master password to the server) @architect
+  ok   t_c015bda7  QA gate bug: R2 blocks a card on a SUPERSEDED invalid verdict token (blocks t_c7c986c7) @qa
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "worker" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A5_EVIDENCE_SUPERSEDED: evidence /home/sap/.hermes/kanban/workspaces/t_c015bda7/wt/tests/evidence/t_c015bda7/README.md named in a superseded verdict/handoff is absent from this checkout — report only
+  ok   t_46c18784  FE-003g-evidence-fix: corriger la preuve fabriquee de tests/evidence/t_19128fb2/README.md (condition du verdict #502) @frontend  [A11: CI state unverified — §5.9 not evaluated]
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "frontend" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  ok   t_b8001b55  SEC-GATE: QA signoff exception — author allowlist, never exempt securityTrack, code-span aware @qa
+        warn A10_EXCEPTION_IGNORED: a qa-signoff-exception key written by "architect" appears only inside a code span/fence — a quotation, not an exception (§5.6) — ignored
+  ok   t_5089a8c1  HUMAN GATE: qa worker fallback model — acceptable for gate-modifying cards?
+  ok   t_9ae2bc23  SEC-GATE audit: done cards that passed only on a QUOTED exception key (t_33dcad7d + sweep) @qa  [A11: CI state unverified — §5.9 not evaluated]
+        warn A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  ok   t_7e1cea21  TOOL-001: pin Node to the CI version (.nvmrc + tighten engines + README) @architect  [A11: CI state unverified — §5.9 not evaluated]
+        warn A4_EVIDENCE_OFF_TREE: operative evidence tests/evidence/t_372385ea/README.md is not in this checkout but exists in the repo at b067aebf39bb73ef37024384a7cdf78df46e347e — accepted
+        warn A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  ok   t_694c9e37  CI: ne pas annuler les runs en cours sur master (checks `cancelled` sur un commit de merge font échouer R10 à tort) @qa  [A11: CI state unverified — §5.9 not evaluated]
+        warn A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  ok   t_d2f1155c  Review + merge PR #119 (t_694c9e37: ci.yml never cancels default-branch runs) @architect  [A11: CI state unverified — §5.9 not evaluated]
+        warn A11_CI_STATE_UNVERIFIABLE: could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+  grandfathered (done before epoch — advisory only): 27
+      warn t_9840ccdd  no verdict/evidence recorded
+      warn t_3ca45da2  no verdict/evidence recorded
+      warn t_258f91c8  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_ad18d4ed  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_08b02da9  no verdict/evidence recorded
+      warn t_5f82ac57  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_7ec83773  no verdict/evidence recorded
+      warn t_f8a5c949  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      warn t_f463b44f  completed before the gate epoch — no QA verdict (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING
+      warn t_415897da  completed before the gate epoch — no QA verdict (grandfathered); completed before the gate epoch — no evidence pointer (grandfathered); pre-epoch gap: R1_QA_VERDICT_MISSING; pre-epoch gap: R4_EVIDENCE_MISSING
+      … and 17 more (use --json for the full list)
+```
+
+---
+_Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._

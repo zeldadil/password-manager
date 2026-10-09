@@ -1,0 +1,36 @@
+scenario=D-live-board-github-off audit_step_exit=1 summary_step_exit=0 enforce_step_exit=1 warning_annotations=8
+--- audit header (first 6 lines of the report) ---
+  enforced (done at/after epoch or pre-complete): 114  ·  pass: 85  ·  FAIL: 29
+  bypasses & degradations (counted on every audit — never a card violation):
+    A11 (CI state unverifiable — R9/R10 not evaluated): 8  ·  cards: t_65c5a636, t_cbaa9f7d, t_75180b28, t_46c18784, t_9ae2bc23, t_7e1cea21, t_694c9e37, t_d2f1155c  ·  --fail-on-a11: FAIL
+  FAIL t_7918f010  BE-001f: Error Handler + Secret Scanning CI @backend
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+  FAIL t_cc570a8b  BE-001h: Integration Tests @backend
+--- ::warning:: annotations (first 5) ---
+::warning title=A11 CI state unverifiable%3A t_65c5a636::t_65c5a636 Write Project Overview, Prerequisites, and Quick Start content — could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+::warning title=A11 CI state unverifiable%3A t_cbaa9f7d::t_cbaa9f7d Draft Disclosure Policy section — could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+::warning title=A11 CI state unverifiable%3A t_75180b28::t_75180b28 QA gate: refuse completion of a code task unless its PR is merged and CI was green on the merge commit — could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+::warning title=A11 CI state unverifiable%3A t_46c18784::t_46c18784 FE-003g-evidence-fix: corriger la preuve fabriquee de tests/evidence/t_19128fb2/README.md (condition du verdict #502) — could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+::warning title=A11 CI state unverifiable%3A t_9ae2bc23::t_9ae2bc23 SEC-GATE audit: done cards that passed only on a QUOTED exception key (t_33dcad7d + sweep) — could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable
+--- step summary: Bypasses and degradations section ---
+### Bypasses and degradations
+
+Counted on every audit. A degradation is **never** a card violation; it says what this audit could not check or what was waived.
+
+| type | count | fails this audit? | cards |
+|---|---|---|---|
+| `A11_CI_STATE_UNVERIFIABLE` — CI state unverifiable — R9/R10 not evaluated | 8 | **yes — red** (`--fail-on-a11`) | `t_65c5a636`, `t_cbaa9f7d`, `t_75180b28`, `t_46c18784`, `t_9ae2bc23`, `t_7e1cea21`, `t_694c9e37`, `t_d2f1155c` |
+
+#### `A11_CI_STATE_UNVERIFIABLE`: 8
+
+| card | title | detail |
+|---|---|---|
+| `t_65c5a636` | Write Project Overview, Prerequisites, and Quick Start content | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_cbaa9f7d` | Draft Disclosure Policy section | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_75180b28` | QA gate: refuse completion of a code task unless its PR is merged and CI was green on the merge commit | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_46c18784` | FE-003g-evidence-fix: corriger la preuve fabriquee de tests/evidence/t_19128fb2/README.md (condition du verdict #502) | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_9ae2bc23` | SEC-GATE audit: done cards that passed only on a QUOTED exception key (t_33dcad7d + sweep) | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_7e1cea21` | TOOL-001: pin Node to the CI version (.nvmrc + tighten engines + README) | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_694c9e37` | CI: ne pas annuler les runs en cours sur master (checks `cancelled` sur un commit de merge font échouer R10 à tort) | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+| `t_d2f1155c` | Review + merge PR #119 (t_694c9e37: ci.yml never cancels default-branch runs) | could not read the pull-request list from GitHub (GitHub lookups disabled (QA_GATE_GITHUB=off / --no-github)) — the PR-merged / merge-commit-CI rule (§5.9) was not evaluated for this card; not a violation, re-run the check when GitHub is reachable |
+

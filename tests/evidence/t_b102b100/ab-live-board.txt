@@ -1,0 +1,12 @@
+base=aab61520d3f73efe8e884a87e50f2005c344b6d5 master-gate sha256=3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749
+branch-gate sha256=8e3e648c67caafe399e01d03780b77126c009c72e1de83ab42773f686005c43e
+== github=live exit master=1 branch=1 branch+--fail-on-a11=1
+  cards master=141 branch=141  rule-set changes=0
+  counts master={"done_cards":141,"enforced":114,"failures":29,"grandfathered":27}
+  counts branch={"done_cards":141,"enforced":114,"failures":29,"grandfathered":27,"a11":0}
+  branch a11_task_ids=[]  matches results=true
+== github=off exit master=1 branch=1 branch+--fail-on-a11=1
+  cards master=141 branch=141  rule-set changes=0
+  counts master={"done_cards":141,"enforced":114,"failures":29,"grandfathered":27}
+  counts branch={"done_cards":141,"enforced":114,"failures":29,"grandfathered":27,"a11":8}
+  branch a11_task_ids=["t_65c5a636","t_cbaa9f7d","t_75180b28","t_46c18784","t_9ae2bc23","t_7e1cea21","t_694c9e37","t_d2f1155c"]  matches results=true
