@@ -77,7 +77,10 @@ line). Adding a `vaultKey` token in R7 v2 is harmless but adds nothing. This is 
 ## Gate check of `t_33dcad7d` (head gate, live board, read-only)
 
 - before the verdict: `check-t_33dcad7d-before.txt`: exit 1, `R1_QA_VERDICT_MISSING`, A10 × 4
-- after the verdict: `check-t_33dcad7d-after.txt`
+- after the verdict: `check-t_33dcad7d-after.txt`: exit 0, `violations=[]`, operative verdict `pass-with-conditions`
+  (qa comment #651 on `t_33dcad7d`; its body is in `verdict-comment-651.txt`, read back from the board). A10 × 4 remain:
+  the old quotations are still refused. There is also one `A6_EVIDENCE_CITED`, for the never-committed decision file
+  the verdict cites. The verdict was written without the exception key, so it cannot become an applied exception itself.
 
 ## Reproduce
 
