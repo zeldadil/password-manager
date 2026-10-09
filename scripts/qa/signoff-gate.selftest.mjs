@@ -256,6 +256,112 @@ const EXC_ALLOWED = Object.fromEntries(
   ]),
 );
 
+// ── t_b2588ee7: an exception can be withdrawn by a later record ─────────────
+// Before the fix the first applied exception was irrevocable (`.find()`), and a
+// withdrawal-shaped record could even be read AS an exception.
+const WDR_REASON = "qa-signoff-exception withdrawn: the incident is closed, the card needs a real QA verdict";
+const EXC_THEN_WDR = card({
+  title: "BE-920a exception, then withdrawn by the same author",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "architect", body: EXC_REASON },
+    { author: "architect", body: WDR_REASON },
+  ],
+});
+const EXC_THEN_WDR_OTHER = card({
+  title: "BE-920b exception by the dashboard, withdrawn by qa",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "dashboard", body: EXC_REASON },
+    { author: "qa", body: WDR_REASON },
+  ],
+});
+const EXC_THEN_WDR_BACKEND = card({
+  title: "BE-921a withdrawal by an executing profile",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "architect", body: EXC_REASON },
+    { author: "backend", body: WDR_REASON },
+  ],
+});
+const EXC_THEN_WDR_WORKER = card({
+  title: "BE-921b withdrawal by the anonymous worker author",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "architect", body: EXC_REASON },
+    { author: "worker", body: WDR_REASON },
+  ],
+});
+const EXC_THEN_WDR_QUOTED = card({
+  title: "BE-921c withdrawal key only quoted in a code span",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "architect", body: EXC_REASON },
+    { author: "architect", body: "To end it, post `qa-signoff-exception withdrawn: <reason>` — not done yet." },
+  ],
+});
+// (3) a withdrawal with nothing to withdraw: no effect, no crash.
+const WDR_ONLY = card({
+  title: "BE-922a withdrawal on a card that never had an exception",
+  body: "**Test Types:** unit",
+  comments: [{ author: "architect", body: WDR_REASON }],
+});
+const WDR_ONLY_COMPLIANT = card({
+  title: "BE-922b compliant card with a stray withdrawal",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "architect", body: "qa-signoff-exception withdrawn" },
+    qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md"),
+  ],
+});
+fixtureFile(`tests/evidence/${WDR_ONLY_COMPLIANT}/README.md`);
+// Order matters: a withdrawal only ends an exception recorded BEFORE it.
+const WDR_BEFORE_EXC = card({
+  title: "BE-922c withdrawal posted before the exception",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "architect", body: WDR_REASON },
+    { author: "architect", body: EXC_REASON },
+  ],
+});
+const EXC_WDR_EXC = card({
+  title: "BE-923a exception, withdrawal, exception again (re-armed)",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "architect", body: EXC_REASON },
+    { author: "qa", body: WDR_REASON },
+    { author: "human", body: "qa-signoff-exception: re-approved for INC-003 after review" },
+  ],
+});
+const EXC_WDR_SAME_COMMENT = card({
+  title: "BE-923b exception and withdrawal in one comment, in that order",
+  body: "**Test Types:** unit",
+  comments: [{ author: "architect", body: `${EXC_REASON}\n\n${WDR_REASON}` }],
+});
+// Same-second tie: the board's created_at has second resolution; the id
+// (posting order) must break the tie.
+const EXC_WDR_SAME_SECOND = card({
+  title: "BE-923c exception and withdrawal posted in the same second",
+  body: "**Test Types:** unit",
+  comments: [
+    { author: "architect", body: EXC_REASON, at: 0 },
+    { author: "architect", body: WDR_REASON, at: 0 },
+  ],
+});
+// A withdrawal-shaped record must never be read as an exception (the old
+// EXCEPTION_RE matched both spellings below and turned them into waivers).
+const WDR_SHAPES_ALONE = ["qa-signoff-exception-withdrawn: no longer needed", "qa-signoff-exception: withdrawn — no longer needed"].map((body, i) =>
+  card({ title: `BE-924${"ab"[i]} withdrawal spelling alone is not an exception`, body: "**Test Types:** unit", comments: [{ author: "architect", body }] }),
+);
+const EXC_SECURITY_WDR = card({
+  title: "BE-925 crypto card: exception refused, withdrawal is a no-op",
+  body: "**Test Types:** unit, security\nImplements the packages/crypto AEAD wrapper and vault key loading.",
+  comments: [
+    { author: "architect", body: EXC_REASON },
+    { author: "architect", body: WDR_REASON },
+  ],
+});
+
 // ── Path B: violations ──────────────────────────────────────────────────────
 const NO_VERDICT = card({ title: "BE-901 no QA verdict and no evidence", body: "**Test Types:** unit" });
 
@@ -995,7 +1101,7 @@ function taskRowSQL(c) {
   for (const [i, cm] of c.comments.entries()) {
     const body = String(cm.body).replace(/__ID__/g, c.tid);
     rows.push(
-      `INSERT INTO task_comments (task_id,author,body,created_at) VALUES ('${c.tid}','${esc(cm.author)}','${esc(body)}',${EPOCH_AFTER + i});`,
+      `INSERT INTO task_comments (task_id,author,body,created_at) VALUES ('${c.tid}','${esc(cm.author)}','${esc(body)}',${EPOCH_AFTER + (cm.at ?? i)});`,
     );
   }
   for (const a of c.attachments || []) {
@@ -1568,6 +1674,148 @@ console.log("\n1f. t_b8001b55 regressions (qa-signoff-exception: author allowlis
       `exit=${r.code} rules=[${violationRules(r).join(",")}] adv=[${advisoryRules(r).join(",")}]`,
     );
   }
+}
+
+console.log("\n1g. t_b2588ee7 regressions (a qa-signoff-exception can be withdrawn by a later record):");
+{
+  const op = (res) => (res.parsed ? res.parsed.facts.exception : undefined);
+  const wd = (res) => (res.parsed ? res.parsed.facts.exceptions_withdrawn || [] : []);
+  const wIg = (res) => (res.parsed ? (res.parsed.facts.exception_withdrawals_ignored || []).map((x) => x.why) : []);
+  const a16 = (res) => (res.parsed ? res.parsed.advisories.filter((a) => a.rule === "A16_EXCEPTION_WITHDRAWAL_IGNORED") : []);
+  const show = (r) =>
+    `exit=${r.code} rules=[${violationRules(r).join(",")}] adv=[${advisoryRules(r).join(",")}] exc=${JSON.stringify(op(r))} wIg=[${wIg(r).join(",")}]`;
+  const gone = (r) =>
+    r.code === 1 &&
+    op(r) === null &&
+    violationRules(r).includes("R1_QA_VERDICT_MISSING") &&
+    violationRules(r).includes("R4_EVIDENCE_MISSING") &&
+    !advisoryRules(r).includes("X1_EXCEPTION");
+  const holds = (r, author = "architect") =>
+    r.code === 0 && violationRules(r).length === 0 && op(r) && op(r).author === author && advisoryRules(r).includes("X1_EXCEPTION");
+
+  // (1) exception then withdrawal → no exception any more; the trail stays visible.
+  for (const [label, tid, by] of [
+    ["same author (architect → architect)", EXC_THEN_WDR, "architect"],
+    ["another allowed author (dashboard → qa)", EXC_THEN_WDR_OTHER, "qa"],
+  ]) {
+    const r = gateJson(tid);
+    check(
+      `(1) exception then withdrawal by ${label} → no exception: R1 + R4 fire, X2 reported, no X1`,
+      gone(r) &&
+        wd(r).length === 1 &&
+        wd(r)[0].withdrawn_by === by &&
+        /incident is closed/.test(wd(r)[0].withdrawal_reason) &&
+        advisoryRules(r).includes("X2_EXCEPTION_WITHDRAWN"),
+      show(r),
+    );
+  }
+
+  // (2) a withdrawal by a non-allowed author is ignored: the exception holds.
+  for (const [label, tid, author] of [
+    ["an executing profile (backend)", EXC_THEN_WDR_BACKEND, "backend"],
+    ["the anonymous `worker` author", EXC_THEN_WDR_WORKER, "worker"],
+  ]) {
+    const r = gateJson(tid);
+    check(
+      `(2) withdrawal by ${label} → ignored: exception holds (X1, 0 violations), A16(author), no X2`,
+      holds(r) &&
+        wd(r).length === 0 &&
+        wIg(r).join() === "author" &&
+        a16(r).some((a) => a.detail.includes(`"${author}"`)) &&
+        !advisoryRules(r).includes("X2_EXCEPTION_WITHDRAWN"),
+      show(r),
+    );
+  }
+  const ww = gateJson(EXC_THEN_WDR_WORKER);
+  check(
+    "(2) the `worker` withdrawal refusal says it names no profile",
+    a16(ww).some((a) => /names no profile/.test(a.detail)),
+    `adv=${JSON.stringify(a16(ww).map((a) => a.detail))}`,
+  );
+  const wq = gateJson(EXC_THEN_WDR_QUOTED);
+  check(
+    "(2) a withdrawal key quoted in a code span is a citation → ignored: exception holds, A16(quoted)",
+    holds(wq) && wd(wq).length === 0 && wIg(wq).join() === "quoted",
+    show(wq),
+  );
+
+  // (3) a withdrawal with no exception in force: no effect, no crash.
+  const wo = gateJson(WDR_ONLY);
+  check(
+    "(3) withdrawal without any exception → no effect: gate runs (JSON), R1 fires as on a bare card, A16(no-exception)",
+    wo.parsed !== null &&
+      wo.code === 1 &&
+      op(wo) === null &&
+      wd(wo).length === 0 &&
+      wIg(wo).join() === "no-exception" &&
+      violationRules(wo).includes("R1_QA_VERDICT_MISSING") &&
+      !advisoryRules(wo).includes("X1_EXCEPTION"),
+    show(wo),
+  );
+  const woc = gateJson(WDR_ONLY_COMPLIANT);
+  check(
+    "(3) a bare stray withdrawal on a compliant card changes nothing (0 violations, A16 only)",
+    woc.code === 0 && violationRules(woc).length === 0 && wIg(woc).join() === "no-exception" && op(woc) === null,
+    show(woc),
+  );
+  const wbe = gateJson(WDR_BEFORE_EXC);
+  check(
+    "(3) a withdrawal posted BEFORE the exception does not pre-empt it (posterior records only)",
+    holds(wbe) && wd(wbe).length === 0 && wIg(wbe).join() === "no-exception",
+    show(wbe),
+  );
+
+  // Ordering and re-arming.
+  const rearm = gateJson(EXC_WDR_EXC);
+  check(
+    "re-arm: exception → withdrawal → new exception → the new one is operative, the first stays visible as X2",
+    holds(rearm, "human") && /INC-003/.test(op(rearm).reason) && wd(rearm).length === 1 && wd(rearm)[0].author === "architect",
+    show(rearm),
+  );
+  const same = gateJson(EXC_WDR_SAME_COMMENT);
+  check("one comment recording an exception then its withdrawal → withdrawn", gone(same) && wd(same).length === 1, show(same));
+  const tie = gateJson(EXC_WDR_SAME_SECOND);
+  check("same-second exception + withdrawal → posting order (id) breaks the tie → withdrawn", gone(tie) && wd(tie).length === 1, show(tie));
+
+  // A withdrawal spelling must never be read as an exception.
+  for (const tid of WDR_SHAPES_ALONE) {
+    const r = gateJson(tid);
+    const body = CARDS.find((c) => c.tid === tid).comments[0].body;
+    check(
+      `withdrawal spelling "${body.slice(0, 34)}…" alone is NOT an exception → R1 fires, no X1`,
+      gone(r) && wIg(r).join() === "no-exception" && (r.parsed.facts.exceptions_ignored || []).length === 0,
+      show(r),
+    );
+  }
+
+  // Security track: nothing to withdraw (the exception is refused), R7 unchanged.
+  const sw = gateJson(EXC_SECURITY_WDR);
+  check(
+    "security-track card: exception refused, withdrawal is a no-op, R7 + R1 still fire",
+    sw.code === 1 &&
+      ["R7_SECURITY_TRACK_SIGNOFF_MISSING", "R1_QA_VERDICT_MISSING"].every((x) => violationRules(sw).includes(x)) &&
+      op(sw) === null &&
+      wIg(sw).join() === "no-exception",
+    show(sw),
+  );
+
+  // Hook mode: a withdrawn exception no longer lets the card complete.
+  const hk = runGate(
+    ["hook", "--db", db],
+    JSON.stringify({
+      hook_event_name: "pre_tool_call",
+      tool_name: "kanban_complete",
+      tool_input: { task_id: EXC_THEN_WDR, summary: "done" },
+      session_id: "sess_fixture",
+      cwd: repo,
+    }),
+    { HERMES_KANBAN_DB: db, HERMES_HOME: root },
+  );
+  check(
+    "hook mode blocks completing a card whose exception was withdrawn",
+    hk.code === 2 && /R1_QA_VERDICT_MISSING/.test(hk.out) && hk.out.includes(EXC_THEN_WDR),
+    `exit=${hk.code} out=${hk.out.slice(0, 200).replace(/\n/g, " ")}`,
+  );
 }
 
 console.log("\n2. Rule coverage (every rule must fire on its own non-compliant card):");

@@ -60,7 +60,12 @@
  *     (human/dashboard/user/architect/qa — never `worker`), outside code spans,
  *     on a non-security-track card (t_b8001b55; QA_SIGN_OFF_GATE.md §5.6). Any
  *     other exception record is reported as `A10_EXCEPTION_IGNORED` and waives
- *     nothing; R7 never consults the exception.
+ *     nothing; R7 never consults the exception;
+ *   - an exception can be withdrawn by a later `qa-signoff-exception withdrawn:
+ *     <reason>` record under the same author/code-span rules (t_b2588ee7;
+ *     QA_SIGN_OFF_GATE.md §5.6). A withdrawn exception is reported as
+ *     `X2_EXCEPTION_WITHDRAWN`; a refused or no-op withdrawal as
+ *     `A16_EXCEPTION_WITHDRAWAL_IGNORED`.
  *
  * R9/R10 (t_75180b28, QA_SIGN_OFF_GATE.md §5.9): a **code** card — one a PR
  * declares, one with a pushed branch named after it, or one whose body says
@@ -150,10 +155,21 @@ const VERDICT_LOOSE_RE = /verdict\s*:\s*([a-z][a-z-]*)/i;
 // (t_58280940: frontend's gate-defect report quoted the marker and the gate
 // then judged *that* quote as the card's live deferral target).
 const DEFERRAL_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*[:\-—]+\s*deferred/i;
-const EXCEPTION_RE = /qa[\s_-]*signoff[\s_-]*exception\s*[:\-—]+\s*(\S[^\n]*)/i;
+// The negative lookahead keeps the withdrawal key below (t_b2588ee7) from being
+// read as an exception: `qa-signoff-exception-withdrawn: …` and
+// `qa-signoff-exception: withdrawn — …` would otherwise both match here, the
+// first with the reason "withdrawn: …" — a withdrawal turned into a waiver.
+const EXCEPTION_RE = /qa[\s_-]*signoff[\s_-]*exception(?![\s_:\-—]*withdrawn\b)\s*[:\-—]+\s*(\S[^\n]*)/i;
 // Global twin for scanning every occurrence in a comment (t_b8001b55): a body
 // can quote the key in a code span *and* record a real one further down.
 const EXCEPTION_RE_G = new RegExp(EXCEPTION_RE.source, "gi");
+/**
+ * §5.6 withdrawal key (t_b2588ee7): `qa-signoff-exception withdrawn: <reason>`
+ * (any of the separators the exception key accepts; the reason is optional so
+ * that a bare "QA signoff exception withdrawn" is never a silent no-op). See
+ * `findException` for why an explicit key was chosen over "last one wins".
+ */
+const WITHDRAWAL_RE_G = /qa[\s_-]*signoff[\s_-]*exception[\s_:\-—]*withdrawn\b[ \t]*[:\-—]*[ \t]*([^\n]*)/gi;
 const ARCH_SIGNOFF_RE = /(arch[\s_-]*(verdict|sign[\s_-]*off)|approv|signed[\s_-]*off|LGTM)/i;
 const TASK_ID_RE = /\bt_[0-9a-f]{8}\b/g;
 const TEST_TYPES_RE = /test\s*types\s*:?\**\s*([^\n]+)/i;
@@ -302,7 +318,10 @@ function sqlViaNode(dbPath, query) {
 
 export function loadBoard(dbPath) {
   const tasks = sql(dbPath, "SELECT id, title, assignee, status, completed_at, body, created_at FROM tasks");
-  const comments = sql(dbPath, "SELECT task_id, author, body, created_at FROM task_comments ORDER BY created_at");
+  // `id` breaks created_at ties (second resolution): an exception and its
+  // withdrawal posted in the same second must keep their posting order
+  // (t_b2588ee7 — the withdrawal only acts on an exception recorded before it).
+  const comments = sql(dbPath, "SELECT task_id, author, body, created_at FROM task_comments ORDER BY created_at, id");
   const attachments = sql(dbPath, "SELECT task_id, filename, size, uploaded_by, stored_path FROM task_attachments");
   const runs = sql(
     dbPath,
@@ -661,26 +680,96 @@ function hasArchitectSignoff(board, task) {
  *     an Architect and a QA sign-off there; it is signed, never waived, so no
  *     exception — whoever wrote it — disarms R1/R4/R7 on such a card.
  * The first record that survives all three is the operative exception.
+ *
+ * Withdrawal (t_b2588ee7). Until then the operative exception was the first
+ * record to survive the checks and nothing could replace it: an exception
+ * recorded in error was permanent, the one irrevocable object in a gate where
+ * everything else is corrected by a *newer* comment (comments are never edited
+ * or deleted — that immutability is what makes the audit trail trustworthy).
+ *
+ * Design choice — an explicit key, `qa-signoff-exception withdrawn: <reason>`,
+ * not "the last occurrence wins":
+ *   - "last wins" cannot express *no exception*: a later key can only replace
+ *     one waiver by another, so a withdrawal would still need a sentinel value,
+ *     i.e. an explicit key in disguise;
+ *   - it would silently change which reason is operative on every card that
+ *     already carries several keys, while the explicit key changes nothing on a
+ *     card that never records one (the measured board delta is zero);
+ *   - a withdrawal is an audit event in its own right: it is greppable, carries
+ *     its own author and reason, and is reported (`X2_EXCEPTION_WITHDRAWN`)
+ *     next to the exception it ended, so neither can be forgotten.
+ * The cost — one more key to know — is paid in QA_SIGN_OFF_GATE.md §5.6.
+ *
+ * Semantics: records are replayed in posting order (comments by created_at,
+ * id; inside one comment, by position). A withdrawal obeys the same author
+ * allowlist and code-span rule as an exception; when it is valid it ends the
+ * exception in force at that point, and when no exception is in force it does
+ * nothing (`no-exception`). A later valid exception re-arms the waiver. While an
+ * exception is in force, a further one is redundant and the first keeps
+ * governing (unchanged from t_b8001b55). Refused or no-op withdrawals are
+ * reported as `A16_EXCEPTION_WITHDRAWAL_IGNORED`.
  */
 function findException(board, task, securityTrack) {
   const ignored = [];
+  const withdrawn = [];
+  const withdrawalsIgnored = [];
   let exception = null;
   for (const c of board.commentsByTask.get(task.id) || []) {
     const body = c.body || "";
-    const ranges = codeRanges(body);
     const hits = [...body.matchAll(EXCEPTION_RE_G)];
-    if (hits.length === 0) continue;
-    const live = hits.find((m) => !insideRanges(m.index, ranges));
+    const wHits = [...body.matchAll(WITHDRAWAL_RE_G)];
+    if (hits.length === 0 && wHits.length === 0) continue;
+    const ranges = codeRanges(body);
     const author = String(c.author || "").trim();
-    const reason = ((live || hits[0])[1] || "").slice(0, 200);
-    let why = null;
-    if (!live) why = "quoted";
-    else if (!EXCEPTION_AUTHORS.has(author)) why = "author";
-    else if (securityTrack) why = "security-track";
-    if (why) ignored.push({ author: c.author, reason, why });
-    else if (!exception) exception = { reason, author: c.author };
+    const allowed = EXCEPTION_AUTHORS.has(author);
+    const events = [];
+
+    if (hits.length) {
+      const live = hits.find((m) => !insideRanges(m.index, ranges));
+      const reason = ((live || hits[0])[1] || "").slice(0, 200);
+      let why = null;
+      if (!live) why = "quoted";
+      else if (!allowed) why = "author";
+      else if (securityTrack) why = "security-track";
+      if (why) ignored.push({ author: c.author, reason, why });
+      else events.push({ kind: "exception", at: live.index, reason });
+    }
+
+    if (wHits.length) {
+      const live = wHits.find((m) => !insideRanges(m.index, ranges));
+      const reason = String((live || wHits[0])[1] || "").trim().slice(0, 200);
+      let why = null;
+      if (!live) why = "quoted";
+      else if (!allowed) why = "author";
+      if (why) withdrawalsIgnored.push({ author: c.author, reason, why });
+      else events.push({ kind: "withdrawal", at: live.index, reason });
+    }
+
+    for (const e of events.sort((a, b) => a.at - b.at)) {
+      if (e.kind === "exception") {
+        if (!exception) exception = { reason: e.reason, author: c.author };
+      } else if (exception) {
+        withdrawn.push({ ...exception, withdrawn_by: c.author, withdrawal_reason: e.reason });
+        exception = null;
+      } else {
+        withdrawalsIgnored.push({ author: c.author, reason: e.reason, why: "no-exception" });
+      }
+    }
   }
-  return { exception, ignored };
+  return { exception, ignored, withdrawn, withdrawalsIgnored };
+}
+
+function withdrawalIgnoredDetail(x) {
+  const who = `"${x.author ?? ""}"`;
+  if (x.why === "quoted") {
+    return `a qa-signoff-exception withdrawal written by ${who} appears only inside a code span/fence — a quotation, not a withdrawal (§5.6) — ignored`;
+  }
+  if (x.why === "author") {
+    const name = String(x.author || "").trim();
+    const id = name === "worker" || name === "" ? " (it names no profile, so no one is accountable for it)" : "";
+    return `a qa-signoff-exception withdrawal recorded by ${who}${id} is not from an allowed author (${[...EXCEPTION_AUTHORS].join(", ")}) — ignored, any exception in force still holds`;
+  }
+  return `a qa-signoff-exception withdrawal recorded by ${who} found no exception in force at that point — no effect`;
 }
 
 function exceptionIgnoredDetail(x) {
@@ -1230,7 +1319,12 @@ export function evaluateCard(board, task, opts = {}) {
     SECURITY_TRACK_RE.test(`${task.title || ""}\n${task.body || ""}`) &&
     /security/.test(tt) &&
     !QA_PROFILES.has(String(task.assignee || "").trim());
-  const { exception, ignored: exceptionsIgnored } = findException(board, task, securityTrack);
+  const {
+    exception,
+    ignored: exceptionsIgnored,
+    withdrawn: exceptionsWithdrawn,
+    withdrawalsIgnored,
+  } = findException(board, task, securityTrack);
 
   const verdicts = collectVerdicts(board, task);
   const valid = verdicts.filter((v) => VERDICTS.has(v.token));
@@ -1298,6 +1392,8 @@ export function evaluateCard(board, task, opts = {}) {
     })),
     exception,
     exceptions_ignored: exceptionsIgnored,
+    exceptions_withdrawn: exceptionsWithdrawn,
+    exception_withdrawals_ignored: withdrawalsIgnored,
     discounted_verdicts: {
       ignored: discounted.ignored,
       self_declared: discounted.selfDeclared,
@@ -1342,6 +1438,17 @@ export function evaluateCard(board, task, opts = {}) {
   // code, written by a non-allowed author, or on a security-track card. Never
   // silent, so a refused waiver can't be mistaken for an applied one.
   for (const x of exceptionsIgnored) advise("A10_EXCEPTION_IGNORED", exceptionIgnoredDetail(x));
+
+  // X2 / A11 — the withdrawal trail (t_b2588ee7). A withdrawn exception waives
+  // nothing any more, but it stays visible, with who ended it and why; a refused
+  // or no-op withdrawal is reported so it cannot be mistaken for an applied one.
+  for (const w of exceptionsWithdrawn) {
+    advise(
+      "X2_EXCEPTION_WITHDRAWN",
+      `QA sign-off exception recorded by ${w.author} (${w.reason}) was withdrawn by ${w.withdrawn_by}${w.withdrawal_reason ? `: ${w.withdrawal_reason}` : " (no reason given)"} — no longer applied`,
+    );
+  }
+  for (const x of withdrawalsIgnored) advise("A16_EXCEPTION_WITHDRAWAL_IGNORED", withdrawalIgnoredDetail(x));
 
   // R1 — a QA verdict, or a resolvable QA deferral, must exist.
   if (exception) {
