@@ -62,7 +62,7 @@
  *     nothing; R7 never consults the exception.
  *
  * R9/R10 (t_75180b28, QA_SIGN_OFF_GATE.md §5.9): a **code** card — one a PR
- * references, one with a pushed branch named after it, or one whose body says
+ * declares, one with a pushed branch named after it, or one whose body says
  * `Deliverable: code` — completes only when a linked PR is merged into the
  * default branch (R9_PR_NOT_MERGED) and every required check of that branch's
  * protection is green on the merge commit (R10_MERGE_CI_NOT_GREEN). Both facts
@@ -70,6 +70,12 @@
  * GitHub cannot be read the result is the advisory A11_CI_STATE_UNVERIFIABLE,
  * never a violation. Extra audit/check flags: --gh-repo OWNER/NAME,
  * --no-github, --pr-epoch-iso ISO.
+ *
+ * A PR is *linked* to a card only by declaration (t_7e8bf917): its head branch
+ * is named after the card, or its body has a `Closes <id>` / `Card: <id>` /
+ * `Task: <id>` line outside code. A mere mention (title, prose, quote, code
+ * span/fence) is the advisory A14_PR_MENTIONS_CARD — never a link, so it can
+ * neither trigger nor satisfy R9.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -707,6 +713,97 @@ function idMentionRe(taskId) {
   return new RegExp(`(?:^|[^0-9a-z_])${taskId.replace(/[^0-9a-z_]/gi, "")}(?![0-9a-z])`, "i");
 }
 
+// ── Declarative PR → card link (t_7e8bf917, QA_SIGN_OFF_GATE.md §5.9) ────────
+// A PR is linked to a card only when it *declares* it: its head branch is named
+// after the card, or its body carries a line `Closes <id>` / `Card: <id>` /
+// `Task: <id>` outside code. Any other occurrence of the id (title, prose,
+// quote, code) is a *mention*: reported as A14_PR_MENTIONS_CARD, never a link.
+// Live origin: PR #114 only quoted t_75180b28 in a fixture and was named by R9
+// on that card; the same looseness let a merged PR that merely cites a card
+// satisfy R9 without delivering its code.
+
+/** Line opener: optional list bullet, optional bold/italic, keyword, separator. */
+const LINK_DECL_HEAD_RE = /^[ ]{0,3}(?:[-*+][ \t]+)?[*_]{0,2}(closes|card|task)[*_]{0,2}[ \t]*(:?)[ \t]*[*_]{0,2}(?=[ \t]*\S)[ \t]*/i;
+/** One id of the declared list, bold/italic tolerated. */
+const LINK_DECL_ID_RE = /^[*_]{0,2}(t_[0-9a-z]+)[*_]{0,2}(?![0-9a-z_])/i;
+/** Separator between declared ids, after an optional `(label)`: `, ` `; ` ` & ` ` and ` ` + `. */
+const LINK_DECL_SEP_RE = /^(?:[ \t]*\([^()\n]*\))?[ \t]*(?:,|;|&|\+|\band\b)[ \t]*/i;
+
+/**
+ * Body lines that are prose, not code: fenced blocks (``` / ~~~), indented code
+ * blocks (4+ spaces or a tab after a blank line or inside one) and inline code
+ * spans are removed; everything else is kept line by line.
+ */
+function proseLines(body) {
+  const out = [];
+  let fence = null;
+  let prevBlank = true;
+  let inIndented = false;
+  for (const raw of String(body || "").replace(/\r\n?/g, "\n").split("\n")) {
+    const fm = /^[ ]{0,3}(`{3,}|~{3,})/.exec(raw);
+    if (fence) {
+      if (fm && fm[1][0] === fence[0] && fm[1].length >= fence.length && /^[ ]{0,3}[`~]+[ \t]*$/.test(raw)) fence = null;
+      prevBlank = false;
+      continue;
+    }
+    if (fm) {
+      fence = fm[1];
+      prevBlank = false;
+      continue;
+    }
+    const blank = raw.trim() === "";
+    const indented = /^(?: {4}|\t)/.test(raw) && !blank;
+    if (indented && (prevBlank || inIndented)) {
+      inIndented = true;
+      prevBlank = false;
+      continue;
+    }
+    if (!blank) inIndented = false;
+    prevBlank = blank;
+    out.push(raw.replace(/(`+)(?:(?!\1)[\s\S])*?\1/g, " "));
+  }
+  return out;
+}
+
+/** Card ids a PR body declares (lower-cased), per the §5.9 vocabulary. */
+export function declaredCardIds(body) {
+  const ids = new Set();
+  for (const line of proseLines(body)) {
+    const head = LINK_DECL_HEAD_RE.exec(line);
+    if (!head) continue;
+    const keyword = head[1].toLowerCase();
+    // `Card:` / `Task:` need the colon; `Closes` is the GitHub closing-keyword form.
+    if (keyword !== "closes" && !head[2] && !/:/.test(head[0])) continue;
+    let rest = line.slice(head[0].length);
+    let m = LINK_DECL_ID_RE.exec(rest);
+    while (m) {
+      ids.add(m[1].toLowerCase());
+      rest = rest.slice(m[0].length);
+      const sep = LINK_DECL_SEP_RE.exec(rest);
+      if (!sep) break;
+      rest = rest.slice(sep[0].length);
+      m = LINK_DECL_ID_RE.exec(rest);
+    }
+  }
+  return ids;
+}
+
+/**
+ * How `pr` relates to `taskId`: `{ link: "head-branch" | "body-declaration" }`
+ * when it declares the card, `{ mention: [...where] }` when it only mentions it,
+ * or null.
+ */
+export function prCardRelation(pr, taskId) {
+  const mention = idMentionRe(taskId);
+  const head = typeof pr.headRefName === "string" ? pr.headRefName : "";
+  if (head && mention.test(head)) return { link: "head-branch" };
+  if (declaredCardIds(pr.body).has(String(taskId).toLowerCase())) return { link: "body-declaration" };
+  const where = [];
+  if (typeof pr.title === "string" && mention.test(pr.title)) where.push("title");
+  if (typeof pr.body === "string" && mention.test(pr.body)) where.push("body");
+  return where.length ? { mention: where } : null;
+}
+
 /**
  * The GitHub reader. Every method throws GitHubUnavailable on any failure, and
  * every result is memoised for the life of the process (an audit asks for the
@@ -893,19 +990,36 @@ export function evaluatePrRule(task, gh) {
   } catch (e) {
     return unverifiable("the pull-request list", e);
   }
-  const linked = prs
-    .filter((pr) => [pr.title, pr.body, pr.headRefName].some((s) => typeof s === "string" && mention.test(s)))
-    .map((pr) => ({
-      number: pr.number,
-      state: String(pr.state || "").toUpperCase(),
-      merged: Boolean(pr.mergedAt) || String(pr.state || "").toUpperCase() === "MERGED",
-      merged_at: pr.mergedAt || null,
-      base: pr.baseRefName || null,
-      head: pr.headRefName || null,
-      merge_commit: (pr.mergeCommit && pr.mergeCommit.oid) || null,
-      url: pr.url || null,
-    }));
+  const shape = (pr, rel) => ({
+    number: pr.number,
+    state: String(pr.state || "").toUpperCase(),
+    merged: Boolean(pr.mergedAt) || String(pr.state || "").toUpperCase() === "MERGED",
+    merged_at: pr.mergedAt || null,
+    base: pr.baseRefName || null,
+    head: pr.headRefName || null,
+    merge_commit: (pr.mergeCommit && pr.mergeCommit.oid) || null,
+    url: pr.url || null,
+    ...(rel.link ? { link: rel.link } : { mentioned_in: rel.mention }),
+  });
+  // Only a declaration links (t_7e8bf917): head branch named after the card, or a
+  // `Closes <id>` / `Card: <id>` / `Task: <id>` body line outside code.
+  const linked = [];
+  const mentioning = [];
+  for (const pr of prs) {
+    const rel = prCardRelation(pr, task.id);
+    if (!rel) continue;
+    (rel.link ? linked : mentioning).push(shape(pr, rel));
+  }
   facts.linked_prs = linked;
+  facts.mentioning_prs = mentioning;
+  // A14 — a mention is never a link and never a violation, but it stays visible.
+  if (mentioning.length) {
+    const desc = (p) => `#${p.number} (${p.merged ? "merged" : p.state.toLowerCase() || "unknown state"}; ${p.mentioned_in.join(" + ")})`;
+    advise(
+      "A14_PR_MENTIONS_CARD",
+      `PR ${mentioning.map(desc).join(", ")} mention${mentioning.length === 1 ? "s" : ""} ${task.id} without declaring it — not linked: neither counted for nor against §5.9. If one of them delivers this card, add a \`Closes ${task.id}\` line to its body (or name its head branch after the card)`,
+    );
+  }
 
   if (linked.length === 0) {
     const declared = CODE_DELIVERABLE_RE.test(task.body || "");
@@ -919,14 +1033,14 @@ export function evaluatePrRule(task, gh) {
     facts.pushed_branches = branches;
     if (!declared && branches.length === 0) {
       facts.applies = false;
-      facts.reason = "no PR references the card, no pushed branch is named after it, and its body does not declare `Deliverable: code`";
+      facts.reason = "no PR declares the card (head branch named after it, or a `Closes`/`Card:`/`Task:` body line), no pushed branch is named after it, and its body does not declare `Deliverable: code`";
       return { violations, advisories, facts };
     }
     facts.applies = true;
     const why = branches.length ? `branch(es) ${branches.map((b) => `\`${b}\``).join(", ")} are pushed` : "the card body declares `Deliverable: code`";
     add(
       "R9_PR_NOT_MERGED",
-      `no pull request references ${task.id} (PR title, body or head branch), yet ${why} — code is delivered only through a PR merged into master: open the PR with ${task.id} in its body, move the card to review with "PR: #<n>", and let the merger complete it (§5.9)`,
+      `no pull request declares ${task.id} (head branch named after the card, or a \`Closes ${task.id}\` / \`Card: ${task.id}\` / \`Task: ${task.id}\` line in its body — a mention in the title or prose does not link)${mentioning.length ? `, only mention(s): ${mentioning.map((p) => `#${p.number}`).join(", ")}` : ""}, yet ${why} — code is delivered only through a PR merged into master: open the PR with \`Closes ${task.id}\` in its body, move the card to review with "PR: #<n>", and let the merger complete it (§5.9)`,
     );
     return { violations, advisories, facts };
   }
@@ -961,7 +1075,7 @@ export function evaluatePrRule(task, gh) {
   facts.merge_commit = pr.merge_commit;
   for (const p of linked) {
     if (p !== pr && p.state === "OPEN") {
-      advise("A12_LINKED_PR_OPEN", `PR #${p.number} also references ${task.id} and is still open — not judged (PR #${pr.number} is the merged one); make sure no part of this card's deliverable lives only there`);
+      advise("A12_LINKED_PR_OPEN", `PR #${p.number} also declares ${task.id} and is still open — not judged (PR #${pr.number} is the merged one); make sure no part of this card's deliverable lives only there`);
     }
   }
 
