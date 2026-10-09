@@ -1,0 +1,6 @@
+keys: ['mode', 'db', 'repo', 'epoch', 'ok', 'fail_on_a11', 'counts', 'a11_task_ids', 'degradations', 'results']
+sample result keys: ['violations', 'advisories', 'facts']
+cards master/branch: 142 142
+violation-set changes: 0 advisory-set changes: 0
+cards with applied X1 on branch: ['t_f49d448c', 't_930fddbe', 't_80fc0326', 't_b51a1ff3', 't_9b3bdba0']
+ok master/branch: False False counts: {'done_cards': 142, 'enforced': 115, 'failures': 29, 'grandfathered': 27, 'a11': 9} {'done_cards': 142, 'enforced': 115, 'failures': 29, 'grandfathered': 27, 'a11': 9}
