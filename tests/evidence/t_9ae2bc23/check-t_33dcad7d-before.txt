@@ -1,0 +1,4 @@
+card=t_33dcad7d status=done gate_exit=1
+violations=['R1_QA_VERDICT_MISSING']
+advisories=A10_EXCEPTION_IGNOREDx4
+verdict=None
