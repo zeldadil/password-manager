@@ -96,8 +96,9 @@ were passing on a non-QA record now surface as `R1` failures rather than passing
 | `A10_EXCEPTION_IGNORED` | a `qa-signoff-exception:` record the gate **refused** (§5.6, `t_b8001b55`): written by an author outside `human` · `dashboard` · `user` · `architect` · `qa` (including the anonymous `worker`), quoted only inside a code span/fence, or recorded on a security-track card | report-only — the refused record waives nothing, so `R1`/`R4`/`R7` apply as if it were absent; the advisory says which of the three reasons applied |
 | `X1_EXCEPTION` | a recorded `qa-signoff-exception:` marker (§5.6) **that the gate applied** — allowed author, outside code, non-security card | report-only — exceptions stay visible in every audit |
 | `A11_CI_STATE_UNVERIFIABLE` | GitHub could not be read for `R9`/`R10` (offline, `gh` missing/unauthenticated, rate limit, time budget, branch protection unreadable/empty) | report-only — **never** a violation (§5.9); re-run the check when GitHub is reachable |
-| `A12_LINKED_PR_OPEN` | the card's merged PR is judged green, but another PR referencing the card is still open | report-only — make sure no part of the deliverable lives only in the open PR |
+| `A12_LINKED_PR_OPEN` | the card's merged PR is judged green, but another PR **declaring** the card (§5.9) is still open | report-only — make sure no part of the deliverable lives only in the open PR |
 | `A13_EARLIER_MERGE_CI_NOT_GREEN` | an earlier merged PR of the card landed with a non-green required check on `master` (the newest merge is judged) | report-only — recorded so a red merge is never silent |
+| `A14_PR_MENTIONS_CARD` | a PR **mentions** the card id (title, body prose, quote or code) without declaring it (§5.9, `t_7e8bf917`) | report-only — **not a link**: it neither triggers nor satisfies `R9`/`R10`; if that PR does deliver the card, add a `Closes <id>` line to its body |
 
 **Fail closed only on genuinely unverifiable input** (added 2026-09-17, `t_5455942d`). The gate blocks when it cannot
 establish the facts it needs (no resolvable task id, unreadable board, unparseable payload, a violation it *can*
@@ -298,11 +299,42 @@ stop either.
 **Which cards are code cards.** A card is judged by this rule when any of these holds, otherwise it is out of scope
 (`facts.pr_rule.applies = false`, no finding):
 
-1. a pull request (any state) carries the card id in its **body, title or head-branch name** — the *linked* PRs;
+1. a pull request (any state) **declares** the card — the *linked* PRs (see *How a PR declares a card* below; a mere
+   mention does not link, `t_7e8bf917`);
 2. a **pushed branch** on GitHub carries the card id in its name, and no PR links the card → `R9` (pushed, never
    opened as a PR);
 3. the card body declares `Deliverable: code` (bold/bullet tolerated) and no PR links the card → `R9`. Architect:
    add this line to code cards whose branch name will not carry the id.
+
+**How a PR declares a card (the linking vocabulary, `t_7e8bf917`, 2026-10-08).** A PR is linked to a card **only** when
+one of these holds:
+
+| Form | Example | Notes |
+|---|---|---|
+| head branch named after the card | `qa/t_7e8bf917-declarative-pr-link`, `feature/t_7e8bf917` | the id as a whole word anywhere in the head ref name |
+| a body line `Closes <id>` | `Closes t_7e8bf917` | GitHub closing-keyword form; the colon is optional (`Closes: <id>`) |
+| a body line `Card: <id>` | `Card: t_7e8bf917` | the colon is **required** |
+| a body line `Task: <id>` | `- **Task:** t_7e8bf917` | the colon is **required** |
+
+On a declaration line: case-insensitive keyword at the start of the line (≤ 3 leading spaces), an optional list bullet
+(`-` `*` `+`) and optional bold/italic around the keyword or the id are tolerated, and several ids may follow, separated
+by `,` `;` `&` `+` or `and`, each optionally followed by a `(label)` — e.g. `Task: t_aaaaaaaa (BE-1), t_bbbbbbbb (BE-2)`.
+The id must come **right after** the keyword: `Closes the gap found in t_…` is prose, not a declaration.
+
+**Not a declaration** — reported as the advisory `A14_PR_MENTIONS_CARD` (naming the PR, its state and where the id
+was seen), **never** a link, so it can neither trigger nor satisfy `R9`/`R10` and never produces `A12`:
+
+- the id in the **PR title** only (`feat: … (t_…)`) — titles are prose;
+- the id anywhere in the body **prose** (a reference, a fixture description, an audit citation);
+- a `Closes`/`Card:`/`Task:` line inside a **code fence** (```` ``` ```` / `~~~`), an **indented code block** or an
+  **inline code span**, or inside a **block quote** (`> Closes t_…`) — that is documentation of the syntax, not a claim.
+
+*Why:* linking by mention let PR #114 (which only quotes `t_75180b28` in a fixture) be named by `R9` on `t_75180b28`
+and — the dangerous direction — would let a merged PR that merely cites a card satisfy `R9` for it without delivering
+its code. Measured live before/after on 2026-10-08 (`tests/evidence/t_7e8bf917/`): on `t_75180b28` the linked PRs go
+from `#114, #116` to `#116` (head branch) with `#114` as `A14`; on `t_b8001b55` the judged PR changes from the foreign
+`#116` to its own `#114`. **Authors: put `Closes t_xxxxxxxx` on its own line in the PR body** (or name the head branch
+after the card) — `WORKTREE_STRATEGY.md` §5 step 3.
 
 **How the linked PRs are judged.**
 
@@ -329,7 +361,8 @@ stop either.
 
 **The normative completion path for a code card** (architect, Q2) — *the merger completes the card, never the author*:
 
-1. the author pushes its branch, opens the PR **with the card id in the PR body**, and moves the card to `review`
+1. the author pushes its branch, opens the PR **with a `Closes <card id>` line in the PR body** (or a head branch named
+   after the card — a mere mention does not link, see above), and moves the card to `review`
    (`kanban_request_review`) with `PR: #<n>` in the summary or a comment — not `kanban_complete`;
 2. `qa` records its `QA-VERDICT:` on the card;
 3. the **merger** (the architect, in practice) merges, waits for the `master` CI run of the merge commit, checks the
@@ -349,9 +382,10 @@ FAIL by the next audit (`qa-signoff-audit.yml`, CI-001h). Agents use the CLI too
 
 **Known limits (stated, not hidden).**
 
-- *Incidental mentions link a PR.* A PR body that merely mentions another card (a fixture, an audit reference) links
-  that card. Harmless once the card's own PR is merged (newest merged wins; an open extra is `A12`), but while the card
-  has no merged PR such a mention yields `R9` naming the foreign PR — the message shows which PR it is.
+- *Mentions are not links* (`t_7e8bf917`, replaces the former limit "incidental mentions link a PR"). A PR that
+  delivers a card but only *mentions* it (title or prose) is not linked: a card with `Deliverable: code` or a pushed
+  branch then gets `R9` until the PR body gains a `Closes <id>` line — the `R9` message and the `A14` advisory both say
+  so. A PR body can be edited after the merge, so the fix never needs a new PR.
 - *Cancelled master runs.* Until `t_694c9e37`, `ci.yml` used `concurrency: ci-<workflow>-<ref>` with
   `cancel-in-progress: true`, so two merges in quick succession cancelled the first merge commit's `master` run →
   `R10 …=cancelled` for that card. Since `t_694c9e37` a run on the default branch is never cancelled (per-run group,
@@ -372,7 +406,7 @@ All paths are relative to the repo root.
 | `node scripts/qa/signoff-gate.mjs audit` | whole board; exit 1 while any enforced card fails; `--json`, `--repo DIR`, `--epoch-iso ISO`, `--strict-history`; `R9`/`R10` flags: `--gh-repo OWNER/NAME`, `--pr-epoch-iso ISO`, `--no-github` |
 | `node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx [--pre-complete]` | one card; `--pre-complete` evaluates a card that is not `done` yet (exactly what the hook does) |
 | `echo '<payload>' \| node scripts/qa/signoff-gate.mjs hook` | hook entry point: `{}` + exit 0 = allow, `{"decision":"block",…}` + exit 2 = block |
-| `node scripts/qa/signoff-gate.selftest.mjs` | 118-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d`, `t_58280940`, `t_99e408c5`, `t_338f47fd`, `t_df8e644a` — cited-file-name — and `t_c015bda7` regressions are covered; `t_75180b28` adds 25 `R9`/`R10`/`A11`–`A13` cases on a JSON GitHub fixture, no network) |
+| `node scripts/qa/signoff-gate.selftest.mjs` | 143-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d`, `t_58280940`, `t_99e408c5`, `t_338f47fd`, `t_df8e644a` — cited-file-name — and `t_c015bda7` regressions are covered; `t_75180b28` adds 25 `R9`/`R10`/`A11`–`A13` cases on a JSON GitHub fixture, no network) |
 | `scripts/qa/hooks/install-signoff-gate.sh --all [--apply]` | install / refresh the hook in every profile (dry-run by default, config backed up) |
 | `scripts/qa/hooks/verify-signoff-gate.sh --all --live --fixture-db … --fixture-noncompliant … --fixture-compliant …` | verify wiring, consent, hash, `hermes hooks doctor`, and fire both paths live |
 
@@ -550,7 +584,7 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 9 | Prose verdict records that are **not** colon-separated are no longer read at all (§5.8, `t_df8e644a`): the live em-dash form `QA-001g verdict — pass-with-conditions` (`t_78b46688`, whose card keeps a run-metadata verdict, so no outcome changed) and any `verdict — <token>` form. Re-admit one only with a path guard (a match whose span is part of a path/file name stays inert) rather than by re-widening the separator, and only with its own regression cases. Measured cost of the narrowing: 1 live comment; the failure direction is `R1`, never a silent pass | `qa` (gate lane) |
 | 10 | `R9`/`R10` rollout (§5.9): after the merge, re-install the hook in all 7 profiles (`install-signoff-gate.sh --all --apply` + verifier) and confirm `gh auth status` succeeds **in the hook environment** of each profile — without it every completion only gets `A11`, i.e. the rule is silently advisory. The scheduled audit needs a `gh` token with admin read for branch protection (a GitHub-hosted `GITHUB_TOKEN` cannot read it) | `qa` (install) + `architect` (runner/token) |
 | 11 | `ci.yml` cancels an in-progress `master` run when the next merge lands (`concurrency … cancel-in-progress: true`), which leaves a merge commit with `cancelled` required checks → `R10` until re-run. Decide whether `push` runs on `master` should stop cancelling (e.g. `cancel-in-progress: ${{ github.event_name == 'pull_request' }}`); `ci.yml` is a collision hotspot, so this is a decision, not a silent edit. **Decided and closed (`t_694c9e37`, card created by `architect`):** on the default branch the group is per run and `cancel-in-progress` is false; PR runs keep cancelling each other — evidence in `tests/evidence/t_694c9e37/` | `architect` |
-| 12 | Linking is by mention (card id in PR body/title/head branch): an incidental mention links a foreign PR (live: PR #114's fixture quotes `t_75180b28`). Harmless once the card's own PR is merged; if it causes a false `R9`, consider requiring a structured `Task: t_xxxxxxxx` line in the PR template instead | `architect` |
+| 12 | ~~Linking is by mention~~ — **closed by `t_7e8bf917` (2026-10-08)**: a PR links a card only by declaration (head branch, or a `Closes`/`Card:`/`Task:` body line outside code); mentions are `A14_PR_MENTIONS_CARD` (§5.9). Live: `#114` no longer links `t_75180b28`. Optional follow-up for `architect`: a PR template carrying a `Closes t_xxxxxxxx` line | `architect` |
 
 ---
 
@@ -565,3 +599,4 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 2026-09-18 | `t_338f47fd` — **§3 author rule**: a *comment* records a verdict only when the `qa` profile wrote it. `VERDICT_MARKER_RE` was matched without any author check, so one `QA-VERDICT: <token>` comment from `architect`/`frontend`/`dashboard` satisfied `R1`/`R2`/`R3` and cleared the fail-closed completion hook (reproduced on `0af4a453` and the installed `28b0b771`). The marker path and the deferral marker now require a `qa` author; a discounted record is reported as `A7_VERDICT_AUTHOR_IGNORED` instead of being dropped, and a non-QA run-metadata verdict — still accepted, the one documented author-independent source — is reported as `A8_VERDICT_SELF_DECLARED`. Run metadata and the loose `verdict: …` path keep their behaviour (§10 item 8). Selftest 66 → 81 cases; live-board A/B, the reported fixture replay and the re-install are in `tests/evidence/t_338f47fd/` |
 | 2026-09-19 | `t_df8e644a` — **§5.8 loose path is colon-only** (the residual half of `t_c3cb6842`): `VERDICT_LOOSE_RE` accepted `-`/`—` as separators, so a `qa` comment that merely *cited* the evidence file name `tests/evidence/t_0af5aa3e/QA-VERDICT-ROTATION.md` was read as the token `rotation` → `R2_QA_VERDICT_INVALID` (reproduced on the live board, `qa` comment 49 on `t_80fc0326`). The loose path now uses the marker's separator and nothing else; the marker's leading boundary and any code-span/fence exclusion were deliberately **not** added (§5.8 records why — the first would break `**QA-VERDICT: pass**`, the second is §10 item 5's open detection question). Measured: loose matches on `qa` comments 14 → 12, path-shaped 1 → 0, `t_80fc0326` `R2`×3 → `R2`×2 with both genuine `"CHANGES"` rows kept and no other card's violation set changed; one em-dash prose record narrowed (§10 item 9). Selftest 81 → 90 cases (9 cases named after this card: three citation shapes, the masked-record shape, the live shape, and three anti-degradation controls). A/B, the RED/GREEN selftest pair and the re-install transcript are in `tests/evidence/t_df8e644a/` |
 | 2026-10-05 | `t_75180b28` — **§5.9 code cards: PR merged + merge-commit CI green** (`R9_PR_NOT_MERGED`, `R10_MERGE_CI_NOT_GREEN`; advisories `A11_CI_STATE_UNVERIFIABLE`, `A12_LINKED_PR_OPEN`, `A13_EARLIER_MERGE_CI_NOT_GREEN`). A card linked to a PR (id in PR body/title/head branch), with a pushed branch named after it, or declaring `Deliverable: code` completes only when a linked PR is merged into `master` and every required check of `master`'s branch protection is green on the merge commit — read from GitHub via `gh` at check time, never from the card. GitHub unreachable → `A11`, never a violation; the §5.6 exception does not waive it; own epoch `2026-10-06T00:00:00Z`; applied in `check --pre-complete`, the hook **and** the audit (the after-the-fact control for the unwrapped `hermes kanban complete` path, architect Q1). Normative completion path: author → `review` with `PR: #<n>`, `qa` verdict, the merger completes citing the merge hash (architect Q2). Selftest 93 → 118 cases (RED against the branch-point gate: the 22 rule cases fail, 3 allow-controls and all 93 earlier cases pass). Live checks, degradation runs, the pre-activation audit and the master-CI history are in `tests/evidence/t_75180b28/` |
+| 2026-10-08 | `t_7e8bf917` — **§5.9 a PR links a card only by declaration**: its head branch is named after the card, or its body has a `Closes <id>` / `Card: <id>` / `Task: <id>` line outside code (fence, indented block, inline span) and outside a block quote. Any other occurrence of the id — PR title, body prose, quote, code — is the new advisory `A14_PR_MENTIONS_CARD`: never a link, so it neither triggers nor satisfies `R9`/`R10` and never yields `A12`. Before, any mention linked: live, PR #114 (only quoting `t_75180b28` in a fixture) was listed by `R9` on `t_75180b28`, and `t_b8001b55` was judged on the foreign PR #116; a merged PR merely citing a card would have satisfied `R9` for it. Selftest 132 → 143 cases (RED against the master gate: 9 of the 11 new cases fail, the `Closes` and longer-id controls pass). Live replay and a board-wide before/after audit (137 cards, 0 violation-set changes), the vocabulary probe and a census of every repo PR (7 of 47 title-named PR×card pairs no longer link, all pre-epoch or with another linked PR) are in `tests/evidence/t_7e8bf917/`; `WORKTREE_STRATEGY.md` §5 step 3 now asks for the `Closes` line; §10 item 12 closed |
