@@ -1,0 +1,20 @@
+{
+ "violations": [
+  "R10_MERGE_CI_NOT_GREEN"
+ ],
+ "advisories": [],
+ "judged": 88,
+ "merge_commit": "09b91f34befd5f39554164699bc637b724604f03",
+ "check_states": {
+  "unit": "success",
+  "integration": "success",
+  "install-lockfile": "success",
+  "lint-typecheck": "success",
+  "e2e": "success",
+  "dependency-audit": "success",
+  "build": "success",
+  "secret-scan": "failure"
+ },
+ "manual": null,
+ "r10": "PR #88 is merged, but CI is not green on its merge commit 09b91f34befd on master: secret-scan=failure (8 required check(s) read from the master branch protection). Fix master or wait for its run to finish; a cancelled run can be re-run with `gh run rerun` (§5.9)"
+}

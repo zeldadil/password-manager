@@ -76,6 +76,12 @@
  * `Task: <id>` line outside code. A mere mention (title, prose, quote, code
  * span/fence) is the advisory A14_PR_MENTIONS_CARD — never a link, so it can
  * neither trigger nor satisfy R9.
+ *
+ * R10 judges the run the merge triggered (t_339a0d02): the `push` run on the
+ * merge commit, its newest attempt included. A run on the same SHA from another
+ * event (workflow_dispatch, schedule, …) is never judged; when it disagrees it
+ * is the advisory A15_NON_PUSH_RUN_ON_MERGE_COMMIT. A required check carried
+ * only by non-push runs is `no-push-run` → R10 (fail closed).
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -858,7 +864,12 @@ export function makeGitHub({ repo = null, mode = process.env.QA_GATE_GITHUB || "
       commitChecks: (sha) =>
         once(`checks:${sha}`, () => {
           guard("commit checks");
-          return { runs: (fx.check_runs || {})[sha] || [], statuses: (fx.statuses || {})[sha] || [] };
+          return {
+            runs: (fx.check_runs || {})[sha] || [],
+            statuses: (fx.statuses || {})[sha] || [],
+            // Fixtures written before t_339a0d02 carry no workflow runs: null keeps their meaning (no event split).
+            workflow_runs: fx.workflow_runs ? (fx.workflow_runs[sha] || []) : null,
+          };
         }),
     };
   }
@@ -917,10 +928,17 @@ export function makeGitHub({ repo = null, mode = process.env.QA_GATE_GITHUB || "
         runs: jsonLines(
           gh([
             "api", "--paginate", `repos/${need()}/commits/${sha}/check-runs?per_page=100`,
-            "--jq", ".check_runs[] | {name, status, conclusion, app_id: .app.id}",
+            "--jq", ".check_runs[] | {name, status, conclusion, app_id: .app.id, id, check_suite_id: .check_suite.id}",
           ]),
         ),
         statuses: jsonLines(gh(["api", `repos/${need()}/commits/${sha}/status`, "--jq", ".statuses[] | {context, state}"])),
+        // Which check suite is the push run (t_339a0d02): every workflow run of the SHA, with its event.
+        workflow_runs: jsonLines(
+          gh([
+            "api", "--paginate", `repos/${need()}/actions/runs?head_sha=${sha}&per_page=100`,
+            "--jq", ".workflow_runs[] | {id, event, run_attempt, check_suite_id}",
+          ]),
+        ),
       })),
   };
 }
@@ -946,21 +964,67 @@ export function resolveGitHubRepo(argRepo, repoRoot) {
   return DEFAULT_GH_REPO;
 }
 
-/** State of one required check on a commit: "success" | "failure" | "in_progress" | "missing" | … */
+/** State of one required check on a commit: "success" | "failure" | "in_progress" | "missing" | "no-push-run" | …
+ *
+ * §5.9 / t_339a0d02 — only the run triggered by the merge counts: the `push`
+ * run on the merge commit. When the reader knows the workflow runs of the SHA
+ * (`checks.workflow_runs`, an array), a check run whose check suite belongs to
+ * a non-push workflow run (workflow_dispatch, schedule, …) is set aside: it is
+ * reported in `manual_state` (advisory A15), never judged. A check run whose
+ * suite no workflow run owns (another app) is judged as before. Within one
+ * suite only the newest check run of a name counts, so a re-run of the push run
+ * (same suite, new attempt) replaces its earlier attempt.
+ */
+function latestPerSuite(runs) {
+  const loose = [];
+  const bySuite = new Map();
+  for (const r of runs) {
+    if (r.check_suite_id === null || r.check_suite_id === undefined || r.id === null || r.id === undefined) {
+      loose.push(r);
+      continue;
+    }
+    const k = String(r.check_suite_id);
+    const cur = bySuite.get(k);
+    if (!cur || Number(r.id) > Number(cur.id)) bySuite.set(k, r);
+  }
+  return loose.concat([...bySuite.values()]);
+}
+
+function splitRunsByEvent(runs, workflowRuns) {
+  if (!Array.isArray(workflowRuns)) return { judged: latestPerSuite(runs), manual: [] };
+  const eventOf = new Map(workflowRuns.filter((w) => w && w.check_suite_id !== undefined && w.check_suite_id !== null).map((w) => [String(w.check_suite_id), String(w.event || "")]));
+  const judged = [];
+  const manual = [];
+  for (const r of runs) {
+    const ev = r.check_suite_id === null || r.check_suite_id === undefined ? undefined : eventOf.get(String(r.check_suite_id));
+    if (ev === undefined || ev === "push") judged.push(r);
+    else manual.push({ ...r, event: ev });
+  }
+  return { judged: latestPerSuite(judged), manual: latestPerSuite(manual) };
+}
+
+const runState = (r) => (r.status !== "completed" ? r.status || "pending" : String(r.conclusion || "no-conclusion").toLowerCase());
+
 function requiredCheckState(req, checks) {
-  const runs = checks.runs.filter((r) => r.name === req.context && (req.app_id === null || req.app_id === undefined || Number(r.app_id) === Number(req.app_id)));
+  const named = checks.runs.filter((r) => r.name === req.context && (req.app_id === null || req.app_id === undefined || Number(r.app_id) === Number(req.app_id)));
+  const { judged: runs, manual } = splitRunsByEvent(named, checks.workflow_runs);
+  let newestManual = null;
+  for (const m of manual) if (!newestManual || Number(m.id) > Number(newestManual.id)) newestManual = m;
+  const manualInfo = newestManual ? { manual_state: runState(newestManual), manual_event: newestManual.event } : {};
   if (runs.length) {
     const notDone = runs.find((r) => r.status !== "completed");
-    if (notDone) return { green: false, state: notDone.status || "pending" };
+    if (notDone) return { green: false, state: notDone.status || "pending", ...manualInfo };
     const bad = runs.find((r) => !GREEN_CONCLUSIONS.has(String(r.conclusion || "").toLowerCase()));
-    if (bad) return { green: false, state: String(bad.conclusion || "no-conclusion").toLowerCase() };
-    return { green: true, state: String(runs[0].conclusion).toLowerCase() };
+    if (bad) return { green: false, state: String(bad.conclusion || "no-conclusion").toLowerCase(), ...manualInfo };
+    return { green: true, state: String(runs[0].conclusion).toLowerCase(), ...manualInfo };
   }
   // Legacy commit statuses only count when the requirement is not bound to an app.
   if (req.app_id === null || req.app_id === undefined) {
     const st = checks.statuses.find((s) => s.context === req.context);
-    if (st) return { green: st.state === "success", state: st.state };
+    if (st) return { green: st.state === "success", state: st.state, ...manualInfo };
   }
+  // Only manual runs carry this check: fail closed, a manual run never satisfies R10.
+  if (newestManual) return { green: false, state: "no-push-run", ...manualInfo };
   return { green: false, state: "missing" };
 }
 
@@ -1097,6 +1161,14 @@ export function evaluatePrRule(task, gh) {
   }
   const states = required.map((r) => ({ context: r.context, ...requiredCheckState(r, checks) }));
   facts.check_states = Object.fromEntries(states.map((s) => [s.context, s.state]));
+  const diverging = states.filter((s) => s.manual_state && s.manual_state !== s.state);
+  if (diverging.length) {
+    facts.manual_check_states = Object.fromEntries(diverging.map((s) => [s.context, `${s.manual_state} (${s.manual_event})`]));
+    advise(
+      "A15_NON_PUSH_RUN_ON_MERGE_COMMIT",
+      `non-push run(s) on merge commit ${pr.merge_commit.slice(0, 12)} of PR #${pr.number} disagree with its push run: ${diverging.map((s) => `${s.context}=${s.manual_state} (${s.manual_event}; push run: ${s.state})`).join(", ")} — not judged: R10 reads only the run the merge triggered (the push run, latest attempt included); a manual run can neither break nor repair it (§5.9, t_339a0d02)`,
+    );
+  }
   const notGreen = states.filter((s) => !s.green);
   if (notGreen.length) {
     add(

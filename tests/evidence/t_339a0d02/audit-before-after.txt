@@ -1,0 +1,10 @@
+master violations: ['R10_MERGE_CI_NOT_GREEN'] adv: ['A9_VERDICT_SUPERSEDED']
+   judged 120 a48d62227f17 states {'unit': 'success', 'integration': 'success', 'install-lockfile': 'success', 'lint-typecheck': 'success', 'e2e': 'success', 'dependency-audit': 'success', 'build': 'success', 'secret-scan': 'failure'} manual None
+branch violations: [] adv: ['A9_VERDICT_SUPERSEDED', 'A15_NON_PUSH_RUN_ON_MERGE_COMMIT']
+   judged 120 a48d62227f17 states {'unit': 'success', 'integration': 'success', 'install-lockfile': 'success', 'lint-typecheck': 'success', 'e2e': 'success', 'dependency-audit': 'success', 'build': 'success', 'secret-scan': 'success'} manual {'secret-scan': 'failure (workflow_dispatch)'}
+   A15: non-push run(s) on merge commit a48d62227f17 of PR #120 disagree with its push run: secret-scan=failure (workflow_dispatch; push run: success) — not judged: R10 reads only the run the merge triggered (the push run, latest attempt included); a manual run can ne
+audit-master.json keys: ['mode', 'db', 'repo', 'epoch', 'ok', 'counts', 'results']
+audit-branch.json keys: ['mode', 'db', 'repo', 'epoch', 'ok', 'counts', 'results']
+cards 140 140
+cards with a changed violation set or A15: 0 | A11: 0 | cards with a judged merged PR: 6
+R10 on branch gate (real red push runs):
