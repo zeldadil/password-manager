@@ -1,0 +1,124 @@
+=== view=default
+  counts old={'done_cards': 140, 'enforced': 113, 'failures': 30, 'grandfathered': 27}
+  counts fix={'done_cards': 140, 'enforced': 113, 'failures': 31, 'grandfathered': 27}
+  counts head={'done_cards': 140, 'enforced': 113, 'failures': 31, 'grandfathered': 27}
+  old -> fix: cards=140 unchanged=139 newly_failing=['t_33dcad7d'] cleared=[] changed=[]
+      t_33dcad7d: old=[] fix=['R1_QA_VERDICT_MISSING']
+  fix -> head: cards=140 unchanged=140 newly_failing=[] cleared=[] changed=[]
+  -- every card with an exception record (old X1 / fix,head A10 or X1):
+    t_33dcad7d assignee=architect post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=['R1_QA_VERDICT_MISSING'] X1=0 A10=['quoted', 'quoted', 'quoted', 'quoted']
+       head: viol=['R1_QA_VERDICT_MISSING'] X1=0 A10=['quoted', 'quoted', 'quoted', 'quoted']
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): True
+    t_75180b28 assignee=architect post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=[] X1=0 A10=['quoted']
+       head: viol=[] X1=0 A10=['quoted']
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_80fc0326 assignee=architect post_epoch=True sec=False
+       old : viol=['R2_QA_VERDICT_INVALID'] X1=1
+       fix : viol=['R2_QA_VERDICT_INVALID'] X1=1 A10=[]
+       head: viol=['R2_QA_VERDICT_INVALID'] X1=1 A10=[]
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_930fddbe assignee=architect post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=[] X1=1 A10=[]
+       head: viol=[] X1=1 A10=[]
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_9b3bdba0 assignee=architect post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=[] X1=1 A10=[]
+       head: viol=[] X1=1 A10=[]
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_b51a1ff3 assignee=architect post_epoch=True sec=False
+       old : viol=['R2_QA_VERDICT_INVALID'] X1=1
+       fix : viol=['R2_QA_VERDICT_INVALID'] X1=1 A10=[]
+       head: viol=['R2_QA_VERDICT_INVALID'] X1=1 A10=[]
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_b8001b55 assignee=qa post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=[] X1=0 A10=['quoted']
+       head: viol=[] X1=0 A10=['quoted']
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_f49d448c assignee=frontend post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=[] X1=1 A10=[]
+       head: viol=[] X1=1 A10=[]
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+
+=== view=strict
+  counts old={'done_cards': 140, 'enforced': 113, 'failures': 48, 'grandfathered': 27}
+  counts fix={'done_cards': 140, 'enforced': 113, 'failures': 49, 'grandfathered': 27}
+  counts head={'done_cards': 140, 'enforced': 113, 'failures': 49, 'grandfathered': 27}
+  old -> fix: cards=140 unchanged=139 newly_failing=['t_33dcad7d'] cleared=[] changed=[]
+      t_33dcad7d: old=[] fix=['R1_QA_VERDICT_MISSING']
+  fix -> head: cards=140 unchanged=140 newly_failing=[] cleared=[] changed=[]
+  -- every card with an exception record (old X1 / fix,head A10 or X1):
+    t_33dcad7d assignee=architect post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=['R1_QA_VERDICT_MISSING'] X1=0 A10=['quoted', 'quoted', 'quoted', 'quoted']
+       head: viol=['R1_QA_VERDICT_MISSING'] X1=0 A10=['quoted', 'quoted', 'quoted', 'quoted']
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): True
+    t_75180b28 assignee=architect post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=[] X1=0 A10=['quoted']
+       head: viol=[] X1=0 A10=['quoted']
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_80fc0326 assignee=architect post_epoch=True sec=False
+       old : viol=['R2_QA_VERDICT_INVALID'] X1=1
+       fix : viol=['R2_QA_VERDICT_INVALID'] X1=1 A10=[]
+       head: viol=['R2_QA_VERDICT_INVALID'] X1=1 A10=[]
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_930fddbe assignee=architect post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=[] X1=1 A10=[]
+       head: viol=[] X1=1 A10=[]
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_9b3bdba0 assignee=architect post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=[] X1=1 A10=[]
+       head: viol=[] X1=1 A10=[]
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_b51a1ff3 assignee=architect post_epoch=True sec=False
+       old : viol=['R2_QA_VERDICT_INVALID'] X1=1
+       fix : viol=['R2_QA_VERDICT_INVALID'] X1=1 A10=[]
+       head: viol=['R2_QA_VERDICT_INVALID'] X1=1 A10=[]
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_b8001b55 assignee=qa post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=[] X1=0 A10=['quoted']
+       head: viol=[] X1=0 A10=['quoted']
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+    t_f49d448c assignee=frontend post_epoch=True sec=False
+       old : viol=[] X1=1
+       fix : viol=[] X1=1 A10=[]
+       head: viol=[] X1=1 A10=[]
+       -> passed ONLY on a refused exception (old clean, fix fails, A10 present): False
+
+=== counterfactual (every exception key neutralised in a copy), strict-history view
+  gate=fix: cards whose outcome changes without exceptions = 3
+    t_930fddbe: with=[] without=['R1_QA_VERDICT_MISSING', 'R4_EVIDENCE_MISSING'] applied_X1=['QA sign-off exception recorded by dashboard: closed by human decision (Ze), duplicate of already-resolved incident t_80fc0326/t_9b3bdba0/t_b51a1ff3, verified independently on all 5 AC-named branches, 0 hits.  Closing as done. This unblocks paren']
+    t_9b3bdba0: with=[] without=['R1_QA_VERDICT_MISSING', 'R4_EVIDENCE_MISSING'] applied_X1=['QA sign-off exception recorded by dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. This is the P0 child of t_80fc0326 (live rotated token in scripts/qa/secret-guard.selftest.mjs on fix/telegram-token-rotation-t_289']
+    t_b51a1ff3: with=['R2_QA_VERDICT_INVALID'] without=['R1_QA_VERDICT_MISSING', 'R2_QA_VERDICT_INVALID'] applied_X1=['QA sign-off exception recorded by dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. Deliverable 3 (rotation decision) and the B1 guard-install claim were both independently verified by a human: sha256 of agent-hooks']
+  gate=head: cards whose outcome changes without exceptions = 3
+    t_930fddbe: with=[] without=['R1_QA_VERDICT_MISSING', 'R4_EVIDENCE_MISSING'] applied_X1=['QA sign-off exception recorded by dashboard: closed by human decision (Ze), duplicate of already-resolved incident t_80fc0326/t_9b3bdba0/t_b51a1ff3, verified independently on all 5 AC-named branches, 0 hits.  Closing as done. This unblocks paren']
+    t_9b3bdba0: with=[] without=['R1_QA_VERDICT_MISSING', 'R4_EVIDENCE_MISSING'] applied_X1=['QA sign-off exception recorded by dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. This is the P0 child of t_80fc0326 (live rotated token in scripts/qa/secret-guard.selftest.mjs on fix/telegram-token-rotation-t_289']
+    t_b51a1ff3: with=['R2_QA_VERDICT_INVALID'] without=['R1_QA_VERDICT_MISSING', 'R2_QA_VERDICT_INVALID'] applied_X1=['QA sign-off exception recorded by dashboard: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. Deliverable 3 (rotation decision) and the B1 guard-install claim were both independently verified by a human: sha256 of agent-hooks']
+
+=== every comment carrying the key on a DONE card (gate EXCEPTION_RE shape), for intent review
+  t_33dcad7d #30 author=architect: ...ve: security Test Type AND a crypto/bridge keyword. False positives are cleared by an architect comment or a `qa-signoff-exception:` marker — both mechanisms exist and are audit-visible (X1_EXCEPTION on every run).  **Verdict: the R7 classification list is cor...
+  t_33dcad7d #31 author=architect: ...vative two-part test described in `QA_SIGN_OFF_GATE.md` §5.5. False positives clear via architect comment or `qa-signoff-exception:` (audit-visible as X1_EXCEPTION); false negatives are unlikely given the AND condition and the vocabulary.  **Signed off (archit...
+  t_33dcad7d #32 author=architect: ...lete against ADR-002 §5.3 + ADR-005 §9.2; no keyword changes. False positives cleared by architect comment / `qa-signoff-exception:` (X1_EXCEPTION, audit-visible). 4. Non-default boards — no release-track board planned; hook follows `$HERMES_KANBAN_DB` automat...
+  t_33dcad7d #33 author=architect: ...card's gate audit is a false positive. The architect sign-off comment (comment 31) quoted the literal phrase `qa-signoff-exception:` in backticks as a description of the exception mechanism (per QA_SIGN_OFF_GATE.md §5.6), and the gate's exception regex matched...
+  t_75180b28 #551 author=architect: ...## Faille du gate — `QA signoff exception:` n'a aucune contrainte d'auteur  Découverte en cherchant comment fermer légitimement une carte d'intendance. Je la signale au li...
+  t_75180b28 #551 author=architect: ...off(board, task) && !exception) {   add("R7_SECURITY_TRACK_SIGNOFF_MISSING", ...); } ```  Un agent qui écrit `QA signoff exception: ...` dans un commentaire ferme une carte de la frontière crypto **sans signature Architecte ni verdict QA**. C'est précisément l...
+  t_75180b28 #571 author=architect: ... dispositif n'a plus de signataire.  Je n'invente pas la sortie de ce trou, et je ne l'ouvre pas avec la clé `qa-signoff-exception` — d'autant qu'elle ne désarmerait pas R9/R10, ce qui est précisément le bon choix de conception de @qa.  ### Ce que j'attends de...
+  t_80fc0326 #80 author=dashboard: ...qa-signoff-exception: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. This card was a P0 security incident (public credential lea...
+  t_930fddbe #90 author=dashboard: ... active threat. Not pursuing a rewrite now.  AC4: human decision recorded — no force-push needed, per above.  qa-signoff-exception: closed by human decision (Ze), duplicate of already-resolved incident t_80fc0326/t_9b3bdba0/t_b51a1ff3, verified independently o...
+  t_9b3bdba0 #81 author=dashboard: ...qa-signoff-exception: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. This is the P0 child of t_80fc0326 (live rotated token in s...
+  t_b51a1ff3 #82 author=dashboard: ...qa-signoff-exception: closed by human decision (Ze), not by qa-profile QA-VERDICT comment. Deliverable 3 (rotation decision) and the B1 guard-install ...
+  t_b8001b55 #569 author=architect: ..., non introduit.** Son commentaire #30 écrit : « False positives are cleared by an architect comment or a `` `qa-signoff-exception:` `` marker — both mechanisms exist ». La clé y est **entre backticks** : une citation décrivant le mécanisme, jamais une dérogat...
+  t_f49d448c #96 author=human: ...qa-signoff-exception: closed by human decision (Ze), bypassing gate defect R8_DEFERRAL_TARGET_INVALID (tracked separately at t_58280940 — stale archit...
+  t_f49d448c #98 author=qa: ... 58 checks (RED 51/58 → GREEN 58/58). PR #25 CI: **10/10 checks pass**, including `secret-scan`. - The human `qa-signoff-exception` on this card can stay as history; it is no longer load-bearing for `R8`, and this card's operative verdict is the `qa`-authored ...
+  total key occurrences on done cards: 14; distinct cards: 8

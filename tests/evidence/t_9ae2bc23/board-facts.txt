@@ -1,0 +1,4 @@
+done cards in snapshot: 140
+comments carrying the key (any card): 21
+done cards carrying the key: 9
+counterfactual copy: neutralised comments: 13; comments still matching EXCEPTION_RE: 0

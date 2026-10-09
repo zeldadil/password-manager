@@ -1,0 +1,8 @@
+gate=old view=default exit=1
+gate=fix view=default exit=1
+gate=head view=default exit=1
+gate=old view=strict exit=1
+gate=fix view=strict exit=1
+gate=head view=strict exit=1
+gate=head view=strict-noexc exit=1
+gate=fix view=strict-noexc exit=1
