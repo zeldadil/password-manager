@@ -861,6 +861,69 @@ writeFileSync(
   JSON.stringify({ ...GH_FIXTURE, errors: { "required checks": "HTTP 403: Resource not accessible by integration" } }),
 );
 
+// ── t_339a0d02 fixtures: R10 judges the merge's push run only ───────────────
+// Live case (2026-10-09): on merge commit a48d622 (PR #120) the push run was
+// green; three workflow_dispatch runs started later on the same SHA failed on
+// secret-scan (full-history scan on that event) and R10 read them, so a merged
+// card could not complete. The other way round, a manual run could "repair" a
+// red merge. Check runs carry their check suite; the workflow runs of the SHA
+// say which suite is the `push` one. A re-run of the push run is the same suite
+// with a higher check-run id, so it counts.
+const EV_PUSH_GREEN_DISPATCH_RED = prCard("FE-970a push run green, a later dispatch run red on the same SHA");
+const EV_PUSH_RED_DISPATCH_GREEN = prCard("FE-970b push run red, a later dispatch run green on the same SHA");
+const EV_PUSH_RERUN_GREEN = prCard("FE-970c push run red, then re-run green (same suite, new attempt)");
+const EV_PUSH_RED_ONLY = prCard("FE-970d push run red, nothing else (non-vacuity)");
+const EV_NO_PUSH_RUN = prCard("FE-970e no push run at all, only a green dispatch run");
+const EV_NON_ACTIONS = prCard("FE-970f a required check from another app (no workflow run) plus a green push run");
+const evRun = (name, conclusion, id, suite) => ({ ...run(name, conclusion), id, check_suite_id: suite });
+const evAll = (conclusions, base, suite) =>
+  [
+    ["lint-typecheck", conclusions[0]],
+    ["integration", conclusions[1]],
+    ["build", conclusions[2]],
+  ].map(([n, c], i) => evRun(n, c, base + i, suite));
+const wf = (id, event, suite, attempt = 1) => ({ id, event, check_suite_id: suite, run_attempt: attempt, name: "CI" });
+const GH_EVENT = join(root, "gh-event.json");
+writeFileSync(
+  GH_EVENT,
+  JSON.stringify(
+    {
+      ...GH_FIXTURE,
+      prs: [
+        merged(941, EV_PUSH_GREEN_DISPATCH_RED, sha("1")),
+        merged(942, EV_PUSH_RED_DISPATCH_GREEN, sha("2")),
+        merged(943, EV_PUSH_RERUN_GREEN, sha("3")),
+        merged(944, EV_PUSH_RED_ONLY, sha("4")),
+        merged(945, EV_NO_PUSH_RUN, sha("5")),
+        merged(946, EV_NON_ACTIONS, sha("6")),
+      ],
+      check_runs: {
+        // push suite 11 green; dispatch suite 12 (higher ids, i.e. newer) red on build.
+        [sha("1")]: [...evAll(["success", "success", "success"], 100, 11), ...evAll(["success", "success", "failure"], 200, 12)],
+        // push suite 21 red on integration; dispatch suite 22 (newer) all green.
+        [sha("2")]: [...evAll(["success", "failure", "success"], 100, 21), ...evAll(["success", "success", "success"], 200, 22)],
+        // push suite 31: attempt 1 red on build (id 102), re-run attempt 2 green (id 302), same suite.
+        [sha("3")]: [...evAll(["success", "success", "failure"], 100, 31), evRun("build", "success", 302, 31)],
+        [sha("4")]: evAll(["success", "failure", "success"], 100, 41),
+        [sha("5")]: evAll(["success", "success", "success"], 100, 52),
+        // `build` comes from a check suite that no workflow run owns (another app): judged as before.
+        [sha("6")]: [...evAll(["success", "success", "success"], 100, 61).slice(0, 2), evRun("build", "success", 400, 69)],
+      },
+      statuses: {},
+      workflow_runs: {
+        [sha("1")]: [wf(1001, "push", 11), wf(1002, "workflow_dispatch", 12)],
+        [sha("2")]: [wf(2001, "push", 21), wf(2002, "workflow_dispatch", 22)],
+        [sha("3")]: [wf(3001, "push", 31, 2)],
+        [sha("4")]: [wf(4001, "push", 41)],
+        [sha("5")]: [wf(5002, "workflow_dispatch", 52)],
+        [sha("6")]: [wf(6001, "push", 61)],
+      },
+    },
+    null,
+    2,
+  ),
+);
+
 // ── t_7e8bf917 fixtures: a PR links a card only by declaration ──────────────
 // Before this fix any mention of the id in a PR title/body/head linked the PR:
 // live, PR #114 (which only quotes t_75180b28 in a fixture) was named by R9 on
@@ -2043,6 +2106,68 @@ console.log("\n7. A PR links a card only by declaration — head branch or `Clos
   check(
     "a longer id (#909 `Closes <id>9`) is neither a link nor a mention → no A14",
     r.code === 0 && r.pr && r.pr.applies === false && !r.adv.includes("A14_PR_MENTIONS_CARD"),
+    show(r),
+  );
+}
+
+console.log("\n8. R10 judges the merge's push run only; manual runs on the same SHA are advisory (§5.9, t_339a0d02):");
+{
+  const evCheck = (taskId) => {
+    const r = runGate(["check", "--task", taskId, "--db", db, "--repo", repo, "--pre-complete", "--json"], "", { QA_GATE_GITHUB_FIXTURE: GH_EVENT });
+    let p = null;
+    try {
+      p = JSON.parse(r.out);
+    } catch {
+      p = null;
+    }
+    const v = p ? p.violations : [];
+    const a = p ? p.advisories : [];
+    return {
+      code: r.code,
+      out: r.out,
+      rules: v.map((x) => x.rule),
+      adv: a.map((x) => x.rule),
+      detail: (rule) => (v.find((x) => x.rule === rule) || a.find((x) => x.rule === rule) || {}).detail || "",
+      pr: p ? p.facts.pr_rule : null,
+    };
+  };
+  const show = (r) => `exit=${r.code} rules=[${r.rules.join(",")}] adv=[${r.adv.join(",")}] out=${r.out.slice(0, 240).replace(/\n/g, " ")}`;
+
+  let r = evCheck(EV_PUSH_GREEN_DISPATCH_RED);
+  check(
+    "(1) push run green + later dispatch run red on the same SHA → no R10, A15 naming build and the dispatch event (live a48d622 shape)",
+    r.code === 0 && r.rules.length === 0 && r.adv.includes("A15_NON_PUSH_RUN_ON_MERGE_COMMIT") && /build/.test(r.detail("A15_NON_PUSH_RUN_ON_MERGE_COMMIT")) && /workflow_dispatch/.test(r.detail("A15_NON_PUSH_RUN_ON_MERGE_COMMIT")),
+    show(r),
+  );
+  check("(1b) the judged states are the push run's (all success)", r.pr && Object.values(r.pr.check_states || {}).every((s) => s === "success"), JSON.stringify(r.pr && r.pr.check_states));
+  r = evCheck(EV_PUSH_RED_DISPATCH_GREEN);
+  check(
+    "(2) push run red + later dispatch run green → R10 integration=failure (a manual run cannot repair a red merge), A15 present",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R10_MERGE_CI_NOT_GREEN" && /integration=failure/.test(r.detail("R10_MERGE_CI_NOT_GREEN")) && r.adv.includes("A15_NON_PUSH_RUN_ON_MERGE_COMMIT"),
+    show(r),
+  );
+  r = evCheck(EV_PUSH_RERUN_GREEN);
+  check(
+    "(3) push run red then re-run green (same suite, newer attempt) → no R10, no A15 (a re-run of the push run is the push run)",
+    r.code === 0 && r.rules.length === 0 && !r.adv.includes("A15_NON_PUSH_RUN_ON_MERGE_COMMIT") && r.pr && r.pr.check_states && r.pr.check_states.build === "success",
+    show(r),
+  );
+  r = evCheck(EV_PUSH_RED_ONLY);
+  check(
+    "(4) non-vacuity: push run red alone → R10 integration=failure, no A15",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R10_MERGE_CI_NOT_GREEN" && /integration=failure/.test(r.detail("R10_MERGE_CI_NOT_GREEN")) && !r.adv.includes("A15_NON_PUSH_RUN_ON_MERGE_COMMIT"),
+    show(r),
+  );
+  r = evCheck(EV_NO_PUSH_RUN);
+  check(
+    "(5) no push run on the merge commit, only a green dispatch run → R10 (fail closed: a manual run never satisfies R10), state no-push-run",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R10_MERGE_CI_NOT_GREEN" && /no-push-run/.test(r.detail("R10_MERGE_CI_NOT_GREEN")),
+    show(r),
+  );
+  r = evCheck(EV_NON_ACTIONS);
+  check(
+    "(6) a required check from a suite no workflow run owns (another app) is judged as before → allowed",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.check_states && r.pr.check_states.build === "success",
     show(r),
   );
 }

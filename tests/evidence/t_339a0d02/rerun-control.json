@@ -1,0 +1,18 @@
+{
+ "violations": [],
+ "advisories": [],
+ "judged": 116,
+ "merge_commit": "8e29a7fafc6982fc7334bddaa31a8070a59d857a",
+ "check_states": {
+  "unit": "success",
+  "integration": "success",
+  "install-lockfile": "success",
+  "lint-typecheck": "success",
+  "e2e": "success",
+  "dependency-audit": "success",
+  "build": "success",
+  "secret-scan": "success"
+ },
+ "manual": null,
+ "r10": null
+}
