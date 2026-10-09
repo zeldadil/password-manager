@@ -1,0 +1,12 @@
+Firing 2 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/docs/agent-hooks/qa-signoff-gate.sh
+      exit=2  elapsed=2.75s
+      stdout: {"decision":"block","reason":"QA sign-off gate blocked this completion of t_20f78461 (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card\n  - R9_PR_NOT_MERGED: PR not merged: no pull request linked to t_20f78461 ...
+      parsed (Hermes wire shape): {"action": "block", "message": "QA sign-off gate blocked this completion of t_20f78461 (2 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card \u2014 add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred \u2014 t_xxxxxxxx` pointing at a QA-owned child card\n  - R9_PR_NOT_MERGED: PR not merged: no pull request linked to t_20f78461 is merged into master \u2014 #110 is open (not merged). The card completes after the merge, by the merger (\u00a75.9)\nRecord the verdict on the card, then call kanban_complete again:\n  hermes kanban comment t_20f78461 --author qa --body \"QA-VERDICT: pass \u2014 evidence: tests/evidence/t_20f78461/README.md\"\nA code card completes only after its PR is merged into master with green CI on the merge commit (\u00a75.9):\n  the author moves the card to review with \"PR: #<n>\" (kanban_request_review); the merger completes it after the merge.\nPolicy: QA_SIGN_OFF_GATE.md \u00b7 re-check: node scripts/qa/signoff-gate.mjs check --task t_20f78461 --pre-complete"}
+
+  → /home/sap/.hermes/profiles/docs/agent-hooks/secret-guard.sh
+      exit=0  elapsed=0.048s
+      stdout: {}
+      parsed: <none — hook contributed nothing to the dispatcher>
+

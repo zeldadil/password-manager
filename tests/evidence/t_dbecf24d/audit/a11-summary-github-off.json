@@ -1,0 +1,23 @@
+{
+  "github": "off",
+  "counts_keys": [
+    "done_cards",
+    "enforced",
+    "failures",
+    "grandfathered"
+  ],
+  "counts": {
+    "done_cards": 137,
+    "enforced": 110,
+    "failures": 31,
+    "grandfathered": 27
+  },
+  "has_a11_counter": false,
+  "a11_cards": [
+    "t_65c5a636",
+    "t_cbaa9f7d",
+    "t_75180b28",
+    "t_7e1cea21"
+  ],
+  "a11_total": 4
+}

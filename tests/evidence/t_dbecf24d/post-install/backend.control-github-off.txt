@@ -1,0 +1,12 @@
+Firing 2 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/backend/agent-hooks/qa-signoff-gate.sh
+      exit=2  elapsed=0.159s
+      stdout: {"decision":"block","reason":"QA sign-off gate blocked this completion of t_20f78461 (1 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card\nRecord the verdict on the card, then call kanban_complete again:\n  hermes...
+      parsed (Hermes wire shape): {"action": "block", "message": "QA sign-off gate blocked this completion of t_20f78461 (1 violation(s)):\n  - R1_QA_VERDICT_MISSING: no QA verdict on the card \u2014 add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred \u2014 t_xxxxxxxx` pointing at a QA-owned child card\nRecord the verdict on the card, then call kanban_complete again:\n  hermes kanban comment t_20f78461 --author qa --body \"QA-VERDICT: pass \u2014 evidence: tests/evidence/t_20f78461/README.md\"\nPolicy: QA_SIGN_OFF_GATE.md \u00b7 re-check: node scripts/qa/signoff-gate.mjs check --task t_20f78461 --pre-complete"}
+
+  → /home/sap/.hermes/profiles/backend/agent-hooks/secret-guard.sh
+      exit=0  elapsed=0.053s
+      stdout: {}
+      parsed: <none — hook contributed nothing to the dispatcher>
+
