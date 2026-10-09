@@ -1,0 +1,17 @@
+gate: scripts/qa/signoff-gate.mjs sha256 3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749
+repo HEAD: 79e3242cd6f1fd0d002d40248bf1e0559c7c8a7f  date: 2026-10-09T22:16:55Z
+== check --task t_7e1cea21
+QA sign-off gate — check t_7e1cea21 (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_7e1cea21  TOOL-001: pin Node to the CI version (.nvmrc + tighten engines + README) @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+exit=1
+== check --task t_65c5a636
+QA sign-off gate — check t_65c5a636 (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_65c5a636  Write Project Overview, Prerequisites, and Quick Start content @architect
+        R1_QA_VERDICT_MISSING: no QA verdict on the card — add a comment `QA-VERDICT: <pass|pass-with-conditions|fail|blocked>` from the qa profile, or `QA-VERDICT: deferred — t_xxxxxxxx` pointing at a QA-owned child card
+        R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "docs" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+exit=1

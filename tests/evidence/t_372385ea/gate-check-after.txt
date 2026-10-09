@@ -1,0 +1,16 @@
+gate: scripts/qa/signoff-gate.mjs sha256 3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749
+repo HEAD: 0d5b86220443b1ed8af47e0cf92496050c7707c8  date: 2026-10-09T22:20:31Z
+== check --task t_7e1cea21
+QA sign-off gate — check t_7e1cea21 (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 1  ·  FAIL: 0
+  ok   t_7e1cea21  TOOL-001: pin Node to the CI version (.nvmrc + tighten engines + README) @architect
+        warn A14_PR_MENTIONS_CARD: PR #125 (merged; title + body) mentions t_7e1cea21 without declaring it — not linked: neither counted for nor against §5.9. If one of them delivers this card, add a `Closes t_7e1cea21` line to its body (or name its head branch after the card)
+exit=0
+== check --task t_65c5a636
+QA sign-off gate — check t_65c5a636 (db: /home/sap/.hermes/kanban.db, epoch: 2026-09-17T15:00:00.000Z)
+  enforced (done at/after epoch or pre-complete): 1  ·  pass: 0  ·  FAIL: 1
+  FAIL t_65c5a636  Write Project Overview, Prerequisites, and Quick Start content @architect
+        R3_VERDICT_NOT_TERMINAL: card is done but its latest QA verdict is "fail"
+        warn A7_VERDICT_AUTHOR_IGNORED: a `QA-VERDICT: pass` comment written by "docs" is not a QA verdict (§3: only a qa-profile comment records one) — ignored
+        warn A14_PR_MENTIONS_CARD: PR #125 (merged; title + body) mentions t_65c5a636 without declaring it — not linked: neither counted for nor against §5.9. If one of them delivers this card, add a `Closes t_65c5a636` line to its body (or name its head branch after the card)
+exit=1
