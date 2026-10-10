@@ -1,0 +1,153 @@
+head: 4960b8e · node: v22.23.3 · 2026-10-10T13:22:34Z
+node: v22.23.3 · base gate 626feb7 sha256: 413da76c5f8f60b9233c43345404c336d0243173184ba60a957ea925d9a8f39b
+QA sign-off gate selftest — fixture board: /home/sap/.hermes/profiles/qa/cache/scratch/signoff-gate-selftest-zqQ8mK/board.db
+fixture repo: /home/sap/.hermes/profiles/qa/cache/scratch/signoff-gate-selftest-zqQ8mK/repo
+
+1. Compliant cards (must produce ZERO violations — anti-vacuous control):
+  ok   - Path A verdict + repo evidence
+  ok   - crypto card with AR-6 architect sign-off
+  ok   - evidence uploaded as attachment
+  ok   - QA-owned card with run-metadata verdict
+  ok   - deferral to a completed QA child
+  ok   - deferral to an open QA child (advisory only)
+  ok   - pass-with-conditions naming a follow-up
+  ok   - grandfathered pre-epoch card
+  ok   - recorded QA sign-off exception
+  ok   - superseded comments name missing artifacts
+  ok   - operative evidence committed on another ref
+  ok   - explicit verdict + linked qa repair child
+  ok   - stale deferral marker + newer QA verdict (t_58280940)
+  ok   - stale deferral marker to an open QA child + newer verdict
+  ok   - quoted deferral marker later in the thread + verdict (t_58280940)
+  ok   - non-vacuity control: the marker comment authored by qa
+  ok   - qa-authored loose verdict (unchanged)
+  ok   - non-QA run-metadata verdict accepted (§3 row 3, A8 only)
+
+1b. t_5455942d regressions (fail closed only on unverifiable input):
+  ok   - superseded verdict/handoff paths are advisory (A5), never R5
+  ok   - operative evidence on another ref is accepted (A4, no R5)
+  ok   - explicit verdict + linked qa child is NOT a deferral (no A2)
+  ok   - linked qa child with NO verdict still counts as a deferral (A2 fires — heuristic intact)
+  ok   - stale deferral marker is superseded by the newer verdict — no R8, no deferral (t_58280940)
+  ok   - stale deferral marker to an open QA child is superseded too — no A2 (t_58280940)
+  ok   - a marker that only appears in a code span is not a deferral (no phantom R8)
+  ok   - a quoted marker must not hijack the newest-marker ordering over a real one (t_58280940)
+
+1c. t_99e408c5 regressions (R5 adjudicates claims, not citations):
+  ok   - a verdict quoting another card's missing path is NOT blocked by R5 (the reported instance)
+  ok   - the quoted path is reported as A6_EVIDENCE_CITED (the audit still sees it)
+  ok   - the reporting card's own labelled evidence stays the claim it resolves
+  ok   - citing another card's artifact that exists produces no R5 and no A6 noise
+  ok   - no label: a quoted path in a code span is a citation (no R5, A6 fires)
+  ok   - labelled evidence file missing (R5 control) → R5_EVIDENCE_FILE_MISSING
+  ok   - labelled evidence file missing inside a code span is still a claim (R5 control) → R5_EVIDENCE_FILE_MISSING
+  ok   - no label: a missing path in plain prose is still a claim (R5 control) → R5_EVIDENCE_FILE_MISSING
+
+1d. t_338f47fd regressions (VERDICT_MARKER_RE had no author check):
+  ok   - (a) the marker comment authored by architect does NOT satisfy R1
+  ok   - (a) no verdict is collected from it at all — R2/R3 cannot fire off it either
+  ok   - (a) the discounted marker is reported as A7_VERDICT_AUTHOR_IGNORED, never dropped silently
+  ok   - (b) the SAME comment authored by qa does satisfy R1 (non-vacuity control)
+  ok   - a non-QA `blocked` marker cannot create R3 on a done card
+  ok   - a non-QA `deferred` marker is not a deferral: R1 fires, R8 must not
+  ok   - live thread shape (architect deferral + dashboard verdict marker) records no verdict
+  ok   - (c) loose path unchanged: a non-QA `verdict: …` is still ignored (already was) and is not a marker (no A7)
+  ok   - (c) run metadata unchanged: a non-QA run-metadata verdict is still accepted (A8 reports it)
+  ok   - (c) a qa run-metadata verdict raises no A8 (the advisory is specific to a non-QA declaration)
+
+1e. t_df8e644a regressions (a cited file name must not read as a verdict token):
+  ok   - t_df8e644a: a cited file name in plain prose yields NO verdict token (R2 must not fire)
+  ok   - t_df8e644a: a cited file name in a code span yields NO verdict token (R2 must not fire)
+  ok   - t_df8e644a: a cited file name in a fenced block yields NO verdict token (R2 must not fire)
+  ok   - t_df8e644a: the citation-only card is still judged — no verdict, so R1 → R1_QA_VERDICT_MISSING
+  ok   - t_df8e644a: the live shape — a compliant verdict citing the same file name stays clean (no R2, no R5)
+  ok   - t_df8e644a: a cited file name before the real loose verdict no longer masks it (R1/R2 must not fire)
+  ok   - t_df8e644a: anti-degradation — a genuine loose `verdict: pass` is still read (non-vacuity)
+  ok   - t_df8e644a: anti-degradation — an off-vocabulary loose token that IS the verdict still fires R2 → R2_QA_VERDICT_INVALID
+  ok   - t_df8e644a: anti-degradation — a loose verdict claiming a missing evidence file still fires R5 → R5_EVIDENCE_FILE_MISSING
+  ok   - t_c015bda7: an invalid token superseded by a later valid verdict passes, with A9 recorded
+  ok   - t_c015bda7: anti-degradation — a valid verdict followed by an invalid one still fires R2 → R2_QA_VERDICT_INVALID
+  ok   - t_c015bda7: a trailing invalid token is not downgraded to an advisory
+
+1f. t_b8001b55 regressions (qa-signoff-exception: author allowlist, quotes, security track):
+  ok   - (1) exception by an executing profile (backend) → ignored: R1 + R4 fire, A10(author), no X1
+  ok   - (1) exception by the anonymous `worker` author → ignored: R1 + R4 fire, A10(author), no X1
+  ok   - (1) the `worker` refusal says it names no profile
+  ok   - (2) key quoted in live t_75180b28 #551 (backtick quotes, architect) → ignored: R1 fires, A10(quoted), no X1
+  ok   - (2) key quoted in fenced block (architect) → ignored: R1 fires, A10(quoted), no X1
+  ok   - (2) non-vacuity: a quote plus a real key in the same comment → the real one is operative
+  ok   - (2) a refused record first does not shadow a later allowed one (no first-match trap)
+  ok   - (3) security-track card with exceptions by dashboard/architect/qa → R7 AND R1 (and R4) still fire
+  ok   - (3) hook mode blocks completing the security-track card despite the exceptions
+  ok   - (4) non-vacuity: exception by architect on a non-security card → still valid (0 violations, X1, no A10)
+  ok   - (4) non-vacuity: exception by qa on a non-security card → still valid (0 violations, X1, no A10)
+  ok   - (4) non-vacuity: exception by human on a non-security card → still valid (0 violations, X1, no A10)
+  ok   - (4) non-vacuity: exception by dashboard on a non-security card → still valid (0 violations, X1, no A10)
+  ok   - (4) non-vacuity: exception by user on a non-security card → still valid (0 violations, X1, no A10)
+
+1g. t_b2588ee7 regressions (a qa-signoff-exception can be withdrawn by a later record):
+  ok   - (1) exception then withdrawal by same author (architect → architect) → no exception: R1 + R4 fire, X2 reported, no X1
+  ok   - (1) exception then withdrawal by another allowed author (dashboard → qa) → no exception: R1 + R4 fire, X2 reported, no X1
+  ok   - (2) withdrawal by an executing profile (backend) → ignored: exception holds (X1, 0 violations), A16(author), no X2
+  ok   - (2) withdrawal by the anonymous `worker` author → ignored: exception holds (X1, 0 violations), A16(author), no X2
+  ok   - (2) the `worker` withdrawal refusal says it names no profile
+  ok   - (2) a withdrawal key quoted in a code span is a citation → ignored: exception holds, A16(quoted)
+  ok   - (3) withdrawal without any exception → no effect: gate runs (JSON), R1 fires as on a bare card, A16(no-exception)
+  ok   - (3) a bare stray withdrawal on a compliant card changes nothing (0 violations, A16 only)
+  ok   - (3) a withdrawal posted BEFORE the exception does not pre-empt it (posterior records only)
+  ok   - re-arm: exception → withdrawal → new exception → the new one is operative, the first stays visible as X2
+  ok   - one comment recording an exception then its withdrawal → withdrawn
+  ok   - same-second exception + withdrawal → posting order (id) breaks the tie → withdrawn
+  ok   - withdrawal spelling "qa-signoff-exception-withdrawn: no…" alone is NOT an exception → R1 fires, no X1
+  ok   - withdrawal spelling "qa-signoff-exception: withdrawn — …" alone is NOT an exception → R1 fires, no X1
+  ok   - security-track card: exception refused, withdrawal is a no-op, R7 + R1 still fire
+  ok   - hook mode blocks completing a card whose exception was withdrawn
+
+2. Rule coverage (every rule must fire on its own non-compliant card):
+  ok   - no verdict, no evidence → R1_QA_VERDICT_MISSING
+  ok   - no verdict, no evidence → R4_EVIDENCE_MISSING
+  ok   - verdict token outside vocabulary → R2_QA_VERDICT_INVALID
+  ok   - fail verdict on a done card → R3_VERDICT_NOT_TERMINAL
+  ok   - blocked verdict on a done card → R3_VERDICT_NOT_TERMINAL
+  ok   - verdict without evidence → R4_EVIDENCE_MISSING
+  ok   - named evidence file missing → R5_EVIDENCE_FILE_MISSING
+  ok   - operative verdict names a missing artifact (scoping is not vacuous) → R5_EVIDENCE_FILE_MISSING
+  ok   - pass-with-conditions without follow-up → R6_CONDITIONS_UNTRACKED
+  ok   - crypto card without architect sign-off → R7_SECURITY_TRACK_SIGNOFF_MISSING
+  ok   - deferral to a non-QA card → R8_DEFERRAL_TARGET_INVALID
+  ok   - deferral to a phantom card → R8_DEFERRAL_TARGET_INVALID
+  ok   - newest record is a deferral to a non-QA card (superseding is ordered, not amnesty) → R8_DEFERRAL_TARGET_INVALID
+  ok   - quoted marker is documentation, not a deferral (R8 must not fire) → R1_QA_VERDICT_MISSING
+
+2b. R7 scope-v2 (t_90a4bd73 — decision t_18230e85 option C; each non-vacuous case names the v1 defect it catches):
+  FAIL - R7v2 (a) scope keyword + `Test Types: unit` → security-track, R7 fires [v1: suppressed by the security Test-Type AND] — exit=0 security_track=false rules=[] advisories=[]
+  FAIL - R7v2 (b) AUTOFILL_REQUEST/_RESPONSE only → security-track, R7 fires [v1: `\bautofill\b` cannot match before `_`] — exit=0 security_track=false rules=[] advisories=[]
+  FAIL - R7v2 (c1) Origin Validation (`sender.origin`, allowed origin) → R7 fires, bridge scope per t_18230e85 §2 [v1: no token] — exit=0 security_track=false rules=[] advisories=[]
+  ok   - R7v2 (c2) guard: `Test Types: security` without a boundary token → NOT security-track, clean [option-B regression]
+  FAIL - R7v2 (d) compliant control: nonce + BRIDGE_MESSAGE, `unit`, architect sign-off → security-track AND zero violations [v1: not classified] — exit=0 security_track=false rules=[] advisories=[]
+  FAIL - R7v2 (e) `bridge messages` / `bridge_message` → security-track, R7 fires [v1: trailing `\b` and `[\s-]*` separator] — exit=0 security_track=false rules=[] advisories=[]
+  FAIL - R7v2 (e2) `crypto boundaries` (plural) → security-track, R7 fires [v1: trailing `\b` after `boundary`] — exit=0 security_track=false rules=[] advisories=[]
+  ok   - R7v2 (f) guard: qa-assigned card quoting KDF / AUTOFILL_REQUEST → exempt (¬qa kept), clean
+  ok   - R7v2 (k) guard: French "annonce" / "Énoncer" and "vault keyboard" → NOT security-track, clean [substring false positives]
+  FAIL - R7v2 (g) v2-only card completed before the R7 v2 epoch → classified, NOT enforced: A17 advisory, zero violations [no retroactive cliff] — exit=0 security_track=false rules=[] advisories=[]
+  ok   - R7v2 (h) v1-classified card completed before the R7 v2 epoch → still enforced, R7 fires (v2 never removes a v1 obligation)
+  FAIL - R7v2 (i) open v2-only card → in force whatever the epoch: R7 fires — exit=0 security_track=false rules=[] advisories=[]
+  FAIL - R7v2 (j) same open card, --pre-complete → R7 blocks the completion — exit=0 security_track=false rules=[] advisories=[]
+  FAIL - --r7-v2-epoch-iso with an unparseable value → refused (exit 3), never a silent NaN epoch — exit=0
+
+2c. `--json` output is flushed before exit (t_90a4bd73):
+  FAIL - audit --json through a slow pipe is complete (> 64 KiB, flushed before exit) — bytes=65536 results piped=-2 expected=88
+
+3. --strict-history turns grandfathered gaps into failures:
+<anonymous_script>:4350
+          "rule": "R2_Q
+
+SyntaxError: Unterminated string in JSON at position 145839 (line 4350 column 24)
+    at JSON.parse (<anonymous>)
+    at file:///home/sap/.hermes/profiles/qa/cache/scratch/tmp.WBxJZN4Wcy/qa/signoff-gate.selftest.mjs:2094:23
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.3
+selftest exit: 1
