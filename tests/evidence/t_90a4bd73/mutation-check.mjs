@@ -9,7 +9,7 @@
  *
  *   M0  none (control)                                   → every case ok
  *   M1  v1 classification restored (\b(...)\b list AND `security` Test Type)
- *                                                        → (a) (b) (c1) (d) (e) (g) (i) (j) FAIL
+ *                                                        → (a) (b) (c1) (d) (e) (e2) (g) (i) (j) FAIL
  *   M2  option B (token OR `security` Test Type)         → (c2) (k) FAIL
  *   M3  ¬qa exemption dropped                            → (f) FAIL
  *   M4  writeThenExit reverted (exit without flush)      → slow-pipe case FAIL
@@ -45,13 +45,13 @@ const B_BODY = `  return (
 const NOQA_BODY = `  return SECURITY_TRACK_RE.test(\`\${task.title || ""}\\n\${task.body || ""}\`);`;
 const ENFORCED = "  const securityTrackEnforced = (securityTrack && r7v2InForce) || isSecurityTrackV1(task);";
 
-const LABELS = ["R7v2 (a)", "R7v2 (b)", "R7v2 (c1)", "R7v2 (c2)", "R7v2 (d)", "R7v2 (e)", "R7v2 (f)", "R7v2 (k)", "R7v2 (g)", "R7v2 (h)", "R7v2 (i)", "R7v2 (j)", "--r7-v2-epoch-iso with an unparseable", "audit --json through a slow pipe"];
-const PIPE = LABELS[13];
-const NAN = LABELS[12];
+const LABELS = ["R7v2 (a)", "R7v2 (b)", "R7v2 (c1)", "R7v2 (c2)", "R7v2 (d)", "R7v2 (e)", "R7v2 (e2)", "R7v2 (f)", "R7v2 (k)", "R7v2 (g)", "R7v2 (h)", "R7v2 (i)", "R7v2 (j)", "--r7-v2-epoch-iso with an unparseable", "audit --json through a slow pipe"];
+const PIPE = LABELS.at(-1);
+const NAN = LABELS.at(-2);
 
 const mutants = [
   { id: "M0", what: "none (control)", edits: [], mustFail: [] },
-  { id: "M1", what: "v1 classification restored", edits: [[V2_BODY, V1_BODY]], mustFail: ["R7v2 (a)", "R7v2 (b)", "R7v2 (c1)", "R7v2 (d)", "R7v2 (e)", "R7v2 (g)", "R7v2 (i)", "R7v2 (j)"] },
+  { id: "M1", what: "v1 classification restored", edits: [[V2_BODY, V1_BODY]], mustFail: ["R7v2 (a)", "R7v2 (b)", "R7v2 (c1)", "R7v2 (d)", "R7v2 (e)", "R7v2 (e2)", "R7v2 (g)", "R7v2 (i)", "R7v2 (j)"] },
   { id: "M2", what: "option B (token OR security Test Type)", edits: [[V2_BODY, B_BODY]], mustFail: ["R7v2 (c2)", "R7v2 (k)"] },
   { id: "M3", what: "¬qa exemption dropped", edits: [[V2_BODY, NOQA_BODY]], mustFail: ["R7v2 (f)"] },
   {

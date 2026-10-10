@@ -482,6 +482,15 @@ const R7V2_BRIDGE_PLURAL = card({
   assignee: "browser",
   comments: [r7v2Verdict],
 });
+// (e2) plural form: v1's trailing `\b` after `boundary` rejected "crypto
+// boundaries", the wording of the ADR-002 card (t_3ca45da2), and the measured
+// option-C regex missed it as well.
+const R7V2_BOUNDARIES = card({
+  title: "ARC-920e2 overall architecture",
+  body: "**Test Types:** architecture-review, security\nDocuments service boundaries, data flow and crypto boundaries.",
+  assignee: "architect",
+  comments: [r7v2Verdict],
+});
 // (f) guard: the ¬qa exemption is kept (option C is "scope-v2 ∧ ¬qa").
 const R7V2_QA_OWNED = card({
   title: "QA-920g gate fixtures that quote KDF and AUTOFILL_REQUEST",
@@ -508,7 +517,7 @@ const R7V2_LOOKALIKE = card({
   assignee: "frontend",
   comments: [r7v2Verdict],
 });
-for (const t of [R7V2_UNIT_ONLY, R7V2_AUTOFILL, R7V2_ORIGIN, R7V2_SEC_TT_ONLY, R7V2_CONTROL, R7V2_BRIDGE_PLURAL, R7V2_QA_OWNED, R7V2_OPEN, R7V2_LOOKALIKE]) {
+for (const t of [R7V2_UNIT_ONLY, R7V2_AUTOFILL, R7V2_ORIGIN, R7V2_SEC_TT_ONLY, R7V2_CONTROL, R7V2_BRIDGE_PLURAL, R7V2_QA_OWNED, R7V2_OPEN, R7V2_LOOKALIKE, R7V2_BOUNDARIES]) {
   fixtureFile(`tests/evidence/${t}/README.md`);
 }
 
@@ -1994,6 +2003,10 @@ console.log("\n2b. R7 scope-v2 (t_90a4bd73 — decision t_18230e85 option C; eac
     clean: true,
   });
   r7Case("R7v2 (e) `bridge messages` / `bridge_message` → security-track, R7 fires [v1: trailing `\\b` and `[\\s-]*` separator]", R7V2_BRIDGE_PLURAL, {
+    track: true,
+    r7: true,
+  });
+  r7Case("R7v2 (e2) `crypto boundaries` (plural) → security-track, R7 fires [v1: trailing `\\b` after `boundary`]", R7V2_BOUNDARIES, {
     track: true,
     r7: true,
   });

@@ -218,15 +218,16 @@ const TEST_TYPES_RE = /test\s*types\s*:?\**\s*([^\n]+)/i;
  *
  * Tokens have **no trailing `\b`**. v1 wrapped the whole list in `\b(...)\b`,
  * so `autofill` could not match the contract's own `AUTOFILL_REQUEST` (`_` is a
- * word character), and `bridge-message` could not match `bridge messages` or
- * `BRIDGE_MESSAGE`. Separators accept space, `-` and `_`. `/i` is kept, so
+ * word character), `bridge-message` could not match `bridge messages` or
+ * `BRIDGE_MESSAGE`, and `crypto boundary` could not match `crypto boundaries`.
+ * Separators accept space, `-` and `_`. `/i` is kept, so
  * `vault[\s_-]*key` already matched `vaultKey` under v1 (t_9ae2bc23 finding);
  * that is not one of the fixes.
  */
 export const SCOPE_V2_TOKENS = Object.freeze([
   // ADR-002 §5.2 — the crypto package and its module boundary
   String.raw`packages/crypto`,
-  String.raw`crypto[\s_-]*(?:primitive|implementation|boundary|module|package)`,
+  String.raw`crypto[\s_-]*(?:primitive|implementation|boundar(?:y|ies)|module|package)`, // "crypto boundaries" (ADR-002 card t_3ca45da2)
   // ADR-002 §5.1, §5.3 — KDF / AEAD primitives, nonce/IV, tag verification
   String.raw`KDF`,
   String.raw`AEAD`,
