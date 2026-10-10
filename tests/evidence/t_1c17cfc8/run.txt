@@ -1,0 +1,24 @@
+HEAD 30334ba660367eddfbc961217e6a25f2528cf79f
+v22.23.3
+9.12.0
+install rc=0
+typecheck rc=0
+
+ RUN  v5.0.1 /home/sap/.hermes/profiles/qa/cache/scratch/t_1c17cfc8/repo/apps/services/api
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  19:45:32
+   Duration  2.15s (tests 44%, import 36%, transform 20%)
+
+newtest rc=0
+ RUN  v5.0.1 /home/sap/.hermes/profiles/qa/cache/scratch/t_1c17cfc8/repo/apps/services/api
+
+
+ Test Files  27 passed (27)
+      Tests  617 passed (617)
+   Start at  19:45:35
+   Duration  44.49s (tests 85%, import 14%, transform 2%)
+
+suite rc=0
