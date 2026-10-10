@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # QA doc-validation checks for docs/development/setup.md on origin/master (t_750423a5)
 set -u
-CL=/home/sap/.hermes/kanban/workspaces/t_750423a5/clone
+CL=/home/sap/.hermes/kanban/workspaces/t_750423a5/run3/clone
 cd "$CL"
 D=docs/development/setup.md
 step() { echo; echo "=== $* ==="; }

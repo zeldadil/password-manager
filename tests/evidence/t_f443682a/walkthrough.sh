@@ -3,7 +3,7 @@
 # Commands from the guide are copied verbatim; only additions are logging, exit codes,
 # HTTP status capture (-w) and token redaction for the evidence log.
 set -u
-WS=/home/sap/.hermes/kanban/workspaces/t_750423a5
+WS=/home/sap/.hermes/kanban/workspaces/t_750423a5/run3
 CL=$WS/clone
 redact() { sed -E 's/"(accessToken|refreshToken)":"[^"]+"/"\1":"<redacted>"/g'; }
 step() { echo; echo "=== $* ==="; }
@@ -28,8 +28,8 @@ corepack enable; echo "corepack enable rc=$?"
 pnpm --version
 
 step "§2 pnpm install"
-pnpm install > "$WS/install.log" 2>&1; echo "pnpm install rc=$?"
-tail -5 "$WS/install.log"
+pnpm install > "$WS/install.txt" 2>&1; echo "pnpm install rc=$?"
+tail -5 "$WS/install.txt"
 
 step "§5 migrate (run 1)"
 pnpm --filter @password-manager/api migrate; echo "migrate#1 rc=$?"
@@ -41,14 +41,14 @@ sqlite3 apps/services/api/dev.db "select count(*) from __drizzle_migrations;" 2>
 sqlite3 apps/services/api/dev.db ".tables" 2>&1
 
 step "§7.1 pnpm dev (background)"
-pnpm dev > "$WS/dev.log" 2>&1 &
+pnpm dev > "$WS/dev.txt" 2>&1 &
 DEVPID=$!
 for i in $(seq 1 60); do
-  curl -s -o /dev/null http://127.0.0.1:3000/health && grep -q 'localhost:5173' "$WS/dev.log" && break
+  curl -s -o /dev/null http://127.0.0.1:3000/health && grep -q 'localhost:5173' "$WS/dev.txt" && break
   sleep 1
 done
 echo "waited ${i}s"
-grep -E 'Scope:|dev\$|ready in|Local:|listening at' "$WS/dev.log"
+grep -E 'Scope:|dev\$|ready in|Local:|listening at' "$WS/dev.txt"
 curl -s -o /dev/null -w 'web 5173 -> %{http_code}\n' http://localhost:5173/
 
 step "§8.1 health"
