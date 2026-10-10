@@ -1,0 +1,573 @@
+﻿2026-10-10T18:23:52.2323339Z Current runner version: '2.337.0'
+2026-10-10T18:23:52.2349019Z ##[group]Runner Image Provisioner
+2026-10-10T18:23:52.2350138Z Hosted Compute Agent
+2026-10-10T18:23:52.2350781Z Version: 20261002.596
+2026-10-10T18:23:52.2351588Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-10T18:23:52.2352313Z Build Date: 2026-10-02T22:28:27Z
+2026-10-10T18:23:52.2353057Z Worker ID: {24ed4d91-fd6d-4c60-abfa-91b9de89952d}
+2026-10-10T18:23:52.2353822Z Region: westus2
+2026-10-10T18:23:52.2354355Z Cloud: Azure
+2026-10-10T18:23:52.2354960Z ##[endgroup]
+2026-10-10T18:23:52.2356987Z ##[group]Operating System
+2026-10-10T18:23:52.2357719Z Ubuntu
+2026-10-10T18:23:52.2358304Z 24.04.5
+2026-10-10T18:23:52.2358820Z LTS
+2026-10-10T18:23:52.2359427Z ##[endgroup]
+2026-10-10T18:23:52.2360002Z ##[group]Runner Image
+2026-10-10T18:23:52.2360641Z Image: ubuntu-24.04
+2026-10-10T18:23:52.2361264Z Version: 20261004.327.1
+2026-10-10T18:23:52.2362605Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-10T18:23:52.2364280Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+2026-10-10T18:23:52.2365616Z ##[endgroup]
+2026-10-10T18:23:52.2366861Z ##[group]GITHUB_TOKEN Permissions
+2026-10-10T18:23:52.2369095Z Contents: read
+2026-10-10T18:23:52.2369756Z Metadata: read
+2026-10-10T18:23:52.2370316Z ##[endgroup]
+2026-10-10T18:23:52.2372484Z Secret source: Actions
+2026-10-10T18:23:52.2373442Z Cache mode: write
+2026-10-10T18:23:52.2374258Z Prepare workflow directory
+2026-10-10T18:23:52.2756408Z Prepare all required actions
+2026-10-10T18:23:52.2825877Z Getting action download info
+2026-10-10T18:23:52.6523122Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-10-10T18:23:52.7631999Z Download action repository 'gitleaks/gitleaks-action@v2' (SHA:ff98106e4c7b2bc287b24eaf42907196329070c7)
+2026-10-10T18:23:53.1374160Z Complete job name: secret-scan-full-history
+2026-10-10T18:23:53.2219572Z ##[group]Run actions/checkout@v4
+2026-10-10T18:23:53.2220483Z with:
+2026-10-10T18:23:53.2220926Z   fetch-depth: 0
+2026-10-10T18:23:53.2221428Z   repository: zeldadil/password-manager
+2026-10-10T18:23:53.2225970Z   token: ***
+2026-10-10T18:23:53.2226439Z   ssh-strict: true
+2026-10-10T18:23:53.2226888Z   ssh-user: git
+2026-10-10T18:23:53.2227346Z   persist-credentials: true
+2026-10-10T18:23:53.2227842Z   clean: true
+2026-10-10T18:23:53.2228286Z   sparse-checkout-cone-mode: true
+2026-10-10T18:23:53.2228815Z   fetch-tags: false
+2026-10-10T18:23:53.2229360Z   show-progress: true
+2026-10-10T18:23:53.2229816Z   lfs: false
+2026-10-10T18:23:53.2230249Z   submodules: false
+2026-10-10T18:23:53.2230723Z   set-safe-directory: true
+2026-10-10T18:23:53.2231243Z   allow-unsafe-pr-checkout: false
+2026-10-10T18:23:53.2232085Z ##[endgroup]
+2026-10-10T18:23:53.3338676Z Syncing repository: zeldadil/password-manager
+2026-10-10T18:23:53.3341535Z ##[group]Getting Git version info
+2026-10-10T18:23:53.3343239Z Working directory is '/home/runner/work/password-manager/password-manager'
+2026-10-10T18:23:53.3346090Z [command]/usr/bin/git version
+2026-10-10T18:23:53.3470800Z git version 2.55.0
+2026-10-10T18:23:53.3498068Z ##[endgroup]
+2026-10-10T18:23:53.3514403Z Temporarily overriding HOME='/home/runner/work/_temp/b76d2093-5a9b-47a8-9145-ff00ca112e9d' before making global git config changes
+2026-10-10T18:23:53.3522691Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-10T18:23:53.3537516Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/password-manager/password-manager
+2026-10-10T18:23:53.3582385Z Deleting the contents of '/home/runner/work/password-manager/password-manager'
+2026-10-10T18:23:53.3601399Z ##[group]Initializing the repository
+2026-10-10T18:23:53.3616932Z [command]/usr/bin/git init /home/runner/work/password-manager/password-manager
+2026-10-10T18:23:53.3721768Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-10T18:23:53.3723740Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-10-10T18:23:53.3725380Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-10-10T18:23:53.3726266Z hint: call:
+2026-10-10T18:23:53.3726693Z hint:
+2026-10-10T18:23:53.3727231Z hint: 	git config --global init.defaultBranch <name>
+2026-10-10T18:23:53.3727857Z hint:
+2026-10-10T18:23:53.3728639Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-10T18:23:53.3730313Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-10T18:23:53.3731617Z hint:
+2026-10-10T18:23:53.3732293Z hint: 	git branch -m <name>
+2026-10-10T18:23:53.3733066Z hint:
+2026-10-10T18:23:53.3733930Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-10-10T18:23:53.3735577Z Initialized empty Git repository in /home/runner/work/password-manager/password-manager/.git/
+2026-10-10T18:23:53.3744435Z [command]/usr/bin/git remote add origin https://github.com/zeldadil/password-manager
+2026-10-10T18:23:53.3795088Z ##[endgroup]
+2026-10-10T18:23:53.3796524Z ##[group]Disabling automatic garbage collection
+2026-10-10T18:23:53.3800065Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-10T18:23:53.3833375Z ##[endgroup]
+2026-10-10T18:23:53.3834403Z ##[group]Setting up auth
+2026-10-10T18:23:53.3840879Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-10T18:23:53.3878052Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-10T18:23:53.4249434Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-10T18:23:53.4304254Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-10T18:23:53.4537634Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-10T18:23:53.4575550Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-10T18:23:53.4800103Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-10T18:23:53.4839340Z ##[endgroup]
+2026-10-10T18:23:53.4840193Z ##[group]Fetching the repository
+2026-10-10T18:23:53.4851452Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-10-10T18:23:53.9516526Z From https://github.com/zeldadil/password-manager
+2026-10-10T18:23:53.9518237Z  * [new branch]      ci-t_e348e0b7-wiring-clean -> origin/ci-t_e348e0b7-wiring-clean
+2026-10-10T18:23:53.9519594Z  * [new branch]      docs/t_1708dc86-quickstart-env-fix -> origin/docs/t_1708dc86-quickstart-env-fix
+2026-10-10T18:23:53.9521151Z  * [new branch]      docs/t_325bea72-readme-assembly -> origin/docs/t_325bea72-readme-assembly
+2026-10-10T18:23:53.9522417Z  * [new branch]      docs/t_65c5a636-readme-expand -> origin/docs/t_65c5a636-readme-expand
+2026-10-10T18:23:53.9523693Z  * [new branch]      docs/t_cbaa9f7d-disclosure-lint -> origin/docs/t_cbaa9f7d-disclosure-lint
+2026-10-10T18:23:53.9524973Z  * [new branch]      docs/t_f443682a-setup-guide -> origin/docs/t_f443682a-setup-guide
+2026-10-10T18:23:53.9527253Z  * [new branch]      docs/t_f443682a-setup-guide-v2 -> origin/docs/t_f443682a-setup-guide-v2
+2026-10-10T18:23:53.9528832Z  * [new branch]      evidence/t_694c9e37-master-side -> origin/evidence/t_694c9e37-master-side
+2026-10-10T18:23:53.9530426Z  * [new branch]      evidence/t_dbecf24d     -> origin/evidence/t_dbecf24d
+2026-10-10T18:23:53.9531607Z  * [new branch]      fe002a-evidence         -> origin/fe002a-evidence
+2026-10-10T18:23:53.9532766Z  * [new branch]      feat/t_4ccd2652-integration-tests -> origin/feat/t_4ccd2652-integration-tests
+2026-10-10T18:23:53.9534255Z  * [new branch]      feature/ARC-001f-github-setup -> origin/feature/ARC-001f-github-setup
+2026-10-10T18:23:53.9545838Z  * [new branch]      feature/t_12f540bf      -> origin/feature/t_12f540bf
+2026-10-10T18:23:53.9547644Z  * [new branch]      feature/t_18ae13ea      -> origin/feature/t_18ae13ea
+2026-10-10T18:23:53.9549773Z  * [new branch]      feature/t_20f78461-mv3-manifest -> origin/feature/t_20f78461-mv3-manifest
+2026-10-10T18:23:53.9551631Z  * [new branch]      feature/t_3b58b7ef      -> origin/feature/t_3b58b7ef
+2026-10-10T18:23:53.9553239Z  * [new branch]      feature/t_5fe41426      -> origin/feature/t_5fe41426
+2026-10-10T18:23:53.9554781Z  * [new branch]      feature/t_76461419      -> origin/feature/t_76461419
+2026-10-10T18:23:53.9556607Z  * [new branch]      feature/t_7e1cea21      -> origin/feature/t_7e1cea21
+2026-10-10T18:23:53.9558253Z  * [new branch]      feature/t_fdd2548e      -> origin/feature/t_fdd2548e
+2026-10-10T18:23:53.9560142Z  * [new branch]      fix/sec-incident-telegram-token -> origin/fix/sec-incident-telegram-token
+2026-10-10T18:23:53.9562070Z  * [new branch]      fix/t_19128fb2-evidence -> origin/fix/t_19128fb2-evidence
+2026-10-10T18:23:53.9564339Z  * [new branch]      fix/t_46c18784-evidence-correction-log -> origin/fix/t_46c18784-evidence-correction-log
+2026-10-10T18:23:53.9567506Z  * [new branch]      fix/t_694c9e37-ci-master-no-cancel -> origin/fix/t_694c9e37-ci-master-no-cancel
+2026-10-10T18:23:53.9570131Z  * [new branch]      fix/t_816a87b5-adr-line13 -> origin/fix/t_816a87b5-adr-line13
+2026-10-10T18:23:53.9572870Z  * [new branch]      fix/t_c015bda7-r2-superseded -> origin/fix/t_c015bda7-r2-superseded
+2026-10-10T18:23:53.9576009Z  * [new branch]      fix/telegram-token-rotation-t_28951254 -> origin/fix/telegram-token-rotation-t_28951254
+2026-10-10T18:23:53.9578589Z  * [new branch]      master                  -> origin/master
+2026-10-10T18:23:53.9581093Z  * [new branch]      qa/sec-incident-telegram-token -> origin/qa/sec-incident-telegram-token
+2026-10-10T18:23:53.9583748Z  * [new branch]      qa/t_0af5aa3e-rotation-verdict -> origin/qa/t_0af5aa3e-rotation-verdict
+2026-10-10T18:23:53.9586471Z  * [new branch]      qa/t_0af5aa3e-verdict   -> origin/qa/t_0af5aa3e-verdict
+2026-10-10T18:23:53.9588461Z  * [new branch]      qa/t_1708dc86-review    -> origin/qa/t_1708dc86-review
+2026-10-10T18:23:53.9590448Z  * [new branch]      qa/t_339a0d02-r10-push-run -> origin/qa/t_339a0d02-r10-push-run
+2026-10-10T18:23:53.9592563Z  * [new branch]      qa/t_372385ea-gate-after -> origin/qa/t_372385ea-gate-after
+2026-10-10T18:23:53.9594605Z  * [new branch]      qa/t_372385ea-verdicts  -> origin/qa/t_372385ea-verdicts
+2026-10-10T18:23:53.9596876Z  * [new branch]      qa/t_4e1b6937-review    -> origin/qa/t_4e1b6937-review
+2026-10-10T18:23:53.9598771Z  * [new branch]      qa/t_5455942d-gate-fix  -> origin/qa/t_5455942d-gate-fix
+2026-10-10T18:23:53.9600943Z  * [new branch]      qa/t_5b5b61e2-bypass-audit-v2 -> origin/qa/t_5b5b61e2-bypass-audit-v2
+2026-10-10T18:23:53.9603141Z  * [new branch]      qa/t_6fd0c4e6-evidence  -> origin/qa/t_6fd0c4e6-evidence
+2026-10-10T18:23:53.9605801Z  * [new branch]      qa/t_750423a5-setup-guide-evidence -> origin/qa/t_750423a5-setup-guide-evidence
+2026-10-10T18:23:53.9608283Z  * [new branch]      qa/t_75180b28-pr-merged-rule -> origin/qa/t_75180b28-pr-merged-rule
+2026-10-10T18:23:53.9610755Z  * [new branch]      qa/t_7e8bf917-declarative-pr-link -> origin/qa/t_7e8bf917-declarative-pr-link
+2026-10-10T18:23:53.9613294Z  * [new branch]      qa/t_b102b100-a11-surface -> origin/qa/t_b102b100-a11-surface
+2026-10-10T18:23:53.9615741Z  * [new branch]      qa/t_b2588ee7-withdrawal-v2 -> origin/qa/t_b2588ee7-withdrawal-v2
+2026-10-10T18:23:53.9618099Z  * [new branch]      qa/t_b51a1ff3-review    -> origin/qa/t_b51a1ff3-review
+2026-10-10T18:23:53.9619934Z  * [new branch]      qa/t_b51a1ff3-review-r2 -> origin/qa/t_b51a1ff3-review-r2
+2026-10-10T18:23:53.9622003Z  * [new branch]      qa/t_b8001b55-exception-allowlist -> origin/qa/t_b8001b55-exception-allowlist
+2026-10-10T18:23:53.9624592Z  * [new branch]      qa/t_cdd23d35-review    -> origin/qa/t_cdd23d35-review
+2026-10-10T18:23:53.9626745Z  * [new branch]      t_4ccd2652/integration-tests -> origin/t_4ccd2652/integration-tests
+2026-10-10T18:23:53.9628608Z  * [new branch]      t_75180b28-gate         -> origin/t_75180b28-gate
+2026-10-10T18:23:53.9630830Z  * [new branch]      test/t_9ae2bc23-quoted-exception-sweep -> origin/test/t_9ae2bc23-quoted-exception-sweep
+2026-10-10T18:23:53.9633061Z  * [new branch]      work-t_b51a1ff3         -> origin/work-t_b51a1ff3
+2026-10-10T18:23:53.9634731Z  * [new branch]      zeldadil-patch-1        -> origin/zeldadil-patch-1
+2026-10-10T18:23:53.9638333Z [command]/usr/bin/git branch --list --remote origin/master
+2026-10-10T18:23:53.9639830Z   origin/master
+2026-10-10T18:23:53.9641876Z [command]/usr/bin/git rev-parse refs/remotes/origin/master
+2026-10-10T18:23:53.9643232Z 9a439d3f7898457fe33b7942a622a9bb19b28358
+2026-10-10T18:23:53.9646354Z ##[endgroup]
+2026-10-10T18:23:53.9648012Z ##[group]Determining the checkout info
+2026-10-10T18:23:53.9649724Z ##[endgroup]
+2026-10-10T18:23:53.9650758Z [command]/usr/bin/git sparse-checkout disable
+2026-10-10T18:23:53.9674890Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-10T18:23:53.9706711Z ##[group]Checking out the ref
+2026-10-10T18:23:53.9710054Z [command]/usr/bin/git checkout --progress --force -B master refs/remotes/origin/master
+2026-10-10T18:23:54.0310452Z Reset branch 'master'
+2026-10-10T18:23:54.0320204Z branch 'master' set up to track 'origin/master'.
+2026-10-10T18:23:54.0324635Z ##[endgroup]
+2026-10-10T18:23:54.0372447Z [command]/usr/bin/git log -1 --format=%H
+2026-10-10T18:23:54.0399010Z 9a439d3f7898457fe33b7942a622a9bb19b28358
+2026-10-10T18:23:54.0621368Z ##[group]Run bash scripts/qa/check-gitleaksignore.sh .gitleaksignore
+2026-10-10T18:23:54.0622568Z [36;1mbash scripts/qa/check-gitleaksignore.sh .gitleaksignore[0m
+2026-10-10T18:23:54.0895388Z shell: /usr/bin/bash -e {0}
+2026-10-10T18:23:54.0896155Z ##[endgroup]
+2026-10-10T18:23:54.1636223Z check-gitleaksignore: OK — 483 commit-scoped fingerprints, no file/rule-wide exclusion
+2026-10-10T18:23:54.1725810Z ##[group]Run gitleaks/gitleaks-action@v2
+2026-10-10T18:23:54.1726541Z env:
+2026-10-10T18:23:54.1731695Z   GITHUB_TOKEN: ***
+2026-10-10T18:23:54.1732222Z   GITLEAKS_VERSION: 8.24.3
+2026-10-10T18:23:54.1732759Z ##[endgroup]
+2026-10-10T18:23:54.3424503Z (node:2300) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-10T18:23:54.3426650Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-10T18:23:54.3547128Z (node:2300) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-10-10T18:23:54.6153009Z [zeldadil] is an individual user. No license key is required.
+2026-10-10T18:23:54.6154885Z gitleaks version: 8.24.3
+2026-10-10T18:23:54.6156954Z Version to install: 8.24.3 (target directory: /tmp/gitleaks-8.24.3)
+2026-10-10T18:23:54.8625119Z Cache hit for: gitleaks-cache-8.24.3-linux-x64
+2026-10-10T18:23:56.1346978Z Received 5712913 of 5712913 (100.0%), 5.6 MBs/sec
+2026-10-10T18:23:56.1348893Z Cache Size: ~5 MB (5712913 B)
+2026-10-10T18:23:56.1385476Z [command]/usr/bin/tar -xf /home/runner/work/_temp/09aab41b-7af8-41ff-9349-facc56b2564c/cache.tzst -P -C /home/runner/work/password-manager/password-manager --use-compress-program unzstd
+2026-10-10T18:23:56.1737705Z Cache restored successfully
+2026-10-10T18:23:56.1743461Z Gitleaks restored from cache
+2026-10-10T18:23:56.1746550Z event type: workflow_dispatch
+2026-10-10T18:23:56.1748563Z gitleaks cmd: gitleaks detect --redact -v --exit-code=2 --report-format=sarif --report-path=results.sarif --log-level=debug
+2026-10-10T18:23:56.1769286Z [command]/tmp/gitleaks-8.24.3/gitleaks detect --redact -v --exit-code=2 --report-format=sarif --report-path=results.sarif --log-level=debug
+2026-10-10T18:23:56.4430360Z 
+2026-10-10T18:23:56.4431246Z     ○
+2026-10-10T18:23:56.4431860Z     │╲
+2026-10-10T18:23:56.4432452Z     │ ○
+2026-10-10T18:23:56.4432930Z     ○ ░
+2026-10-10T18:23:56.4433464Z     ░    gitleaks
+2026-10-10T18:23:56.4433790Z 
+2026-10-10T18:23:56.4434582Z [90m6:23PM[0m DBG using github.com/wasilibs/go-re2 regex engine
+2026-10-10T18:23:56.4436336Z [90m6:23PM[0m DBG using existing gitleaks config .gitleaks.toml from `(--source)/.gitleaks.toml`
+2026-10-10T18:23:56.4451067Z [90m6:23PM[0m DBG found .gitleaksignore file: .gitleaksignore
+2026-10-10T18:23:56.4454259Z [90m6:23PM[0m DBG found .gitleaksignore file: .gitleaksignore
+2026-10-10T18:23:56.4458813Z [90m6:23PM[0m DBG executing: /usr/bin/git -C . log -p -U0 --full-history --all
+2026-10-10T18:23:56.4510007Z [90m6:23PM[0m DBG SCM platform parsed from host [36mhost=[0mgithub.com [36mplatform=[0mgithub
+2026-10-10T18:23:56.4643063Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m4bfc7ccac8bfa7ec1939a97af090d617f8f3f5a7:docs/development/setup.md:generic-api-key:277
+2026-10-10T18:23:56.5961449Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m09b91f34befd5f39554164699bc637b724604f03:tests/integration/web/auth-flow.integration.test.tsx:generic-api-key:73
+2026-10-10T18:23:56.5987513Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m8ecf9a18459d061ac5d202e3c5f9b26861b9e5e4:tests/integration/web/token-refresh.integration.test.ts:generic-api-key:32
+2026-10-10T18:23:56.6017312Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m09b91f34befd5f39554164699bc637b724604f03:tests/integration/web/token-refresh.integration.test.ts:generic-api-key:32
+2026-10-10T18:23:56.6020776Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m09b91f34befd5f39554164699bc637b724604f03:tests/integration/web/rate-limit.integration.test.tsx:generic-api-key:65
+2026-10-10T18:23:56.6047766Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m09b91f34befd5f39554164699bc637b724604f03:tests/integration/web/rate-limit.integration.test.tsx:generic-api-key:66
+2026-10-10T18:23:56.6077441Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m8ecf9a18459d061ac5d202e3c5f9b26861b9e5e4:tests/integration/web/rate-limit.integration.test.tsx:generic-api-key:63
+2026-10-10T18:23:56.6107182Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m8ecf9a18459d061ac5d202e3c5f9b26861b9e5e4:tests/integration/web/rate-limit.integration.test.tsx:generic-api-key:64
+2026-10-10T18:23:56.6117498Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m8ecf9a18459d061ac5d202e3c5f9b26861b9e5e4:tests/integration/web/auth-flow.integration.test.tsx:generic-api-key:71
+2026-10-10T18:23:56.6340130Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/src/auth/jwt.ts:generic-api-key:133
+2026-10-10T18:23:56.6357596Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/jwt.test.ts:generic-api-key:15
+2026-10-10T18:23:56.6360506Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/jwt.test.ts:generic-api-key:83
+2026-10-10T18:23:56.6363729Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/jwt.test.ts:generic-api-key:94
+2026-10-10T18:23:56.6419240Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:61
+2026-10-10T18:23:56.6423265Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:90
+2026-10-10T18:23:56.6457468Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:58
+2026-10-10T18:23:56.6464788Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:72
+2026-10-10T18:23:56.6487628Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:179
+2026-10-10T18:23:56.6517104Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:221
+2026-10-10T18:23:56.6552477Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:270
+2026-10-10T18:23:56.6577167Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:310
+2026-10-10T18:23:56.6599564Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:110
+2026-10-10T18:23:56.6607595Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:71
+2026-10-10T18:23:56.6617382Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:99
+2026-10-10T18:23:56.6620075Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:122
+2026-10-10T18:23:56.6623485Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:146
+2026-10-10T18:23:56.6627229Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:178
+2026-10-10T18:23:56.6648108Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:194
+2026-10-10T18:23:56.6651427Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:222
+2026-10-10T18:23:56.6654549Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:239
+2026-10-10T18:23:56.6656593Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:253
+2026-10-10T18:23:56.6660328Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:271
+2026-10-10T18:23:56.6662199Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:290
+2026-10-10T18:23:56.6664633Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:306
+2026-10-10T18:23:56.6666613Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:330
+2026-10-10T18:23:56.6668961Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:359
+2026-10-10T18:23:56.6670732Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:375
+2026-10-10T18:23:56.6672985Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:407
+2026-10-10T18:23:56.6674716Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:431
+2026-10-10T18:23:56.6677718Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:459
+2026-10-10T18:23:56.6679737Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:501
+2026-10-10T18:23:56.6682149Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:514
+2026-10-10T18:23:56.6683924Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:578
+2026-10-10T18:23:56.6686636Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:602
+2026-10-10T18:23:56.6690221Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:668
+2026-10-10T18:23:56.6693718Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:678
+2026-10-10T18:23:56.6696669Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:741
+2026-10-10T18:23:56.6699588Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:769
+2026-10-10T18:23:56.6702217Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:786
+2026-10-10T18:23:56.6705469Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:135
+2026-10-10T18:23:56.6707191Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/lock.test.ts:generic-api-key:42
+2026-10-10T18:23:56.6709481Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/lock.test.ts:generic-api-key:58
+2026-10-10T18:23:56.6711132Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/lock.test.ts:generic-api-key:65
+2026-10-10T18:23:56.6713354Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/lock.test.ts:generic-api-key:115
+2026-10-10T18:23:56.6715033Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/lock.test.ts:generic-api-key:121
+2026-10-10T18:23:56.6717913Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/lock.test.ts:generic-api-key:141
+2026-10-10T18:23:56.6720298Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/lock.test.ts:generic-api-key:201
+2026-10-10T18:23:56.6722550Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/lock.test.ts:generic-api-key:249
+2026-10-10T18:23:56.6724678Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:153
+2026-10-10T18:23:56.6727223Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:176
+2026-10-10T18:23:56.6729512Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/src/auth/refresh.ts:generic-api-key:174
+2026-10-10T18:23:56.6731943Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/src/auth/refresh.ts:generic-api-key:210
+2026-10-10T18:23:56.6734222Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:192
+2026-10-10T18:23:56.6736566Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:210
+2026-10-10T18:23:56.6738862Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:258
+2026-10-10T18:23:56.6741587Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:277
+2026-10-10T18:23:56.6744745Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:packages/crypto/tests/vault.test.ts:generic-api-key:23
+2026-10-10T18:23:56.6747829Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:packages/crypto/tests/vault.test.ts:generic-api-key:185
+2026-10-10T18:23:56.6750646Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m314960e72682f4a08223b990ee96daddbac8bd3b:packages/crypto/tests/vault.test.ts:generic-api-key:23
+2026-10-10T18:23:56.6753519Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:62
+2026-10-10T18:23:56.6756673Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:92
+2026-10-10T18:23:56.6759795Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:102
+2026-10-10T18:23:56.6762804Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:167
+2026-10-10T18:23:56.6765979Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:185
+2026-10-10T18:23:56.6769537Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:202
+2026-10-10T18:23:56.6772886Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:235
+2026-10-10T18:23:56.6776441Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:305
+2026-10-10T18:23:56.6779543Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:113
+2026-10-10T18:23:56.6782564Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:122
+2026-10-10T18:23:56.6785848Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m314960e72682f4a08223b990ee96daddbac8bd3b:packages/crypto/tests/vault.test.ts:generic-api-key:185
+2026-10-10T18:23:56.6789027Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:133
+2026-10-10T18:23:56.6792161Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:455
+2026-10-10T18:23:56.6795730Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:499
+2026-10-10T18:23:56.6799175Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:538
+2026-10-10T18:23:56.6802222Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:539
+2026-10-10T18:23:56.6805399Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:540
+2026-10-10T18:23:56.6808329Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:541
+2026-10-10T18:23:56.6811350Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:548
+2026-10-10T18:23:56.6814607Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:549
+2026-10-10T18:23:56.6817974Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:560
+2026-10-10T18:23:56.6821215Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/security.test.ts:generic-api-key:560
+2026-10-10T18:23:56.6824184Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/src/auth/unlock.ts:generic-api-key:261
+2026-10-10T18:23:56.6827741Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:telegram-token:516
+2026-10-10T18:23:56.6830784Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:bearer-token:523
+2026-10-10T18:23:56.6833731Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:bearer-token:568
+2026-10-10T18:23:56.6836922Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:113
+2026-10-10T18:23:56.6840026Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:122
+2026-10-10T18:23:56.6842972Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:133
+2026-10-10T18:23:56.6846135Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:455
+2026-10-10T18:23:56.6849120Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:499
+2026-10-10T18:23:56.6852400Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:531
+2026-10-10T18:23:56.6855908Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:532
+2026-10-10T18:23:56.6858871Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:533
+2026-10-10T18:23:56.6861800Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:534
+2026-10-10T18:23:56.6864718Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:541
+2026-10-10T18:23:56.6868037Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:542
+2026-10-10T18:23:56.6871155Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:553
+2026-10-10T18:23:56.6874205Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:generic-api-key:553
+2026-10-10T18:23:56.6877905Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:257
+2026-10-10T18:23:56.6881288Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:302
+2026-10-10T18:23:56.6884371Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:319
+2026-10-10T18:23:56.6887655Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:330
+2026-10-10T18:23:56.6890828Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:357
+2026-10-10T18:23:56.6894180Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:431
+2026-10-10T18:23:56.6897473Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:459
+2026-10-10T18:23:56.6900544Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:471
+2026-10-10T18:23:56.6903541Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:504
+2026-10-10T18:23:56.6906805Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:515
+2026-10-10T18:23:56.6910127Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:50
+2026-10-10T18:23:56.6913127Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:70
+2026-10-10T18:23:56.6916296Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:75
+2026-10-10T18:23:56.6919512Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:87
+2026-10-10T18:23:56.6922688Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:95
+2026-10-10T18:23:56.6926031Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:106
+2026-10-10T18:23:56.6929117Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:179
+2026-10-10T18:23:56.6932068Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:180
+2026-10-10T18:23:56.6934955Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:186
+2026-10-10T18:23:56.6938594Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:187
+2026-10-10T18:23:56.6941682Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m99909bdffd11a0ddacb9f8ef9ff2059eaff916b3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:314
+2026-10-10T18:23:56.6944870Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m62c5a4f6613888a6ea68a1bb018a91742af30e61:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:49
+2026-10-10T18:23:56.6948253Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m62c5a4f6613888a6ea68a1bb018a91742af30e61:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:74
+2026-10-10T18:23:56.6951599Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m62c5a4f6613888a6ea68a1bb018a91742af30e61:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:86
+2026-10-10T18:23:56.6955102Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m62c5a4f6613888a6ea68a1bb018a91742af30e61:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:94
+2026-10-10T18:23:56.6958584Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m62c5a4f6613888a6ea68a1bb018a91742af30e61:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:105
+2026-10-10T18:23:56.6961749Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m62c5a4f6613888a6ea68a1bb018a91742af30e61:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:177
+2026-10-10T18:23:56.6965114Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m62c5a4f6613888a6ea68a1bb018a91742af30e61:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:178
+2026-10-10T18:23:56.6968825Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m62c5a4f6613888a6ea68a1bb018a91742af30e61:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:184
+2026-10-10T18:23:56.6972112Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m62c5a4f6613888a6ea68a1bb018a91742af30e61:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:185
+2026-10-10T18:23:56.6975386Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:61
+2026-10-10T18:23:56.6978357Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:58
+2026-10-10T18:23:56.6981400Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:72
+2026-10-10T18:23:56.6984540Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:179
+2026-10-10T18:23:56.6987740Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:221
+2026-10-10T18:23:56.6990708Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:270
+2026-10-10T18:23:56.6994077Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/tests/auth/refresh.test.ts:generic-api-key:310
+2026-10-10T18:23:56.6996980Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/src/auth/unlock.ts:generic-api-key:30
+2026-10-10T18:23:56.6998498Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/tests/auth/refresh-unit.test.ts:generic-api-key:13
+2026-10-10T18:23:56.6999991Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/src/auth/jwt.ts:generic-api-key:113
+2026-10-10T18:23:56.7001443Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/register.test.ts:generic-api-key:63
+2026-10-10T18:23:56.7002943Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/register.test.ts:generic-api-key:89
+2026-10-10T18:23:56.7004416Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/register.test.ts:generic-api-key:158
+2026-10-10T18:23:56.7006237Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/register.test.ts:generic-api-key:187
+2026-10-10T18:23:56.7007995Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/register.test.ts:generic-api-key:215
+2026-10-10T18:23:56.7011004Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/src/auth/refresh.ts:generic-api-key:174
+2026-10-10T18:23:56.7013702Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m126c2dbc336af6fcf66e70e47f2448e76e642427:apps/services/api/src/auth/refresh.ts:generic-api-key:210
+2026-10-10T18:23:56.7016726Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:62
+2026-10-10T18:23:56.7019766Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:92
+2026-10-10T18:23:56.7022611Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:102
+2026-10-10T18:23:56.7025823Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:167
+2026-10-10T18:23:56.7028910Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:185
+2026-10-10T18:23:56.7031940Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:202
+2026-10-10T18:23:56.7034944Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:235
+2026-10-10T18:23:56.7038383Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:257
+2026-10-10T18:23:56.7041471Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:302
+2026-10-10T18:23:56.7044492Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:319
+2026-10-10T18:23:56.7047661Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:330
+2026-10-10T18:23:56.7050669Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:357
+2026-10-10T18:23:56.7053529Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:431
+2026-10-10T18:23:56.7056718Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:459
+2026-10-10T18:23:56.7058485Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:471
+2026-10-10T18:23:56.7060262Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:504
+2026-10-10T18:23:56.7061807Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/wrong-password.test.ts:generic-api-key:515
+2026-10-10T18:23:56.7063304Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock.test.ts:generic-api-key:42
+2026-10-10T18:23:56.7064741Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock.test.ts:generic-api-key:58
+2026-10-10T18:23:56.7067404Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock.test.ts:generic-api-key:65
+2026-10-10T18:23:56.7070246Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock.test.ts:generic-api-key:115
+2026-10-10T18:23:56.7072987Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock.test.ts:generic-api-key:121
+2026-10-10T18:23:56.7075869Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock.test.ts:generic-api-key:141
+2026-10-10T18:23:56.7078536Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock.test.ts:generic-api-key:201
+2026-10-10T18:23:56.7081375Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock.test.ts:generic-api-key:249
+2026-10-10T18:23:56.7084052Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:90
+2026-10-10T18:23:56.7086952Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/jwt.test.ts:generic-api-key:15
+2026-10-10T18:23:56.7089789Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/jwt.test.ts:generic-api-key:82
+2026-10-10T18:23:56.7092759Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/jwt.test.ts:generic-api-key:93
+2026-10-10T18:23:56.7095623Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/src/auth/unlock.ts:generic-api-key:149
+2026-10-10T18:23:56.7098456Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/src/auth/unlock.ts:generic-api-key:172
+2026-10-10T18:23:56.7101192Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/src/auth/unlock.ts:generic-api-key:173
+2026-10-10T18:23:56.7103900Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:85
+2026-10-10T18:23:56.7107153Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:130
+2026-10-10T18:23:56.7109960Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:139
+2026-10-10T18:23:56.7112685Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:172
+2026-10-10T18:23:56.7115593Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:261
+2026-10-10T18:23:56.7118419Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m5a98c5fc9025db4735ecdb6185658665bf8fc558:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:304
+2026-10-10T18:23:56.7121031Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/src/auth/unlock.ts:generic-api-key:261
+2026-10-10T18:23:56.7123703Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock-v2.test.ts:generic-api-key:48
+2026-10-10T18:23:56.7126645Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock-v2.test.ts:generic-api-key:69
+2026-10-10T18:23:56.7129384Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock-v2.test.ts:generic-api-key:118
+2026-10-10T18:23:56.7132312Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock-v2.test.ts:generic-api-key:167
+2026-10-10T18:23:56.7135076Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m2c218382436ce43c2b2e90ca14804ca8efc3f287:apps/services/api/tests/auth/lock-v2.test.ts:generic-api-key:193
+2026-10-10T18:23:56.7138212Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md2aa9aa7aed075490e9835484cff21d5539c12c1:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:85
+2026-10-10T18:23:56.7141084Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md2aa9aa7aed075490e9835484cff21d5539c12c1:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:130
+2026-10-10T18:23:56.7143839Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md2aa9aa7aed075490e9835484cff21d5539c12c1:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:139
+2026-10-10T18:23:56.7146812Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md2aa9aa7aed075490e9835484cff21d5539c12c1:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:172
+2026-10-10T18:23:56.7149537Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md2aa9aa7aed075490e9835484cff21d5539c12c1:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:261
+2026-10-10T18:23:56.7152276Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md2aa9aa7aed075490e9835484cff21d5539c12c1:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:304
+2026-10-10T18:23:56.7155610Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:71
+2026-10-10T18:23:56.7159003Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:99
+2026-10-10T18:23:56.7161950Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:122
+2026-10-10T18:23:56.7164904Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:146
+2026-10-10T18:23:56.7168102Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:178
+2026-10-10T18:23:56.7171053Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:194
+2026-10-10T18:23:56.7173950Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:222
+2026-10-10T18:23:56.7177286Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:239
+2026-10-10T18:23:56.7180416Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:253
+2026-10-10T18:23:56.7183739Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:271
+2026-10-10T18:23:56.7187009Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:290
+2026-10-10T18:23:56.7189983Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:306
+2026-10-10T18:23:56.7193119Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:330
+2026-10-10T18:23:56.7196358Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:359
+2026-10-10T18:23:56.7199404Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:375
+2026-10-10T18:23:56.7202436Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:407
+2026-10-10T18:23:56.7205696Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:431
+2026-10-10T18:23:56.7208731Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:459
+2026-10-10T18:23:56.7211906Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:501
+2026-10-10T18:23:56.7214872Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:514
+2026-10-10T18:23:56.7218132Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:578
+2026-10-10T18:23:56.7221120Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:602
+2026-10-10T18:23:56.7224161Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:668
+2026-10-10T18:23:56.7227316Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:678
+2026-10-10T18:23:56.7230221Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:741
+2026-10-10T18:23:56.7232116Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:769
+2026-10-10T18:23:56.7233895Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m3b00eeb2df09defda24289240af12738ac37e801:apps/services/api/tests/auth/fullflow.integration.test.ts:generic-api-key:786
+2026-10-10T18:23:56.7235857Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/src/auth/unlock.ts:generic-api-key:22
+2026-10-10T18:23:56.7238684Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md2aa9aa7aed075490e9835484cff21d5539c12c1:apps/services/api/src/auth/unlock.ts:generic-api-key:151
+2026-10-10T18:23:56.7241533Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md2aa9aa7aed075490e9835484cff21d5539c12c1:apps/services/api/src/auth/unlock.ts:generic-api-key:174
+2026-10-10T18:23:56.7244235Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md2aa9aa7aed075490e9835484cff21d5539c12c1:apps/services/api/src/auth/unlock.ts:generic-api-key:175
+2026-10-10T18:23:56.7247210Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:61
+2026-10-10T18:23:56.7249917Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:90
+2026-10-10T18:23:56.7253065Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:110
+2026-10-10T18:23:56.7256028Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:135
+2026-10-10T18:23:56.7258950Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/src/auth/unlock.ts:generic-api-key:172
+2026-10-10T18:23:56.7261586Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:153
+2026-10-10T18:23:56.7264359Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:176
+2026-10-10T18:23:56.7267250Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md5eeacb76ad84455bdd984f7aaacc98ff83ecc9e:apps/services/api/src/auth/unlock.ts:generic-api-key:151
+2026-10-10T18:23:56.7269981Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md5eeacb76ad84455bdd984f7aaacc98ff83ecc9e:apps/services/api/src/auth/unlock.ts:generic-api-key:174
+2026-10-10T18:23:56.7271745Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md5eeacb76ad84455bdd984f7aaacc98ff83ecc9e:apps/services/api/src/auth/unlock.ts:generic-api-key:175
+2026-10-10T18:23:56.7273240Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:192
+2026-10-10T18:23:56.7274737Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:210
+2026-10-10T18:23:56.7276504Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m17fd35abb81730f4feacf16c43a5a3f29d803e91:apps/services/api/tests/auth/register.test.ts:generic-api-key:63
+2026-10-10T18:23:56.7278621Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m17fd35abb81730f4feacf16c43a5a3f29d803e91:apps/services/api/tests/auth/register.test.ts:generic-api-key:89
+2026-10-10T18:23:56.7281417Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m17fd35abb81730f4feacf16c43a5a3f29d803e91:apps/services/api/tests/auth/register.test.ts:generic-api-key:158
+2026-10-10T18:23:56.7284208Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m17fd35abb81730f4feacf16c43a5a3f29d803e91:apps/services/api/tests/auth/register.test.ts:generic-api-key:187
+2026-10-10T18:23:56.7287113Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m17fd35abb81730f4feacf16c43a5a3f29d803e91:apps/services/api/tests/auth/register.test.ts:generic-api-key:215
+2026-10-10T18:23:56.7289853Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:258
+2026-10-10T18:23:56.7292529Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:110
+2026-10-10T18:23:56.7295402Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md5eeacb76ad84455bdd984f7aaacc98ff83ecc9e:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:85
+2026-10-10T18:23:56.7298149Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md5eeacb76ad84455bdd984f7aaacc98ff83ecc9e:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:130
+2026-10-10T18:23:56.7300323Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md5eeacb76ad84455bdd984f7aaacc98ff83ecc9e:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:139
+2026-10-10T18:23:56.7303433Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md5eeacb76ad84455bdd984f7aaacc98ff83ecc9e:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:172
+2026-10-10T18:23:56.7306468Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md5eeacb76ad84455bdd984f7aaacc98ff83ecc9e:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:261
+2026-10-10T18:23:56.7309194Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0md5eeacb76ad84455bdd984f7aaacc98ff83ecc9e:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:304
+2026-10-10T18:23:56.7311397Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:277
+2026-10-10T18:23:56.7313478Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:305
+2026-10-10T18:23:56.7315927Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc30d7bf925072724d53ac9b1c81a6d32ddbcacf3:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:314
+2026-10-10T18:23:56.7318752Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:135
+2026-10-10T18:23:56.7321451Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:153
+2026-10-10T18:23:56.7324176Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:170
+2026-10-10T18:23:56.7327707Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:185
+2026-10-10T18:23:56.7330528Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:200
+2026-10-10T18:23:56.7333282Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:246
+2026-10-10T18:23:56.7336954Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:262
+2026-10-10T18:23:56.7339838Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:290
+2026-10-10T18:23:56.7342620Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m348422860761f74a3aee48c2066ad4b86a0d5144:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:299
+2026-10-10T18:23:56.7508872Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m0f4031d3687d6c04c6b01e3d4ab33de00eb88ef1:tests/fixtures/README.md:generic-api-key:48
+2026-10-10T18:23:56.7526973Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m0f4031d3687d6c04c6b01e3d4ab33de00eb88ef1:tests/fixtures/user.ts:generic-api-key:70
+2026-10-10T18:23:56.7546797Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m0f4031d3687d6c04c6b01e3d4ab33de00eb88ef1:tests/fixtures/user.ts:generic-api-key:71
+2026-10-10T18:23:56.7617541Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:scripts/qa/signoff-gate.mjs:generic-api-key:392
+2026-10-10T18:23:56.7619102Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:scripts/qa/signoff-gate.mjs:generic-api-key:397
+2026-10-10T18:23:56.7620664Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:9
+2026-10-10T18:23:56.7622233Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:49
+2026-10-10T18:23:56.7623787Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:55
+2026-10-10T18:23:56.7625721Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:56
+2026-10-10T18:23:56.7628777Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:57
+2026-10-10T18:23:56.7631891Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:58
+2026-10-10T18:23:56.7635056Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:59
+2026-10-10T18:23:56.7651073Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:60
+2026-10-10T18:23:56.7657467Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/non-qa-marker-inventory.txt:generic-api-key:69
+2026-10-10T18:23:56.7684756Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/gate-fix.diff:generic-api-key:187
+2026-10-10T18:23:56.7707315Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me23ca8a09e555c9b865318029dae2bba4bfff335:tests/evidence/t_338f47fd/gate-fix.diff:generic-api-key:192
+2026-10-10T18:23:56.8157405Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m247dc22c6ad58c62b54a494a82a3c3386180efab:tests/evidence/t_7dd3b960/gate-master.mjs:generic-api-key:199
+2026-10-10T18:23:56.8187008Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m247dc22c6ad58c62b54a494a82a3c3386180efab:tests/evidence/t_7dd3b960/gate-master.mjs:generic-api-key:212
+2026-10-10T18:23:56.8190078Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m247dc22c6ad58c62b54a494a82a3c3386180efab:tests/evidence/t_7dd3b960/gate-master.mjs:generic-api-key:228
+2026-10-10T18:23:56.8197972Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m247dc22c6ad58c62b54a494a82a3c3386180efab:tests/evidence/t_7dd3b960/gate-pr25.mjs:generic-api-key:208
+2026-10-10T18:23:56.8200785Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m247dc22c6ad58c62b54a494a82a3c3386180efab:tests/evidence/t_7dd3b960/gate-pr25.mjs:generic-api-key:221
+2026-10-10T18:23:56.8203974Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m247dc22c6ad58c62b54a494a82a3c3386180efab:tests/evidence/t_7dd3b960/gate-pr25.mjs:generic-api-key:237
+2026-10-10T18:23:56.8318670Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0ma4746466c7593fbfd7e428523b13657487109795:apps/web/src/api/envelope.test.ts:generic-api-key:191
+2026-10-10T18:23:56.8387263Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0ma4746466c7593fbfd7e428523b13657487109795:tests/evidence/t_4e1b6937/d1_sensitivity.py:generic-api-key:25
+2026-10-10T18:23:56.8394483Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m0f750820fb5422cf1682ce3f2598f797c84a8b6e:apps/web/src/api/tokenStore.ts:generic-api-key:23
+2026-10-10T18:23:56.8407117Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m0f750820fb5422cf1682ce3f2598f797c84a8b6e:apps/web/src/api/tokenStore.ts:generic-api-key:48
+2026-10-10T18:23:56.8409076Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m0f750820fb5422cf1682ce3f2598f797c84a8b6e:apps/web/src/api/tokenStore.ts:generic-api-key:49
+2026-10-10T18:23:56.8410497Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m0f750820fb5422cf1682ce3f2598f797c84a8b6e:apps/web/src/api/client.ts:generic-api-key:126
+2026-10-10T18:23:56.8411847Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m0f750820fb5422cf1682ce3f2598f797c84a8b6e:apps/web/src/api/client.ts:generic-api-key:182
+2026-10-10T18:23:56.8473155Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me404deeaa676e356e745549c6b453da2ed412442:tests/evidence/t_4e1b6937/qa/round2/d1_ab_repro.py:generic-api-key:12
+2026-10-10T18:23:56.8476790Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0me404deeaa676e356e745549c6b453da2ed412442:tests/evidence/t_4e1b6937/qa/round2/d1_r2_sensitivity.py:generic-api-key:26
+2026-10-10T18:23:56.8523640Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc8fa8590a673a1cb572a83f36ac7280851ebffcc:tests/evidence/t_4e1b6937/d1_sensitivity.py:generic-api-key:25
+2026-10-10T18:23:56.8529861Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mfa55051f19562eaf96bae463282439d3d0c6dc5e:tests/evidence/t_4e1b6937/qa/probeSecretHygiene.test.ts:generic-api-key:52
+2026-10-10T18:23:56.8547495Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mfa55051f19562eaf96bae463282439d3d0c6dc5e:tests/evidence/t_4e1b6937/qa/probeSecretHygiene.test.ts:generic-api-key:63
+2026-10-10T18:23:56.8550681Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mfa55051f19562eaf96bae463282439d3d0c6dc5e:tests/evidence/t_4e1b6937/qa/probeErrorShape.test.ts:generic-api-key:22
+2026-10-10T18:23:56.8553630Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc4165fd79b8125a0a43e6240fcf165c0c73d5f25:apps/web/src/api/tokenStore.ts:generic-api-key:23
+2026-10-10T18:23:56.8575586Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc4165fd79b8125a0a43e6240fcf165c0c73d5f25:apps/web/src/api/envelope.test.ts:generic-api-key:176
+2026-10-10T18:23:56.8587039Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc4165fd79b8125a0a43e6240fcf165c0c73d5f25:apps/web/src/api/tokenStore.ts:generic-api-key:48
+2026-10-10T18:23:56.8607919Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc4165fd79b8125a0a43e6240fcf165c0c73d5f25:apps/web/src/api/tokenStore.ts:generic-api-key:49
+2026-10-10T18:23:56.8627228Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m732bc559fa33c327d20ad7364283283ddbda5a90:tests/evidence/t_b51a1ff3/live-fire.txt:aws-access-key-id:26
+2026-10-10T18:23:56.8639722Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m9f5daab3b9f664985c5e838ffd782de0e1a779c8:scripts/qa/secret-guard.selftest.mjs:aws-access-key-id:84
+2026-10-10T18:23:56.8646317Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m9f5daab3b9f664985c5e838ffd782de0e1a779c8:scripts/qa/secret-guard.selftest.mjs:aws-access-key-id:182
+2026-10-10T18:23:56.8663028Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m9f5daab3b9f664985c5e838ffd782de0e1a779c8:scripts/qa/secret-guard.selftest.mjs:aws-access-key-id:422
+2026-10-10T18:23:56.8665010Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m9f5daab3b9f664985c5e838ffd782de0e1a779c8:scripts/qa/secret-guard.selftest.mjs:telegram-token:41
+2026-10-10T18:23:56.8707406Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m40280562b11fe21291dd9bd13621b09e332678db:tests/evidence/t_b51a1ff3/reproduce-review.sh:telegram-token:77
+2026-10-10T18:23:56.8747954Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc4165fd79b8125a0a43e6240fcf165c0c73d5f25:apps/web/src/api/client.ts:generic-api-key:126
+2026-10-10T18:23:56.8777013Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m433181e890fb0a9bd1f6cd0e374ee6140c3af937:tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt:telegram-token:40
+2026-10-10T18:23:56.8807044Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m433181e890fb0a9bd1f6cd0e374ee6140c3af937:tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt:telegram-token:41
+2026-10-10T18:23:56.8837503Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m433181e890fb0a9bd1f6cd0e374ee6140c3af937:tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt:telegram-token:53
+2026-10-10T18:23:56.8848153Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m433181e890fb0a9bd1f6cd0e374ee6140c3af937:tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt:telegram-token:54
+2026-10-10T18:23:56.8865481Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mf74fb094edc6d02807cd8c7ad6b9fd1d5c8f2e7f:scripts/qa/signoff-gate.mjs:generic-api-key:199
+2026-10-10T18:23:56.8897041Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mf74fb094edc6d02807cd8c7ad6b9fd1d5c8f2e7f:scripts/qa/signoff-gate.mjs:generic-api-key:212
+2026-10-10T18:23:56.8900046Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mf74fb094edc6d02807cd8c7ad6b9fd1d5c8f2e7f:scripts/qa/signoff-gate.mjs:generic-api-key:228
+2026-10-10T18:23:56.8926876Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m48b89a359b5771153bcbd267f6c0bc03bcb92d9f:tests/evidence/t_b51a1ff3/live-fire.txt:aws-access-key-id:26
+2026-10-10T18:23:56.8937980Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc4165fd79b8125a0a43e6240fcf165c0c73d5f25:apps/web/src/api/client.ts:generic-api-key:182
+2026-10-10T18:23:56.8953044Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0meb6044b8bb263182953dedd5af817cb01eeba6ad:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt:telegram-token:8
+2026-10-10T18:23:56.8959044Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0meb6044b8bb263182953dedd5af817cb01eeba6ad:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt:telegram-token:22
+2026-10-10T18:23:56.8977249Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0meb6044b8bb263182953dedd5af817cb01eeba6ad:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt:telegram-token:36
+2026-10-10T18:23:56.9007129Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mf9f38eb419740f862662be5c11477adcc5ac9e11:scripts/qa/secret-guard.selftest.mjs:aws-access-key-id:84
+2026-10-10T18:23:56.9037138Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mf9f38eb419740f862662be5c11477adcc5ac9e11:scripts/qa/secret-guard.selftest.mjs:aws-access-key-id:182
+2026-10-10T18:23:56.9127052Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mf9f38eb419740f862662be5c11477adcc5ac9e11:scripts/qa/secret-guard.selftest.mjs:aws-access-key-id:422
+2026-10-10T18:23:56.9167162Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:176
+2026-10-10T18:23:56.9168862Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:189
+2026-10-10T18:23:56.9175111Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m8a8b2e3034b8e28daf0988373a20864161e119ee:scripts/qa/signoff-gate.mjs:generic-api-key:205
+2026-10-10T18:23:56.9187505Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0m543c396d8bf4289492b80066a93e8c9f51de8c2a:PROJECT_BRIEF.md:telegram-token:87
+2026-10-10T18:23:56.9207745Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc54e3e0026b4640041b32b10f216c3ca451e2a2b:apps/web/src/api/client.ts:generic-api-key:126
+2026-10-10T18:23:56.9211174Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc54e3e0026b4640041b32b10f216c3ca451e2a2b:apps/web/src/api/client.ts:generic-api-key:182
+2026-10-10T18:23:56.9238192Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc54e3e0026b4640041b32b10f216c3ca451e2a2b:apps/web/src/api/tokenStore.ts:generic-api-key:23
+2026-10-10T18:23:56.9276070Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc54e3e0026b4640041b32b10f216c3ca451e2a2b:apps/web/src/api/tokenStore.ts:generic-api-key:48
+2026-10-10T18:23:56.9279113Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mc54e3e0026b4640041b32b10f216c3ca451e2a2b:apps/web/src/api/tokenStore.ts:generic-api-key:49
+2026-10-10T18:23:56.9458179Z [90m6:23PM[0m DBG skipping finding: fingerprint [36mfinding=[0mREDACTED [36mfingerprint=[0mad01bb48e3a83d84e77f469b96465476b40a9ab8:architecture/adr/ADR-002-overall-architecture.md:generic-api-key:409
+2026-10-10T18:23:56.9469601Z [90m6:23PM[0m [32mINF[0m [1m303 commits scanned.[0m
+2026-10-10T18:23:56.9470237Z [90m6:23PM[0m DBG Note: this number might be smaller than expected due to commits with no additions
+2026-10-10T18:23:56.9473378Z [90m6:23PM[0m [32mINF[0m [1mscanned ~10180093 bytes (10.18 MB) in 504ms[0m
+2026-10-10T18:23:56.9473854Z [90m6:23PM[0m [32mINF[0m [1mno leaks found[0m
+2026-10-10T18:23:56.9502986Z Artifact name is valid!
+2026-10-10T18:23:56.9503999Z Root directory input is valid!
+2026-10-10T18:23:57.3452313Z Beginning upload of artifact content to blob storage
+2026-10-10T18:23:57.6424687Z Uploaded bytes 647
+2026-10-10T18:23:57.7433982Z Finished uploading artifact content to blob storage!
+2026-10-10T18:23:57.7435441Z SHA256 digest of uploaded artifact zip is 4474f2c3a64b6bae37ef4d2f9286020e32b8ab298995295c640d7e06be4c24f2
+2026-10-10T18:23:57.7437255Z Finalizing artifact upload
+2026-10-10T18:23:58.1409411Z Artifact gitleaks-results.sarif.zip successfully finalized. Artifact ID 11677799957
+2026-10-10T18:23:58.1423674Z ✅ No leaks detected
+2026-10-10T18:23:58.1667295Z Post job cleanup.
+2026-10-10T18:23:58.2549385Z [command]/usr/bin/git version
+2026-10-10T18:23:58.2594068Z git version 2.55.0
+2026-10-10T18:23:58.2632664Z Temporarily overriding HOME='/home/runner/work/_temp/bd0f3de8-4875-4530-ba37-eb381c68576d' before making global git config changes
+2026-10-10T18:23:58.2634164Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-10T18:23:58.2641819Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/password-manager/password-manager
+2026-10-10T18:23:58.2683456Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-10T18:23:58.2757013Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-10T18:23:58.3044934Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-10T18:23:58.3129103Z http.https://github.com/.extraheader
+2026-10-10T18:23:58.3156276Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-10-10T18:23:58.3206891Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-10T18:23:58.3492853Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-10T18:23:58.3535729Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-10T18:23:58.4051022Z Cleaning up orphan processes
+2026-10-10T18:23:58.4437349Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, gitleaks/gitleaks-action@v2. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
