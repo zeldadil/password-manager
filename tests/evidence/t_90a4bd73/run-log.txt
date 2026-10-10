@@ -1,0 +1,11 @@
+date (UTC): 2026-10-10T13:25:27Z
+node: v22.23.3
+branch head: 4960b8e
+board snapshot sha256: b7bf0db6d6682a42053bbcdf968cd977c5643db417bb458bc58ee5861fcbdf8c (not committed)
+gate before (626feb7) sha256: 413da76c5f8f60b9233c43345404c336d0243173184ba60a957ea925d9a8f39b
+gate after (working tree) sha256: e1478eb9139aaaa622f963e784e9b3dbd0b1a0196edcde689cb4284a0ba9e60b
+before:   node gate-626feb7.mjs audit --strict-history --json → exit 1
+after:    node scripts/qa/signoff-gate.mjs audit --strict-history --json → exit 1
+no-epoch: node scripts/qa/signoff-gate.mjs audit --strict-history --json --r7-v2-epoch-iso 2026-09-17T15:00:00Z → exit 1
+table (before → after): exit 0
+table (before → no-epoch): exit 0

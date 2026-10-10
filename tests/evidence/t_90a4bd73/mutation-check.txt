@@ -1,0 +1,148 @@
+head: 4960b8e · node: v22.23.3 · 2026-10-10T13:22:46Z
+M0  mutation: none (control)  ·  selftest: 222/222 cases passed
+    R7v2 (a)                           ok      expected ok    ✓
+    R7v2 (b)                           ok      expected ok    ✓
+    R7v2 (c1)                          ok      expected ok    ✓
+    R7v2 (c2)                          ok      expected ok    ✓
+    R7v2 (d)                           ok      expected ok    ✓
+    R7v2 (e)                           ok      expected ok    ✓
+    R7v2 (e2)                          ok      expected ok    ✓
+    R7v2 (f)                           ok      expected ok    ✓
+    R7v2 (k)                           ok      expected ok    ✓
+    R7v2 (g)                           ok      expected ok    ✓
+    R7v2 (h)                           ok      expected ok    ✓
+    R7v2 (i)                           ok      expected ok    ✓
+    R7v2 (j)                           ok      expected ok    ✓
+    --r7-v2-epoch-iso with an unparsea ok      expected ok    ✓
+    audit --json through a slow pipe   ok      expected ok    ✓
+M1  mutation: v1 classification restored  ·  selftest: 213/222 cases passed
+    R7v2 (a)                           FAIL    expected FAIL  ✓
+    R7v2 (b)                           FAIL    expected FAIL  ✓
+    R7v2 (c1)                          FAIL    expected FAIL  ✓
+    R7v2 (c2)                          ok      expected ok    ✓
+    R7v2 (d)                           FAIL    expected FAIL  ✓
+    R7v2 (e)                           FAIL    expected FAIL  ✓
+    R7v2 (e2)                          FAIL    expected FAIL  ✓
+    R7v2 (f)                           ok      expected ok    ✓
+    R7v2 (k)                           ok      expected ok    ✓
+    R7v2 (g)                           FAIL    expected FAIL  ✓
+    R7v2 (h)                           ok      expected ok    ✓
+    R7v2 (i)                           FAIL    expected FAIL  ✓
+    R7v2 (j)                           FAIL    expected FAIL  ✓
+    --r7-v2-epoch-iso with an unparsea ok      expected ok    ✓
+    audit --json through a slow pipe   ok      expected ok    ✓
+M2  mutation: option B (token OR security Test Type)  ·  selftest: 220/222 cases passed
+    R7v2 (a)                           ok      expected ok    ✓
+    R7v2 (b)                           ok      expected ok    ✓
+    R7v2 (c1)                          ok      expected ok    ✓
+    R7v2 (c2)                          FAIL    expected FAIL  ✓
+    R7v2 (d)                           ok      expected ok    ✓
+    R7v2 (e)                           ok      expected ok    ✓
+    R7v2 (e2)                          ok      expected ok    ✓
+    R7v2 (f)                           ok      expected ok    ✓
+    R7v2 (k)                           FAIL    expected FAIL  ✓
+    R7v2 (g)                           ok      expected ok    ✓
+    R7v2 (h)                           ok      expected ok    ✓
+    R7v2 (i)                           ok      expected ok    ✓
+    R7v2 (j)                           ok      expected ok    ✓
+    --r7-v2-epoch-iso with an unparsea ok      expected ok    ✓
+    audit --json through a slow pipe   ok      expected ok    ✓
+M3  mutation: ¬qa exemption dropped  ·  selftest: 221/222 cases passed
+    R7v2 (a)                           ok      expected ok    ✓
+    R7v2 (b)                           ok      expected ok    ✓
+    R7v2 (c1)                          ok      expected ok    ✓
+    R7v2 (c2)                          ok      expected ok    ✓
+    R7v2 (d)                           ok      expected ok    ✓
+    R7v2 (e)                           ok      expected ok    ✓
+    R7v2 (e2)                          ok      expected ok    ✓
+    R7v2 (f)                           FAIL    expected FAIL  ✓
+    R7v2 (k)                           ok      expected ok    ✓
+    R7v2 (g)                           ok      expected ok    ✓
+    R7v2 (h)                           ok      expected ok    ✓
+    R7v2 (i)                           ok      expected ok    ✓
+    R7v2 (j)                           ok      expected ok    ✓
+    --r7-v2-epoch-iso with an unparsea ok      expected ok    ✓
+    audit --json through a slow pipe   ok      expected ok    ✓
+M4  mutation: writeThenExit reverted (exit without flush)  ·  selftest: (no total line)
+    R7v2 (a)                           ok      expected ok    ✓
+    R7v2 (b)                           ok      expected ok    ✓
+    R7v2 (c1)                          ok      expected ok    ✓
+    R7v2 (c2)                          ok      expected ok    ✓
+    R7v2 (d)                           ok      expected ok    ✓
+    R7v2 (e)                           ok      expected ok    ✓
+    R7v2 (e2)                          ok      expected ok    ✓
+    R7v2 (f)                           ok      expected ok    ✓
+    R7v2 (k)                           ok      expected ok    ✓
+    R7v2 (g)                           ok      expected ok    ✓
+    R7v2 (h)                           ok      expected ok    ✓
+    R7v2 (i)                           ok      expected ok    ✓
+    R7v2 (j)                           ok      expected ok    ✓
+    --r7-v2-epoch-iso with an unparsea ok      expected ok    ✓
+    audit --json through a slow pipe   FAIL    expected FAIL  ✓
+M5  mutation: R7 v2 epoch removed (retroactive)  ·  selftest: 221/222 cases passed
+    R7v2 (a)                           ok      expected ok    ✓
+    R7v2 (b)                           ok      expected ok    ✓
+    R7v2 (c1)                          ok      expected ok    ✓
+    R7v2 (c2)                          ok      expected ok    ✓
+    R7v2 (d)                           ok      expected ok    ✓
+    R7v2 (e)                           ok      expected ok    ✓
+    R7v2 (e2)                          ok      expected ok    ✓
+    R7v2 (f)                           ok      expected ok    ✓
+    R7v2 (k)                           ok      expected ok    ✓
+    R7v2 (g)                           FAIL    expected FAIL  ✓
+    R7v2 (h)                           ok      expected ok    ✓
+    R7v2 (i)                           ok      expected ok    ✓
+    R7v2 (j)                           ok      expected ok    ✓
+    --r7-v2-epoch-iso with an unparsea ok      expected ok    ✓
+    audit --json through a slow pipe   ok      expected ok    ✓
+M6  mutation: v1 obligation not kept before the epoch  ·  selftest: 209/222 cases passed
+    R7v2 (a)                           ok      expected ok    ✓
+    R7v2 (b)                           ok      expected ok    ✓
+    R7v2 (c1)                          ok      expected ok    ✓
+    R7v2 (c2)                          ok      expected ok    ✓
+    R7v2 (d)                           ok      expected ok    ✓
+    R7v2 (e)                           ok      expected ok    ✓
+    R7v2 (e2)                          ok      expected ok    ✓
+    R7v2 (f)                           ok      expected ok    ✓
+    R7v2 (k)                           ok      expected ok    ✓
+    R7v2 (g)                           ok      expected ok    ✓
+    R7v2 (h)                           FAIL    expected FAIL  ✓
+    R7v2 (i)                           ok      expected ok    ✓
+    R7v2 (j)                           ok      expected ok    ✓
+    --r7-v2-epoch-iso with an unparsea ok      expected ok    ✓
+    audit --json through a slow pipe   ok      expected ok    ✓
+M7  mutation: bare `nonce` / `vault key` tokens  ·  selftest: 221/222 cases passed
+    R7v2 (a)                           ok      expected ok    ✓
+    R7v2 (b)                           ok      expected ok    ✓
+    R7v2 (c1)                          ok      expected ok    ✓
+    R7v2 (c2)                          ok      expected ok    ✓
+    R7v2 (d)                           ok      expected ok    ✓
+    R7v2 (e)                           ok      expected ok    ✓
+    R7v2 (e2)                          ok      expected ok    ✓
+    R7v2 (f)                           ok      expected ok    ✓
+    R7v2 (k)                           FAIL    expected FAIL  ✓
+    R7v2 (g)                           ok      expected ok    ✓
+    R7v2 (h)                           ok      expected ok    ✓
+    R7v2 (i)                           ok      expected ok    ✓
+    R7v2 (j)                           ok      expected ok    ✓
+    --r7-v2-epoch-iso with an unparsea ok      expected ok    ✓
+    audit --json through a slow pipe   ok      expected ok    ✓
+M8  mutation: NaN guard on --r7-v2-epoch-iso removed  ·  selftest: 221/222 cases passed
+    R7v2 (a)                           ok      expected ok    ✓
+    R7v2 (b)                           ok      expected ok    ✓
+    R7v2 (c1)                          ok      expected ok    ✓
+    R7v2 (c2)                          ok      expected ok    ✓
+    R7v2 (d)                           ok      expected ok    ✓
+    R7v2 (e)                           ok      expected ok    ✓
+    R7v2 (e2)                          ok      expected ok    ✓
+    R7v2 (f)                           ok      expected ok    ✓
+    R7v2 (k)                           ok      expected ok    ✓
+    R7v2 (g)                           ok      expected ok    ✓
+    R7v2 (h)                           ok      expected ok    ✓
+    R7v2 (i)                           ok      expected ok    ✓
+    R7v2 (j)                           ok      expected ok    ✓
+    --r7-v2-epoch-iso with an unparsea FAIL    expected FAIL  ✓
+    audit --json through a slow pipe   ok      expected ok    ✓
+
+RESULT: every expectation met — each new case fails on the mutant that removes what it guards.
+mutation-check exit: 0
