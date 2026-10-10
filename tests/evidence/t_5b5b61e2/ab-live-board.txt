@@ -1,0 +1,13 @@
+base=92f01d7ae99040558d8ac59f0ef4af2feb012b6a master-gate sha256=f0f2abcb3fb3d980273772d483e7b05ea8b0d36664d8d1677bbf4ce287b97865
+branch-gate sha256=413da76c5f8f60b9233c43345404c336d0243173184ba60a957ea925d9a8f39b
+snapshot taken 2026-10-10T11:54:21Z
+[github=live exit master=1 branch=1] done cards=144  violation-set changes=0  cards with advisory changes=54
+  advisories added by B: {"X3_COMPLETED_OUTSIDE_HOOK":54}
+  advisories removed by B: {}
+  counts A={"failures":29,"a11":2}  B={"done_cards":144,"enforced":117,"failures":29,"grandfathered":27,"a11":2,"exceptions":{"available":true,"cards":5,"occurrences":5},"exceptions_withdrawn":{"available":true,"cards":0,"occurrences":0},"completed_outside_hook":{"available":true,"cards":54,"occurrences":54}}
+  verdict: OK — no violation-set change; the only advisory change is the new X3
+[github=off exit master=1 branch=1] done cards=144  violation-set changes=0  cards with advisory changes=54
+  advisories added by B: {"X3_COMPLETED_OUTSIDE_HOOK":54}
+  advisories removed by B: {}
+  counts A={"failures":29,"a11":11}  B={"done_cards":144,"enforced":117,"failures":29,"grandfathered":27,"a11":11,"exceptions":{"available":true,"cards":5,"occurrences":5},"exceptions_withdrawn":{"available":true,"cards":0,"occurrences":0},"completed_outside_hook":{"available":true,"cards":54,"occurrences":54}}
+  verdict: OK — no violation-set change; the only advisory change is the new X3

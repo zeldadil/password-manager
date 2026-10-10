@@ -26,7 +26,7 @@
  * Usage:
  *   node scripts/qa/signoff-gate.mjs audit  [--db PATH] [--repo PATH] [--epoch-iso ISO]
  *                                           [--strict-history] [--json] [--json-out FILE]
- *                                           [--fail-on-a11]
+ *                                           [--fail-on-a11] [--now-iso ISO]
  *   node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx [--pre-complete] [--json]
  *   echo '<pre_tool_call payload>' | node scripts/qa/signoff-gate.mjs hook
  *
@@ -99,12 +99,39 @@
  * protection, time budget). Without the flag the exit code is unchanged.
  * `--json-out FILE` writes the `--json` document to FILE as well, so one
  * evaluation yields both the text report and the machine-readable one.
+ *
+ * Bypasses are listed by `audit` too (t_5b5b61e2, QA_SIGN_OFF_GATE.md §5.10), in
+ * the same "bypasses & degradations" block, one line per OCCURRENCE (card, date,
+ * author, reason, state) so the report reads without opening the board:
+ * X1_EXCEPTION (an exception in force, plus the redundant records repeating
+ * it), X2_EXCEPTION_WITHDRAWN (history, not an active bypass) and
+ * X3_COMPLETED_OUTSIDE_HOOK (a completion the `pre_tool_call` hook never saw:
+ * CLI, dashboard, direct board edit — read from the board's `task_events`).
+ * Each bypass type carries a per-month trend and a 30-day watch threshold
+ * (`BYPASS_WATCH_30D`; `--now-iso` anchors the window). A bypass NEVER changes
+ * the exit code. Reasons are free text: they pass through the repo's secret
+ * scanner (secret-guard.mjs) and are withheld, rule ids only, on a hit (AR-2).
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
+
+/**
+ * The repo's secret scanner (scripts/qa/secret-guard.mjs, SEC-001), used to keep
+ * secret-shaped values out of the bypass report (t_5b5b61e2, AR-2): exception
+ * and override reasons are free text written by agents and humans. Loaded from
+ * the sibling file (it ships next to this script in the repo and in every
+ * profile's agent-hooks/); when it cannot be loaded, reasons are withheld —
+ * never printed unscanned.
+ */
+let secretScanText = null;
+try {
+  ({ scanText: secretScanText } = await import(new URL("./secret-guard.mjs", import.meta.url).href));
+} catch {
+  secretScanText = null;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Policy constants (mirror QA_SIGN_OFF_GATE.md — change both together)
@@ -328,6 +355,19 @@ export function loadBoard(dbPath) {
     "SELECT id, task_id, profile, status, outcome, summary, metadata, ended_at, started_at FROM task_runs ORDER BY started_at",
   );
   const links = sql(dbPath, "SELECT parent_id, child_id FROM task_links");
+  // Completion events, for the out-of-band completion report (t_5b5b61e2,
+  // §5.10). Read tolerantly: a board without `task_events` (an older schema, a
+  // minimal fixture) must not make the gate — and the fail-closed hook — fail;
+  // the report then says "not available" instead of counting 0.
+  let events = null;
+  try {
+    events = sql(
+      dbPath,
+      "SELECT id, task_id, run_id, kind, payload, created_at FROM task_events WHERE kind IN ('completed', 'manual_complete') ORDER BY created_at, id",
+    );
+  } catch {
+    events = null;
+  }
   const byTask = (rows) => {
     const m = new Map();
     for (const r of rows) {
@@ -347,6 +387,7 @@ export function loadBoard(dbPath) {
     attachmentsByTask: byTask(attachments),
     runsByTask: byTask(runs),
     runsById,
+    eventsByTask: events ? byTask(events) : null,
     links,
     childrenOf: (id) => links.filter((l) => l.parent_id === id).map((l) => l.child_id),
   };
@@ -713,8 +754,14 @@ function findException(board, task, securityTrack) {
   const ignored = [];
   const withdrawn = [];
   const withdrawalsIgnored = [];
+  // t_5b5b61e2: a valid exception recorded while another one is in force
+  // changes nothing (the first keeps governing), but it is still a recorded
+  // waiver — the bypass report lists it, so it is collected instead of dropped.
+  const redundant = [];
   let exception = null;
   for (const c of board.commentsByTask.get(task.id) || []) {
+    // Comment timestamp (epoch seconds) — the bypass report's date column.
+    const at = c.created_at ?? null;
     const body = c.body || "";
     const hits = [...body.matchAll(EXCEPTION_RE_G)];
     const wHits = [...body.matchAll(WITHDRAWAL_RE_G)];
@@ -726,37 +773,116 @@ function findException(board, task, securityTrack) {
 
     if (hits.length) {
       const live = hits.find((m) => !insideRanges(m.index, ranges));
-      const reason = ((live || hits[0])[1] || "").slice(0, 200);
+      // Kept long here: `safeReason` scans the whole text, THEN truncates (a cut
+      // through a secret would leave an unmatched prefix — t_5b5b61e2, AR-2).
+      const reason = ((live || hits[0])[1] || "").slice(0, 4000);
       let why = null;
       if (!live) why = "quoted";
       else if (!allowed) why = "author";
       else if (securityTrack) why = "security-track";
-      if (why) ignored.push({ author: c.author, reason, why });
+      if (why) ignored.push({ author: c.author, reason, why, created_at: at });
       else events.push({ kind: "exception", at: live.index, reason });
     }
 
     if (wHits.length) {
       const live = wHits.find((m) => !insideRanges(m.index, ranges));
-      const reason = String((live || wHits[0])[1] || "").trim().slice(0, 200);
+      const reason = String((live || wHits[0])[1] || "").trim().slice(0, 4000);
       let why = null;
       if (!live) why = "quoted";
       else if (!allowed) why = "author";
-      if (why) withdrawalsIgnored.push({ author: c.author, reason, why });
+      if (why) withdrawalsIgnored.push({ author: c.author, reason, why, created_at: at });
       else events.push({ kind: "withdrawal", at: live.index, reason });
     }
 
     for (const e of events.sort((a, b) => a.at - b.at)) {
       if (e.kind === "exception") {
-        if (!exception) exception = { reason: e.reason, author: c.author };
+        if (!exception) exception = { reason: e.reason, author: c.author, created_at: at };
+        else redundant.push({ reason: e.reason, author: c.author, created_at: at, governedBy: exception });
       } else if (exception) {
-        withdrawn.push({ ...exception, withdrawn_by: c.author, withdrawal_reason: e.reason });
+        withdrawn.push({ ...exception, withdrawn_by: c.author, withdrawal_reason: e.reason, withdrawn_at: at });
         exception = null;
       } else {
-        withdrawalsIgnored.push({ author: c.author, reason: e.reason, why: "no-exception" });
+        withdrawalsIgnored.push({ author: c.author, reason: e.reason, why: "no-exception", created_at: at });
       }
     }
   }
-  return { exception, ignored, withdrawn, withdrawalsIgnored };
+  // A redundant record is part of the active waiver only while the exception it
+  // repeated is still the one in force; once that one was withdrawn it is
+  // history (a later exception re-arms the waiver on its own record).
+  const redundantOut = redundant.map(({ governedBy, ...x }) => ({ ...x, active: governedBy === exception }));
+  return { exception, ignored, withdrawn, withdrawalsIgnored, redundant: redundantOut };
+}
+
+/**
+ * Completions that did NOT go through the `pre_tool_call` hook (t_5b5b61e2;
+ * QA_SIGN_OFF_GATE.md §5.10). The hook wraps the `kanban_complete` *tool* only;
+ * `hermes kanban complete` from a terminal, a dashboard approval and a direct
+ * edit of the board all close a card without it (architect decision #505 on
+ * t_75180b28: the CLI path is a deliberate override that is NOT wrapped, and
+ * the audit is what makes it visible). Hermes has no `--override "<reason>"`
+ * flag; what it does record, and what is read here:
+ *
+ *   - a `manual_complete` event — a closure written straight into the board,
+ *     with `payload.reason`;
+ *   - a `completed` event with no run (`payload.closure_method`, when present,
+ *     says how — e.g. `human_direct_db_edit`);
+ *   - a `completed` event whose run Hermes *synthesized* because no worker had
+ *     claimed the card: `_synthesize_ended_run` writes `status = outcome =
+ *     'completed'`, while a worker run is ended with `status = 'done'`. That is
+ *     the CLI / dashboard path. The run's `profile` is the card's assignee, not
+ *     the person who ran the command — Hermes does not record the actor, so the
+ *     report says so instead of guessing.
+ *
+ * Known blind spot (documented, not guessed around): `hermes kanban complete
+ * --force` on a card a worker is running closes *that worker's* run, which then
+ * looks exactly like a worker completion. A CLI call made from inside a worker
+ * with that worker's own `HERMES_KANBAN_RUN_ID` is indistinguishable too.
+ *
+ * Returns `null` when the board has no readable `task_events` table — the
+ * report then says "not available", never 0.
+ */
+export function collectOutOfBandCompletions(board, task) {
+  if (!board.eventsByTask) return null;
+  const out = [];
+  for (const e of board.eventsByTask.get(task.id) || []) {
+    let payload = {};
+    try {
+      payload = e.payload ? JSON.parse(e.payload) : {};
+    } catch {
+      payload = {};
+    }
+    if (!payload || typeof payload !== "object") payload = {};
+    const text = (v) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 4000) : null);
+    if (e.kind === "manual_complete") {
+      out.push({
+        at: e.created_at ?? null,
+        method: "manual_complete event (direct board edit)",
+        actor: safeReason(text(payload.actor) || text(payload.by) || "") || null,
+        assignee: task.assignee || null,
+        reason: text(payload.reason),
+      });
+      continue;
+    }
+    if (e.kind !== "completed") continue;
+    const run = e.run_id === null || e.run_id === undefined ? null : board.runsById.get(String(e.run_id));
+    let method = null;
+    if (e.run_id === null || e.run_id === undefined) {
+      method = text(payload.closure_method) ? `completed with no run (${safeReason(text(payload.closure_method)).slice(0, 60)})` : "completed with no run";
+    } else if (!run) {
+      method = "completed by a run missing from the board";
+    } else if (String(run.status || "") === "completed") {
+      method = "completed outside a worker run (CLI / dashboard)";
+    }
+    if (!method) continue;
+    out.push({
+      at: e.created_at ?? null,
+      method,
+      actor: null,
+      assignee: (run && run.profile) || task.assignee || null,
+      reason: text(payload.summary) || text(payload.result) || null,
+    });
+  }
+  return out;
 }
 
 function withdrawalIgnoredDetail(x) {
@@ -1324,7 +1450,9 @@ export function evaluateCard(board, task, opts = {}) {
     ignored: exceptionsIgnored,
     withdrawn: exceptionsWithdrawn,
     withdrawalsIgnored,
+    redundant: exceptionsRedundant,
   } = findException(board, task, securityTrack);
+  const outOfBand = collectOutOfBandCompletions(board, task);
 
   const verdicts = collectVerdicts(board, task);
   const valid = verdicts.filter((v) => VERDICTS.has(v.token));
@@ -1390,10 +1518,14 @@ export function evaluateCard(board, task, opts = {}) {
       via_ref: p.viaRef || null,
       origin: p.origin,
     })),
-    exception,
-    exceptions_ignored: exceptionsIgnored,
-    exceptions_withdrawn: exceptionsWithdrawn,
-    exception_withdrawals_ignored: withdrawalsIgnored,
+    // Reasons are free text: printed only through safeReason (AR-2, t_5b5b61e2),
+    // so the JSON document the workflow uploads carries no secret-shaped value.
+    exception: exception ? { ...exception, reason: safeReason(exception.reason) } : null,
+    exceptions_ignored: exceptionsIgnored.map((x) => ({ ...x, reason: safeReason(x.reason) })),
+    exceptions_withdrawn: exceptionsWithdrawn.map((x) => ({ ...x, reason: safeReason(x.reason), withdrawal_reason: safeReason(x.withdrawal_reason) })),
+    exception_withdrawals_ignored: withdrawalsIgnored.map((x) => ({ ...x, reason: safeReason(x.reason) })),
+    exceptions_redundant: exceptionsRedundant.map((x) => ({ ...x, reason: safeReason(x.reason) })),
+    out_of_band_completions: outOfBand ? outOfBand.map((x) => ({ ...x, reason: x.reason ? safeReason(x.reason) : null })) : null,
     discounted_verdicts: {
       ignored: discounted.ignored,
       self_declared: discounted.selfDeclared,
@@ -1445,14 +1577,25 @@ export function evaluateCard(board, task, opts = {}) {
   for (const w of exceptionsWithdrawn) {
     advise(
       "X2_EXCEPTION_WITHDRAWN",
-      `QA sign-off exception recorded by ${w.author} (${w.reason}) was withdrawn by ${w.withdrawn_by}${w.withdrawal_reason ? `: ${w.withdrawal_reason}` : " (no reason given)"} — no longer applied`,
+      `QA sign-off exception recorded by ${w.author} (${safeReason(w.reason)}) was withdrawn by ${w.withdrawn_by}${w.withdrawal_reason ? `: ${safeReason(w.withdrawal_reason)}` : " (no reason given)"} — no longer applied`,
     );
   }
   for (const x of withdrawalsIgnored) advise("A16_EXCEPTION_WITHDRAWAL_IGNORED", withdrawalIgnoredDetail(x));
 
+  // X3 — the card was closed without the completion hook (CLI, dashboard,
+  // direct board edit; t_5b5b61e2, §5.10). Never a violation: the override is
+  // legitimate (architect decision #505 on t_75180b28), the audit trail is the
+  // control. The rules above still judge the card as it stands.
+  for (const o of outOfBand || []) {
+    advise(
+      "X3_COMPLETED_OUTSIDE_HOOK",
+      `${o.method} on ${isoDay(o.at)}${o.actor ? ` by ${o.actor}` : " — actor not recorded by Hermes"}${o.assignee ? ` (assignee ${o.assignee})` : ""}: ${o.reason ? safeReason(o.reason) : "(no reason recorded)"}`,
+    );
+  }
+
   // R1 — a QA verdict, or a resolvable QA deferral, must exist.
   if (exception) {
-    advisories.push({ rule: "X1_EXCEPTION", detail: `QA sign-off exception recorded by ${exception.author}: ${exception.reason}` });
+    advisories.push({ rule: "X1_EXCEPTION", detail: `QA sign-off exception recorded by ${exception.author}: ${safeReason(exception.reason)}` });
   } else if (valid.length === 0 && !deferral) {
     add(
       "R1_QA_VERDICT_MISSING",
@@ -1632,6 +1775,119 @@ function resolveRepo(argRepo) {
 /** Rule id of the "GitHub could not be read" advisory (§5.9). */
 export const A11_RULE = "A11_CI_STATE_UNVERIFIABLE";
 
+/** `2026-10-05 20:36 UTC` for an epoch-seconds board timestamp; `date unknown` otherwise. */
+export function isoDay(at) {
+  const n = Number(at);
+  if (at === null || at === undefined || !Number.isFinite(n) || n <= 0) return "date unknown";
+  return `${new Date(n * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
+}
+
+/**
+ * A free-text reason, made safe to print (AR-2, t_5b5b61e2): control characters
+ * flattened, length capped, and the whole reason withheld — naming only the
+ * secret-guard rule ids, never the value — when it carries a secret shape.
+ * When the scanner could not be loaded the reason is withheld too.
+ */
+export function safeReason(reason) {
+  if (reason === null || reason === undefined || reason === "") return "";
+  // Control characters flattened; fence-length backtick/tilde runs shortened, so
+  // a reason cannot close the ```text fence the workflow wraps the report in.
+  const flat = String(reason)
+    .replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ")
+    .replace(/`{3,}/g, "`")
+    .replace(/~{3,}/g, "~")
+    .trim();
+  if (typeof secretScanText !== "function") return "[reason withheld: secret scanner (secret-guard.mjs) unavailable]";
+  // Scan the WHOLE text before truncating: a cut through a secret would leave a
+  // prefix too short to match and print it.
+  const hits = secretScanText(flat);
+  return hits.length ? `[reason withheld: matches ${hits.join(", ")} — read it on the card]` : flat.slice(0, 200);
+}
+
+/**
+ * Watch thresholds for the bypass trend (t_5b5b61e2, criterion 3): occurrences
+ * in the 30 days before the audit above which the report says "above watch
+ * threshold". A threshold NEVER fails the audit — an exception or an override is
+ * legitimate, and a red CI for it would only teach people to bypass it another
+ * way. It is a prompt to look, named in the output so nobody has to compute it.
+ * Policy values (QA_SIGN_OFF_GATE.md §5.10), tunable by the architect.
+ */
+export const BYPASS_WATCH_30D = { x1: 2, x2: 2, x3: 10 };
+
+const DAY_S = 86400;
+
+/** Per-month counts + the last-30-days / previous-30-days pair for a list of records. */
+export function bypassTrend(records, nowMs, threshold) {
+  const now = Math.floor(nowMs / 1000);
+  const byMonth = {};
+  let last30 = 0;
+  let prev30 = 0;
+  let undated = 0;
+  for (const r of records) {
+    const at = Number(r.at);
+    if (!Number.isFinite(at) || at <= 0) {
+      undated++;
+      continue;
+    }
+    const m = new Date(at * 1000).toISOString().slice(0, 7);
+    byMonth[m] = (byMonth[m] || 0) + 1;
+    if (at > now - 30 * DAY_S && at <= now) last30++;
+    else if (at > now - 60 * DAY_S && at <= now - 30 * DAY_S) prev30++;
+  }
+  const sorted = Object.fromEntries(Object.entries(byMonth).sort(([a], [b]) => a.localeCompare(b)));
+  return {
+    by_month: sorted,
+    last_30d: last30,
+    previous_30d: prev30,
+    undated,
+    direction: last30 > prev30 ? "rising" : last30 < prev30 ? "falling" : "flat",
+    watch_threshold_30d: threshold ?? null,
+    above_watch: threshold !== null && threshold !== undefined && last30 > threshold,
+    as_of: new Date(nowMs).toISOString(),
+  };
+}
+
+/** Exception records of a card, for the X1 report: the one in force first, then the redundant ones that repeat it. */
+function exceptionRecordsOf(r) {
+  const f = r.facts;
+  if (!f.exception) return [];
+  const out = [{ at: f.exception.created_at ?? null, author: f.exception.author, reason: safeReason(f.exception.reason), state: "in force" }];
+  for (const x of (f.exceptions_redundant || []).filter((y) => y.active)) {
+    out.push({ at: x.created_at ?? null, author: x.author, reason: safeReason(x.reason), state: "redundant — repeats the exception in force" });
+  }
+  return out;
+}
+
+/** Withdrawn exceptions of a card, for the X2 (history) report. */
+function withdrawnRecordsOf(r) {
+  const f = r.facts;
+  const out = [];
+  for (const w of f.exceptions_withdrawn || []) {
+    out.push({
+      at: w.created_at ?? null,
+      author: w.author,
+      reason: safeReason(w.reason),
+      state: `withdrawn by ${w.withdrawn_by} on ${isoDay(w.withdrawn_at)}${w.withdrawal_reason ? `: ${safeReason(w.withdrawal_reason)}` : " (no reason given)"}`,
+    });
+  }
+  for (const x of (f.exceptions_redundant || []).filter((y) => !y.active)) {
+    out.push({ at: x.created_at ?? null, author: x.author, reason: safeReason(x.reason), state: "redundant when recorded — the exception it repeated was withdrawn" });
+  }
+  return out;
+}
+
+/** Out-of-band completions of a card, for the X3 report (null = events not readable). */
+function outOfBandRecordsOf(r) {
+  const list = r.facts.out_of_band_completions;
+  if (list === null || list === undefined) return null;
+  return list.map((o) => ({
+    at: o.at,
+    author: o.actor || "not recorded",
+    reason: o.reason ? safeReason(o.reason) : "(no reason recorded)",
+    state: `${o.method}${o.assignee ? ` · assignee ${o.assignee}` : ""}`,
+  }));
+}
+
 /**
  * "Bypasses and degradations" — ONE block of the audit report, one entry per
  * type (t_b102b100; architect design note on the card, shared with
@@ -1643,11 +1899,22 @@ export const A11_RULE = "A11_CI_STATE_UNVERIFIABLE";
  *   - A11 → only with `--fail-on-a11` (§5.9: a GitHub outage must never make a
  *     card uncompletable, but a scheduled audit that runs WITH GitHub and
  *     still gets A11 is a real degradation);
- *   - t_5b5b61e2 adds the sign-off exceptions and the CLI bypasses here, with
- *     `failsAudit: () => false` (an exception never fails the audit).
+ *   - the bypasses (t_5b5b61e2, QA_SIGN_OFF_GATE.md §5.10): X1 sign-off
+ *     exceptions in force, X2 withdrawn exceptions (history, not an active
+ *     bypass — consistent with t_b2588ee7), X3 completions made outside the
+ *     completion hook (CLI / dashboard / direct board edit). All three have
+ *     `failsAudit: () => false`: a bypass is made VISIBLE, it never turns the
+ *     audit red (an exception that broke CI would only be bypassed another way).
  * `detail(r)` returns the per-card detail string, or null when the card does
- * not carry the type.
+ * not carry the type. `records(r)` (bypass types) returns one row per
+ * occurrence — `{ at, author, reason, state }` — or null when the type could
+ * not be read for that card (the entry is then `available: false`, never 0);
+ * a bypass type also reports a per-month trend and its 30-day watch threshold
+ * (`BYPASS_WATCH_30D`).
  */
+const recordsDetail = (recs) =>
+  recs.length ? recs.map((x) => `${isoDay(x.at)} · ${x.author} · ${x.reason || "(no reason)"} · ${x.state}`).join(" | ") : null;
+
 export const DEGRADATION_TYPES = [
   {
     key: "a11",
@@ -1662,18 +1929,68 @@ export const DEGRADATION_TYPES = [
       return a ? a.detail : null;
     },
   },
+  {
+    key: "x1",
+    rule: "X1_EXCEPTION",
+    label: "QA sign-off exception in force (§5.6) — R1/evidence waived",
+    tag: "X1: QA sign-off exception in force",
+    annotation: "X1 sign-off exception",
+    annotate: "per-record",
+    failFlag: null,
+    failsAudit: () => false,
+    records: exceptionRecordsOf,
+  },
+  {
+    key: "x2",
+    rule: "X2_EXCEPTION_WITHDRAWN",
+    label: "QA sign-off exception withdrawn (§5.6) — history, not in force",
+    tag: "X2: exception withdrawn (history)",
+    annotation: "X2 exception withdrawn",
+    annotate: "aggregate",
+    failFlag: null,
+    failsAudit: () => false,
+    records: withdrawnRecordsOf,
+  },
+  {
+    key: "x3",
+    rule: "X3_COMPLETED_OUTSIDE_HOOK",
+    label: "completed outside the completion hook (CLI / dashboard / direct board edit, §5.10)",
+    tag: "X3: completed outside the hook",
+    annotation: "X3 completed outside the hook",
+    annotate: "aggregate",
+    failFlag: null,
+    failsAudit: () => false,
+    records: outOfBandRecordsOf,
+  },
 ];
 
-/** Evaluated "bypasses and degradations" block, in DEGRADATION_TYPES order (JSON-safe). */
+/**
+ * Evaluated "bypasses and degradations" block, in DEGRADATION_TYPES order
+ * (JSON-safe). `opts.nowMs` anchors the 30-day trend window (default: now).
+ */
 export function degradations(results, opts = {}) {
+  const nowMs = Number.isFinite(opts.nowMs) ? opts.nowMs : Date.now();
   return DEGRADATION_TYPES.map((t) => {
     const cards = [];
+    const allRecords = [];
+    let unreadable = 0;
     for (const r of results) {
-      const detail = t.detail(r);
-      if (detail !== null && detail !== undefined) cards.push({ task_id: r.facts.task_id, title: r.facts.title || "", detail });
+      if (t.records) {
+        const recs = t.records(r);
+        if (recs === null || recs === undefined) {
+          unreadable++;
+          continue;
+        }
+        if (!recs.length) continue;
+        cards.push({ task_id: r.facts.task_id, title: r.facts.title || "", detail: recordsDetail(recs), records: recs });
+        for (const x of recs) allRecords.push({ task_id: r.facts.task_id, ...x });
+      } else {
+        const detail = t.detail(r);
+        if (detail !== null && detail !== undefined) cards.push({ task_id: r.facts.task_id, title: r.facts.title || "", detail });
+      }
     }
     const flagOn = t.failsAudit(opts);
-    return {
+    const entry = {
       key: t.key,
       rule: t.rule,
       label: t.label,
@@ -1685,6 +2002,16 @@ export function degradations(results, opts = {}) {
       fails_audit: flagOn && cards.length > 0,
       cards,
     };
+    if (t.records) {
+      // Not readable for some card (a board without `task_events`): the count
+      // would be a guess — say so, never report a reassuring 0.
+      entry.available = unreadable === 0;
+      if (unreadable) entry.unavailable_reason = `${unreadable} card(s) could not be read for ${t.rule} (no readable task_events table on this board)`;
+      entry.annotate = t.annotate || "per-card";
+      entry.occurrences = allRecords.length;
+      entry.trend = bypassTrend(allRecords, nowMs, BYPASS_WATCH_30D[t.key]);
+    }
+    return entry;
   });
 }
 
@@ -1705,9 +2032,22 @@ function renderReport(results, opts, out) {
   out(`  enforced (done at/after epoch or pre-complete): ${enforced.length}  ·  pass: ${enforced.length - enforcedFailed.length}  ·  FAIL: ${enforcedFailed.length}`);
   out(`  bypasses & degradations (counted on every audit — never a card violation):`);
   for (const d of block) {
+    if (d.available === false) {
+      out(`    ${d.key.toUpperCase()} (${d.label}): not available — ${d.unavailable_reason}`);
+      continue;
+    }
     const cards = d.count ? `  ·  cards: ${d.task_ids.join(", ")}` : "";
     const flag = d.fail_flag && d.fail_flag_on ? `  ·  ${d.fail_flag}: ${d.fails_audit ? "FAIL" : "pass"}` : "";
-    out(`    ${d.key.toUpperCase()} (${d.label}): ${d.count}${cards}${flag}`);
+    const occ = d.occurrences !== undefined ? `  ·  occurrences: ${d.occurrences}` : "";
+    out(`    ${d.key.toUpperCase()} (${d.label}): ${d.count}${occ}${cards}${flag}`);
+    if (d.trend) {
+      const months = Object.entries(d.trend.by_month).map(([m, n]) => `${m}: ${n}`).join(", ") || "none";
+      const watch = d.trend.watch_threshold_30d !== null ? `  ·  watch threshold ${d.trend.watch_threshold_30d}/30d: ${d.trend.above_watch ? "ABOVE — review these bypasses (never fails the audit)" : "below"}` : "";
+      out(`        trend: last 30 days ${d.trend.last_30d} (previous 30 days ${d.trend.previous_30d}, ${d.trend.direction})${watch}  ·  by month: ${months}`);
+    }
+    const rows = d.cards.flatMap((c) => (c.records || []).map((x) => ({ task_id: c.task_id, ...x })));
+    rows.sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0) || a.task_id.localeCompare(b.task_id));
+    for (const x of rows) out(`        ${x.task_id}  ${isoDay(x.at)}  ${x.author}  ${x.reason || "(no reason)"}  [${x.state}]`);
   }
   for (const r of failed) {
     out(`  FAIL ${fmtCard(r.facts)}${r.facts.status !== "done" ? ` [${r.facts.status}]` : ""}${degTag(r)}`);
@@ -1753,7 +2093,7 @@ function main() {
   }
   // Board-level flags (t_b102b100): refuse them on `check` instead of silently
   // ignoring them — a per-card check never fails on A11 (§5.9).
-  for (const flag of ["fail-on-a11", "json-out"]) {
+  for (const flag of ["fail-on-a11", "json-out", "now-iso"]) {
     if (mode === "check" && args[flag] !== undefined) {
       console.error(`signoff-gate: --${flag} applies to \`audit\` only`);
       process.exit(3);
@@ -1799,10 +2139,24 @@ function main() {
     process.exit(3);
   }
   const failOnA11 = args["fail-on-a11"] === true;
+  // --now-iso ISO (t_5b5b61e2): anchors the bypass trend's 30-day windows, so a
+  // replayed audit (or the selftest) reads the trend as of a fixed instant.
+  let nowMs = Date.now();
+  if (args["now-iso"] !== undefined) {
+    nowMs = typeof args["now-iso"] === "string" ? Date.parse(args["now-iso"]) : NaN;
+    if (!Number.isFinite(nowMs)) {
+      console.error(`signoff-gate: --now-iso needs an ISO-8601 instant (got "${args["now-iso"]}")`);
+      process.exit(3);
+    }
+  }
   const results = board.tasks.filter((t) => t.status === "done").map((t) => evaluateCard(board, t, opts));
   const failures = results.filter((r) => r.violations.length > 0);
-  const block = degradations(results, { failOnA11 });
+  const block = degradations(results, { failOnA11, nowMs });
   const a11 = block.find((d) => d.key === "a11");
+  const bypass = (key) => {
+    const d = block.find((x) => x.key === key);
+    return d.available === false ? { available: false, cards: null, occurrences: null } : { available: true, cards: d.count, occurrences: d.occurrences };
+  };
   // Exit 1 on violations (unchanged); also when a degradation type is allowed
   // to fail the audit and fired — today only A11 under --fail-on-a11
   // (t_b102b100). A degradation never becomes a card violation.
@@ -1820,6 +2174,10 @@ function main() {
       failures: failures.length,
       grandfathered: results.filter((r) => !r.facts.post_epoch).length,
       a11: a11.count,
+      // t_5b5b61e2 — bypasses: cards + occurrences per type (null = not readable).
+      exceptions: bypass("x1"),
+      exceptions_withdrawn: bypass("x2"),
+      completed_outside_hook: bypass("x3"),
     },
     a11_task_ids: a11.task_ids,
     degradations: block,

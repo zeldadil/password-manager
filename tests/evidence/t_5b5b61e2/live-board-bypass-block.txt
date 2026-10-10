@@ -1,0 +1,72 @@
+counts: {"done_cards":144,"enforced":117,"failures":29,"grandfathered":27,"a11":11,"exceptions":{"available":true,"cards":5,"occurrences":5},"exceptions_withdrawn":{"available":true,"cards":0,"occurrences":0},"completed_outside_hook":{"available":true,"cards":54,"occurrences":54}}
+
+A11_CI_STATE_UNVERIFIABLE: 11 card(s)
+  cards: t_65c5a636, t_cbaa9f7d, t_75180b28, t_46c18784, t_b2588ee7, t_9ae2bc23, t_7e1cea21, t_694c9e37, t_d2f1155c, t_372385ea, t_b102b100
+
+X1_EXCEPTION: 5 card(s), 5 occurrence(s)
+  trend as of 2026-10-10T11:55:02.012Z: last 30 days 5, previous 30 days 0 (rising), watch threshold 2: ABOVE, by month {"2026-09":5}
+  t_80fc0326  2026-09-18 11:22 UTC  dashboard  <reason: 200 chars>  [in force]
+  t_9b3bdba0  2026-09-18 11:23 UTC  dashboard  <reason: 200 chars>  [in force]
+  t_b51a1ff3  2026-09-18 11:23 UTC  dashboard  <reason: 200 chars>  [in force]
+  t_930fddbe  2026-09-18 20:25 UTC  dashboard  <reason: 200 chars>  [in force]
+  t_f49d448c  2026-09-18 20:52 UTC  human  <reason: 200 chars>  [in force]
+
+X2_EXCEPTION_WITHDRAWN: 0 card(s), 0 occurrence(s)
+  trend as of 2026-10-10T11:55:02.012Z: last 30 days 0, previous 30 days 0 (flat), watch threshold 2: below, by month {}
+
+X3_COMPLETED_OUTSIDE_HOOK: 54 card(s), 54 occurrence(s)
+  trend as of 2026-10-10T11:55:02.012Z: last 30 days 54, previous 30 days 0 (rising), watch threshold 10: ABOVE, by month {"2026-09":33,"2026-10":21}
+  t_80fc0326  2026-09-18 09:31 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_9b3bdba0  2026-09-18 10:31 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_b51a1ff3  2026-09-18 10:43 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_c3cb6842  2026-09-18 11:27 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee qa]
+  t_930fddbe  2026-09-18 20:37 UTC  not recorded  <reason: 200 chars>  [manual_complete event (direct board edit) · assignee architect]
+  t_2cc2d094  2026-09-20 18:01 UTC  not recorded  <reason: 132 chars>  [completed outside a worker run (CLI / dashboard) · assignee qa]
+  t_18a945c2  2026-09-20 19:02 UTC  not recorded  <reason: 188 chars>  [completed with no run (human_direct_db_edit) · assignee docs]
+  t_fe0be554  2026-09-20 19:03 UTC  not recorded  <reason: 190 chars>  [completed with no run (human_direct_db_edit) · assignee docs]
+  t_76ec1e22  2026-09-20 19:03 UTC  not recorded  <reason: 200 chars>  [completed with no run (human_direct_db_edit) · assignee docs]
+  t_f9d4d3bb  2026-09-20 20:08 UTC  not recorded  <reason: 199 chars>  [manual_complete event (direct board edit) · assignee architect]
+  t_08b05087  2026-09-20 20:09 UTC  not recorded  <reason: 200 chars>  [manual_complete event (direct board edit) · assignee docs]
+  t_56490bf2  2026-09-20 20:09 UTC  not recorded  <reason: 200 chars>  [manual_complete event (direct board edit) · assignee docs]
+  t_c4eb81f1  2026-09-20 20:09 UTC  not recorded  <reason: 199 chars>  [manual_complete event (direct board edit) · assignee docs]
+  t_d7c21957  2026-09-20 20:09 UTC  not recorded  <reason: 200 chars>  [manual_complete event (direct board edit) · assignee docs]
+  t_e2468413  2026-09-20 20:09 UTC  not recorded  <reason: 200 chars>  [manual_complete event (direct board edit) · assignee docs]
+  t_fdd2548e  2026-09-23 11:23 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee qa]
+  t_b6f633c3  2026-09-23 12:02 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee backend]
+  t_ddd8fb1e  2026-09-23 12:22 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee backend]
+  t_b51bf4b9  2026-09-23 15:51 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee backend]
+  t_55c28180  2026-09-23 15:55 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee backend]
+  t_03612cd7  2026-09-23 16:43 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee backend]
+  t_d136be82  2026-09-23 16:56 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee backend]
+  t_d696f175  2026-09-23 17:13 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee backend]
+  t_a7b64b39  2026-09-23 18:02 UTC  not recorded  <reason: 185 chars>  [completed outside a worker run (CLI / dashboard) · assignee backend]
+  t_f4f3ec16  2026-09-23 18:44 UTC  not recorded  <reason: 185 chars>  [completed outside a worker run (CLI / dashboard) · assignee backend]
+  t_e4341d18  2026-09-23 19:11 UTC  not recorded  <reason: 185 chars>  [completed outside a worker run (CLI / dashboard) · assignee backend]
+  t_782802ac  2026-09-24 10:11 UTC  not recorded  <reason: 152 chars>  [completed outside a worker run (CLI / dashboard) · assignee frontend]
+  t_7f8643d9  2026-09-24 10:58 UTC  not recorded  <reason: 176 chars>  [completed outside a worker run (CLI / dashboard) · assignee frontend]
+  t_63323ce5  2026-09-25 12:29 UTC  not recorded  <reason: 168 chars>  [completed outside a worker run (CLI / dashboard) · assignee frontend]
+  t_a9d5cb1b  2026-09-25 12:29 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee frontend]
+  t_aca6ed13  2026-09-28 15:04 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee frontend]
+  t_f37504f0  2026-09-30 15:25 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee frontend]
+  t_51eb9ae5  2026-09-30 15:25 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee qa]
+  t_4ccd2652  2026-10-02 09:47 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee frontend]
+  t_4f872624  2026-10-02 09:47 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_816a87b5  2026-10-03 20:55 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_c015bda7  2026-10-04 10:29 UTC  not recorded  <reason: 188 chars>  [completed outside a worker run (CLI / dashboard) · assignee qa]
+  t_c7c986c7  2026-10-04 10:30 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_8f551794  2026-10-04 10:35 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_dd9eb295  2026-10-04 10:35 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_8577a5a9  2026-10-04 10:35 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_15897ff9  2026-10-04 16:45 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_bc8335fe  2026-10-04 16:48 UTC  not recorded  <reason: 199 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_d5e68535  2026-10-05 12:23 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee qa]
+  t_069c605b  2026-10-05 12:28 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee qa]
+  t_b37ce45a  2026-10-05 12:39 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_5089a8c1  2026-10-05 14:29 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard)]
+  t_b8001b55  2026-10-05 20:36 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee qa]
+  t_75180b28  2026-10-08 16:18 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_cbaa9f7d  2026-10-08 16:37 UTC  not recorded  <reason: 65 chars>  [completed outside a worker run (CLI / dashboard) · assignee docs]
+  t_7e1cea21  2026-10-08 17:02 UTC  not recorded  <reason: 199 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_65c5a636  2026-10-08 17:48 UTC  not recorded  <reason: 200 chars>  [completed outside a worker run (CLI / dashboard) · assignee architect]
+  t_46c18784  2026-10-09 09:36 UTC  not recorded  <reason: 199 chars>  [completed outside a worker run (CLI / dashboard) · assignee frontend]
+  t_694c9e37  2026-10-09 09:40 UTC  not recorded  <reason: 199 chars>  [completed outside a worker run (CLI / dashboard) · assignee qa]

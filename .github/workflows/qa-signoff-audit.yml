@@ -15,12 +15,30 @@ name: QA sign-off audit
 #     (b / c / d / g each edit it). A separate file adds no hunk to it. The
 #     per-PR job graph in ci.yml (install-lockfile → lint-typecheck → unit →
 #     integration → e2e → dependency-audit → secret-scan → build) is not
-#     touched by CI-001h, and this workflow has no `pull_request`/`push`
-#     trigger.
+#     touched by CI-001h, and the board audit has no `pull_request`/`push`
+#     trigger (the PR-only fixture job below never reads the board).
 #
-# Triggers: weekly `schedule` + `workflow_dispatch` only. `qa-signoff-audit`
-# must NOT be added to the required status checks on `master` (CI-001h AC3/AC4)
-# — branch protection is unchanged. It reports; it does not gate.
+# Triggers: weekly `schedule` + `workflow_dispatch` for the board audit.
+# `qa-signoff-audit` must NOT be added to the required status checks on
+# `master` (CI-001h AC3/AC4) — branch protection is unchanged. It reports; it
+# does not gate.
+#
+# `pull_request` (t_5b5b61e2) runs ONLY the `bypass-report-fixture` job, and
+# only when the gate, its selftest, the summary script, the secret scanner or
+# this file change: it executes the selftest and then the real audit + summary
+# steps against the selftest's synthetic bypass board, so a change to the
+# report is exercised on the PR itself. It never reads the real board (a
+# GitHub runner cannot see it), it is not a required check, and the board
+# audit job is skipped on `pull_request`.
+#
+# Bypasses (t_5b5b61e2, QA_SIGN_OFF_GATE.md §5.10): the audit lists, in the
+# same "Bypasses and degradations" block as A11, every X1 sign-off exception in
+# force, every X2 withdrawn exception (history) and every X3 completion made
+# outside the completion hook (`hermes kanban complete` from a terminal,
+# dashboard approval, direct board edit) — card, date, author, reason, state,
+# plus a trend and a watch threshold. A bypass NEVER fails the audit; it is
+# made visible. Reasons are free text: they travel as JSON (never through a
+# shell), are secret-scanned by the gate and Markdown-escaped by the summary.
 #
 # Board transport — read this before "fixing" a red run:
 #   The gate reads a SQLite board through `sqlite3`. The canonical board lives
@@ -57,6 +75,15 @@ on:
         required: false
         type: boolean
         default: false
+  # t_5b5b61e2: exercise the bypass report on the PR that changes it (fixture
+  # board only — see the header). Not a required check.
+  pull_request:
+    paths:
+      - "scripts/qa/signoff-gate.mjs"
+      - "scripts/qa/signoff-gate.selftest.mjs"
+      - "scripts/qa/signoff-audit-summary.mjs"
+      - "scripts/qa/secret-guard.mjs"
+      - ".github/workflows/qa-signoff-audit.yml"
 
 permissions:
   contents: read
@@ -73,6 +100,9 @@ concurrency:
 jobs:
   qa-signoff-audit:
     name: qa-signoff-audit
+    # The board audit never runs on a PR: a GitHub-hosted runner has no board,
+    # and the PR path is covered by `bypass-report-fixture` below.
+    if: github.event_name != 'pull_request'
     runs-on: ${{ vars.QA_SIGNOFF_AUDIT_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
@@ -186,12 +216,16 @@ jobs:
             echo "| board | $board_shown |"
             echo
           } >> "$GITHUB_STEP_SUMMARY"
-          # "Bypasses and degradations" block (t_b102b100): one counter + card
-          # list per type (A11 today; exceptions / CLI bypasses come with
-          # t_5b5b61e2) in the summary, one ::warning:: annotation per card on
-          # stdout. Only when the audit ran: the "AUDIT NOT RUN" branch below
-          # already says nothing was counted. A missing JSON is reported as
-          # "not available" by the script itself, never as 0.
+          # "Bypasses and degradations" block (t_b102b100 + t_5b5b61e2): one
+          # counter row per type — A11, X1 exceptions in force, X2 withdrawn
+          # exceptions, X3 completions outside the hook — a trend table, then
+          # one row per card (A11) or per occurrence (X1/X2/X3: date, card,
+          # author, reason, state) in the summary; ::warning:: / ::notice::
+          # annotations on stdout. Only when the audit ran: the "AUDIT NOT RUN"
+          # branch below already says nothing was counted. A missing JSON — or
+          # a type the board could not provide — is reported as "not
+          # available" by the script itself, never as 0. A bypass never
+          # changes the run's colour (the exit code is the audit's own).
           if [ -f "$RUNNER_TEMP/qa-signoff-audit.txt" ]; then
             node scripts/qa/signoff-audit-summary.mjs --json "$RUNNER_TEMP/qa-signoff-audit.json" || echo "::error title=Degradations summary failed::scripts/qa/signoff-audit-summary.mjs could not read the audit JSON"
           fi
@@ -232,3 +266,83 @@ jobs:
           code="$(cat "$RUNNER_TEMP/qa-signoff-audit.exit" 2>/dev/null || echo 3)"
           echo "Board audit exit code: $code"
           exit "$code"
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # t_5b5b61e2 — the bypass report, executed for real on the PR that changes it.
+  # Same scripts and the same audit/summary invocation as the job above, on the
+  # selftest's synthetic bypass board (X1/X2/X3 cards, a secret-shaped reason,
+  # Markdown in a reason). Expected: selftest green, audit exit 0 — the board
+  # carries bypasses only, and a bypass never fails the audit — and a run
+  # summary listing every occurrence. Independent of `install-lockfile` (like
+  # `secret-scan` and `sast` in ci.yml): zero npm dependencies, no install.
+  # ────────────────────────────────────────────────────────────────────────────
+  bypass-report-fixture:
+    name: bypass-report-fixture
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Gate selftest (keeps its fixture root)
+        id: selftest
+        shell: bash
+        run: |
+          set -uo pipefail
+          set +e
+          node scripts/qa/signoff-gate.selftest.mjs --keep 2>&1 | tee "$RUNNER_TEMP/selftest.txt"
+          code="${PIPESTATUS[0]}"
+          set -e
+          # First line: "QA sign-off gate selftest — fixture board: <root>/board.db"
+          root="$(sed -n '1s#^.*fixture board: \(.*\)/board\.db$#\1#p' "$RUNNER_TEMP/selftest.txt")"
+          printf 'root=%s\n' "$root" >> "$GITHUB_OUTPUT"
+          exit "$code"
+
+      - name: Audit the synthetic bypass board
+        shell: bash
+        env:
+          FIXTURE_ROOT: ${{ steps.selftest.outputs.root }}
+        run: |
+          set -uo pipefail
+          test -f "$FIXTURE_ROOT/board-bypass.db" || { echo "::error::selftest fixture board-bypass.db not found under '$FIXTURE_ROOT'"; exit 1; }
+          set +e
+          QA_GATE_GITHUB_FIXTURE="$FIXTURE_ROOT/gh-empty.json" node scripts/qa/signoff-gate.mjs audit \
+            --db "$FIXTURE_ROOT/board-bypass.db" --repo "$FIXTURE_ROOT/repo" --fail-on-a11 \
+            --now-iso 2026-09-27T15:46:40Z --json-out "$RUNNER_TEMP/bypass-audit.json" 2>&1 | tee "$RUNNER_TEMP/bypass-audit.txt"
+          code="${PIPESTATUS[0]}"
+          set -e
+          {
+            echo "## Bypass report — synthetic fixture board (t_5b5b61e2)"
+            echo
+            echo "Fixture board from \`scripts/qa/signoff-gate.selftest.mjs\` section 10 — not the real board."
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          node scripts/qa/signoff-audit-summary.mjs --json "$RUNNER_TEMP/bypass-audit.json"
+          {
+            echo "### Audit report (exit code $code — expected 0: a bypass never fails the audit)"
+            echo
+            echo '```text'
+            cat "$RUNNER_TEMP/bypass-audit.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" != "0" ]; then
+            echo "::error title=Bypass report::the audit of a board whose only findings are bypasses exited $code (expected 0)"
+            exit 1
+          fi
+
+      - name: Upload the fixture bypass report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bypass-report-fixture
+          path: |
+            ${{ runner.temp }}/selftest.txt
+            ${{ runner.temp }}/bypass-audit.txt
+            ${{ runner.temp }}/bypass-audit.json
+          if-no-files-found: warn
+          retention-days: 14
