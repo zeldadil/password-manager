@@ -77,6 +77,12 @@
  * never a violation. Extra audit/check flags: --gh-repo OWNER/NAME,
  * --no-github, --pr-epoch-iso ISO.
  *
+ * R7 scope-v2 (t_90a4bd73, decision t_18230e85 option C): security-track is
+ * classified on the crypto/bridge boundary named in the card (SCOPE_V2_TOKENS),
+ * no longer on a `security` Test Type. A card completed before R7_V2_EPOCH_ISO
+ * keeps its v1 obligation. A card that only v2 classifies gets the advisory
+ * A17_R7_SCOPE_V2_UNGATED. Extra audit/check flag: --r7-v2-epoch-iso ISO.
+ *
  * A PR is *linked* to a card only by declaration (t_7e8bf917): its head branch
  * is named after the card, or its body has a `Closes <id>` / `Card: <id>` /
  * `Task: <id>` line outside code. A mere mention (title, prose, quote, code
@@ -200,8 +206,104 @@ const WITHDRAWAL_RE_G = /qa[\s_-]*signoff[\s_-]*exception[\s_:\-—]*withdrawn\b
 const ARCH_SIGNOFF_RE = /(arch[\s_-]*(verdict|sign[\s_-]*off)|approv|signed[\s_-]*off|LGTM)/i;
 const TASK_ID_RE = /\bt_[0-9a-f]{8}\b/g;
 const TEST_TYPES_RE = /test\s*types\s*:?\**\s*([^\n]+)/i;
-const SECURITY_TRACK_RE =
+/**
+ * R7 security-track classification, **scope-v2** (t_90a4bd73). Decision:
+ * docs/decisions/ARCH-DECISION-t_18230e85.md, option C, dual architect + qa
+ * sign-off. The boundary list comes from the ADRs (decision record §3,
+ * docs/decisions/qa-signoff-gate-s10-open-items-t_7dd3b960.md §4.1). A card is
+ * security-track when its title or body names an artifact inside the crypto or
+ * bridge boundary. The self-declared Test Type is no longer read: v1 also
+ * required `security` there, and that AND hid 13 in-scope cards (e.g. a
+ * "KDF + Vault Key Storage" card that declares `Test Types: unit`).
+ *
+ * Tokens have **no trailing `\b`**. v1 wrapped the whole list in `\b(...)\b`,
+ * so `autofill` could not match the contract's own `AUTOFILL_REQUEST` (`_` is a
+ * word character), and `bridge-message` could not match `bridge messages` or
+ * `BRIDGE_MESSAGE`. Separators accept space, `-` and `_`. `/i` is kept, so
+ * `vault[\s_-]*key` already matched `vaultKey` under v1 (t_9ae2bc23 finding);
+ * that is not one of the fixes.
+ */
+export const SCOPE_V2_TOKENS = Object.freeze([
+  // ADR-002 §5.2 — the crypto package and its module boundary
+  String.raw`packages/crypto`,
+  String.raw`crypto[\s_-]*(?:primitive|implementation|boundary|module|package)`,
+  // ADR-002 §5.1, §5.3 — KDF / AEAD primitives, nonce/IV, tag verification
+  String.raw`KDF`,
+  String.raw`AEAD`,
+  String.raw`Argon2id`,
+  String.raw`AES[\s_-]*256[\s_-]*GCM`,
+  String.raw`GCM[\s_-]*tag`,
+  String.raw`(?<![\p{L}\p{N}])nonce`, // not inside a word: French "annonce" / "Énoncer" contain "nonce"
+  String.raw`\bIVs?\b`,
+  // ADR-002 §5.1, §5.3, §5.5 — keys, wrapping, recovery, encrypted export
+  String.raw`key[\s_-]*wrap`,
+  String.raw`vault[\s_-]*key(?!board)`,
+  String.raw`master[\s_-]*key(?!board)`,
+  String.raw`\bsub[\s_-]*key(?!board)`,
+  String.raw`recovery[\s_-]*(?:kit|key)`,
+  String.raw`encrypt(?:ed)?[\s_-]*(?:backup|export)`,
+  String.raw`backup[\s_-]*(?:export|dump)`,
+  // ADR-002 §5.3 Decision 6 — lock/unlock lifecycle
+  String.raw`lock[/-]unlock`,
+  // ADR-002 §5.4 — RNG and the platform crypto APIs
+  String.raw`randomBytes`,
+  String.raw`getRandomValues`,
+  String.raw`node:crypto`,
+  String.raw`crypto\.subtle`,
+  // ADR-005 §2.1, §5, §9.2 — bridge message contract (packages/shared)
+  String.raw`packages/shared`,
+  String.raw`bridge[\s_-]*(?:protocol|message)`,
+  String.raw`autofill`, // also AUTOFILL_REQUEST / AUTOFILL_RESPONSE
+  String.raw`LOCK_STATE_CHANGED`,
+  String.raw`VAULT_SEARCH`,
+  String.raw`vault[\s_-]*session[\s_-]*sync`,
+  // ADR-005 §3, §9.3 — origin validation (bridge scope confirmed by t_18230e85 §2)
+  String.raw`origin[\s_-]*validation`,
+  String.raw`allowed[\s_-]*origin`,
+  String.raw`sender\.origin`,
+  String.raw`postMessage`,
+]);
+export const SECURITY_TRACK_RE = new RegExp(`(?:${SCOPE_V2_TOKENS.join("|")})`, "iu");
+
+/**
+ * scope-v2 ∧ ¬qa. Option C dropped the `security` Test-Type condition. The
+ * `qa`-assignee exemption stays: QA cannot be the Architect half of AR-6 on its
+ * own work, and QA's gate cards quote these tokens as subject matter.
+ */
+export function isSecurityTrack(task) {
+  return (
+    SECURITY_TRACK_RE.test(`${task.title || ""}\n${task.body || ""}`) &&
+    !QA_PROFILES.has(String(task.assignee || "").trim())
+  );
+}
+
+/**
+ * Cards completed before this instant keep the R7 obligation they were
+ * completed under (v1). A card that only scope-v2 classifies, and that
+ * completed before this instant, gets the advisory A17_R7_SCOPE_V2_UNGATED
+ * instead of R7. Open cards, and cards completed at or after it, are judged
+ * by scope-v2. Decision t_18230e85 §1 adopted option C on the premise "no
+ * retroactive cliff". That premise held for the 2026-09-18 board. On the
+ * 2026-10-10 board, scope-v2 without an epoch would turn 11 already-closed
+ * post-epoch cards red (tests/evidence/t_90a4bd73/README.md §3). This epoch
+ * keeps the premise; the architect confirms it at review.
+ */
+export const R7_V2_EPOCH_ISO = "2026-10-12T00:00:00Z";
+
+/**
+ * The v1 classification, frozen. It shipped up to t_90a4bd73. Only used so
+ * that a card completed before R7_V2_EPOCH_ISO is enforced exactly as before:
+ * v2 never removes an obligation v1 imposed.
+ */
+const SECURITY_TRACK_V1_RE =
   /\b(packages\/crypto|crypto[\s-]*(primitive|implementation|boundary|module|package)|KDF|AEAD|Argon2id|vault[\s-]*key|bridge[\s-]*protocol|bridge[\s-]*message|autofill)\b/i;
+export function isSecurityTrackV1(task) {
+  return (
+    SECURITY_TRACK_V1_RE.test(`${task.title || ""}\n${task.body || ""}`) &&
+    /security/.test(testTypesOf(task)) &&
+    !QA_PROFILES.has(String(task.assignee || "").trim())
+  );
+}
 const NOTE_FOLLOWUP_RE = /\b(follow[\s-]*up|t_[0-9a-f]{8}|https:\/\/github\.com\/\S+\/(issues|pull)\/\d+)\b/i;
 
 /**
@@ -1440,18 +1542,21 @@ export function evaluateCard(board, task, opts = {}) {
     preComplete || task.status !== "done" || (completedMs !== null && completedMs >= epochMs);
   // Classified before the exception lookup: on a security-track card the
   // exception is refused outright (t_b8001b55, AR-6 — signed, never waived).
-  const tt = testTypesOf(task);
-  const securityTrack =
-    SECURITY_TRACK_RE.test(`${task.title || ""}\n${task.body || ""}`) &&
-    /security/.test(tt) &&
-    !QA_PROFILES.has(String(task.assignee || "").trim());
+  // scope-v2 (t_90a4bd73): the Test Type is not consulted any more.
+  // `securityTrack` is the classification. `securityTrackEnforced` adds the
+  // R7_V2_EPOCH_ISO cut-over: a card completed before it is enforced only if
+  // v1 classified it.
+  const securityTrack = isSecurityTrack(task);
+  const r7v2EpochMs = opts.r7v2EpochMs ?? Date.parse(R7_V2_EPOCH_ISO);
+  const r7v2InForce = preComplete || task.status !== "done" || (completedMs !== null && completedMs >= r7v2EpochMs);
+  const securityTrackEnforced = (securityTrack && r7v2InForce) || isSecurityTrackV1(task);
   const {
     exception,
     ignored: exceptionsIgnored,
     withdrawn: exceptionsWithdrawn,
     withdrawalsIgnored,
     redundant: exceptionsRedundant,
-  } = findException(board, task, securityTrack);
+  } = findException(board, task, securityTrackEnforced);
   const outOfBand = collectOutOfBandCompletions(board, task);
 
   const verdicts = collectVerdicts(board, task);
@@ -1688,8 +1793,15 @@ export function evaluateCard(board, task, opts = {}) {
   // signed, never waived — findException already refuses it on this track, and
   // this condition holds even if that ever regressed.
   facts.security_track = securityTrack;
-  if (securityTrack && postEpoch && !hasArchitectSignoff(board, task)) {
+  facts.security_track_enforced = securityTrackEnforced;
+  const archSigned = hasArchitectSignoff(board, task);
+  if (securityTrackEnforced && postEpoch && !archSigned) {
     add("R7_SECURITY_TRACK_SIGNOFF_MISSING", "crypto/bridge/auth card carries no Architect sign-off comment (AR-6)");
+  } else if (securityTrack && !securityTrackEnforced && !archSigned) {
+    advise(
+      "A17_R7_SCOPE_V2_UNGATED",
+      `crypto/bridge card under R7 scope-v2, completed before its epoch ${new Date(r7v2EpochMs).toISOString()} — no Architect sign-off comment (AR-6); reported, not enforced`,
+    );
   }
 
   // R9/R10 — code cards: PR merged into master + required CI green on the merge
@@ -2080,6 +2192,13 @@ function main() {
   const repo = resolveRepo(args.repo);
   const epochMs = typeof args["epoch-iso"] === "string" ? Date.parse(args["epoch-iso"]) : Date.parse(GATE_EPOCH_ISO);
   const prEpochMs = typeof args["pr-epoch-iso"] === "string" ? Date.parse(args["pr-epoch-iso"]) : Date.parse(PR_RULE_EPOCH_ISO);
+  const r7v2EpochMs = typeof args["r7-v2-epoch-iso"] === "string" ? Date.parse(args["r7-v2-epoch-iso"]) : Date.parse(R7_V2_EPOCH_ISO);
+  // An unparseable epoch would be NaN, and every comparison against NaN is false.
+  // R7 v2 would then silently never apply to a done card. Refuse it instead.
+  if (args["r7-v2-epoch-iso"] !== undefined && Number.isNaN(r7v2EpochMs)) {
+    console.error("signoff-gate: --r7-v2-epoch-iso needs an ISO-8601 instant");
+    process.exit(3);
+  }
 
   if (mode === "hook") return hookMode(db);
 
@@ -2120,19 +2239,19 @@ function main() {
       repo,
       epochMs,
       prEpochMs,
+      r7v2EpochMs,
       github,
       preComplete: Boolean(args["pre-complete"]),
       strictHistory: Boolean(args["strict-history"]),
     });
     if (args.json) {
-      console.log(JSON.stringify({ mode, db, repo, task_id: task.id, ...r }, null, 2));
-    } else {
-      renderReport([r], { mode: `check ${task.id}${args["pre-complete"] ? " (pre-complete)" : ""}`, db, epochMs }, (s) => console.log(s));
+      return writeThenExit(`${JSON.stringify({ mode, db, repo, task_id: task.id, ...r }, null, 2)}\n`, r.violations.length ? 1 : 0);
     }
+    renderReport([r], { mode: `check ${task.id}${args["pre-complete"] ? " (pre-complete)" : ""}`, db, epochMs }, (s) => console.log(s));
     process.exit(r.violations.length ? 1 : 0);
   }
 
-  const opts = { repo, epochMs, prEpochMs, github, strictHistory: Boolean(args["strict-history"]) };
+  const opts = { repo, epochMs, prEpochMs, r7v2EpochMs, github, strictHistory: Boolean(args["strict-history"]) };
   // A bare switch: `--fail-on-a11 false` must not read as "on" (t_b102b100).
   if (args["fail-on-a11"] !== undefined && args["fail-on-a11"] !== true) {
     console.error(`signoff-gate: --fail-on-a11 takes no value (got "${args["fail-on-a11"]}")`);
@@ -2195,11 +2314,22 @@ function main() {
     process.exit(3);
   }
   if (args.json) {
-    console.log(JSON.stringify(doc, null, 2));
-  } else {
-    renderReport(results, { mode, db, epochMs, failOnA11, degradations: block }, (s) => console.log(s));
+    return writeThenExit(`${JSON.stringify(doc, null, 2)}\n`, red ? 1 : 0);
   }
+  renderReport(results, { mode, db, epochMs, failOnA11, degradations: block }, (s) => console.log(s));
   process.exit(red ? 1 : 0);
+}
+
+/**
+ * Write one (possibly large) document to stdout, and exit only once it is
+ * flushed (t_90a4bd73). On a pipe, a single write larger than the kernel
+ * buffer (64 KiB on Linux) is only partly taken at once. The rest is queued,
+ * and a `process.exit()` right after `console.log` drops it. `audit --json |
+ * jq` then got exactly 65536 bytes of truncated JSON, and the selftest's
+ * execFileSync read stopped at a size that depended on timing.
+ */
+function writeThenExit(text, code) {
+  process.stdout.write(text, () => process.exit(code));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

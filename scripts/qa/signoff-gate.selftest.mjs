@@ -428,6 +428,90 @@ const DEFER_PHANTOM = card({
   comments: [qaVerdict("QA-VERDICT: deferred — t_deadbeef")],
 });
 
+// ── t_90a4bd73: R7 scope-v2 (decision t_18230e85, option C) ─────────────────
+// Each fixture has a QA verdict and evidence, so R7 is the only rule that can
+// fire on it. Cases (a), (b), (c1), (d) and (e) are NON-VACUOUS: each one
+// fails when the gate runs the v1 classification (keyword list wrapped in
+// `\b(...)\b`, AND a `security` Test Type). The section-2b log names the v1
+// defect each case catches. (c2) and (f) are guards. They pass under v1 as
+// well, and they exist to catch the opposite regressions: option B (Test Type
+// alone flags a card) and losing the ¬qa exemption.
+const r7v2Verdict = qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md");
+// (a) scope keyword, `Test Types: unit`. v1's Test-Type AND hid it (BE-002a shape).
+const R7V2_UNIT_ONLY = card({
+  title: "BE-920a Registration + KDF + vault key storage",
+  body: "**Test Types:** unit\nDerives the KDF output at registration and stores the wrapped vault key.",
+  comments: [r7v2Verdict],
+});
+// (b) the contract's own message names, nothing else. v1's `\bautofill\b`
+// cannot match AUTOFILL_REQUEST (`_` is a word character) (BR-001e shape).
+const R7V2_AUTOFILL = card({
+  title: "BR-920b content-script message handler",
+  body: "**Test Types:** unit, security\nHandles AUTOFILL_REQUEST and answers with AUTOFILL_RESPONSE.",
+  assignee: "browser",
+  comments: [r7v2Verdict],
+});
+// (c1) origin validation with `Test Types: security`. v1 had no token for it.
+// t_18230e85 §2 puts bridge/origin-validation work under R7 (BR-001f shape).
+const R7V2_ORIGIN = card({
+  title: "BR-920c Origin Validation",
+  body: "**Test Types:** security\nRejects every message whose sender.origin is not the allowed origin.",
+  assignee: "browser",
+  comments: [r7v2Verdict],
+});
+// (c2) guard: `Test Types: security` with no boundary token must NOT be
+// security-track. Option B would flag it.
+const R7V2_SEC_TT_ONLY = card({
+  title: "BE-920d login rate limiting",
+  body: "**Test Types:** unit, security\nThrottles failed logins per account and per IP address.",
+  comments: [r7v2Verdict],
+});
+// (d) compliant control: v2-only tokens (nonce, BRIDGE_MESSAGE), `Test Types:
+// unit`, architect sign-off. It must be security-track AND have zero violations.
+const R7V2_CONTROL = card({
+  title: "BR-920e bridge envelope with per-message nonce",
+  body: "**Test Types:** unit\nWraps each BRIDGE_MESSAGE envelope with a fresh nonce.",
+  assignee: "browser",
+  comments: [r7v2Verdict, { author: "architect", body: "AR-6 review — nonce source and envelope reviewed; signed off." }],
+});
+// (e) `bridge-*` word-boundary misses: v1's trailing `\b` rejects `bridge
+// messages`, and its `[\s-]*` separator rejects `bridge_message`.
+const R7V2_BRIDGE_PLURAL = card({
+  title: "BR-920f schema checks for bridge messages",
+  body: "**Test Types:** unit, security\nValidates every bridge messages payload and the bridge_message_v2 envelope.",
+  assignee: "browser",
+  comments: [r7v2Verdict],
+});
+// (f) guard: the ¬qa exemption is kept (option C is "scope-v2 ∧ ¬qa").
+const R7V2_QA_OWNED = card({
+  title: "QA-920g gate fixtures that quote KDF and AUTOFILL_REQUEST",
+  body: "**Test Types:** unit\nSelftest fixtures that name the KDF and AUTOFILL_REQUEST tokens.",
+  assignee: "qa",
+  comments: [r7v2Verdict],
+});
+// (i) an OPEN v2-only card: the R7 v2 epoch only spares cards already
+// completed before it. A card still open is judged by scope-v2.
+const R7V2_OPEN = card({
+  title: "BR-920h popup lock/unlock indicator",
+  body: "**Test Types:** unit\nShows the lock/unlock state pushed by LOCK_STATE_CHANGED.",
+  assignee: "browser",
+  status: "review",
+  completed: null,
+  comments: [r7v2Verdict],
+});
+// (k) guard against substring false positives measured on the live board
+// (t_7e1cea21 / t_46c18784 matched a bare `nonce` inside French "annonce" /
+// "Énoncer"), plus a look-alike `vault keyboard`. Must NOT be security-track.
+const R7V2_LOOKALIKE = card({
+  title: "FE-920k corriger la preuve",
+  body: "**Test Types:** unit, security\nLe fichier annonce 8/8 checks. Énoncer la version épinglée. Adds a vault keyboard shortcut.",
+  assignee: "frontend",
+  comments: [r7v2Verdict],
+});
+for (const t of [R7V2_UNIT_ONLY, R7V2_AUTOFILL, R7V2_ORIGIN, R7V2_SEC_TT_ONLY, R7V2_CONTROL, R7V2_BRIDGE_PLURAL, R7V2_QA_OWNED, R7V2_OPEN, R7V2_LOOKALIKE]) {
+  fixtureFile(`tests/evidence/${t}/README.md`);
+}
+
 // ── t_58280940 regression fixtures ──────────────────────────────────────────
 // A stale `QA-VERDICT: deferred — t_...` marker must not outlive the QA verdict
 // that supersedes it: §3 of QA_SIGN_OFF_GATE.md — "When several sources exist,
@@ -1853,6 +1937,143 @@ expectRule("newest record is a deferral to a non-QA card (superseding is ordered
 expectRule("quoted marker is documentation, not a deferral (R8 must not fire)", QUOTED_DEFERRAL, "R1_QA_VERDICT_MISSING", {
   forbid: ["R8_DEFERRAL_TARGET_INVALID", "R2_QA_VERDICT_INVALID"],
 });
+
+console.log("\n2b. R7 scope-v2 (t_90a4bd73 — decision t_18230e85 option C; each non-vacuous case names the v1 defect it catches):");
+{
+  const R7 = "R7_SECURITY_TRACK_SIGNOFF_MISSING";
+  // The fixtures complete on 2026-09-17, before R7_V2_EPOCH_ISO. Cases (a)–(f)
+  // judge the classification itself, so they move the R7 v2 epoch before that
+  // date. Cases (g)–(i) then judge the cut-over at the default epoch.
+  const R7V2_IN_FORCE = ["--r7-v2-epoch-iso", "2026-09-01T00:00:00Z"];
+  const r7Run = (tid, extra) => {
+    const r = runGate(["check", "--task", tid, "--db", db, "--repo", repo, "--json", ...extra]);
+    let parsed = null;
+    try {
+      parsed = JSON.parse(r.out);
+    } catch {
+      parsed = null;
+    }
+    return { code: r.code, out: r.out, parsed };
+  };
+  const A17 = "A17_R7_SCOPE_V2_UNGATED";
+  // a17: undefined = not judged · true = A17 must be reported · false = must not be.
+  const r7Case = (label, tid, { track, r7, clean = false, extra = R7V2_IN_FORCE, a17 }) => {
+    const res = r7Run(tid, extra);
+    const rules = violationRules(res);
+    const advs = advisoryRules(res);
+    const ok =
+      res.parsed !== null &&
+      res.parsed.facts.security_track === track &&
+      rules.includes(R7) === r7 &&
+      (!clean || (res.code === 0 && rules.length === 0)) &&
+      // R7 must be the ONLY violation where it fires: the fixture is otherwise compliant.
+      (!r7 || (res.code === 1 && rules.length === 1)) &&
+      (a17 === undefined || advs.includes(A17) === a17);
+    check(label, ok, `exit=${res.code} security_track=${res.parsed?.facts.security_track} rules=[${rules.join(",")}] advisories=[${advs.join(",")}]`);
+  };
+  r7Case("R7v2 (a) scope keyword + `Test Types: unit` → security-track, R7 fires [v1: suppressed by the security Test-Type AND]", R7V2_UNIT_ONLY, {
+    track: true,
+    r7: true,
+  });
+  r7Case("R7v2 (b) AUTOFILL_REQUEST/_RESPONSE only → security-track, R7 fires [v1: `\\bautofill\\b` cannot match before `_`]", R7V2_AUTOFILL, {
+    track: true,
+    r7: true,
+  });
+  r7Case("R7v2 (c1) Origin Validation (`sender.origin`, allowed origin) → R7 fires, bridge scope per t_18230e85 §2 [v1: no token]", R7V2_ORIGIN, {
+    track: true,
+    r7: true,
+  });
+  r7Case("R7v2 (c2) guard: `Test Types: security` without a boundary token → NOT security-track, clean [option-B regression]", R7V2_SEC_TT_ONLY, {
+    track: false,
+    r7: false,
+    clean: true,
+  });
+  r7Case("R7v2 (d) compliant control: nonce + BRIDGE_MESSAGE, `unit`, architect sign-off → security-track AND zero violations [v1: not classified]", R7V2_CONTROL, {
+    track: true,
+    r7: false,
+    clean: true,
+  });
+  r7Case("R7v2 (e) `bridge messages` / `bridge_message` → security-track, R7 fires [v1: trailing `\\b` and `[\\s-]*` separator]", R7V2_BRIDGE_PLURAL, {
+    track: true,
+    r7: true,
+  });
+  r7Case("R7v2 (f) guard: qa-assigned card quoting KDF / AUTOFILL_REQUEST → exempt (¬qa kept), clean", R7V2_QA_OWNED, {
+    track: false,
+    r7: false,
+    clean: true,
+  });
+  r7Case("R7v2 (k) guard: French \"annonce\" / \"Énoncer\" and \"vault keyboard\" → NOT security-track, clean [substring false positives]", R7V2_LOOKALIKE, {
+    track: false,
+    r7: false,
+    clean: true,
+  });
+  // Cut-over at the default R7_V2_EPOCH_ISO (the fixtures completed before it).
+  r7Case("R7v2 (g) v2-only card completed before the R7 v2 epoch → classified, NOT enforced: A17 advisory, zero violations [no retroactive cliff]", R7V2_UNIT_ONLY, {
+    track: true,
+    r7: false,
+    clean: true,
+    extra: [],
+    a17: true,
+  });
+  r7Case("R7v2 (h) v1-classified card completed before the R7 v2 epoch → still enforced, R7 fires (v2 never removes a v1 obligation)", SEC_NO_ARCH, {
+    track: true,
+    r7: true,
+    extra: [],
+    a17: false,
+  });
+  r7Case("R7v2 (i) open v2-only card → in force whatever the epoch: R7 fires", R7V2_OPEN, {
+    track: true,
+    r7: true,
+    extra: [],
+    a17: false,
+  });
+  r7Case("R7v2 (j) same open card, --pre-complete → R7 blocks the completion", R7V2_OPEN, {
+    track: true,
+    r7: true,
+    extra: ["--pre-complete"],
+    a17: false,
+  });
+  {
+    const bad = runGate(["check", "--task", R7V2_OPEN, "--db", db, "--repo", repo, "--json", "--r7-v2-epoch-iso", "not-a-date"]);
+    check("--r7-v2-epoch-iso with an unparseable value → refused (exit 3), never a silent NaN epoch", bad.code === 3, `exit=${bad.code}`);
+  }
+}
+
+console.log("\n2c. `--json` output is flushed before exit (t_90a4bd73):");
+{
+  // `audit --json` to a slow pipe reader. The document is > 64 KiB (one pipe
+  // buffer). Before writeThenExit, process.exit() dropped the unflushed tail,
+  // and the reader got exactly 65536 bytes. The 1 s sleep makes the old failure
+  // deterministic: nothing drains the pipe while the gate exits. The reference
+  // document comes from --json-out (a synchronous file write). This section runs
+  // before section 3, whose JSON.parse would otherwise crash on a truncated
+  // document before this case could report.
+  const ref = join(root, "audit-ref.json");
+  const env = { ...process.env, HERMES_KANBAN_TASK: "", QA_GATE_GITHUB: "", QA_GATE_GH_REPO: "", QA_GATE_GITHUB_FIXTURE: GH_EMPTY };
+  let piped = "";
+  let expected = -1;
+  try {
+    piped = execFileSync(
+      "/bin/sh",
+      ["-c", 'node "$0" audit --db "$1" --repo "$2" --strict-history --json --json-out "$3" --epoch-iso 2026-09-17T00:00:00Z | { sleep 1; cat; }', GATE, db, repo, ref],
+      { encoding: "utf8", env, maxBuffer: 64 * 1024 * 1024 },
+    );
+    expected = JSON.parse(readFileSync(ref, "utf8")).results.length;
+  } catch (e) {
+    piped = `${e.stdout || ""}`;
+  }
+  let got = -2;
+  try {
+    got = JSON.parse(piped).results.length;
+  } catch {
+    got = -2;
+  }
+  check(
+    "audit --json through a slow pipe is complete (> 64 KiB, flushed before exit)",
+    Buffer.byteLength(piped) > 65536 && got === expected,
+    `bytes=${Buffer.byteLength(piped)} results piped=${got} expected=${expected}`,
+  );
+}
 
 console.log("\n3. --strict-history turns grandfathered gaps into failures:");
 {
