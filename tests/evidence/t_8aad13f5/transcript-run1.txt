@@ -1,0 +1,128 @@
+== node22 tarball sha check
+node-v22.23.3-linux-x64.tar.xz: OK
+node v22.23.3 pnpm 9.12.0
+== ls-remote master: 38f3dae0efa3617ece56e5b26909cb49d0231410	refs/heads/master
+== HEAD 38f3dae0efa3617ece56e5b26909cb49d0231410
+== dd7ec14 ancestor of master?
+yes
+== .env.example DATABASE_URL + loading wording
+6:# NOTHING in the repository loads this file automatically (no dotenv, no
+7:# --env-file). To use it, copy it and export its variables into your shell,
+10:#   cp .env.example .env.local      # then edit .env.local
+11:#   set -a; . ./.env.local; set +a  # export every variable it defines
+14:# The exported values only apply to that shell session.
+26:# Plain SQLite FILE PATH (not a `file:` URL — `file:./dev.db` makes
+29:DATABASE_URL=./dev.db
+== db.ts
+/**
+ * Database connection factory and Drizzle ORM instance.
+ *
+ * Uses better-sqlite3 (synchronous SQLite driver for Node.js).
+ * ADR-002 Sec 3.1: Node.js backend with SQLite v1 (dev).
+ * ADR-002 Sec 5.1: this module manages the connection only — it never
+ * inspects or logs ciphertext, vault keys, salts, or any cryptographic
+ * material. Those blobs flow through the DB as opaque buffers.
+ */
+
+import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import * as schema from './schema';
+
+/**
+ * Create a Drizzle ORM instance backed by better-sqlite3.
+ *
+ * @param url — SQLite database path. Use ':memory:' for ephemeral/test DBs.
+ */
+export function createDb(
+  url: string = process.env.DATABASE_URL ?? './dev.db',
+) {
+  const client = new Database(url);
+  client.exec(`PRAGMA foreign_keys = ON;`);
+  return drizzle(client, { schema });
+}
+
+export type Db = ReturnType<typeof createDb>;
+
+/**
+ * Default singleton for production/runtime use.
+ * Tests should call `createDb(':memory:')` for isolation.
+ */
+export let db = createDb();
+
+/**
+ * Override the db singleton for integration tests. Must be called before
+ * `createServer()` so routes close over the replaced live binding.
+ */
+export function setTestDbOverride(override: Db): void {
+  db = override;
+}
+== drizzle.config / migrate use of DATABASE_URL
+apps/services/api/src/db.ts:21:  url: string = process.env.DATABASE_URL ?? './dev.db',
+apps/services/api/src/migrate.ts:10: * by DATABASE_URL (default: ./dev.db).
+apps/services/api/tests/auth/test-env.ts:2:// so process.env.DATABASE_URL is set before db.ts evaluates.
+apps/services/api/tests/auth/test-env.ts:3:process.env.DATABASE_URL =
+apps/services/api/tests/auth/test-env.ts:4:  process.env.DATABASE_URL ||
+apps/services/api/drizzle.config.ts:20:    url: process.env.DATABASE_URL ?? './dev.db',
+== api package.json scripts
+8:  "scripts": {
+9-    "dev": "tsx watch src/index.ts",
+10-    "start": "tsx src/index.ts",
+11-    "build": "node scripts/generate-openapi.mjs && tsc",
+12-    "build:openapi": "node scripts/generate-openapi.mjs",
+13-    "lint": "prettier --check . 2>/dev/null || true",
+14-    "typecheck": "tsc --noEmit",
+15-    "test": "vitest run",
+16-    "test:unit": "vitest run",
+17-    "test:integration": "vitest run",
+18-    "test:watch": "vitest watch",
+19-    "test:coverage": "vitest run --coverage",
+20-    "migrate": "tsx src/migrate.ts",
+== P3 loader grep (dotenv / env-file) excluding node_modules
+no loader found
+== docs mentions of .env.local (any still promising auto-load?)
+README.md:196:Nothing in the repository loads a `.env` / `.env.local` file automatically (no
+README.md:198:[`.env.example`](.env.example) and **export** its variables into your shell
+README.md:202:cp .env.example .env.local        # edit .env.local (synthetic values only)
+README.md:203:set -a; . ./.env.local; set +a    # export every variable defined in the file
+README.md:212:`.env.example`), not a `file:` URL: `better-sqlite3` treats `file:./dev.db` as a
+docs/security/gitleaks-baseline.md:54:expression (`tokens.accessToken`, `process.env.JWT_SECRET`).
+docs/security/gitleaks-baseline.md:62:* **G2 — code, not values.** `process.env.JWT_SECRET` lookups, property
+docs/development/setup.md:10:  **synthetic**. Never put real credentials into examples, `.env` files or issues.
+docs/development/setup.md:112:### Important: nothing loads `.env` files automatically
+docs/development/setup.md:115:`.env` or `.env.local` has **no effect** unless you export its variables into your
+docs/development/setup.md:119:cp .env.example .env.local          # then edit .env.local, with synthetic values only
+docs/development/setup.md:120:set -a; . ./.env.local; set +a      # export every variable defined in the file
+docs/development/setup.md:124:shell session. `.env.local` is git-ignored. Do not commit it.
+docs/development/setup.md:132:**Verified:** with `.env.local` edited to `PORT=3101` and `DATABASE_URL=./dev-alt.db`
+docs/development/setup.md:413:| Changes in `.env.local` have no effect | The file is not loaded automatically. Run `set -a; . ./.env.local; set +a` in the shell where you run pnpm (§3). |
+.env.example:10:#   cp .env.example .env.local      # then edit .env.local
+.env.example:11:#   set -a; . ./.env.local; set +a  # export every variable it defines
+== file: mentions in docs
+README.md:212:`.env.example`), not a `file:` URL: `better-sqlite3` treats `file:./dev.db` as a
+docs/development/setup.md:139:  `file:` URL. `better-sqlite3` treats `file:./dev.db` as a literal path and fails
+docs/development/setup.md:411:| *"Cannot open database because the directory does not exist"* | `DATABASE_URL` is a `file:` URL or points to a missing directory. Use a plain path such as `./dev.db` (§3). |
+.env.example:26:# Plain SQLite FILE PATH (not a `file:` URL — `file:./dev.db` makes
+== install
+install exit=0
++ vitest 3.2.7
+
+Done in 2.7s
+== P1 documented flow: copy .env.example -> .env.local, override PORT/DB, set -a; . ; set +a
+18:PORT=3927
+22:NODE_ENV=development
+29:DATABASE_URL=./qa-t8aad.db
+P1 migrate exit=0
+P1 migrate (2nd, idempotent) exit=0
+P1 /health http=200 body={"status":"ok","version":"0.1.0","timestamp":"2026-10-10T20:39:41.872Z"}
+-rw-r--r-- 1 sap sap 212992 Oct 10 20:39 qa-t8aad.db
+== P1c control: without exporting the file, PORT from it is NOT applied (nothing auto-loads)
+P1c port 3927 (would need auto-load) http=200
+{"level":30,"time":1791664783453,"pid":487065,"hostname":"ai-server","msg":"Server listening at http://127.0.0.1:3000"}
+[api] @password-manager/api v0.1.0 listening at http://127.0.0.1:3000 (development)
+== P1b unmodified .env.example value
+P1b exit=0
+== P2 negative control file:./dev.db
+P2 exit=1
+Cannot open database because the directory does not e
+== git status (expect clean)
+== done

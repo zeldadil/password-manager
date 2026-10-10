@@ -1,0 +1,19 @@
+HEAD 38f3dae0efa3617ece56e5b26909cb49d0231410 node v22.23.3
+port 3927 free
+port 3000 free
+== P1: set -a; . env.local copy; set +a; migrate; start
+exported PORT=3927 DATABASE_URL=./qa-t8aad.db
+P1 migrate exit=0
+P1 /health :3927 http=200 body={"status":"ok","version":"0.1.0","timestamp":"2026-10-10T20:40:27.278Z"}
+listening at http://127.0.0.1:3927"}
+-rw-r--r-- 1 sap sap 212992 Oct 10 20:40 qa-t8aad.db
+port 3927 free
+port 3000 free
+== P1c: .env.local present at repo root AND api dir, NOT exported -> must NOT be applied
+.env.local is gitignored
+P1c :3000 (default) http=200 ; :3927 (only via auto-load) http=000
+listening at http://127.0.0.1:3000"}
+port 3927 free
+port 3000 free
+git status:
+done
