@@ -1,0 +1,10 @@
+gh api /markdown exit=0 bytes=25802
+<section class="js-render-needs-enrichment render-needs-enrichment position-relative" data-identity="713ddd9f-6478-422e-9de1-f5d667f61854" data-host="https://viewscreen.githubusercontent.com" data-src="https://viewscreen.githubusercontent.com/markdown/mermaid?docs_host=https%3A%2F%2Fdocs.github.com" data-type="mermaid" aria-label="mermaid rendered output container">
+1
+Project Overview
+Architecture Diagram
+Prerequisites
+Quick Start
+Security
+Architecture Decision Records
+License
