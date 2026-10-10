@@ -67,6 +67,12 @@ git -C "$CLONE" worktree add --quiet --detach "$WT" "$REF"
 find "$REPORTS" -maxdepth 1 -type f -name 'qa-signoff-audit-*' -mtime +90 -delete 2>/dev/null || true
 
 cd "$WT"
+# The gate's GitHub time budget defaults to 20 s — sized for the completion
+# hook's 30 s timeout. A whole-board audit reads ~20 merge commits and needs
+# more: at 20 s the rehearsal of t_8a64c3dd got 13 A11 that were ALL "time
+# budget exhausted", i.e. a red audit caused by its own budget. No hook timeout
+# applies here, so give it 10 minutes; a real GitHub failure is still A11.
+export QA_GATE_GH_BUDGET_MS="${QA_GATE_GH_BUDGET_MS:-600000}"
 node scripts/qa/signoff-audit-local.mjs run \
   --db "$BOARD" \
   --repo "$WT" \
