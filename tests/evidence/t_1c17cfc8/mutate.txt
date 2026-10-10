@@ -1,0 +1,26 @@
+== M0 pre-fix refresh.ts (df0b4cd): rc=1 KILLED
+    × production + signing env unset: refresh errors like getJwtSecret() and issues no token 185ms
+    Tests  1 failed | 1 passed (2)
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    AssertionError: expected 200 to be greater than or equal to 500
+== M1 getJwtSecret() resolved after rotation: rc=1 KILLED
+    × production + signing env unset: refresh errors like getJwtSecret() and issues no token 219ms
+    Tests  1 failed | 1 passed (2)
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    AssertionError: expected 2026-10-10T19:46:45.000Z to be null
+== M2 sign with a wrong constant key: rc=1 KILLED
+    × signing env configured: refreshed access token is signed with it and verifies 152ms
+    Tests  1 failed | 1 passed (2)
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+== M3 catch guard error and echo its message in 500 body: rc=1 KILLED
+    × production + signing env unset: refresh errors like getJwtSecret() and issues no token 132ms
+    Tests  1 failed | 1 passed (2)
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    AssertionError: expected '{"error":"Internal","message":"JWT_SE…' not to contain 'JWT_SECRET'
+== M4 catch guard error and fall back to a constant: rc=1 KILLED
+    × production + signing env unset: refresh errors like getJwtSecret() and issues no token 177ms
+    Tests  1 failed | 1 passed (2)
+    ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    AssertionError: expected 200 to be greater than or equal to 500
+git status after restore: clean
+summary: ['KILLED', 'KILLED', 'KILLED', 'KILLED', 'KILLED']
