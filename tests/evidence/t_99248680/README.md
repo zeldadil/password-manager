@@ -21,7 +21,7 @@ This directory holds QA's own re-execution and does not reuse it.
 
   The QA card body lists this order backwards. The code, the PR handoff and `api/src/config.ts` all agree with the order above.
 
-## 2. Unit and real-Vite tests (`vitest-devproxy.log`, `mutation.txt`, `mut.sh`)
+## 2. Unit and real-Vite tests (`vitest-devproxy.txt`, `mutation.txt`, `mut.sh`)
 
 - `cd apps/web && npx vitest run dev-proxy.test.ts`: **8/8 passed**.
 - Mutation check: I swapped in `vite.config.ts` from `b1db88f^`, the config before the fix.

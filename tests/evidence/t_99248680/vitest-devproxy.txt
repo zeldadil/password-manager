@@ -1,0 +1,10 @@
+
+ RUN  v3.2.7 /home/sap/.hermes/kanban/workspaces/t_99248680/repo/apps/web
+
+ ✓ dev-proxy.test.ts (8 tests) 247ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  20:55:31
+   Duration  853ms (transform 76ms, setup 129ms, collect 176ms, tests 247ms, environment 0ms, prepare 82ms)
+
