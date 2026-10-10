@@ -42,6 +42,14 @@ function fixtureFile(rel) {
 }
 
 // ── fixture board ───────────────────────────────────────────────────────────
+// `task_events` mirrors the Hermes schema (t_5b5b61e2: the audit reads the
+// `completed` / `manual_complete` events to list completions made outside the
+// hook). Kept separate so a legacy board WITHOUT it can be built (section 10).
+const EVENTS_SQL = `CREATE TABLE task_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, task_id TEXT NOT NULL, run_id INTEGER, kind TEXT NOT NULL,
+  payload TEXT, created_at INTEGER NOT NULL
+);
+`;
 const BOARD_SQL = `
 CREATE TABLE tasks (
   id TEXT PRIMARY KEY, title TEXT, body TEXT, assignee TEXT, status TEXT,
@@ -59,7 +67,7 @@ CREATE TABLE task_runs (
   summary TEXT, metadata TEXT, started_at INTEGER, ended_at INTEGER
 );
 CREATE TABLE task_links (parent_id TEXT, child_id TEXT, PRIMARY KEY (parent_id, child_id));
-`;
+${EVENTS_SQL}`;
 
 const CARDS = [];
 let seq = 0xb0000000;
@@ -2618,6 +2626,281 @@ console.log("\n9. The audit counts and surfaces A11; --fail-on-a11 turns it red 
   check("`--fail-on-a11 false` → refused (exit 3), never silently on", val.code === 3 && /takes no value/.test(val.out), `exit=${val.code} out=${val.out.slice(0, 200)}`);
   const jn = runGate(["audit", "--db", miniDb, "--repo", repo, "--json-out"], "", { QA_GATE_GITHUB_FIXTURE: GH_DOWN });
   check("`--json-out` without a path → refused (exit 3)", jn.code === 3 && /requires a file path/.test(jn.out), `exit=${jn.code} out=${jn.out.slice(0, 200)}`);
+}
+
+console.log("\n10. The audit lists every bypass — X1 exception, X2 withdrawn, X3 completed outside the hook — and never fails on one (t_5b5b61e2, §5.10):");
+{
+  const SUMMARY = join(HERE, "signoff-audit-summary.mjs");
+  const DAY = 86400;
+  const NOW_ISO = new Date((EPOCH_AFTER + 10 * DAY) * 1000).toISOString();
+  const verdict = qaVerdict("QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md");
+  // A secret-SHAPED value built at runtime, so no line of this file carries a
+  // keyword next to a quoted value (gitleaks generic-api-key, see the skill
+  // pitfall): `tok` + `en=` + 24 chars matches secret-guard R_SECRET_KEY_VALUE_PAIR.
+  const FAKE_SECRET_VALUE = "Zq7".repeat(8);
+  const FAKE_SECRET = ["tok", "en=", FAKE_SECRET_VALUE].join("");
+  const MD_REASON = "see ![pixel](https://example.invalid/p.png) and [link](https://example.invalid) | col `code` *em*";
+  const exc = (reason) => `qa-signoff-exception: ${reason}`;
+  const B = (n) => `t_b5b6${n.toString(16).padStart(4, "0")}`;
+  const bp = [
+    // X1 — in force (architect) + a redundant later record (human).
+    { tid: B(1), title: "BP-01 exception in force + a redundant one", comments: [{ author: "architect", body: exc("incident INC-7, verdict waived 24h") }, { author: "human", body: exc("same incident, confirmed by the human") }] },
+    { tid: B(2), title: "BP-02 exception recorded from the dashboard", comments: [{ author: "dashboard", body: exc("closed by human decision, duplicate card") }] },
+    // Author model of t_b8001b55: none of these is an exception — never listed under X1.
+    { tid: B(3), title: "BP-03 quoted key only (A10)", comments: [{ author: "architect", body: "The key is `qa-signoff-exception: <reason>` — not used here." }, verdict] },
+    { tid: B(4), title: "BP-04 exception by an executing profile (A10)", comments: [{ author: "backend", body: exc("I waive my own card") }, verdict] },
+    {
+      tid: B(5),
+      title: "BP-05 crypto card: exception refused (security track)",
+      body: "**Test Types:** unit, security\nImplements the packages/crypto AEAD wrapper.",
+      comments: [{ author: "architect", body: exc("waive AR-6 please") }, { author: "architect", body: "Architect sign-off: approved (AR-6)." }, verdict],
+    },
+    // X2 — withdrawn (history), and withdrawn then re-armed (X1 + X2).
+    { tid: B(6), title: "BP-06 exception withdrawn", comments: [{ author: "architect", body: exc("temporary waiver") }, { author: "qa", body: "qa-signoff-exception withdrawn: the incident is closed" }, verdict] },
+    {
+      tid: B(7),
+      title: "BP-07 exception withdrawn then re-armed",
+      comments: [{ author: "architect", body: exc("first waiver") }, { author: "qa", body: "qa-signoff-exception withdrawn: not justified" }, { author: "human", body: exc("re-approved after review") }],
+    },
+    // AR-2 + untrusted text.
+    { tid: B(8), title: "BP-08 exception whose reason carries a secret shape", comments: [{ author: "architect", body: exc(`pasted by mistake ${FAKE_SECRET}`) }] },
+    { tid: B(9), title: "BP-09 exception whose reason carries Markdown | pipes", comments: [{ author: "architect", body: exc(MD_REASON) }] },
+    // X3 — completions without the hook, and a worker completion (control).
+    { tid: B(10), title: "BP-10 completed from the CLI (synthesized run)", comments: [verdict] },
+    { tid: B(11), title: "BP-11 completed by direct board edit (no run)", comments: [verdict] },
+    { tid: B(12), title: "BP-12 manual_complete events (one old, one recent)", comments: [verdict] },
+    { tid: B(13), title: "BP-13 worker completion through the hook (control)", comments: [verdict] },
+  ].map((c) => ({ body: "**Test Types:** unit", assignee: "frontend", status: "done", completed: EPOCH_AFTER, runs: [], attachments: [], ...c }));
+  for (const c of bp) fixtureFile(`tests/evidence/${c.tid}/README.md`);
+  const ev = (id, tid, runId, kind, payload, at) =>
+    `INSERT INTO task_events (id,task_id,run_id,kind,payload,created_at) VALUES (${id},'${tid}',${runId === null ? "NULL" : runId},'${kind}','${JSON.stringify(payload).replace(/'/g, "''")}',${at});`;
+  const run = (id, tid, profile, status, at0, at1) =>
+    `INSERT INTO task_runs (id,task_id,profile,status,outcome,summary,metadata,started_at,ended_at) VALUES (${id},'${tid}','${profile}','${status}','completed','handoff','{}',${at0},${at1});`;
+  const extraSql = [
+    // Hermes `_synthesize_ended_run`: status = outcome = 'completed', zero duration.
+    run(9001, B(10), "frontend", "completed", EPOCH_AFTER + 50, EPOCH_AFTER + 50),
+    ev(1, B(10), 9001, "completed", { summary: "approved from the terminal\nsecond line" }, EPOCH_AFTER + 50),
+    ev(2, B(11), null, "completed", { summary: "closed by a human edit", closure_method: "human_direct_db_edit" }, EPOCH_AFTER + 60),
+    ev(3, B(12), null, "manual_complete", { reason: "old closure, before the window" }, EPOCH_AFTER - 40 * DAY),
+    ev(4, B(12), null, "manual_complete", { reason: "closed as duplicate via direct SQL" }, EPOCH_AFTER + 70),
+    // A worker run ends with status 'done' (`_end_run`): NOT a bypass.
+    run(9002, B(13), "frontend", "done", EPOCH_AFTER + 10, EPOCH_AFTER + 80),
+    ev(5, B(13), 9002, "completed", { summary: "worker handoff" }, EPOCH_AFTER + 80),
+  ];
+  const bpDb = join(root, "board-bypass.db");
+  execFileSync("sqlite3", [bpDb], { input: [BOARD_SQL, ...bp.map(taskRowSQL), ...extraSql].join("\n") });
+  // Same cards on a legacy board WITHOUT task_events.
+  const legacyDb = join(root, "board-bypass-legacy.db");
+  execFileSync("sqlite3", [legacyDb], { input: [BOARD_SQL.replace(EVENTS_SQL, ""), ...bp.map(taskRowSQL)].join("\n") });
+
+  const audit = (dbPath, extra = []) => {
+    const jsonOut = join(root, `bp-audit-${cases}.json`);
+    const t = runGate(["audit", "--db", dbPath, "--repo", repo, "--json-out", jsonOut, "--now-iso", NOW_ISO, ...extra]);
+    let doc = null;
+    try {
+      doc = JSON.parse(readFileSync(jsonOut, "utf8"));
+    } catch {
+      doc = null;
+    }
+    return { code: t.code, out: t.out, doc, jsonOut };
+  };
+  const summarize = (jsonPath) => {
+    const sumFile = join(root, `bp-summary-${cases}.md`);
+    writeFileSync(sumFile, "");
+    let code = 0;
+    let out = "";
+    try {
+      out = execFileSync("node", [SUMMARY, "--json", jsonPath, "--summary-out", sumFile], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    } catch (e) {
+      code = e.status === undefined ? -1 : e.status;
+      out = `${e.stdout || ""}${e.stderr || ""}`;
+    }
+    return { code, out, md: readFileSync(sumFile, "utf8") };
+  };
+  const deg = (doc, key) => (doc && Array.isArray(doc.degradations) ? doc.degradations.find((d) => d.key === key) : null);
+
+  const a = audit(bpDb, ["--fail-on-a11"]);
+  const x1 = deg(a.doc, "x1");
+  const x2 = deg(a.doc, "x2");
+  const x3 = deg(a.doc, "x3");
+
+  // Criterion 3 — never fails on a bypass.
+  check(
+    "board whose only findings are bypasses → audit exit 0, ok = true, 0 violations, even with --fail-on-a11 (a bypass never turns the audit red)",
+    a.code === 0 && a.doc && a.doc.ok === true && a.doc.counts.failures === 0 && [x1, x2, x3].every((d) => d && d.fails_audit === false && d.fail_flag === null),
+    `exit=${a.code} counts=${a.doc && JSON.stringify(a.doc.counts)} out=${a.out.slice(0, 300)}`,
+  );
+
+  // Criterion 1 — every X1, with card, author, reason, date, under the corrected author model.
+  const x1Ids = x1 ? x1.task_ids.slice().sort() : [];
+  check(
+    "X1: exactly the exceptions in force — BP-01, 02, 07 (re-armed), 08, 09; never the quoted key, the executing profile, the security-track card or the withdrawn one",
+    JSON.stringify(x1Ids) === JSON.stringify([B(1), B(2), B(7), B(8), B(9)]) && x1.count === 5,
+    JSON.stringify(x1Ids),
+  );
+  const r1 = x1 ? (x1.cards.find((c) => c.task_id === B(1)) || {}).records || [] : [];
+  check(
+    "X1: every occurrence is a record — BP-01 lists the exception in force (architect) AND the redundant one (human), each with its reason and its comment date; occurrences = 6",
+    x1 && x1.occurrences === 6 && r1.length === 2 &&
+      r1[0].author === "architect" && r1[0].state === "in force" && r1[0].reason === "incident INC-7, verdict waived 24h" && r1[0].at === EPOCH_AFTER &&
+      r1[1].author === "human" && /^redundant/.test(r1[1].state) && r1[1].at === EPOCH_AFTER + 1,
+    JSON.stringify(r1),
+  );
+  check(
+    "--json: counts.exceptions = { available, cards 5, occurrences 6 }; counts.completed_outside_hook = { available, cards 3, occurrences 4 }",
+    a.doc && JSON.stringify(a.doc.counts.exceptions) === JSON.stringify({ available: true, cards: 5, occurrences: 6 }) &&
+      JSON.stringify(a.doc.counts.completed_outside_hook) === JSON.stringify({ available: true, cards: 3, occurrences: 4 }) &&
+      JSON.stringify(a.doc.counts.exceptions_withdrawn) === JSON.stringify({ available: true, cards: 2, occurrences: 2 }),
+    a.doc && JSON.stringify(a.doc.counts),
+  );
+  // X2 is history, consistent with t_b2588ee7: listed, but not an active bypass.
+  const x2Ids = x2 ? x2.task_ids.slice().sort() : [];
+  const r6 = x2 ? (x2.cards.find((c) => c.task_id === B(6)) || {}).records || [] : [];
+  check(
+    "X2: the withdrawn exceptions (BP-06, BP-07) are history — who recorded it, who withdrew it, why — and BP-06 is NOT under X1",
+    JSON.stringify(x2Ids) === JSON.stringify([B(6), B(7)]) && r6.length === 1 && r6[0].author === "architect" && /^withdrawn by qa on .*: the incident is closed$/.test(r6[0].state) && !x1Ids.includes(B(6)),
+    JSON.stringify(x2 && x2.cards),
+  );
+
+  // Criterion 2 — CLI / out-of-band completions, in the SAME block.
+  const x3Ids = x3 ? x3.task_ids.slice().sort() : [];
+  const rec = (tid) => (x3 ? (x3.cards.find((c) => c.task_id === tid) || {}).records || [] : []);
+  check(
+    "X3: synthesized-run completion (CLI), no-run completion and manual_complete events are listed; the worker completion through the hook is NOT",
+    JSON.stringify(x3Ids) === JSON.stringify([B(10), B(11), B(12)]) && !x3Ids.includes(B(13)),
+    JSON.stringify(x3Ids),
+  );
+  const r10 = rec(B(10));
+  const r11 = rec(B(11));
+  const r12 = rec(B(12));
+  check(
+    "X3 records: method, date, reason (summary / closure_method / manual_complete reason), actor `not recorded` (Hermes does not record who ran the CLI), newline flattened",
+    r10.length === 1 && /outside a worker run \(CLI \/ dashboard\)/.test(r10[0].state) && r10[0].author === "not recorded" && r10[0].reason === "approved from the terminal second line" && r10[0].at === EPOCH_AFTER + 50 &&
+      r11.length === 1 && /human_direct_db_edit/.test(r11[0].state) &&
+      r12.length === 2 && r12.every((x) => /manual_complete/.test(x.state)) && r12[1].reason === "closed as duplicate via direct SQL",
+    JSON.stringify({ r10, r11, r12 }),
+  );
+  const chkBp10 = runGate(["check", "--task", B(10), "--db", bpDb, "--repo", repo, "--json"]);
+  let p10 = null;
+  try {
+    p10 = JSON.parse(chkBp10.out);
+  } catch {
+    p10 = null;
+  }
+  const chkBp13 = runGate(["check", "--task", B(13), "--db", bpDb, "--repo", repo, "--json"]);
+  check(
+    "check --task: the CLI-completed card carries the X3_COMPLETED_OUTSIDE_HOOK advisory and no violation; the worker-completed control does not",
+    chkBp10.code === 0 && p10 && p10.advisories.some((x) => x.rule === "X3_COMPLETED_OUTSIDE_HOOK") && p10.violations.length === 0 &&
+      chkBp13.code === 0 && !/X3_COMPLETED_OUTSIDE_HOOK/.test(chkBp13.out),
+    `bp10 exit=${chkBp10.code} bp13=${chkBp13.out.slice(0, 200)}`,
+  );
+
+  // Text report — readable without the board, one line per occurrence.
+  check(
+    "text report: X1/X2/X3 lines inside the ONE bypasses block, with counts, occurrences and a line per occurrence (card, date, author, reason, state)",
+    (a.out.match(/^ {2}bypasses & degradations /gm) || []).length === 1 &&
+      /^ {4}X1 \(QA sign-off exception in force[^)]*\)[^:]*: 5 {2}· {2}occurrences: 6 {2}· {2}cards: /m.test(a.out) &&
+      /^ {4}X3 \(completed outside the completion hook[^\n]*: 3 {2}· {2}occurrences: 4 /m.test(a.out) &&
+      new RegExp(`^ {8}${B(1)} {2}\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d UTC {2}architect {2}incident INC-7, verdict waived 24h {2}\\[in force\\]$`, "m").test(a.out) &&
+      new RegExp(`^ {8}${B(12)} {2}.* {2}not recorded {2}closed as duplicate via direct SQL {2}\\[manual_complete`, "m").test(a.out),
+    a.out.slice(0, 1500),
+  );
+
+  // Criterion 3 — trend and threshold named in the output.
+  check(
+    "trend: X1 last 30 days 6 > watch threshold 2 → `ABOVE`; X3 last 30 days 3, previous 30 days 1 (the old manual_complete), by month 2026-08: 1, 2026-09: 3; below its threshold",
+    x1 && x1.trend.last_30d === 6 && x1.trend.above_watch === true && x1.trend.watch_threshold_30d === 2 &&
+      x3 && x3.trend.last_30d === 3 && x3.trend.previous_30d === 1 && x3.trend.above_watch === false && JSON.stringify(x3.trend.by_month) === JSON.stringify({ "2026-08": 1, "2026-09": 3 }) &&
+      /trend: last 30 days 6 \(previous 30 days 0, rising\) {2}· {2}watch threshold 2\/30d: ABOVE/.test(a.out),
+    JSON.stringify({ x1: x1 && x1.trend, x3: x3 && x3.trend }),
+  );
+
+  // AR-2 — no secret value anywhere in the output.
+  const s = summarize(a.jsonOut);
+  const everywhere = [a.out, readFileSync(a.jsonOut, "utf8"), s.md, s.out].join("\n");
+  check(
+    "AR-2: a secret-shaped reason is withheld (rule id only) — the value appears in NONE of: text report, JSON document, run summary, annotations",
+    !everywhere.includes(FAKE_SECRET_VALUE) && /\[reason withheld: matches R_SECRET_KEY_VALUE_PAIR/.test(a.out) && /reason withheld: matches R\\_SECRET\\_KEY\\_VALUE\\_PAIR/.test(s.md),
+    `leak=${everywhere.includes(FAKE_SECRET_VALUE)} md=${s.md.slice(0, 200)}`,
+  );
+
+  // Workflow summary: one place for both forms of bypass.
+  check(
+    "summary: X1, X2 and X3 rows in the SAME `Bypasses and degradations` table (cards + occurrences, `never`), plus a trend table naming the watch threshold",
+    s.code === 0 && (s.md.match(/^### Bypasses and degradations$/gm) || []).length === 1 &&
+      /^\| `X1_EXCEPTION` — .* \| 5 \(6 occurrences\) \| never \| /m.test(s.md) &&
+      /^\| `X2_EXCEPTION_WITHDRAWN` — .* \| 2 \(2 occurrences\) \| never \| /m.test(s.md) &&
+      /^\| `X3_COMPLETED_OUTSIDE_HOOK` — .* \| 3 \(4 occurrences\) \| never \| /m.test(s.md) &&
+      /^\| `X1_EXCEPTION` \| 6 \| 0 \| rising \| 2: \*\*above — review\*\* \| 2026-09: 6 \|$/m.test(s.md),
+    s.md.slice(0, 1600),
+  );
+  check(
+    "summary: one row per occurrence (date, card, title, author, reason, state) — `#### X1_EXCEPTION: 6 occurrences on 5 cards` and `#### X3_COMPLETED_OUTSIDE_HOOK: 4 occurrences on 3 cards`",
+    /^#### `X1_EXCEPTION`: 6 occurrences on 5 cards$/m.test(s.md) &&
+      /^#### `X3_COMPLETED_OUTSIDE_HOOK`: 4 occurrences on 3 cards$/m.test(s.md) &&
+      new RegExp(`^\\| \\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d UTC \\| \`${B(1)}\` \\| BP-01 .* \\| architect \\| incident INC-7, verdict waived 24h \\| in force \\|$`, "m").test(s.md),
+    s.md.slice(0, 2000),
+  );
+  check(
+    "summary: untrusted Markdown in a reason is escaped — no live image/link, the pipe cannot split the row",
+    !s.md.includes("![pixel](") && !s.md.includes("[link](") && s.md.includes("\\!\\[pixel\\]\\(https://example.invalid/p.png\\)") &&
+      new RegExp(`^\\| [^\\n]* \\| \`${B(9)}\` \\| [^\\n]*\\\\\\| col \\\\\`code\\\\\` \\\\\\*em\\\\\\* \\| in force \\|$`, "m").test(s.md),
+    (s.md.split("\n").find((l) => l.includes(B(9)) && l.startsWith("| 2")) || "(no row)").slice(0, 300),
+  );
+  const warn = s.out.split("\n").filter((l) => l.startsWith("::warning "));
+  const notice = s.out.split("\n").filter((l) => l.startsWith("::notice "));
+  check(
+    "annotations: one ::warning:: per X1 exception (6) + one for X1 above its watch threshold; one ::notice:: per non-empty X2/X3 type (never one per CLI completion)",
+    warn.filter((l) => l.startsWith("::warning title=X1 sign-off exception%3A t_")).length === 6 &&
+      warn.filter((l) => /above watch threshold/.test(l)).length === 1 &&
+      notice.length === 2 && notice.some((l) => l.startsWith("::notice title=X3 completed outside the hook%3A 4::")),
+    s.out.slice(0, 600),
+  );
+
+  // A board without `task_events`: X3 is "not available", never 0; the hook still works.
+  const l = audit(legacyDb);
+  const lx3 = deg(l.doc, "x3");
+  const ls = summarize(l.jsonOut);
+  check(
+    "legacy board without task_events → X3 `not available` (text, JSON, summary + warning), never a reassuring 0; X1 still listed; exit unchanged (0)",
+    l.code === 0 && lx3 && lx3.available === false && l.doc?.counts?.completed_outside_hook?.available === false && l.doc?.counts?.completed_outside_hook?.occurrences === null &&
+      /^ {4}X3 \([^\n]*: not available — /m.test(l.out) && deg(l.doc, "x1")?.count === 5 &&
+      /^\| `X3_COMPLETED_OUTSIDE_HOOK` — .* \| \*\*not available\*\* \| never \| /m.test(ls.md) && /::warning title=X3 completed outside the hook%3A not available::/.test(ls.out),
+    `exit=${l.code} x3=${String(JSON.stringify(lx3 ?? null)).slice(0, 200)} out=${l.out.slice(0, 400)}`,
+  );
+  const hk = runGate(
+    ["hook", "--db", legacyDb],
+    JSON.stringify({ hook_event_name: "pre_tool_call", tool_name: "kanban_complete", tool_input: { task_id: B(13) }, cwd: repo, extra: {} }),
+    { HERMES_KANBAN_DB: legacyDb },
+  );
+  check("hook on a board without task_events → a compliant card is still allowed ({} + exit 0): the events read never fails the fail-closed hook", hk.code === 0 && hk.out.trim() === "{}", `exit=${hk.code} out=${hk.out.slice(0, 200)}`);
+
+  // AR-2 fail-safe: without the scanner next to the gate, no reason is printed.
+  const lone = join(root, "gate-without-secret-guard");
+  mkdirSync(lone, { recursive: true });
+  writeFileSync(join(lone, "signoff-gate.mjs"), readFileSync(GATE));
+  let loneOut = "";
+  let loneCode = 0;
+  try {
+    loneOut = execFileSync("node", [join(lone, "signoff-gate.mjs"), "audit", "--db", bpDb, "--repo", repo, "--now-iso", NOW_ISO], {
+      encoding: "utf8",
+      env: { ...process.env, HERMES_KANBAN_TASK: "", HERMES_KANBAN_WORKSPACE: "", HERMES_KANBAN_BRANCH: "", QA_GATE_GITHUB: "", QA_GATE_GH_REPO: "", QA_GATE_GITHUB_FIXTURE: GH_EMPTY },
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+  } catch (e) {
+    loneCode = e.status;
+    loneOut = `${e.stdout || ""}${e.stderr || ""}`;
+  }
+  check(
+    "fail-safe: a gate copy with no secret-guard.mjs next to it withholds every reason (`secret scanner … unavailable`) instead of printing it unscanned; exit unchanged",
+    loneCode === 0 && /\[reason withheld: secret scanner \(secret-guard\.mjs\) unavailable\]/.test(loneOut) && !loneOut.includes("incident INC-7") && !loneOut.includes(FAKE_SECRET_VALUE),
+    `exit=${loneCode} out=${loneOut.slice(0, 300)}`,
+  );
+
+  // --now-iso is audit-only and validated.
+  const nc = runGate(["check", "--task", B(1), "--db", bpDb, "--repo", repo, "--now-iso", NOW_ISO]);
+  const nb = runGate(["audit", "--db", bpDb, "--repo", repo, "--now-iso", "yesterday"]);
+  check("`check --now-iso` → refused (exit 3); `audit --now-iso yesterday` → refused (exit 3)", nc.code === 3 && nb.code === 3 && /ISO-8601/.test(nb.out), `check=${nc.code} audit=${nb.code} ${nb.out.slice(0, 120)}`);
 }
 
 console.log(`\n${cases - failures.length}/${cases} cases passed`);

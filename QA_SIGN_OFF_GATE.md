@@ -94,7 +94,8 @@ were passing on a non-QA record now surface as `R1` failures rather than passing
 | `A7_VERDICT_AUTHOR_IGNORED` | a `QA-VERDICT: <token>` (or `deferred`) comment written by a profile other than `qa` — **discounted, not a verdict** (§3, `t_338f47fd`) | report-only — it does not satisfy `R1`, so the card must record its verdict from the `qa` profile; the advisory is what tells you the comment you are looking at is not the one the gate reads |
 | `A8_VERDICT_SELF_DECLARED` | the operative verdict comes from the run metadata of a **non-`qa`** run — accepted per §3 (the one author-independent source) | report-only — a self-declared verdict must never be invisible; the card should still carry a QA review |
 | `A10_EXCEPTION_IGNORED` | a `qa-signoff-exception:` record the gate **refused** (§5.6, `t_b8001b55`): written by an author outside `human` · `dashboard` · `user` · `architect` · `qa` (including the anonymous `worker`), quoted only inside a code span/fence, or recorded on a security-track card | report-only — the refused record waives nothing, so `R1`/`R4`/`R7` apply as if it were absent; the advisory says which of the three reasons applied |
-| `X1_EXCEPTION` | a recorded `qa-signoff-exception:` marker (§5.6) **that the gate applied** — allowed author, outside code, non-security card | report-only — exceptions stay visible in every audit |
+| `X1_EXCEPTION` | a recorded `qa-signoff-exception:` marker (§5.6) **that the gate applied** — allowed author, outside code, non-security card | report-only — exceptions stay visible in every audit; since `t_5b5b61e2` the audit lists every occurrence (card, date, author, reason) in its bypass block (§5.10) |
+| `X3_COMPLETED_OUTSIDE_HOOK` | the card was completed **without** the `pre_tool_call` hook: `hermes kanban complete` from a terminal or a dashboard approval (Hermes synthesized the run), a completion with no run, or a `manual_complete` event (direct board edit) — §5.10, `t_5b5b61e2` | report-only — the override is legitimate (architect decision on `t_75180b28`); the audit lists it with date, method and reason so it is never silent. Hermes does not record who ran the command |
 | `X2_EXCEPTION_WITHDRAWN` | an applied exception that a later `qa-signoff-exception withdrawn: <reason>` record **ended** (§5.6, `t_b2588ee7`) — names who recorded the exception, who withdrew it and why | report-only — the withdrawn exception waives nothing any more (`R1`–`R8` apply again), but it stays visible next to its withdrawal |
 | `A16_EXCEPTION_WITHDRAWAL_IGNORED` | a withdrawal record the gate **did not apply** (§5.6, `t_b2588ee7`): written by an author outside the exception allowlist (including `worker`), quoted only inside a code span/fence, or posted when no exception was in force (before any exception, on a card without one, or on a security-track card whose exceptions are all refused) | report-only — a refused withdrawal leaves the exception in force; a no-op withdrawal changes nothing; the advisory says which case applied |
 | `A11_CI_STATE_UNVERIFIABLE` | GitHub could not be read for `R9`/`R10` (offline, `gh` missing/unauthenticated, rate limit, time budget, branch protection unreadable/empty) | report-only — **never** a violation (§5.9); re-run the check when GitHub is reachable |
@@ -399,8 +400,8 @@ after the card) — `WORKTREE_STRATEGY.md` §5 step 3.
   without it the exit code is unchanged (local / offline runs). The scheduled `qa-signoff-audit.yml` passes
   `--fail-on-a11`: it runs **with** GitHub, so an A11 there is a real degradation (token, branch-protection read,
   time budget) and the run is red. It also writes the block to the run summary and one `::warning::` annotation
-  per card (`scripts/qa/signoff-audit-summary.mjs`, fed by `--json-out`). An exception (§5.6) will be counted in
-  the same block but **never** fails the audit.
+  per card (`scripts/qa/signoff-audit-summary.mjs`, fed by `--json-out`). The exceptions (§5.6) and the
+  completions made outside the hook are counted in the same block (§5.10) but **never** fail the audit.
 
 **The normative completion path for a code card** (architect, Q2) — *the merger completes the card, never the author*:
 
@@ -421,7 +422,9 @@ architect's integration role — and it is **not silent**: the board **audit app
 at/after the rule epoch**, so a card closed through the CLI with an unmerged PR or a red merge commit is reported as a
 FAIL by the next audit (`qa-signoff-audit.yml`, CI-001h). Agents use the CLI too (the architect confirmed it on
 `t_75180b28`), so the audit — not the CLI — is the enforcement point for that path; anyone using it should run
-`node scripts/qa/signoff-gate.mjs check --task <id> --pre-complete --repo <clone>` first.
+`node scripts/qa/signoff-gate.mjs check --task <id> --pre-complete --repo <clone>` first. Since `t_5b5b61e2` every
+completion made this way is also **listed** by the audit (`X3_COMPLETED_OUTSIDE_HOOK`, §5.10), whatever the rules say
+about the card.
 
 **Known limits (stated, not hidden).**
 
@@ -438,6 +441,63 @@ FAIL by the next audit (`qa-signoff-audit.yml`, CI-001h). Agents use the CLI too
   it; a GitHub-hosted `GITHUB_TOKEN` does not, so an audit run there reports `A11` for `R10` (the audit already needs a
   self-hosted runner for the board, CI-001h).
 
+### 5.10 Bypasses are listed by the audit, never failed on (`t_5b5b61e2`)
+
+A sign-off exception (§5.6) and a completion made outside the hook are two forms of the same thing: a card that
+reached `done` without the gate's normal path. Both are legitimate; neither may be silent. The board audit lists
+them in its **"bypasses & degradations"** block, next to `A11` (§5.9), so "how many bypasses this month, by whom, on
+which cards" is answered by the report itself — text report, `--json`, and the workflow run summary — without
+opening the board.
+
+| Type | What is listed (one line per **occurrence**) | Source on the board |
+|---|---|---|
+| `X1_EXCEPTION` | every exception **in force** on a `done` card (author model of `t_b8001b55`: allowed author, outside code, non-security card), plus the later valid records that repeat it (`redundant`) — card, date, author, reason, state | `task_comments` |
+| `X2_EXCEPTION_WITHDRAWN` | every withdrawn exception (§5.6, `t_b2588ee7`) — **history, not an active bypass**: who recorded it, who withdrew it, when and why | `task_comments` |
+| `X3_COMPLETED_OUTSIDE_HOOK` | every completion the `pre_tool_call` hook did not see — card, date, method, reason (the completion summary or the `manual_complete` reason), assignee | `task_events` + `task_runs` |
+
+How `X3` is detected — from what Hermes records, nothing guessed:
+
+- a `completed` event whose run Hermes **synthesized** (`_synthesize_ended_run`: `status = outcome = 'completed'`,
+  zero duration) — `hermes kanban complete` from a terminal or a dashboard approval of a card no worker had claimed;
+  a worker run is ended with `status = 'done'` and is not listed;
+- a `completed` event with no run (its `closure_method`, e.g. `human_direct_db_edit`, is shown);
+- a `manual_complete` event (a direct board edit, with `payload.reason`).
+
+Hermes has **no** `hermes kanban complete --override "<reason>"` flag (checked with `hermes kanban complete --help`):
+the CLI is not wrapped (architect decision #505 on `t_75180b28`), so the audit reads what the board already holds.
+Two limits follow, stated here so nobody reads more into the list than it says: **the actor is not recorded** (the
+synthesized run's `profile` is the card's assignee, not the person who ran the command — the report says "not
+recorded"), and `hermes kanban complete --force` on a card a worker is running closes **that worker's** run, which then
+looks exactly like a worker completion and is not listed (§10 item 13).
+
+Rules of the block:
+
+- **A bypass never fails the audit** (no flag turns it red): an exception that broke CI would just be bypassed
+  another way. It is made visible instead — `X1` per occurrence as a `::warning::` annotation, `X2`/`X3` as one
+  `::notice::` per type (they can be numerous; GitHub keeps only the first annotations of a step).
+- **Trend and threshold are named in the output**: per type, the count per month, the last 30 days vs the previous
+  30 days, and a **watch threshold** per 30 days (`BYPASS_WATCH_30D` in the gate: `X1` 2, `X2` 2, `X3` 10). Above it
+  the report says `ABOVE — review` and the run summary adds a `::warning::`; the exit code does not change. The
+  values are policy — `architect` tunes them (§10 item 13). `--now-iso ISO` (audit only) anchors the window for a
+  replay.
+- **Not readable ≠ zero**: on a board without a readable `task_events` table `X3` is reported **not available**
+  (text, JSON `available: false`, summary row + warning), never 0. The events read never makes the fail-closed hook
+  fail.
+- **Free text is untrusted (AR-2)**: reasons go through the repo's secret scanner (`scripts/qa/secret-guard.mjs`,
+  loaded next to the gate) on their full length before truncation to 200 characters; a hit withholds the whole reason
+  and names only the rule ids. If the scanner cannot be loaded every reason is withheld. Fence-length backtick/tilde
+  runs are shortened (the workflow wraps the report in a fence); the summary Markdown-escapes reasons, titles and
+  authors. Reasons travel as JSON from the gate to the summary script — never through a shell.
+- The audit scope is the audit's own: **`done` cards**. A key posted on a card that is not `done` waives nothing yet.
+
+Measured on a read-only snapshot of the live board (2026-10-10, see `tests/evidence/t_5b5b61e2/`): `X1` 5
+occurrences on 5 cards (`dashboard` ×4, `human` ×1), `X2` 0, `X3` 54 on 54 cards. The card's starting expectation
+— "10 occurrences on 7 cards (`architect` ×5, `dashboard` ×4, `human` ×1)", measured on 2026-10-05 — predates the
+author model of `t_b8001b55`. The `dashboard` ×4 and `human` ×1 records are exactly the 5 listed; every `architect`
+record on a `done` card is a key quoted in a code span (6 `A10_EXCEPTION_IGNORED` on the snapshot: `t_33dcad7d` ×4,
+`t_75180b28`, `t_b8001b55`), which the gate has not applied since `bd62d76`, so the audit correctly does not list
+them as exceptions (the 10-vs-11 count itself is `t_2bb5f1f2`'s subject).
+
 ---
 
 ## 6. Enforcement tooling
@@ -446,11 +506,11 @@ All paths are relative to the repo root.
 
 | Command | Purpose |
 |---|---|
-| `node scripts/qa/signoff-gate.mjs audit` | whole board; exit 1 while any enforced card fails; `--json`, `--json-out FILE` (same document written to a file alongside the text report), `--repo DIR`, `--epoch-iso ISO`, `--strict-history`; `R9`/`R10` flags: `--gh-repo OWNER/NAME`, `--pr-epoch-iso ISO`, `--no-github`, `--fail-on-a11` (also exit 1 when ≥ 1 card carries `A11`, §5.9) |
-| `node scripts/qa/signoff-audit-summary.mjs --json FILE [--summary-out FILE]` | renders the audit's "bypasses and degradations" block into `$GITHUB_STEP_SUMMARY` + one `::warning::` per card; reports a missing document as `not available`, never as 0; never decides the run's colour |
+| `node scripts/qa/signoff-gate.mjs audit` | whole board; exit 1 while any enforced card fails; `--json`, `--json-out FILE` (same document written to a file alongside the text report), `--repo DIR`, `--epoch-iso ISO`, `--strict-history`; `R9`/`R10` flags: `--gh-repo OWNER/NAME`, `--pr-epoch-iso ISO`, `--no-github`, `--fail-on-a11` (also exit 1 when ≥ 1 card carries `A11`, §5.9); `--now-iso ISO` anchors the bypass trend window (§5.10); bypasses never change the exit code |
+| `node scripts/qa/signoff-audit-summary.mjs --json FILE [--summary-out FILE]` | renders the audit's "bypasses and degradations" block into `$GITHUB_STEP_SUMMARY`: counter rows, the bypass trend table, one row per A11 card and per bypass occurrence (§5.10); `::warning::` per A11 card and per `X1`, `::notice::` per non-empty `X2`/`X3` type, `::warning::` above a watch threshold; reports a missing document or an unreadable type as `not available`, never as 0; never decides the run's colour |
 | `node scripts/qa/signoff-gate.mjs check --task t_xxxxxxxx [--pre-complete]` | one card; `--pre-complete` evaluates a card that is not `done` yet (exactly what the hook does) |
 | `echo '<payload>' \| node scripts/qa/signoff-gate.mjs hook` | hook entry point: `{}` + exit 0 = allow, `{"decision":"block",…}` + exit 2 = block |
-| `node scripts/qa/signoff-gate.selftest.mjs` | 188-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d`, `t_58280940`, `t_99e408c5`, `t_338f47fd`, `t_df8e644a` — cited-file-name — and `t_c015bda7` regressions are covered; `t_75180b28` adds 25 `R9`/`R10`/`A11`–`A13` cases on a JSON GitHub fixture, no network; `t_339a0d02` adds 7 push-run-only `R10`/`A15` cases; `t_b102b100` adds 22 audit A11 counter / `--fail-on-a11` / run-summary cases; `t_b2588ee7` adds 16 exception-withdrawal cases) |
+| `node scripts/qa/signoff-gate.selftest.mjs` | 207-case non-vacuity proof on a throwaway fixture board (every rule fires; every compliant control passes; the `t_5455942d`, `t_58280940`, `t_99e408c5`, `t_338f47fd`, `t_df8e644a` — cited-file-name — and `t_c015bda7` regressions are covered; `t_75180b28` adds 25 `R9`/`R10`/`A11`–`A13` cases on a JSON GitHub fixture, no network; `t_339a0d02` adds 7 push-run-only `R10`/`A15` cases; `t_b102b100` adds 22 audit A11 counter / `--fail-on-a11` / run-summary cases; `t_b2588ee7` adds 16 exception-withdrawal cases; `t_5b5b61e2` adds 19 bypass-report cases — X1/X2/X3 listing, trend/threshold, never-fails, AR-2 withholding, Markdown escaping, legacy board without `task_events`) |
 | `scripts/qa/hooks/install-signoff-gate.sh --all [--apply]` | install / refresh the hook in every profile (dry-run by default, config backed up) |
 | `scripts/qa/hooks/verify-signoff-gate.sh --all --live --fixture-db … --fixture-noncompliant … --fixture-compliant …` | verify wiring, consent, hash, `hermes hooks doctor`, and fire both paths live |
 
@@ -629,6 +689,7 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 10 | `R9`/`R10` rollout (§5.9): after the merge, re-install the hook in all 7 profiles (`install-signoff-gate.sh --all --apply` + verifier) and confirm `gh auth status` succeeds **in the hook environment** of each profile — without it every completion only gets `A11`, i.e. the rule is silently advisory. The scheduled audit needs a `gh` token with admin read for branch protection (a GitHub-hosted `GITHUB_TOKEN` cannot read it). Since `t_b102b100` the scheduled audit runs with `--fail-on-a11`, so until that token exists on its runner the run is **red** on A11 by design — not a defect to silence | `qa` (install) + `architect` (runner/token) |
 | 11 | `ci.yml` cancels an in-progress `master` run when the next merge lands (`concurrency … cancel-in-progress: true`), which leaves a merge commit with `cancelled` required checks → `R10` until re-run. Decide whether `push` runs on `master` should stop cancelling (e.g. `cancel-in-progress: ${{ github.event_name == 'pull_request' }}`); `ci.yml` is a collision hotspot, so this is a decision, not a silent edit. **Decided and closed (`t_694c9e37`, card created by `architect`):** on the default branch the group is per run and `cancel-in-progress` is false; PR runs keep cancelling each other — evidence in `tests/evidence/t_694c9e37/` | `architect` |
 | 12 | ~~Linking is by mention~~ — **closed by `t_7e8bf917` (2026-10-08)**: a PR links a card only by declaration (head branch, or a `Closes`/`Card:`/`Task:` body line outside code); mentions are `A14_PR_MENTIONS_CARD` (§5.9). Live: `#114` no longer links `t_75180b28`. Optional follow-up for `architect`: a PR template carrying a `Closes t_xxxxxxxx` line | `architect` |
+| 13 | Bypass report (§5.10, `t_5b5b61e2`): (a) the watch thresholds `X1` 2 / `X2` 2 / `X3` 10 per 30 days are a QA proposal — on the 2026-10-10 snapshot both `X1` (5) and `X3` (54) are above them, so either the values or the practice need a decision; (b) Hermes records no actor for a CLI/dashboard completion and has no `--override "<reason>"` flag, and `hermes kanban complete --force` on a running card is indistinguishable from a worker completion — closing either gap is a Hermes-side change (or a CLI wrapper, which architect decision #505 declined); (c) the PR-only `bypass-report-fixture` job in `qa-signoff-audit.yml` adds a `pull_request` trigger limited to the gate files (fixture board only, never required) — confirm it is acceptable under CI-001h's "no PR trigger" design | `architect` |
 
 ---
 
@@ -647,3 +708,4 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 2026-10-09 | `t_339a0d02` — **§5.9 `R10` judges the merge's `push` run only**. Live case: on `a48d622` (PR #120, `t_7e8bf917`) the push run was green, three `workflow_dispatch` runs started later on the same SHA failed on `secret-scan` (full-history scan on that event) and `R10` read them, so a merged card could not complete; the other way round, a manual run could repair a red merge. Check runs are now read with their check suite and matched to the SHA's workflow runs (`GET …/actions/runs?head_sha=`): a suite owned by a non-push run is set aside and reported as the new advisory `A15_NON_PUSH_RUN_ON_MERGE_COMMIT`; within a suite only the newest check run of a name counts (a re-run of the push run replaces its earlier attempt); a check carried only by non-push runs is `no-push-run` → `R10` (fail closed — deviation from the card's "A11 if no push run", for architect's counter-verification: `A11` is non-blocking, so it would let a merge with no push run complete); suites no workflow run owns are judged as before. Selftest 143 → 150 (RED against the master gate: 5 of the 7 new cases fail, the non-vacuity and other-app controls pass). Live replay, negative control (PR #88, push run really red → still `R10`), re-run control (PR #116) and a 140-card before/after audit (0 violation-set changes) are in `tests/evidence/t_339a0d02/` |
 | 2026-10-09 | `t_b102b100` — **§5.9 A11 is counted and surfaced by the audit** (criterion 3 of `t_dbecf24d`, failed in qa verdict #595: a board with only `A11_CI_STATE_UNVERIFIABLE` cards audited green and `t_cbaa9f7d` showed a bare `ok`). The report header now carries one "bypasses & degradations" block (one line per type, counter + card ids — architect design note shared with `t_5b5b61e2`, which adds the exceptions and CLI bypasses to the same block); a card carrying A11 is tagged `[A11: …]`; `--json` adds `counts.a11`, `a11_task_ids` and `degradations[]`; `--json-out FILE` writes the same document from the same evaluation. New `--fail-on-a11` (audit only — refused on `check`, takes no value): exit 1 on ≥ 1 A11; without it the exit code is unchanged. A11 stays a per-card advisory: `check` and the hook never fail on it. `qa-signoff-audit.yml` passes `--fail-on-a11`, and `scripts/qa/signoff-audit-summary.mjs` writes the block to `$GITHUB_STEP_SUMMARY` with one `::warning::` per card (a missing JSON is `not available`, never 0). Selftest 150 → 172 (RED against the master gate: 19 of the 22 new cases fail; the hook-allow control and the two JSON-less summary cases pass, all 150 earlier cases pass). Workflow step bodies run verbatim against the fixture board and a live-board snapshot, and a master-vs-branch audit over 141 cards shows 0 rule-set changes (`tests/evidence/t_b102b100/`) |
 | 2026-10-09 | `t_b2588ee7` — **§5.6 an exception can be withdrawn**. `findException` kept the first applied exception and nothing could replace it, so an exception recorded in error was the one irrevocable object of the gate. New explicit key `qa-signoff-exception withdrawn: <reason>` (chosen over "last occurrence wins", rationale in §5.6 and in the `findException` doc comment), under the same author allowlist and code-span rule as the exception itself; records replayed in posting order (`ORDER BY created_at, id` — a same-second tie keeps posting order); a withdrawal with no exception in force is a no-op; a later exception re-arms. `EXCEPTION_RE` no longer reads `qa-signoff-exception-withdrawn: …` / `qa-signoff-exception: withdrawn — …` as an exception. New report-only codes `X2_EXCEPTION_WITHDRAWN` and `A16_EXCEPTION_WITHDRAWAL_IGNORED` (A11–A15 were already taken). Selftest 172 → 188 (RED against the master gate: all 16 new cases fail, the 172 earlier cases pass). Master-vs-branch audit over a live-board snapshot (142 done cards): 0 violation-set, 0 advisory-set, 0 operative-exception changes (`tests/evidence/t_b2588ee7/`) |
+| 2026-10-10 | `t_5b5b61e2` — **§5.10 the audit lists every bypass**, in the "bypasses & degradations" block `t_b102b100` opened: `X1_EXCEPTION` (each exception in force, plus the redundant records that repeat it), `X2_EXCEPTION_WITHDRAWN` (history, not an active bypass — consistent with `t_b2588ee7`) and the new report-only `X3_COMPLETED_OUTSIDE_HOOK` (a completion the hook never saw: synthesized-run completion from the CLI/dashboard, completion with no run, `manual_complete` event — read from `task_events`; Hermes has no `--override` flag and records no actor, both stated). One line per occurrence — card, date, author, reason, state — in the text report, `--json` (`counts.exceptions` / `exceptions_withdrawn` / `completed_outside_hook`, per-card `records`, per-type `trend`) and the run summary; a per-month trend, last-30-vs-previous-30 and a watch threshold per type (`BYPASS_WATCH_30D`, `--now-iso`). A bypass **never** changes the exit code. Reasons are secret-scanned on full length (`secret-guard.mjs`; withheld on a hit or when the scanner is missing), fence runs shortened, Markdown-escaped in the summary. A board without `task_events` reports `X3` as `not available`, and the hook is unaffected. `qa-signoff-audit.yml` gains a PR-only `bypass-report-fixture` job (fixture board, gate files only, not required — §10 item 13). Selftest 188 → 207 (RED against the master gate: 18 of the 19 new cases fail; the hook-on-legacy-board control passes; all 188 earlier cases pass). Master-vs-branch audit over a 144-card live snapshot: 0 violation-set changes, the only advisory change is `X3` on 54 cards (`tests/evidence/t_5b5b61e2/`) |

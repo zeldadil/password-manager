@@ -1,0 +1,244 @@
+QA sign-off gate selftest — fixture board: /home/sap/.hermes/profiles/qa/cache/scratch/signoff-gate-selftest-m3a0RM/board.db
+fixture repo: /home/sap/.hermes/profiles/qa/cache/scratch/signoff-gate-selftest-m3a0RM/repo
+
+1. Compliant cards (must produce ZERO violations — anti-vacuous control):
+  ok   - Path A verdict + repo evidence
+  ok   - crypto card with AR-6 architect sign-off
+  ok   - evidence uploaded as attachment
+  ok   - QA-owned card with run-metadata verdict
+  ok   - deferral to a completed QA child
+  ok   - deferral to an open QA child (advisory only)
+  ok   - pass-with-conditions naming a follow-up
+  ok   - grandfathered pre-epoch card
+  ok   - recorded QA sign-off exception
+  ok   - superseded comments name missing artifacts
+  ok   - operative evidence committed on another ref
+  ok   - explicit verdict + linked qa repair child
+  ok   - stale deferral marker + newer QA verdict (t_58280940)
+  ok   - stale deferral marker to an open QA child + newer verdict
+  ok   - quoted deferral marker later in the thread + verdict (t_58280940)
+  ok   - non-vacuity control: the marker comment authored by qa
+  ok   - qa-authored loose verdict (unchanged)
+  ok   - non-QA run-metadata verdict accepted (§3 row 3, A8 only)
+
+1b. t_5455942d regressions (fail closed only on unverifiable input):
+  ok   - superseded verdict/handoff paths are advisory (A5), never R5
+  ok   - operative evidence on another ref is accepted (A4, no R5)
+  ok   - explicit verdict + linked qa child is NOT a deferral (no A2)
+  ok   - linked qa child with NO verdict still counts as a deferral (A2 fires — heuristic intact)
+  ok   - stale deferral marker is superseded by the newer verdict — no R8, no deferral (t_58280940)
+  ok   - stale deferral marker to an open QA child is superseded too — no A2 (t_58280940)
+  ok   - a marker that only appears in a code span is not a deferral (no phantom R8)
+  ok   - a quoted marker must not hijack the newest-marker ordering over a real one (t_58280940)
+
+1c. t_99e408c5 regressions (R5 adjudicates claims, not citations):
+  ok   - a verdict quoting another card's missing path is NOT blocked by R5 (the reported instance)
+  ok   - the quoted path is reported as A6_EVIDENCE_CITED (the audit still sees it)
+  ok   - the reporting card's own labelled evidence stays the claim it resolves
+  ok   - citing another card's artifact that exists produces no R5 and no A6 noise
+  ok   - no label: a quoted path in a code span is a citation (no R5, A6 fires)
+  ok   - labelled evidence file missing (R5 control) → R5_EVIDENCE_FILE_MISSING
+  ok   - labelled evidence file missing inside a code span is still a claim (R5 control) → R5_EVIDENCE_FILE_MISSING
+  ok   - no label: a missing path in plain prose is still a claim (R5 control) → R5_EVIDENCE_FILE_MISSING
+
+1d. t_338f47fd regressions (VERDICT_MARKER_RE had no author check):
+  ok   - (a) the marker comment authored by architect does NOT satisfy R1
+  ok   - (a) no verdict is collected from it at all — R2/R3 cannot fire off it either
+  ok   - (a) the discounted marker is reported as A7_VERDICT_AUTHOR_IGNORED, never dropped silently
+  ok   - (b) the SAME comment authored by qa does satisfy R1 (non-vacuity control)
+  ok   - a non-QA `blocked` marker cannot create R3 on a done card
+  ok   - a non-QA `deferred` marker is not a deferral: R1 fires, R8 must not
+  ok   - live thread shape (architect deferral + dashboard verdict marker) records no verdict
+  ok   - (c) loose path unchanged: a non-QA `verdict: …` is still ignored (already was) and is not a marker (no A7)
+  ok   - (c) run metadata unchanged: a non-QA run-metadata verdict is still accepted (A8 reports it)
+  ok   - (c) a qa run-metadata verdict raises no A8 (the advisory is specific to a non-QA declaration)
+
+1e. t_df8e644a regressions (a cited file name must not read as a verdict token):
+  ok   - t_df8e644a: a cited file name in plain prose yields NO verdict token (R2 must not fire)
+  ok   - t_df8e644a: a cited file name in a code span yields NO verdict token (R2 must not fire)
+  ok   - t_df8e644a: a cited file name in a fenced block yields NO verdict token (R2 must not fire)
+  ok   - t_df8e644a: the citation-only card is still judged — no verdict, so R1 → R1_QA_VERDICT_MISSING
+  ok   - t_df8e644a: the live shape — a compliant verdict citing the same file name stays clean (no R2, no R5)
+  ok   - t_df8e644a: a cited file name before the real loose verdict no longer masks it (R1/R2 must not fire)
+  ok   - t_df8e644a: anti-degradation — a genuine loose `verdict: pass` is still read (non-vacuity)
+  ok   - t_df8e644a: anti-degradation — an off-vocabulary loose token that IS the verdict still fires R2 → R2_QA_VERDICT_INVALID
+  ok   - t_df8e644a: anti-degradation — a loose verdict claiming a missing evidence file still fires R5 → R5_EVIDENCE_FILE_MISSING
+  ok   - t_c015bda7: an invalid token superseded by a later valid verdict passes, with A9 recorded
+  ok   - t_c015bda7: anti-degradation — a valid verdict followed by an invalid one still fires R2 → R2_QA_VERDICT_INVALID
+  ok   - t_c015bda7: a trailing invalid token is not downgraded to an advisory
+
+1f. t_b8001b55 regressions (qa-signoff-exception: author allowlist, quotes, security track):
+  ok   - (1) exception by an executing profile (backend) → ignored: R1 + R4 fire, A10(author), no X1
+  ok   - (1) exception by the anonymous `worker` author → ignored: R1 + R4 fire, A10(author), no X1
+  ok   - (1) the `worker` refusal says it names no profile
+  ok   - (2) key quoted in live t_75180b28 #551 (backtick quotes, architect) → ignored: R1 fires, A10(quoted), no X1
+  ok   - (2) key quoted in fenced block (architect) → ignored: R1 fires, A10(quoted), no X1
+  ok   - (2) non-vacuity: a quote plus a real key in the same comment → the real one is operative
+  ok   - (2) a refused record first does not shadow a later allowed one (no first-match trap)
+  ok   - (3) security-track card with exceptions by dashboard/architect/qa → R7 AND R1 (and R4) still fire
+  ok   - (3) hook mode blocks completing the security-track card despite the exceptions
+  ok   - (4) non-vacuity: exception by architect on a non-security card → still valid (0 violations, X1, no A10)
+  ok   - (4) non-vacuity: exception by qa on a non-security card → still valid (0 violations, X1, no A10)
+  ok   - (4) non-vacuity: exception by human on a non-security card → still valid (0 violations, X1, no A10)
+  ok   - (4) non-vacuity: exception by dashboard on a non-security card → still valid (0 violations, X1, no A10)
+  ok   - (4) non-vacuity: exception by user on a non-security card → still valid (0 violations, X1, no A10)
+
+1g. t_b2588ee7 regressions (a qa-signoff-exception can be withdrawn by a later record):
+  ok   - (1) exception then withdrawal by same author (architect → architect) → no exception: R1 + R4 fire, X2 reported, no X1
+  ok   - (1) exception then withdrawal by another allowed author (dashboard → qa) → no exception: R1 + R4 fire, X2 reported, no X1
+  ok   - (2) withdrawal by an executing profile (backend) → ignored: exception holds (X1, 0 violations), A16(author), no X2
+  ok   - (2) withdrawal by the anonymous `worker` author → ignored: exception holds (X1, 0 violations), A16(author), no X2
+  ok   - (2) the `worker` withdrawal refusal says it names no profile
+  ok   - (2) a withdrawal key quoted in a code span is a citation → ignored: exception holds, A16(quoted)
+  ok   - (3) withdrawal without any exception → no effect: gate runs (JSON), R1 fires as on a bare card, A16(no-exception)
+  ok   - (3) a bare stray withdrawal on a compliant card changes nothing (0 violations, A16 only)
+  ok   - (3) a withdrawal posted BEFORE the exception does not pre-empt it (posterior records only)
+  ok   - re-arm: exception → withdrawal → new exception → the new one is operative, the first stays visible as X2
+  ok   - one comment recording an exception then its withdrawal → withdrawn
+  ok   - same-second exception + withdrawal → posting order (id) breaks the tie → withdrawn
+  ok   - withdrawal spelling "qa-signoff-exception-withdrawn: no…" alone is NOT an exception → R1 fires, no X1
+  ok   - withdrawal spelling "qa-signoff-exception: withdrawn — …" alone is NOT an exception → R1 fires, no X1
+  ok   - security-track card: exception refused, withdrawal is a no-op, R7 + R1 still fire
+  ok   - hook mode blocks completing a card whose exception was withdrawn
+
+2. Rule coverage (every rule must fire on its own non-compliant card):
+  ok   - no verdict, no evidence → R1_QA_VERDICT_MISSING
+  ok   - no verdict, no evidence → R4_EVIDENCE_MISSING
+  ok   - verdict token outside vocabulary → R2_QA_VERDICT_INVALID
+  ok   - fail verdict on a done card → R3_VERDICT_NOT_TERMINAL
+  ok   - blocked verdict on a done card → R3_VERDICT_NOT_TERMINAL
+  ok   - verdict without evidence → R4_EVIDENCE_MISSING
+  ok   - named evidence file missing → R5_EVIDENCE_FILE_MISSING
+  ok   - operative verdict names a missing artifact (scoping is not vacuous) → R5_EVIDENCE_FILE_MISSING
+  ok   - pass-with-conditions without follow-up → R6_CONDITIONS_UNTRACKED
+  ok   - crypto card without architect sign-off → R7_SECURITY_TRACK_SIGNOFF_MISSING
+  ok   - deferral to a non-QA card → R8_DEFERRAL_TARGET_INVALID
+  ok   - deferral to a phantom card → R8_DEFERRAL_TARGET_INVALID
+  ok   - newest record is a deferral to a non-QA card (superseding is ordered, not amnesty) → R8_DEFERRAL_TARGET_INVALID
+  ok   - quoted marker is documentation, not a deferral (R8 must not fire) → R1_QA_VERDICT_MISSING
+
+3. --strict-history turns grandfathered gaps into failures:
+  ok   - pre-epoch card fails under --strict-history
+  ok   - same card is advisory-only without --strict-history
+
+4. Audit on the fixture board reports the enforced failures and exits 1:
+  ok   - audit exits 1 with enforced failures
+  ok   - audit counts the grandfathered card separately
+
+5. Hook mode (pre_tool_call: kanban_complete):
+  ok   - non-compliant card → block directive + exit 2
+  ok   - compliant card → {} + exit 0
+  ok   - a non-QA marker comment does NOT clear the fail-closed hook (block + exit 2, reason names R1)
+  ok   - the same comment authored by qa still allows the completion (non-vacuity control)
+  ok   - task id resolved from extra.task_id
+  ok   - task id resolved from HERMES_KANBAN_TASK
+  ok   - other tool names pass through
+  ok   - unparseable payload → fail closed (block)
+  ok   - unreadable board → fail closed (block)
+  ok   - no resolvable task id → fail closed (block)
+  ok   - (a) session id in extra.task_id + HERMES_KANBAN_TASK set → allow ({} + exit 0)
+  ok   - (b) session id only → block, reason names the source and the id shape
+  ok   - (c) explicit tool_input.task_id → allow
+  ok   - (d) unknown task id → block, reason names the source of the id
+  ok   - (e) numeric run id in tool_input.task_id → resolved to its card via the board → allow
+  ok   - (f) identity vars scrubbed (no HERMES_KANBAN_TASK) + session id in extra → resolved from HERMES_KANBAN_WORKSPACE → allow
+  ok   - (g) same payload, workspace var empty → resolved from the worker's cwd basename → allow
+  ok   - (h) no id and no task-shaped location → still fails closed, listing every source tried
+  ok   - kill switch allows completion
+
+6. PR merged into master + required CI green on the merge commit (R9/R10, t_75180b28):
+  ok   - (1) open PR → R9_PR_NOT_MERGED naming PR #901 as open
+  ok   - (2) closed-unmerged PR → R9_PR_NOT_MERGED naming PR #902 as closed without merge
+  ok   - (3) merged PR with a red required check → R10_MERGE_CI_NOT_GREEN naming PR #903 and integration=failure (never R9)
+  ok   - (3b) a red check that is NOT required (sast) is not reported
+  ok   - (4) merged PR, all required checks green on the merge commit → allowed (0 violations, PR #904 judged)
+  ok   - (4b) the required list comes from the fixture's branch protection, not a hard-coded list
+  ok   - (4c) an earlier merge of the same card that landed red (#913, build=failure) → A13 advisory, not a violation
+  ok   - PR merged into a stacked branch is not merged into master → R9 naming #905 and its base
+  ok   - merge-commit CI still running / a required check missing → R10 (in_progress, missing)
+  ok   - merged green PR + a second open PR → allowed, the open one reported as A12_LINKED_PR_OPEN (#908); skipped + legacy status count as green
+  ok   - branch pushed but no PR ever opened → R9 naming the branch
+  ok   - card declares `Deliverable: code`, no PR → R9
+  ok   - non-code card (no PR, no branch, no declaration; a longer id in PR #909 does not link) → rule does not apply
+  ok   - a §5.6 sign-off exception does not waive R9 (repository fact, not a QA record)
+  ok   - GitHub unreachable → A11_CI_STATE_UNVERIFIABLE advisory, no violation (open-PR card completes)
+  ok   - GitHub unreachable → red-CI card is not failed either (A11 only)
+  ok   - branch protection unreadable → R10 not evaluated, A11 names the branch protection
+  ok   - branch protection unreadable does not disarm R9 (PR state was readable)
+  ok   - --no-github → A11, no violation
+  ok   - audit: a card completed (e.g. via `hermes kanban complete`) after the rule epoch with an open PR → R9 FAIL, exit 1
+  ok   - audit: a card completed before the rule epoch is not re-judged (no lookup, no R9)
+  ok   - hook: open PR → block (exit 2) with R9, PR #901, and the review→merger path — no misleading 'record the verdict' line
+  ok   - hook: merged PR with red CI → block with R10 and PR #903
+  ok   - hook: merged PR with green CI → {} + exit 0
+  ok   - hook: GitHub unreachable → allowed (A11 is advisory, never a block)
+
+7. A PR links a card only by declaration — head branch or `Closes`/`Card:`/`Task:` line (§5.9, t_7e8bf917):
+  ok   - (1) prose mention only → no link: a merged PR #921 that merely mentions the card does NOT satisfy R9 (Deliverable: code → R9) and is reported as A14_PR_MENTIONS_CARD
+  ok   - (2) `Closes <id>` line in the body → linked: PR #923 judged, allowed, no A14
+  ok   - (3) `Closes <id>` / `Task: <id>` only inside a code fence, an inline code span or an indented code block → no link (R9 on the Deliverable: code card) + A14 naming #924
+  ok   - (4) head branch named after the card (id absent from title and body) → linked: PR #925 judged, allowed
+  ok   - live #114 shape: an open foreign PR (#922) that quotes the card in prose → not linked, no R9 naming it, card out of scope; A14 keeps it visible
+  ok   - own merged PR (#928, head branch) + foreign open PR mentioning the card (#929) → allowed, A14 for #929 and NO A12 (it is not linked)
+  ok   - `- **Task:** t_a (BE-1), **<id>** (BE-2)` — bold bullet, list of ids → linked (#926 judged)
+  ok   - `Closes the gap found in <id>.` and a quoted `> Closes <id>` → not a declaration (R9 + A14 for #927)
+  ok   - id only in the PR title (`feat: … (<id>)`) → not a link (R9 + A14 for #930)
+  ok   - the R9 message tells the author how to declare the link (`Closes <id>` / head branch)
+  ok   - a longer id (#909 `Closes <id>9`) is neither a link nor a mention → no A14
+
+8. R10 judges the merge's push run only; manual runs on the same SHA are advisory (§5.9, t_339a0d02):
+  ok   - (1) push run green + later dispatch run red on the same SHA → no R10, A15 naming build and the dispatch event (live a48d622 shape)
+  ok   - (1b) the judged states are the push run's (all success)
+  ok   - (2) push run red + later dispatch run green → R10 integration=failure (a manual run cannot repair a red merge), A15 present
+  ok   - (3) push run red then re-run green (same suite, newer attempt) → no R10, no A15 (a re-run of the push run is the push run)
+  ok   - (4) non-vacuity: push run red alone → R10 integration=failure, no A15
+  ok   - (5) no push run on the merge commit, only a green dispatch run → R10 (fail closed: a manual run never satisfies R10), state no-push-run
+  ok   - (6) a required check from a suite no workflow run owns (another app) is judged as before → allowed
+
+9. The audit counts and surfaces A11; --fail-on-a11 turns it red (t_b102b100, §5.9):
+  ok   - A11-only board, no flag → exit 0 (exit behaviour unchanged), but the header counts `A11 … : 2` and names both cards
+  ok   - A11-only board: an `ok` card carrying A11 is tagged on its own line (no bare `ok`)
+  ok   - A11-only board + --fail-on-a11 → exit 1, header says `--fail-on-a11: FAIL`, still 0 card violations (A11 is not a violation)
+  ok   - --json: counts.a11 = 2, a11_task_ids = both ids, ok = true and fail_on_a11 = false without the flag
+  ok   - --json-out writes the same document as --json (counts + ids), and ok = false under --fail-on-a11
+  ok   - board without A11 (same cards, GitHub reachable) → exit 0 without the flag, `A11 … : 0`
+  ok   - board without A11 + --fail-on-a11 → exit 0 (`--fail-on-a11: pass`), no card tagged A11
+  ok   - fixture board with violations and GitHub readable → still exit 1, counts.a11 = 0 (A11 counts only what GitHub could not answer)
+  ok   - check --fail-on-a11 → refused (exit 3): a per-card check never fails on A11
+  ok   - hook on an A11-only card → still allowed ({} + exit 0)
+  ok   - summary: ONE `Bypasses and degradations` block — A11 row with counter 2, `yes — red (--fail-on-a11)`, both cards; then a per-card table with the A11 detail
+  ok   - annotations: exactly one ::warning:: per A11 card, each naming its card
+  ok   - annotations: workflow-command escaping (`:` in the title property → %3A, `%` in the message → %25) — no raw delimiter can split the command
+  ok   - summary without the flag: same A11 row, but `no (--fail-on-a11 off)` — the summary never claims a colour the exit code does not have
+  ok   - summary on the board without A11: A11 row counter 0 (`no (--fail-on-a11 on, count 0)`), no per-card table, no annotation (non-vacuity)
+  ok   - summary when the audit wrote no JSON → says `not available` + a warning, never a reassuring 0
+  ok   - summary on a document with no `degradations` block (older gate) → `not available`, never 0
+  ok   - text report: ONE `bypasses & degradations` block in the header, before the per-card lines
+  ok   - --json: `degradations[]` carries the A11 entry (rule, count, task_ids, fails_audit) consistent with counts.a11 / a11_task_ids, and per-card details
+  ok   - --json without the flag: A11 entry has fails_audit = false, fail_flag_on = false
+  ok   - `--fail-on-a11 false` → refused (exit 3), never silently on
+  ok   - `--json-out` without a path → refused (exit 3)
+
+10. The audit lists every bypass — X1 exception, X2 withdrawn, X3 completed outside the hook — and never fails on one (t_5b5b61e2, §5.10):
+  ok   - board whose only findings are bypasses → audit exit 0, ok = true, 0 violations, even with --fail-on-a11 (a bypass never turns the audit red)
+  ok   - X1: exactly the exceptions in force — BP-01, 02, 07 (re-armed), 08, 09; never the quoted key, the executing profile, the security-track card or the withdrawn one
+  ok   - X1: every occurrence is a record — BP-01 lists the exception in force (architect) AND the redundant one (human), each with its reason and its comment date; occurrences = 6
+  ok   - --json: counts.exceptions = { available, cards 5, occurrences 6 }; counts.completed_outside_hook = { available, cards 3, occurrences 4 }
+  ok   - X2: the withdrawn exceptions (BP-06, BP-07) are history — who recorded it, who withdrew it, why — and BP-06 is NOT under X1
+  ok   - X3: synthesized-run completion (CLI), no-run completion and manual_complete events are listed; the worker completion through the hook is NOT
+  ok   - X3 records: method, date, reason (summary / closure_method / manual_complete reason), actor `not recorded` (Hermes does not record who ran the CLI), newline flattened
+  ok   - check --task: the CLI-completed card carries the X3_COMPLETED_OUTSIDE_HOOK advisory and no violation; the worker-completed control does not
+  ok   - text report: X1/X2/X3 lines inside the ONE bypasses block, with counts, occurrences and a line per occurrence (card, date, author, reason, state)
+  ok   - trend: X1 last 30 days 6 > watch threshold 2 → `ABOVE`; X3 last 30 days 3, previous 30 days 1 (the old manual_complete), by month 2026-08: 1, 2026-09: 3; below its threshold
+  ok   - AR-2: a secret-shaped reason is withheld (rule id only) — the value appears in NONE of: text report, JSON document, run summary, annotations
+  ok   - summary: X1, X2 and X3 rows in the SAME `Bypasses and degradations` table (cards + occurrences, `never`), plus a trend table naming the watch threshold
+  ok   - summary: one row per occurrence (date, card, title, author, reason, state) — `#### X1_EXCEPTION: 6 occurrences on 5 cards` and `#### X3_COMPLETED_OUTSIDE_HOOK: 4 occurrences on 3 cards`
+  ok   - summary: untrusted Markdown in a reason is escaped — no live image/link, the pipe cannot split the row
+  ok   - annotations: one ::warning:: per X1 exception (6) + one for X1 above its watch threshold; one ::notice:: per non-empty X2/X3 type (never one per CLI completion)
+  ok   - legacy board without task_events → X3 `not available` (text, JSON, summary + warning), never a reassuring 0; X1 still listed; exit unchanged (0)
+  ok   - hook on a board without task_events → a compliant card is still allowed ({} + exit 0): the events read never fails the fail-closed hook
+  ok   - fail-safe: a gate copy with no secret-guard.mjs next to it withholds every reason (`secret scanner … unavailable`) instead of printing it unscanned; exit unchanged
+  ok   - `check --now-iso` → refused (exit 3); `audit --now-iso yesterday` → refused (exit 3)
+
+207/207 cases passed
+exit=0  node=v22.23.3  gate sha256=413da76c5f8f60b9233c43345404c336d0243173184ba60a957ea925d9a8f39b

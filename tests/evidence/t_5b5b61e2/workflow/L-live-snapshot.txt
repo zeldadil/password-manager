@@ -1,0 +1,33 @@
+job=qa-signoff-audit (live snapshot, GitHub off) audit_step_exit=1 summary_step_exit=0 enforce_step_exit=1
+annotations: warning=18 notice=1
+--- run summary: counter table + trend table (per-occurrence rows with free-text reasons NOT committed) ---
+### Bypasses and degradations
+
+Counted on every audit. A degradation is **never** a card violation; it says what this audit could not check or what was waived.
+A bypass (`X1`/`X2`/`X3`) **never** fails the audit: it is listed here so it stays visible (t_5b5b61e2, QA_SIGN_OFF_GATE.md §5.10).
+
+| type | count | fails this audit? | cards |
+|---|---|---|---|
+| `A11_CI_STATE_UNVERIFIABLE` — CI state unverifiable — R9/R10 not evaluated | 11 | **yes — red** (`--fail-on-a11`) | `t_65c5a636`, `t_cbaa9f7d`, `t_75180b28`, `t_46c18784`, `t_b2588ee7`, `t_9ae2bc23`, `t_7e1cea21`, `t_694c9e37`, `t_d2f1155c`, `t_372385ea`, `t_b102b100` |
+| `X1_EXCEPTION` — QA sign-off exception in force (§5.6) — R1/evidence waived | 5 (5 occurrences) | never | `t_f49d448c`, `t_930fddbe`, `t_80fc0326`, `t_b51a1ff3`, `t_9b3bdba0` |
+| `X2_EXCEPTION_WITHDRAWN` — QA sign-off exception withdrawn (§5.6) — history, not in force | 0 (0 occurrences) | never | — |
+| `X3_COMPLETED_OUTSIDE_HOOK` — completed outside the completion hook (CLI / dashboard / direct board edit, §5.10) | 54 (54 occurrences) | never | `t_4ccd2652`, `t_f9d4d3bb`, `t_ddd8fb1e`, `t_b51bf4b9`, `t_b6f633c3`, `t_55c28180`, `t_03612cd7`, `t_d136be82`, `t_d696f175`, `t_a7b64b39`, `t_f4f3ec16`, `t_e4341d18`, `t_fdd2548e`, `t_7f8643d9`, `t_63323ce5`, `t_a9d5cb1b`, `t_aca6ed13`, `t_f37504f0`, `t_930fddbe`, `t_80fc0326`, `t_b51a1ff3`, `t_c3cb6842`, `t_9b3bdba0`, `t_76ec1e22`, `t_08b05087`, `t_56490bf2`, `t_c4eb81f1`, `t_d7c21957`, `t_e2468413`, `t_4f872624`, `t_816a87b5`, `t_d5e68535`, `t_782802ac`, `t_65c5a636`, `t_18a945c2`, `t_cbaa9f7d`, `t_fe0be554`, `t_2cc2d094`, `t_51eb9ae5`, `t_dd9eb295`, `t_c7c986c7`, `t_b37ce45a`, `t_069c605b`, `t_75180b28`, `t_bc8335fe`, `t_8f551794`, `t_8577a5a9`, `t_c015bda7`, `t_15897ff9`, `t_46c18784`, `t_b8001b55`, `t_5089a8c1`, `t_7e1cea21`, `t_694c9e37` |
+
+Trend as of 2026-10-10T11:56:29.250Z (30-day windows):
+
+| type | last 30 days | previous 30 days | direction | watch threshold (30 days) | by month |
+|---|---|---|---|---|---|
+| `X1_EXCEPTION` | 5 | 0 | rising | 2: **above — review** | 2026-09: 5 |
+| `X2_EXCEPTION_WITHDRAWN` | 0 | 0 | flat | 2: below | — |
+| `X3_COMPLETED_OUTSIDE_HOOK` | 54 | 0 | rising | 10: **above — review** | 2026-09: 33, 2026-10: 21 |
+
+--- per-type section headings ---
+#### `A11_CI_STATE_UNVERIFIABLE`: 11
+#### `X1_EXCEPTION`: 5 occurrences on 5 cards
+#### `X3_COMPLETED_OUTSIDE_HOOK`: 54 occurrences on 54 cards
+--- X1 rows: date | card | author | state (reason column dropped) ---
+| 2026-09-18 11:22 UTC | `t_80fc0326` | dashboard | in force |
+| 2026-09-18 11:23 UTC | `t_9b3bdba0` | dashboard | in force |
+| 2026-09-18 11:23 UTC | `t_b51a1ff3` | dashboard | in force |
+| 2026-09-18 20:25 UTC | `t_930fddbe` | dashboard | in force |
+| 2026-09-18 20:52 UTC | `t_f49d448c` | human | in force |

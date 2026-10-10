@@ -1,0 +1,14 @@
+job=bypass-report-fixture selftest_step_exit=0 bypass_step_exit=0 fixture_root_found=yes
+--- selftest tail ---
+
+207/207 cases passed
+--- annotations printed by the summary script ---
+::warning title=X1 sign-off exception%3A above watch threshold::6 in the last 30 days (threshold 2, previous 30 days 0) — review them in the run summary; this never fails the audit
+::warning title=X1 sign-off exception%3A t_b5b60001::t_b5b60001 BP-01 exception in force + a redundant one — 2026-09-17 15:46 UTC · architect · incident INC-7, verdict waived 24h
+::warning title=X1 sign-off exception%3A t_b5b60002::t_b5b60002 BP-02 exception recorded from the dashboard — 2026-09-17 15:46 UTC · dashboard · closed by human decision, duplicate card
+::warning title=X1 sign-off exception%3A t_b5b60008::t_b5b60008 BP-08 exception whose reason carries a secret shape — 2026-09-17 15:46 UTC · architect · [reason withheld: matches R_SECRET_KEY_VALUE_PAIR — read it on the card]
+::warning title=X1 sign-off exception%3A t_b5b60009::t_b5b60009 BP-09 exception whose reason carries Markdown | pipes — 2026-09-17 15:46 UTC · architect · see ![pixel](https://example.invalid/p.png) and [link](https://example.invalid) | col `code` *em*
+::warning title=X1 sign-off exception%3A t_b5b60001::t_b5b60001 BP-01 exception in force + a redundant one — 2026-09-17 15:46 UTC · human · same incident, confirmed by the human
+::warning title=X1 sign-off exception%3A t_b5b60007::t_b5b60007 BP-07 exception withdrawn then re-armed — 2026-09-17 15:46 UTC · human · re-approved after review
+::notice title=X2 exception withdrawn%3A 2::2 occurrence(s) on 2 card(s) — listed in the run summary
+::notice title=X3 completed outside the hook%3A 4::4 occurrence(s) on 3 card(s) — listed in the run summary
