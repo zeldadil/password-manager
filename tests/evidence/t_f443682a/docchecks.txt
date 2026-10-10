@@ -1,0 +1,93 @@
+
+=== leftover dev processes ===
+405767 node /home/sap/.hermes/kanban/workspaces/t_750423a5/run3/clone/apps/services/api/node_modules/.bin/../tsx/dist/cli.mjs watch src/index.ts
+405774 node /home/sap/.hermes/kanban/workspaces/t_750423a5/run3/clone/apps/web/node_modules/.bin/../vite/bin/vite.js
+
+=== Planned item 1: Docker Compose / Postgres absent ===
+no compose/Dockerfile tracked
+no postgres driver dependency
+no postgres drizzle import
+
+=== Planned item 2: db:seed absent ===
+no seed script in any package.json
+
+=== Planned item 3: Swagger UI absent ===
+no swagger ui registration/dependency
+apps/services/api/src/middleware/envelope.ts:10: * paths are enveloped — infra endpoints (`/health`, `/openapi.json`) are served
+apps/services/api/src/middleware/error-handler.ts:216: * paths like `/health`, `/openapi.json`) would return a *raw* Fastify body,
+apps/services/api/src/routes/health.ts:6: * matching the contract documented in openapi.json (`GET /health`).
+
+=== Known gap: no vite proxy ===
+no proxy in vite.config.ts
+
+=== Facts: engines/nvmrc/packageManager/scripts ===
+7:    "dev": "pnpm -r --parallel --filter '**' run dev",
+15:    "test:e2e": "playwright test",
+16:    "test:e2e:install": "playwright install --with-deps chromium firefox webkit",
+17:    "test:e2e:report": "playwright show-report",
+28:  "packageManager": "pnpm@9.12.0",
+30:    "node": ">=22 <23",
+22
+9:    "dev": "tsx watch src/index.ts",
+10:    "start": "tsx src/index.ts",
+20:    "migrate": "tsx src/migrate.ts",
+21:    "migrate:generate": "drizzle-kit generate"
+apps/services/api/migrations/0000_baseline_schema.sql
+apps/services/api/migrations/0001_be002e_rate_limiting.sql
+apps/services/api/migrations/0002_be003c_secrets_table.sql
+
+=== Facts: env vars read by API vs doc table ===
+AUTO_LOCK_TIMEOUT_MS
+DATABASE_URL
+HOST
+JWT_SECRET
+NODE_ENV
+PORT
+apps/services/api/src/auth/jwt.ts:136:    throw new Error('JWT_SECRET must be set in production');
+
+=== Synthetic data: emails in doc ===
+320:alice@example.test
+331:alice@example.test
+342:alice@example.test
+
+=== Synthetic data: suspicious secret shapes in doc ===
+no secret-shaped literals
+277:NODE_ENV=production JWT_SECRET="$(openssl rand -hex 32)" \
+
+=== gitleaks on the doc (if available) ===
+/home/sap/.local/bin/gitleaks
+7:31PM INF scanned ~17552 bytes (17.55 KB) in 22.2ms
+7:31PM INF no leaks found
+
+=== Internal anchors resolve ===
+](#4-database)
+](#73-known-gap-web-ui--api-in-local-dev)
+](#planned--not-yet-available)
+1:# Development setup
+33:## 1. Prerequisites
+44:### Install Node 22 (example using nvm)
+55:### Enable pnpm through Corepack
+70:## 2. Clone and install
+97:## 3. Environment variables
+112:### Important: nothing loads `.env` files automatically
+136:### Pitfalls
+153:## 4. Database
+155:### Implemented: SQLite (no Docker)
+173:### Planned: PostgreSQL via Docker Compose
+183:## 5. Migrations
+213:## 6. Seed data
+228:## 7. Run the apps
+230:### 7.1 Everything at once
+257:### 7.2 One app at a time
+265:### 7.3 Known gap: Web UI ↔ API in local dev
+274:### 7.4 Running in production mode (local check only)
+292:## 8. Verification checklist
+406:## Troubleshooting
+421:## Planned / not yet available
+
+=== README pointer ===
+232:[`docs/development/setup.md`](docs/development/setup.md).
+old 'planned' sentence gone
+
+=== §7.4 nit: 'example value above' ===
+287:deployment. Never use the example value above. The deployment and runbook
