@@ -13,7 +13,19 @@ HTTP codes and redacted log lines only).
 | `ci-green1-secret-scan.log` | run 38074698633 (dispatch, all refs): no leaks found |
 | `ci-red-secret-scan.log` | run 38074823974 (negative control pushed): leaks found: 1 = the control commit `a5331dd` |
 | `ci-green2-secret-scan.log` | run 38074938982 (control branch deleted): no leaks found |
+| `ci-fullhistory-38075597533.log` | post-merge `secret-scan-full-history` run 38075597533 (dispatch, `9a439d3`): 303 commits, no leaks found |
+| `ci-logs.sha256` | sha256 of the four `ci-*.log` files above |
 | `format-guard-*.out`, `format-guard-bad-sample.ign` | format guard refuses a bare string and a commit-less entry (exit 1); accepts the real baseline (exit 0) |
+
+The four `ci-*.log` files are the raw `secret-scan` / `secret-scan-full-history` **job**
+logs, downloaded with `gh api repos/zeldadil/password-manager/actions/jobs/<job-id>/logs`
+on 2026-10-10 and committed unmodified (gitleaks ran with `--redact`; GitHub masks
+`GITHUB_TOKEN`). They were missing from PR #137 because `.gitignore` ignores `*.log`;
+they are force-added by `t_764a497a` (AC4). Before committing they were scanned with
+`gitleaks dir` 8.24.3 (0 findings), `trufflehog filesystem` (0 detectors), a
+telegram-token shape grep (0) and a check that every `Secret:` line reads `REDACTED`.
+Job ids: green1 114279119920, red 114279506138, green2 114279845179,
+full-history 114281791403.
 
 ## Reproduce
 
