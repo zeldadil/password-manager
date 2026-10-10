@@ -632,9 +632,10 @@ flags exec-bit/consent/mtime drift.
 profile runs **two** hooks (`qa-signoff-gate.sh` and `secret-guard.sh`), and `doctor` reports `script modified since
 approval` for each one whose mtime moved — for the sign-off gate that is exactly what a re-install does. The approval
 refresh (`hermes hooks revoke` + re-approve) is interactive-only, so a headless re-install cannot clear it. The
-verifier tolerates **one** such warning and therefore reports FAIL on such a profile; read the warning text before
-treating it as drift: both entries must be `script modified since approval`, with `script exists and is executable`,
-`allowlisted` and `produced valid JSON` all green.
+verifier reads `doctor` **per hook section** (t_39a7e9eb): only the `qa-signoff-gate.sh` section is judged — a single
+`script modified since approval` there is a `warn`, anything more (a second warning, any `✗`, or no section for the
+sign-off hook at all) is a FAIL. Issues in another hook's section (e.g. `secret-guard.sh` drift) are printed as
+`info` and never counted; that hook has its own verifier (`verify-secret-guard.sh`).
 
 **Confirm what the gate would decide, without touching the kill switch:**
 

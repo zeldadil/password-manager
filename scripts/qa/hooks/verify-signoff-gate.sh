@@ -7,7 +7,8 @@
 #   3. config.yaml carries the pre_tool_call entry with fail_closed: true
 #   4. `hermes config get hooks` (profile-scoped) resolves the hook
 #   5. `hermes hooks list` shows it with consent granted
-#   6. `hermes hooks doctor` reports clean
+#   6. `hermes hooks doctor` reports the sign-off hook's own section clean (another
+#      hook's issues are printed as `info`, never counted — t_39a7e9eb)
 #   7. live fire (`--live`): a synthetic pre_tool_call payload for a
 #      non-compliant card must come back as `decision: block`, and a compliant
 #      card must come back as `{}` — using --fixture-db / --fixture-noncompliant
@@ -46,7 +47,7 @@ while [ $# -gt 0 ]; do
     --fixture-compliant) FIXTURE_GOOD="$2"; shift 2 ;;
     --fixture-repo) FIXTURE_REPO="$2"; shift 2 ;;
     --profiles-root) PROFILES_ROOT="$2"; shift 2 ;;
-    -h|--help) sed -n '2,25p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
     *) echo "verify-signoff-gate: unknown argument $1" >&2; exit 3 ;;
   esac
 done
@@ -59,9 +60,12 @@ fi
 pass=0
 fail=0
 warned=0
+infos=0
 ok()   { echo "   ok   - $1"; pass=$((pass + 1)); }
 bad()  { echo "   FAIL - $1"; fail=$((fail + 1)); }
 warn() { echo "   warn - $1"; warned=$((warned + 1)); }
+# info: observed, deliberately NOT a verdict on the sign-off hook (e.g. another hook's drift).
+info() { echo "   info - $1"; infos=$((infos + 1)); }
 
 echo "QA sign-off gate verification — repo gate: ${GATE_SRC}"
 echo
@@ -102,16 +106,31 @@ for profile in "${PROFILES[@]}"; do
   fi
 
   if command -v hermes >/dev/null 2>&1 && [ -f "${cfg}" ]; then
-    if HERMES_HOME="${pd}" hermes config get hooks 2>/dev/null | grep -q "qa-signoff-gate.sh"; then
+    # Capture each hermes command's output in full, THEN filter it (t_39a7e9eb).
+    # `hermes … | grep -q` under `set -o pipefail` is a false negative: grep -q exits on
+    # the first match, the next write from hermes hits a closed pipe, Python exits 120
+    # on the failed stdout flush, and pipefail turns the pipeline red although the hook
+    # IS listed. A capture also lets a genuine hermes failure be reported as such
+    # instead of masquerading as "hook not shown".
+    cfg_hooks_out="$(HERMES_HOME="${pd}" hermes config get hooks 2>/dev/null)"; cfg_hooks_rc=$?
+    if [ "${cfg_hooks_rc}" -ne 0 ]; then
+      bad "hermes config get hooks failed (exit ${cfg_hooks_rc})"
+    elif grep -qF "qa-signoff-gate.sh" <<<"${cfg_hooks_out}"; then
       ok "hermes config get hooks resolves the hook for this profile"
     else
       bad "hermes config get hooks does not resolve the hook for this profile"
     fi
-    if HERMES_HOME="${pd}" hermes hooks list 2>/dev/null | grep -q "qa-signoff-gate.sh"; then
+    hooks_list_out="$(HERMES_HOME="${pd}" hermes hooks list 2>/dev/null)"; hooks_list_rc=$?
+    # The hook's own entry line (`- <path> matcher=… (timeout=…, ✓ allowed)`), never a
+    # neighbouring hook's line.
+    hook_line="$(grep -m 1 -F "qa-signoff-gate.sh" <<<"${hooks_list_out}")"
+    if [ "${hooks_list_rc}" -ne 0 ]; then
+      bad "hermes hooks list failed (exit ${hooks_list_rc})"
+    elif [ -n "${hook_line}" ]; then
       ok "hermes hooks list shows the hook"
       if grep -q "^hooks_auto_accept: true" "${cfg}"; then
         ok "consent via hooks_auto_accept: true (headless workers do not need the interactive prompt)"
-      elif HERMES_HOME="${pd}" hermes hooks list 2>/dev/null | grep -q "✓ allowlisted"; then
+      elif grep -qF "✓ allowed" <<<"${hook_line}"; then
         ok "consent via shell-hooks allowlist"
       else
         bad "hook is neither allowlisted nor auto-accepted — non-TTY workers would silently skip it"
@@ -119,21 +138,43 @@ for profile in "${PROFILES[@]}"; do
     else
       bad "hermes hooks list does not show the hook"
     fi
-    doctor_out="/tmp/signoff-gate-doctor-${profile}.txt"
+    doctor_out="${TMPDIR:-/tmp}/signoff-gate-doctor-${profile}.txt"
     if HERMES_HOME="${pd}" hermes hooks doctor >"${doctor_out}" 2>&1; then
       # `hermes hooks doctor` exits 0 even when it prints "issue(s) found", so the exit
       # code alone is not a clean bill of health — read the report (t_5455942d).
-      doctor_warns="$(grep -c '⚠' "${doctor_out}" || true)"
-      doctor_drift="$(grep -c 'script modified since approval' "${doctor_out}" || true)"
-      if grep -q "issue(s) found" "${doctor_out}"; then
-        if [ "${doctor_warns}" = "1" ] && [ "${doctor_drift}" = "1" ]; then
-          warn "hermes hooks doctor: only the expected post-install mtime drift (approval refresh is interactive-only; hooks_auto_accept: true keeps the hook live — see the live fire below)"
-        else
-          bad "hermes hooks doctor reported issues beyond the expected mtime drift (${doctor_warns} warning(s)) — see ${doctor_out}"
-        fi
+      # The report has one section per configured hook (`  [event] <command>`); only the
+      # sign-off hook's own section decides ok/warn/FAIL here. Issues in another hook's
+      # section (e.g. secret-guard.sh drift) are reported as info, never counted
+      # (t_39a7e9eb) — that hook has its own verifier.
+      doctor_tally="$(awk '
+        /^  \[[^]]+\] / {
+          cur = substr($0, index($0, "] ") + 2)
+          sig = (cur ~ /(^|\/)qa-signoff-gate\.sh( |$)/)
+          if (sig) seen = 1
+          next
+        }
+        /^[^ ]/ { sig = 0; cur = ""; next }
+        sig && /⚠/ { w++; if (/script modified since approval/) d++ }
+        sig && /✗/ { x++ }
+        !sig && cur != "" && (/⚠/ || /✗/) { other[cur]++ }
+        END {
+          printf "%d %d %d %d\n", seen + 0, w + 0, d + 0, x + 0
+          for (k in other) printf "%s\t%d\n", k, other[k]
+        }' "${doctor_out}")"
+      read -r sig_seen sig_warns sig_drift sig_errors <<<"$(head -n 1 <<<"${doctor_tally}")"
+      if [ "${sig_seen}" -ne 1 ]; then
+        bad "hermes hooks doctor does not check the sign-off hook — see ${doctor_out}"
+      elif [ "${sig_errors}" -gt 0 ] || [ "${sig_warns}" -gt "${sig_drift}" ] || [ "${sig_drift}" -gt 1 ]; then
+        bad "hermes hooks doctor: sign-off hook has issues beyond the expected mtime drift (${sig_errors} error(s), ${sig_warns} warning(s)) — see ${doctor_out}"
+      elif [ "${sig_drift}" -eq 1 ]; then
+        warn "hermes hooks doctor: sign-off hook shows only the expected post-install mtime drift (approval refresh is interactive-only; hooks_auto_accept: true keeps the hook live — see the live fire below)"
       else
-        ok "hermes hooks doctor clean (transcript: ${doctor_out})"
+        ok "hermes hooks doctor: sign-off hook clean (transcript: ${doctor_out})"
       fi
+      while IFS=$'\t' read -r other_hook other_n; do
+        [ -n "${other_hook}" ] || continue
+        info "hermes hooks doctor: ${other_n} issue(s) on an unrelated hook ${other_hook} — not counted here (see ${doctor_out})"
+      done < <(tail -n +2 <<<"${doctor_tally}")
     else
       bad "hermes hooks doctor reported a problem — see ${doctor_out}"
     fi
@@ -161,14 +202,15 @@ for profile in "${PROFILES[@]}"; do
         fi
       }
 
+      # Here-strings, not `printf | grep -q` pipelines: same pipefail class as above.
       bad_out="$(fire "${bad_payload}")"
-      if printf '%s' "${bad_out}" | grep -q '"action": "block"'; then
+      if grep -qF '"action": "block"' <<<"${bad_out}"; then
         ok "live fire — non-compliant card ${FIXTURE_BAD} blocked (exit 2 + action:block)"
       else
         bad "live fire did not block ${FIXTURE_BAD}: $(printf '%s' "${bad_out}" | tail -3 | tr '\n' ' ')"
       fi
       good_out="$(fire "${good_payload}")"
-      if printf '%s' "${good_out}" | grep -q "exit=0" && printf '%s' "${good_out}" | grep -q "parsed: <none"; then
+      if grep -qF "exit=0" <<<"${good_out}" && grep -qF "parsed: <none" <<<"${good_out}"; then
         ok "live fire — compliant card ${FIXTURE_GOOD} allowed (exit 0, no dispatcher contribution)"
       else
         bad "live fire did not allow ${FIXTURE_GOOD}: $(printf '%s' "${good_out}" | tail -3 | tr '\n' ' ')"
@@ -179,6 +221,6 @@ for profile in "${PROFILES[@]}"; do
   echo
 done
 
-echo "verification: ${pass} ok · ${warned} warn · ${fail} FAIL"
+echo "verification: ${pass} ok · ${warned} warn · ${fail} FAIL · ${infos} info (not counted)"
 [ "${fail}" -eq 0 ] || exit 1
 exit 0

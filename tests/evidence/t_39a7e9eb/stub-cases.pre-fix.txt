@@ -1,0 +1,20 @@
+# stub-cases.sh — 2026-10-10T12:44:58Z — repo 1fc8907 — verifier under test: scripts/qa/hooks/zz-prefix-verify.tmp.sh (sha256 92c521975aed)
+[MISBEHAVES] A real shape (architect/docs/qa 2026-10-09): sign-off drift + unrelated secret-guard drift -> warn + info, 0 FAIL: FAIL=2 (want 0) info=0 (want 1)
+         FAIL - hermes hooks list does not show the hook
+         FAIL - hermes hooks doctor reported issues beyond the expected mtime drift (2 warning(s)) — see /tmp/signoff-gate-doctor-p.txt
+[MISBEHAVES] B all clean -> 0 FAIL, 0 info: FAIL=1 (want 0) info=0 (want 0)
+         FAIL - hermes hooks list does not show the hook
+[MISBEHAVES] C negative: sign-off hook has a 2nd warning of its own -> FAIL: FAIL=1 (want 1) info=0 (want 0)
+         FAIL - hermes hooks list does not show the hook
+[MISBEHAVES] D negative: sign-off hook error (✗) even with the other hook clean -> FAIL: FAIL=1 (want 1) info=0 (want 0)
+         FAIL - hermes hooks list does not show the hook
+[MISBEHAVES] E negative: doctor has no section for the sign-off hook (only the other hook's) -> FAIL, other hook still info: FAIL=1 (want 1) info=0 (want 1)
+         FAIL - hermes hooks list does not show the hook
+[ok] F negative: hooks list genuinely lacks the hook -> FAIL: FAIL=1 (want 1) info=0 (want 0)
+         FAIL - hermes hooks list does not show the hook
+[MISBEHAVES] G negative: hooks list itself fails (exit 120) -> FAIL reported as a hermes failure: FAIL=1 (want 1) info=0 (want 0)
+         FAIL - hermes hooks list does not show the hook
+[MISBEHAVES] H unrelated hook whose path merely contains the name (qa-signoff-gate.sh.bak) is not mistaken for the sign-off hook -> FAIL (no section): FAIL=1 (want 1) info=0 (want 1)
+         FAIL - hermes hooks list does not show the hook
+
+stub cases: 1 behave as expected · 7 misbehave
