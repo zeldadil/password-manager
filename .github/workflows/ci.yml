@@ -258,10 +258,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # full history so committed secrets are detected too
+      # t_76461419 — the baseline (.gitleaksignore) may only hold commit-scoped
+      # fingerprints; a file/rule-wide or commit-less exclusion fails here.
+      # Groups are justified in docs/security/gitleaks-baseline.md. The weekly
+      # full-history run lives in secret-scan-full-history.yml.
+      - name: gitleaks baseline format guard
+        run: bash scripts/qa/check-gitleaksignore.sh .gitleaksignore
       - name: gitleaks secret scan
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pinned: the baseline fingerprints were generated with 8.24.3.
+          GITLEAKS_VERSION: "8.24.3"
       - name: truffleHog secret scan (entropy + verified, JSON report)
         # `if: always()` — truffleHog must produce its report even when the
         # gitleaks step above already failed on a finding, otherwise the
