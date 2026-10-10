@@ -1,0 +1,4 @@
+check-gitleaksignore: tests/evidence/t_76461419/format-guard-bad-sample.ign:1 is not a commit-scoped fingerprint (commit:file:rule:line)
+check-gitleaksignore: tests/evidence/t_76461419/format-guard-bad-sample.ign:2 is not a commit-scoped fingerprint (commit:file:rule:line)
+check-gitleaksignore: FAIL — 2 invalid line(s) out of 3 entries
+exit=1

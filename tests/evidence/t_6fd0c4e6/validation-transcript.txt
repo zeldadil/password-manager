@@ -1,0 +1,61 @@
+== d577aa4 (PR #132 squash) ==
+H2 headings (outside fences):
+  l.9: Project Overview
+  l.63: Architecture Diagram
+  l.101: Prerequisites
+  l.123: Quick Start
+  l.220: Security
+  l.233: Architecture Decision Records
+  l.248: License
+AC2 PASS: four required sections are the first four H2, in order
+  sections after the four required: ['Security', 'Architecture Decision Records', 'License']
+mermaid blocks: [(71, 99)]
+  mermaid header: flowchart LR; 27 lines
+Quick Start fenced blocks: [('bash', 129, 146), ('bash', 158, 171)]
+  bash -n block l.129-146 (16 lines): ok rc=0 
+  bash -n block l.158-171 (12 lines): ok rc=0 
+
+RESULT: PASS
+exit=0
+
+== origin/master a56dc76 (after dd7ec14) ==
+H2 headings (outside fences):
+  l.9: Project Overview
+  l.63: Architecture Diagram
+  l.101: Prerequisites
+  l.123: Quick Start
+  l.234: Security
+  l.247: Architecture Decision Records
+  l.262: License
+AC2 PASS: four required sections are the first four H2, in order
+  sections after the four required: ['Security', 'Architecture Decision Records', 'License']
+mermaid blocks: [(71, 99)]
+  mermaid header: flowchart LR; 27 lines
+Quick Start fenced blocks: [('bash', 129, 146), ('bash', 158, 171), ('bash', 201, 206)]
+  bash -n block l.129-146 (16 lines): ok rc=0 
+  bash -n block l.158-171 (12 lines): ok rc=0 
+  bash -n block l.201-206 (4 lines): ok rc=0 
+
+RESULT: PASS
+exit=0
+
+== negative control: Prerequisites moved before Architecture Diagram, unclosed quote in a Quick Start block ==
+H2 headings (outside fences):
+  l.9: Project Overview
+  l.63: Prerequisites
+  l.85: Architecture Diagram
+  l.123: Quick Start
+  l.221: Security
+  l.234: Architecture Decision Records
+  l.249: License
+  sections after the four required: ['Security', 'Architecture Decision Records', 'License']
+mermaid blocks: [(93, 121)]
+  mermaid header: flowchart LR; 27 lines
+Quick Start fenced blocks: [('bash', 129, 147), ('bash', 159, 172)]
+  bash -n block l.129-147 (17 lines): FAIL rc=2 /home/sap/.hermes/profiles/qa/cache/scratch/tmp5c32rm8w.sh: line 1: unexpected EOF while looking for matching `"'
+  bash -n block l.159-172 (12 lines): ok rc=0 
+
+RESULT: FAIL
+  - AC2: first four H2 are ['Project Overview', 'Prerequisites', 'Architecture Diagram', 'Quick Start'], expected ['Project Overview', 'Architecture Diagram', 'Prerequisites', 'Quick Start']
+  - AC4: bash -n failed for block l.129-147
+exit=1

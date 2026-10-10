@@ -1,0 +1,27 @@
+flowchart LR
+    subgraph Client["Client — browser trust boundary"]
+        WEB["apps/web<br/>React 18 + Vite SPA<br/>(implemented)"]
+        EXT["apps/browser-firefox<br/>Firefox MV3 extension<br/>(planned — scaffold only)"]
+        CKDF["Client-side Argon2id KDF<br/>ADR-007 Option B<br/>(planned)"]
+    end
+
+    subgraph Server["Server trust boundary — apps/services/api"]
+        API["Fastify API<br/>/health · /openapi.json · /auth/*<br/>/api/v1/resources · folders · tags"]
+        CRYPTO["packages/crypto<br/>Argon2id · AES-256-GCM · HMAC/JWT"]
+        ORM["Drizzle ORM"]
+    end
+
+    DB[("SQLite dev.db<br/>(implemented, dev)")]
+    PG[("PostgreSQL<br/>(planned, production)")]
+
+    WEB -->|"JSON over HTTP<br/>/auth/* · /api/v1/*"| API
+    API -->|"register / unlock:<br/>server-side KDF (current)"| CRYPTO
+    API --> ORM
+    ORM --> DB
+    ORM -.->|planned| PG
+    WEB -.->|planned| CKDF
+    EXT -.->|"postMessage bridge<br/>ADR-005 (planned)"| WEB
+    EXT -.->|"own JWT session<br/>(planned)"| API
+
+    classDef planned stroke-dasharray: 5 5
+    class EXT,CKDF,PG planned
