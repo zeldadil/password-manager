@@ -27,7 +27,7 @@ import { db } from '../db';
 import { sessions, refreshTokens } from '../schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { config } from '../config';
-import { signAccessToken, generateRefreshToken, hashRefreshToken, type DecodedAccessToken } from './jwt';
+import { signAccessToken, generateRefreshToken, hashRefreshToken, getJwtSecret, type DecodedAccessToken } from './jwt';
 import { randomUUID } from 'node:crypto';
 
 // ─── Config ────────────────────────────────────────────────────────────────────
@@ -170,6 +170,12 @@ export function refreshPlugin(server: FastifyInstance): void {
         }
       }
 
+      // ── Resolve the signing secret before any state change ─────────────────
+      // getJwtSecret() fails closed in production when JWT_SECRET is unset.
+      // Resolving it before rotation means a misconfigured deployment errors
+      // without consuming the caller's refresh token (t_1c17cfc8).
+      const jwtSecret = getJwtSecret();
+
       // ── Rotate refresh token (BE-002d AC1 — refresh rotation) ──────────────
       const newRawRefreshToken = generateRefreshToken();
       const newRefreshTokenHash = hashRefreshToken(newRawRefreshToken);
@@ -203,7 +209,7 @@ export function refreshPlugin(server: FastifyInstance): void {
         .where(eq(sessions.id, session.id));
 
       // ── Issue new access token ──────────────────────────────────────────────
-      const accessToken = signAccessToken(session.userId, process.env.JWT_SECRET ?? 'dev-jwt-secret-change-in-production', ACCESS_TOKEN_TTL_SEC, session.id);
+      const accessToken = signAccessToken(session.userId, jwtSecret, ACCESS_TOKEN_TTL_SEC, session.id);
 
       return reply.code(200).send({
         accessToken,
