@@ -1,0 +1,38 @@
+  ok   PROJECT_BRIEF.md
+  ok   architecture/adr/ADR-007-vault-key-client-availability.md
+  ok   architecture/adr/ADR-002-overall-architecture.md
+  ok   architecture/adr/ADR-005-extension-bridge-protocol.md
+  ok   PROJECT_BRIEF.md
+  ok   architecture/adr/ADR-001-functional-patterns-from-passbolt.md
+  ok   architecture/adr/ADR-002-overall-architecture.md
+  ok   architecture/adr/SEC-001-threat-model.md
+  ok   architecture/adr/ADR-007-vault-key-client-availability.md
+  ok   .nvmrc
+  ok   .npmrc
+  ok   .env.example
+  ok   docs/development/setup.md
+  ok   architecture/adr/SEC-001-threat-model.md
+  ok   architecture/adr/ADR-007-vault-key-client-availability.md
+  ok   SECURITY.md
+  ok   architecture/adr/ADR-001-functional-patterns-from-passbolt.md
+  ok   architecture/adr/ADR-002-overall-architecture.md
+  ok   architecture/adr/ADR-003-data-model.md
+  ok   architecture/adr/ADR-004-api-contract.yaml
+  ok   architecture/adr/ADR-005-extension-bridge-protocol.md
+  ok   architecture/adr/ADR-006-workspace-manifest-crypto-path.md
+  ok   architecture/adr/ADR-007-vault-key-client-availability.md
+  ok   architecture/adr/SEC-001-threat-model.md
+  ok   architecture/kanban/backlog.md
+relative links: 25, missing: 0
+absolute URLs:
+  http://127.0.0.1:3000
+  http://127.0.0.1:3000/auth/register
+  http://127.0.0.1:3000/auth/unlock
+  http://127.0.0.1:3000/health
+  http://127.0.0.1:3000/openapi.json
+  http://localhost:5173
+  https://github.com/zeldadil/password-manager.git
+  https://learn.microsoft.com/en-us/windows/wsl/
+emails: ['alice@example.test', 'pnpm@9.12.0']
+secret-shaped strings: 0
+exit=0
