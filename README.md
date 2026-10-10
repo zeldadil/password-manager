@@ -227,8 +227,9 @@ exist"*.
 | `pnpm scan:secrets` | Run a gitleaks secret scan (requires `gitleaks` on your `PATH`) |
 | `pnpm --filter @password-manager/api migrate` | Apply database migrations |
 
-A full development setup guide (`docs/development/setup.md`, covering seeding and
-production configuration) is **planned** and not yet on `master`.
+For the full step-by-step development setup (environment variables, database,
+migrations, verification checklist, troubleshooting, and what is still planned), see
+[`docs/development/setup.md`](docs/development/setup.md).
 
 ## Security
 
