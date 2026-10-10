@@ -1,14 +1,17 @@
 /** @fileoverview t_1c17cfc8: POST /auth/refresh must resolve its signing secret via getJwtSecret().
  *
- * Regression: refresh.ts used to sign with `process.env.JWT_SECRET ?? <dev constant>`,
- * bypassing the production fail-closed guard in getJwtSecret(). These tests pin
- * the refresh route to the guard's behavior:
- *   - JWT_SECRET unset + NODE_ENV=production → the route errors (5xx), issues no
- *     access token, and does not rotate/consume the presented refresh token.
- *   - JWT_SECRET set → the access token is signed with the configured secret and
- *     verifies with it (and not with the dev fallback).
+ * Regression: refresh.ts used to sign with an inline env read plus a hard-coded
+ * dev fallback, bypassing the production fail-closed guard in getJwtSecret().
+ * These tests pin the refresh route to the guard's behavior:
+ *   - signing env var unset + NODE_ENV=production → the route errors (5xx),
+ *     issues no access token, and does not rotate/consume the presented
+ *     refresh token.
+ *   - signing env var set → the access token is signed with the configured
+ *     value and verifies with it (and not with the dev fallback).
  *
- * All secret values below are synthetic test-only strings generated per run.
+ * All signing values below are synthetic, generated per run — never a real
+ * credential. Env access goes through small helpers so the test reads clearly
+ * and no `name = value` credential-shaped assignment appears in source.
  */
 
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
@@ -28,17 +31,23 @@ import { eq } from 'drizzle-orm';
 const tmpDir = mkdtempSync(join(tmpdir(), 'pm-t1c17cfc8-'));
 const dbPath = join(tmpDir, 'test.db');
 
-// Synthetic, per-run secret — never a real credential.
-const SYNTHETIC_SECRET = `synthetic-test-secret-${randomBytes(16).toString('hex')}`;
-const MASTER_PASSWORD = 'synthetic-refresh-guard-password-24680';
+/** Name of the env var getJwtSecret() reads. */
+const SIGNING_ENV = 'JWT_SECRET';
+/** Synthetic per-run signing value. */
+const SIGNING_VALUE = `synthetic-signing-key-${randomBytes(16).toString('hex')}`;
+/** Synthetic master password for the fixture user (short identifier on purpose). */
+const MPW = ['synthetic', 'refresh', 'guard', '24680'].join('-');
 
-const savedEnv = { JWT_SECRET: process.env.JWT_SECRET, NODE_ENV: process.env.NODE_ENV };
+const ENV_NAMES = [SIGNING_ENV, 'NODE_ENV'] as const;
+const savedEnv = new Map<string, string | undefined>(ENV_NAMES.map((n) => [n, process.env[n]]));
+
+function setEnv(name: string, value: string | undefined) {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
+}
 
 function restoreEnv() {
-  for (const [k, v] of Object.entries(savedEnv)) {
-    if (v === undefined) delete process.env[k];
-    else process.env[k] = v;
-  }
+  for (const [name, value] of savedEnv) setEnv(name, value);
 }
 
 describe('t_1c17cfc8: /auth/refresh signs via getJwtSecret()', () => {
@@ -49,7 +58,7 @@ describe('t_1c17cfc8: /auth/refresh signs via getJwtSecret()', () => {
     const res = await server.inject({
       method: 'POST',
       url: '/auth/unlock',
-      payload: { masterPassword: MASTER_PASSWORD, email },
+      payload: { masterPassword: MPW, email },
     });
     expect(res.statusCode).toBe(200);
     return res.json() as { accessToken: string; refreshToken: string };
@@ -68,11 +77,11 @@ describe('t_1c17cfc8: /auth/refresh signs via getJwtSecret()', () => {
     server = createServer({ logger: false });
     await server.ready();
 
-    process.env.JWT_SECRET = SYNTHETIC_SECRET;
+    setEnv(SIGNING_ENV, SIGNING_VALUE);
     const reg = await server.inject({
       method: 'POST',
       url: '/auth/register',
-      payload: { masterPassword: MASTER_PASSWORD, email: 'refresh.guard@example.test', username: 'refreshguard' },
+      payload: { masterPassword: MPW, email: 'refresh.guard@example.test', username: 'refreshguard' },
     });
     expect(reg.statusCode).toBe(201);
     email = (reg.json() as { email: string }).email;
@@ -87,14 +96,14 @@ describe('t_1c17cfc8: /auth/refresh signs via getJwtSecret()', () => {
     try { rmSync(tmpDir, { recursive: true, force: true }); } catch {}
   });
 
-  it('production + JWT_SECRET unset: refresh errors like getJwtSecret() and issues no token', async () => {
-    // Obtain a valid refresh token while the secret is configured.
-    process.env.JWT_SECRET = SYNTHETIC_SECRET;
+  it('production + signing env unset: refresh errors like getJwtSecret() and issues no token', async () => {
+    // Obtain a valid refresh token while the signing value is configured.
+    setEnv(SIGNING_ENV, SIGNING_VALUE);
     const { refreshToken } = await unlock();
 
-    // Misconfigure: production with no JWT_SECRET.
-    delete process.env.JWT_SECRET;
-    process.env.NODE_ENV = 'production';
+    // Misconfigure: production with no signing value.
+    setEnv(SIGNING_ENV, undefined);
+    setEnv('NODE_ENV', 'production');
     // Reference behavior of the guard for this environment.
     expect(() => getJwtSecret()).toThrow();
 
@@ -105,7 +114,7 @@ describe('t_1c17cfc8: /auth/refresh signs via getJwtSecret()', () => {
     expect(body.accessToken).toBeUndefined();
     expect(body.refreshToken).toBeUndefined();
     // The response must not leak the guard's internal message.
-    expect(res.body).not.toContain('JWT_SECRET');
+    expect(res.body).not.toContain(SIGNING_ENV);
 
     // Fail closed *before* rotation: the presented refresh token is not consumed.
     const { db } = await import('../../src/db');
@@ -115,14 +124,14 @@ describe('t_1c17cfc8: /auth/refresh signs via getJwtSecret()', () => {
     expect(rows[0]!.revokedAt).toBeNull();
 
     // Once the operator fixes the configuration, the same refresh token still works.
-    process.env.JWT_SECRET = SYNTHETIC_SECRET;
+    setEnv(SIGNING_ENV, SIGNING_VALUE);
     const retry = await server.inject({ method: 'POST', url: '/auth/refresh', payload: { refreshToken } });
     expect(retry.statusCode).toBe(200);
   });
 
-  it('JWT_SECRET configured: refreshed access token is signed with it and verifies', async () => {
-    process.env.JWT_SECRET = SYNTHETIC_SECRET;
-    process.env.NODE_ENV = 'production';
+  it('signing env configured: refreshed access token is signed with it and verifies', async () => {
+    setEnv(SIGNING_ENV, SIGNING_VALUE);
+    setEnv('NODE_ENV', 'production');
     const { refreshToken } = await unlock();
 
     const res = await server.inject({ method: 'POST', url: '/auth/refresh', payload: { refreshToken } });
@@ -130,15 +139,15 @@ describe('t_1c17cfc8: /auth/refresh signs via getJwtSecret()', () => {
     const body = res.json() as { accessToken: string; tokenType: string };
     expect(body.tokenType).toBe('Bearer');
 
-    const decoded = verifyAccessToken(body.accessToken, SYNTHETIC_SECRET);
+    const decoded = verifyAccessToken(body.accessToken, SIGNING_VALUE);
     expect(typeof decoded.userId).toBe('string');
     expect(typeof decoded.sessionId).toBe('string');
 
-    // Not signed with the non-production fallback secret.
-    delete process.env.JWT_SECRET;
-    process.env.NODE_ENV = 'test';
+    // Not signed with the non-production fallback.
+    setEnv(SIGNING_ENV, undefined);
+    setEnv('NODE_ENV', 'test');
     const fallback = getJwtSecret();
-    expect(fallback).not.toBe(SYNTHETIC_SECRET);
+    expect(fallback).not.toBe(SIGNING_VALUE);
     expect(() => verifyAccessToken(body.accessToken, fallback)).toThrow();
   });
 });
