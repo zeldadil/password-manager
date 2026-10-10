@@ -458,5 +458,35 @@ eb6044b8bb263182953dedd5af817cb01eeba6ad:tests/evidence/t_e348e0b7/trufflehog-or
 
 ## Negative control (criterion 2)
 
-_Pending: filled in by the evidence commit of this PR (t_76461419)._
+Runs on PR #137 (branch `feature/t_76461419`, head `01d7e92`), 2026-10-10. In
+every run the `ci.yml` `secret-scan` job was started by `workflow_dispatch`, so
+gitleaks-action scanned **all refs**
+(`git log -p -U0 --full-history --all`) with gitleaks 8.24.3 and the PR's
+`.gitleaksignore`. Log excerpts (values redacted by `--redact`) are in
+`tests/evidence/t_76461419/ci-*-secret-scan.log`.
+
+| step | run / job | result |
+|---|---|---|
+| 1. full scan with the baseline | [run 38074698633](https://github.com/zeldadil/password-manager/actions/runs/38074698633), job 114279119920 | **green** — 300 commits, `no leaks found`, 344 findings skipped by fingerprint |
+| 2. throwaway branch `qa/t_76461419-negative-control` pushed: commit `a5331dd` appends a **fake** random 32-char value (`const qaNegativeControlApiKey = '…'`) to `apps/services/api/tests/auth/unlock.test.ts`, a file that already has 36 baselined fingerprints | — | — |
+| 3. full scan again, same baseline | [run 38074823974](https://github.com/zeldadil/password-manager/actions/runs/38074823974), job 114279506138 | **red** — `leaks found: 1`, exactly the control: `a5331dd263c709db231bfc114f7b35927162b601:apps/services/api/tests/auth/unlock.test.ts:generic-api-key:329` |
+| 4. throwaway branch deleted, full scan again | [run 38074938982](https://github.com/zeldadil/password-manager/actions/runs/38074938982), job 114279845179 | **green** — `no leaks found` |
+
+This proves the two properties the baseline must keep: the scan of the whole
+history is green with it, and a new finding is still reported **inside a file
+that already has baselined findings** (no file-wide exclusion). The
+pull_request run of the PR
+([run 38074699067](https://github.com/zeldadil/password-manager/actions/runs/38074699067))
+is green as well, with no exception added for the baseline files.
+
+The format guard was exercised locally on a sample containing a bare string and
+a commit-less `file:rule:line` entry: exit 1, both lines refused
+(`format-guard-negative.out`); on the real `.gitleaksignore`: exit 0, 483
+commit-scoped fingerprints (`format-guard-positive.out`).
+
+The weekly workflow `secret-scan-full-history.yml` runs the same action, the
+same version and the same baseline. GitHub only dispatches a workflow that
+exists on the default branch, so its first live run can only happen after the
+merge (`gh workflow run secret-scan-full-history.yml --ref master`); until then
+it was validated with `actionlint` (clean).
 
