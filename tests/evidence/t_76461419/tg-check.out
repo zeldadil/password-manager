@@ -1,0 +1,17 @@
+telegram-token findings: 11, distinct values: 4
+sha256[:16]=aca3d28e22485ee2  http=401  ok=False  findings=1
+    ab33fba34e020ae46fd2878a1181377cd7eb23a4:apps/services/api/tests/auth/security.test.ts:telegram-token:516
+sha256[:16]=6d51c6b0d4706124  http=401  ok=False  findings=1
+    40280562b11fe21291dd9bd13621b09e332678db:tests/evidence/t_b51a1ff3/reproduce-review.sh:telegram-token:77
+sha256[:16]=62fe6fe5053a50ec  http=401  ok=False  findings=8
+    433181e890fb0a9bd1f6cd0e374ee6140c3af937:tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt:telegram-token:40
+    433181e890fb0a9bd1f6cd0e374ee6140c3af937:tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt:telegram-token:41
+    433181e890fb0a9bd1f6cd0e374ee6140c3af937:tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt:telegram-token:53
+    433181e890fb0a9bd1f6cd0e374ee6140c3af937:tests/evidence/t_0af5aa3e/scan-final-gitleaks.txt:telegram-token:54
+    eb6044b8bb263182953dedd5af817cb01eeba6ad:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt:telegram-token:8
+    eb6044b8bb263182953dedd5af817cb01eeba6ad:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt:telegram-token:22
+    eb6044b8bb263182953dedd5af817cb01eeba6ad:tests/evidence/t_e348e0b7/trufflehog-origin-master-output.txt:telegram-token:36
+    543c396d8bf4289492b80066a93e8c9f51de8c2a:PROJECT_BRIEF.md:telegram-token:87
+sha256[:16]=df5ccd96d61f23a3  http=401  ok=False  findings=1
+    9f5daab3b9f664985c5e838ffd782de0e1a779c8:scripts/qa/secret-guard.selftest.mjs:telegram-token:41
+RESULT: no value answered 200
