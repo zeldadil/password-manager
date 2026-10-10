@@ -1,0 +1,102 @@
+
+=== env ===
+2026-10-10T19:31:06Z
+Linux 6.8.0-146-generic
+
+=== §2 clone ===
+clone rc=0
+HEAD=9a439d3f7898457fe33b7942a622a9bb19b28358
+9a439d3f7898457fe33b7942a622a9bb19b28358	refs/heads/master
+a56dc76 ancestor-of-HEAD rc=0
+f9a0b771bad0458b492382bf55f31d3e452116c3493b5ba4f3a45e04f19f3ddc  docs/development/setup.md
+
+=== §1/§2 nvm use + corepack enable ===
+Found '/home/sap/.hermes/kanban/workspaces/t_750423a5/run3/clone/.nvmrc' with version <22>
+Now using node v22.23.3 (npm v10.9.9)
+nvm use rc=0
+v22.23.3
+corepack enable rc=0
+9.12.0
+
+=== §2 pnpm install ===
+pnpm install rc=0
++ react-dom 18.3.1
++ react-router-dom 6.30.6
++ vitest 3.2.7
+
+Done in 3.7s
+
+=== §5 migrate (run 1) ===
+
+> @password-manager/api@0.1.0 migrate /home/sap/.hermes/kanban/workspaces/t_750423a5/run3/clone/apps/services/api
+> tsx src/migrate.ts
+
+[migrate] All migrations applied successfully.
+migrate#1 rc=0
+
+=== §5 migrate (run 2, idempotency) ===
+
+> @password-manager/api@0.1.0 migrate /home/sap/.hermes/kanban/workspaces/t_750423a5/run3/clone/apps/services/api
+> tsx src/migrate.ts
+
+[migrate] All migrations applied successfully.
+migrate#2 rc=0
+-rw-r--r-- 1 sap sap 212992 Oct 10 19:31 apps/services/api/dev.db
+3
+3
+__drizzle_migrations  refresh_tokens        tags                
+folders               resource_tags         users               
+group_members         resources             vaults              
+groups                secrets             
+permissions           sessions            
+
+=== §7.1 pnpm dev (background) ===
+waited 4s
+Scope: 5 of 6 workspace projects
+apps/services/api dev$ tsx watch src/index.ts
+apps/web dev$ vite
+apps/web dev:   VITE v8.3.0  ready in 277 ms
+apps/web dev:   ➜  Local:   http://localhost:5173/
+apps/services/api dev: {"level":30,"time":1791660678547,"pid":405796,"hostname":"ai-server","msg":"Server listening at http://127.0.0.1:3000"}
+apps/services/api dev: [api] @password-manager/api v0.1.0 listening at http://127.0.0.1:3000 (development)
+web 5173 -> 200
+
+=== §8.1 health ===
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    72  100    72    0     0  39933      0 --:--:-- --:--:-- --:--:-- 72000
+{"status":"ok","version":"0.1.0","timestamp":"2026-10-10T19:31:19.046Z"}
+HTTP 200
+
+=== §8.2 openapi ===
+200 application/json; charset=utf-8
+
+=== §8.3 register ===
+{"id":"d96ab608-a72c-417a-9da0-47512704231e","email":"alice@example.test","username":"alice","kdfParams":{"algorithm":"argon2id","memory":65536,"iterations":3,"parallelism":4,"hashLength":32}}
+HTTP 201
+
+=== §8.3 register duplicate ===
+{"error":"Conflict","message":"A user with this email already exists"}
+HTTP 409
+
+=== §8.3 unlock (tokens redacted) ===
+{"accessToken":"<redacted>","refreshToken":"<redacted>","expiresIn":900,"tokenType":"Bearer"}
+HTTP 200
+
+=== §8.4 TOKEN extraction (verbatim) ===
+TOKEN length=281 segments=3
+
+=== §8.4 POST folders ===
+{"header":{"id":"e4cfed73-cf86-40b9-ab65-ae96f2b89721","status":"success","servertime":"2026-10-10T19:31:22.542Z","action":"CreateFolder","message":"","code":201},"body":{"id":"c8853098-082b-4952-9e80-8eb9e81b31ea","vaultId":"3af3b568-10ff-4730-96ae-45cb52c2c7e3","ownerId":"d96ab608-a72c-417a-9da0-47512704231e","name":"Synthetic folder","parentId":null,"description":null,"icon":null,"color":null,"permissionMask":null,"createdAt":"2026-10-10T19:31:22.000Z","updatedAt":"2026-10-10T19:31:22.000Z","deleted":false}}
+HTTP 201
+
+=== §8.4 GET folders ===
+{"header":{"id":"a6bcf811-dce6-4070-a175-19e98a4037a3","status":"success","servertime":"2026-10-10T19:31:22.554Z","action":"ListFolders","message":"","code":200},"body":{"data":[{"id":"c8853098-082b-4952-9e80-8eb9e81b31ea","vaultId":"3af3b568-10ff-4730-96ae-45cb52c2c7e3","ownerId":"d96ab608-a72c-417a-9da0-47512704231e","name":"Synthetic folder","parentId":null,"description":null,"icon":null,"color":null,"permissionMask":null,"createdAt":"2026-10-10T19:31:22.000Z","updatedAt":"2026-10-10T19:31:22.000Z","deleted":false}],"pagination":{"page":1,"perPage":20}}}
+HTTP 200
+
+=== §8.4 GET folders without auth ===
+{"header":{"id":"f7cf5f6f-7ca1-4d2d-9b9a-299c67e97988","status":"error","servertime":"2026-10-10T19:31:22.568Z","action":"ListFolders","message":"Authentication is required.","code":401},"body":{"errors":[{"code":"UNAUTHORIZED","field":":global","message":"Authentication is required."}]}}
+HTTP 401
+
+=== stop pnpm dev ===
+stopped
