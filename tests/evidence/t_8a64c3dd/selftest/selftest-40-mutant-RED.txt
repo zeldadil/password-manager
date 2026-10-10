@@ -1,0 +1,54 @@
+signoff-audit-local selftest — fixture root: /home/sap/.hermes/profiles/qa/cache/scratch/signoff-audit-local-selftest-h3D2CL
+1. unit
+  FAIL guard refuses a gate-readable comment: "QA-VERDICT: pass"
+  FAIL guard refuses a gate-readable comment: "verdict: fail"
+  FAIL guard refuses a gate-readable comment: "Verdict — pass"
+  FAIL guard refuses a gate-readable comment: "qa-signoff-exception: x"
+  FAIL guard refuses a gate-readable comment: "qa sign-off exception — y"
+  FAIL guard refuses a gate-readable comment: "Evidence: tests/evidence/x/README.md"
+  FAIL guard refuses a gate-readable comment: "attachment: a.txt"
+  FAIL guard refuses a gate-readable comment: "Artifacts — x"
+  ok   every rule id (alone and all together) yields a comment the guard accepts
+  ok   findings: rules deduplicated, A11 added, malformed card id / rule dropped
+2. run on the fixture board (--fail-on-a11, GitHub off)
+  ok   precondition: the fixture has a violating card, an A11 card and a compliant card
+  ok   run exits 0 (findings are reported, not an error of the job)
+  FAIL violating card: exactly one qa comment `AUDIT 2026-10-12 : R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING`
+       [{"author":"qa","body":"AUDIT 2026-10-12 : R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING verdict: fail\n\nWeekly QA sign-off gate audit, posted automatically by qa (t_8a64c3dd). This notice changes nothing on the card: no status, assignee or record is touched.\nThe rules above are the gate's findings for this card as of this run; their meaning is in QA_SIGN_OFF_GATE.md section 4.\nFull report: maintenance card t_f00000aa, file qa-signoff-audit-20261012T061700Z.txt."}]
+  FAIL A11 card: one comment `AUDIT 2026-10-12 : A11_CI_STATE_UNVERIFIABLE`
+       [{"author":"qa","body":"AUDIT 2026-10-12 : A11_CI_STATE_UNVERIFIABLE verdict: fail\n\nWeekly QA sign-off gate audit, posted automatically by qa (t_8a64c3dd). This notice changes nothing on the card: no status, assignee or record is touched.\nA11 means the audit could not verify this card's CI state on GitHub (R9/R10 not evaluated). It fails the weekly audit (--fail-on-a11) until the CI state can be read; it is not a defect in the card's own work.\nFull report: maintenance card t_f00000aa, file qa-signoff-audit-20261012T061700Z.txt."}]
+  ok   compliant card: no AUDIT comment
+  ok   maintenance card: synthesis comment whose FIRST line is `AUDIT-RUN: 2026-10-12T06:17:00Z`
+  ok   synthesis: result FAIL (gate exit 1, --fail-on-a11) and both cards listed
+  ok   maintenance card: the full text report and the JSON report are attached, by qa
+  ok   attached text report is the real gate audit output (header + FAIL line for the violating card)
+  ok   the job only ever calls `hermes kanban comment` / `hermes kanban attach` (no complete/unblock/assign/edit, no send)
+  ok   every write carries --author qa and targets the audited board (HERMES_KANBAN_DB)
+  ok   synthesis is posted LAST (the stamp means the run finished)
+  ok   no card status / assignee / title / body changed
+  FAIL gate-inert: every card's violation and advisory set is identical after the AUDIT comments
+       before {"t_f0000001":"{\"v\":[\"R1_QA_VERDICT_MISSING\",\"R4_EVIDENCE_MISSING\"],\"a\":[]}","t_f0000002":"{\"v\":[],\"a\":[]}","t_f0000003":"{\"v\":[],\"a\":[\"A11_CI_STATE_UNVERIFIABLE\"]}"}
+after  {"t_f0000001":"{\"v\":[\"R3_VERDICT_NOT_TERMINAL\",\"R4_EVIDENCE_MISSING\"],\"a\":[]}","t_f0000002":"{\"v\":[],\"a\":[]}","t_f0000003":"{\"v\":[\"R3_VERDICT_NOT_TERMINAL\"],\"a\":[\"A11_CI_STATE_UNVERIFIABLE\"]}"}
+3. idempotence
+  FAIL same-day re-run exits 0 and adds no duplicate card notice
+       signoff-audit-local: AUDIT-RUN: 2026-10-12T09:00:00Z · gate exit 1 · 2 card(s) with findings · 2 notice(s) posted, 0 already posted · report /home/sap/.hermes/profiles/qa/cache/scratch/signoff-audit-local-selftest-h3D2CL/out/qa-signoff-audit-20261012T090000Z.txt
+
+  FAIL …and its synthesis says `0 posted, 2 already posted for this date`
+  FAIL next week's run posts a new notice on the still-violating card
+4. check-stale
+  ok   fresh stamp (1 day old) → exit 0 `AUDIT OK`
+  ok   negative control: stamp older than 8 days → exit 1 `AUDIT MISSING`
+  ok   boundary: exactly 8 days → still OK
+  ok   negative control: maintenance card with no stamp at all → exit 1 (last: never)
+  ok   a stamp written by another profile, a FAILED stamp and a quoted stamp are not runs → still exit 1
+  ok   check-stale refuses a card that is not the maintenance card (exit 3)
+5. failure paths
+  ok   run refuses a maintenance card id that is not the maintenance card: exit 2, nothing written
+  ok   run on a missing maintenance card: exit 2, nothing written
+  ok   missing --maintenance-card: usage exit 3
+  ok   a board write that fails → exit 2, and NO `AUDIT-RUN:` stamp is written
+  ok   …an `AUDIT-RUN-FAILED:` notice is posted instead
+  ok   hermes CLI missing → exit 2 (never a silent success)
+  ok   --dry-run: exit 0, plans the writes, performs none
+
+26 passed, 14 failed

@@ -1,0 +1,13 @@
+t_7e1cea21  could not read the checks of merge commit b19fe2769f01 from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rul
+t_694c9e37  could not read the checks of merge commit 261d74af72be from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rul
+t_d2f1155c  could not read the branch list from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evalua
+t_372385ea  could not read the checks of merge commit 64d153122e6a from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rul
+t_b102b100  could not read the checks of merge commit 6d0d3acb1e42 from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rul
+t_39a7e9eb  could not read the checks of merge commit 626feb74677e from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rul
+t_339a0d02  could not read the checks of merge commit fdaabca54c55 from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rul
+t_76461419  could not read the checks of merge commit 9a439d3f7898 from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rul
+t_1708dc86  could not read the checks of merge commit dd7ec14294df from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rul
+t_6fd0c4e6  could not read the checks of merge commit 4858aecfbf1e from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rul
+t_750423a5  could not read the checks of merge commit df0b4cd39fc4 from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rul
+t_1e217ae2  could not read the branch list from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evalua
+t_fe000001  could not read the branch list from GitHub (GitHub time budget (20000 ms) exhausted) — the PR-merged / merge-commit-CI rule (§5.9) was not evalua

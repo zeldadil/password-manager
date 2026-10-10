@@ -411,9 +411,10 @@ after the card) — `WORKTREE_STRATEGY.md` §5 step 3.
   the §5.6 exceptions and the CLI bypasses join it with `t_5b5b61e2`), every card that carries A11 is tagged
   `[A11: …]` on its own line (never a bare `ok`), and `--json` exposes `counts.a11`, `a11_task_ids` and the
   generic `degradations[]` block. `--fail-on-a11` makes the audit exit 1 when at least one card carries A11;
-  without it the exit code is unchanged (local / offline runs). The scheduled `qa-signoff-audit.yml` passes
+  without it the exit code is unchanged (local / offline runs). The weekly local audit (§6.5, `t_8a64c3dd`) passes
   `--fail-on-a11`: it runs **with** GitHub, so an A11 there is a real degradation (token, branch-protection read,
-  time budget) and the run is red. It also writes the block to the run summary and one `::warning::` annotation
+  time budget) and the run reports FAIL; each A11 card gets an `AUDIT` comment. `qa-signoff-audit.yml` (fixture
+  boards only since `t_8a64c3dd`) writes the block to the run summary and one `::warning::` annotation
   per card (`scripts/qa/signoff-audit-summary.mjs`, fed by `--json-out`). The exceptions (§5.6) and the
   completions made outside the hook are counted in the same block (§5.10) but **never** fail the audit.
 
@@ -434,7 +435,7 @@ It is **not wrapped**: `hermes_cli` is code outside this repository, a patch wou
 could not be tested in this CI. The path is documented as a **human override**, reserved for the human (Adil) and the
 architect's integration role — and it is **not silent**: the board **audit applies `R9`/`R10` to every card completed
 at/after the rule epoch**, so a card closed through the CLI with an unmerged PR or a red merge commit is reported as a
-FAIL by the next audit (`qa-signoff-audit.yml`, CI-001h). Agents use the CLI too (the architect confirmed it on
+FAIL by the next audit (the weekly local audit, §6.5). Agents use the CLI too (the architect confirmed it on
 `t_75180b28`), so the audit — not the CLI — is the enforcement point for that path; anyone using it should run
 `node scripts/qa/signoff-gate.mjs check --task <id> --pre-complete --repo <clone>` first. Since `t_5b5b61e2` every
 completion made this way is also **listed** by the audit (`X3_COMPLETED_OUTSIDE_HOOK`, §5.10), whatever the rules say
@@ -452,8 +453,8 @@ about the card.
   `cancel-in-progress` false; PR runs still cancel each other). A `cancelled` merge commit predating the fix (or a run
   cancelled by hand) is still re-run with `gh run rerun <id>`.
 - *Token rights.* Reading branch protection needs admin read on the repository: the owner token used on the host has
-  it; a GitHub-hosted `GITHUB_TOKEN` does not, so an audit run there reports `A11` for `R10` (the audit already needs a
-  self-hosted runner for the board, CI-001h).
+  it; a GitHub-hosted `GITHUB_TOKEN` does not, so an audit run there reports `A11` for `R10` — one more reason the
+  weekly audit runs on the host (§6.5, `t_8a64c3dd`).
 
 ### 5.10 Bypasses are listed by the audit, never failed on (`t_5b5b61e2`)
 
@@ -585,6 +586,43 @@ _GOAL_MAX_TURNS)` and `scrub_kanban_env()` removes them, so a hook subprocess (a
 `HERMES_KANBAN_TASK` — confirmed empirically in `tests/evidence/t_5455942d/` (`hook-env-probe.py`). That scrub is a
 deliberate runtime-scoping behaviour and must not be undone for the gate's convenience.
 
+### 6.5 Weekly board audit — local cron, reported on the board (`t_8a64c3dd`)
+
+The weekly audit runs **on the host that carries the board**, never on a GitHub runner (Adil's decision 2026-10-09;
+architect analysis #632 on `t_30d7dff5`): a hosted runner cannot see `~/.hermes/kanban.db`, and the repository is
+public, so a self-hosted runner with the board mounted would let a fork PR execute code on the host. On the host the
+board is local and the `gh` login reads branch protection, so `R9`/`R10` are evaluated for real and `--fail-on-a11`
+is meaningful. There is no extra token and no runner.
+
+| Piece | What it does |
+|---|---|
+| Hermes cron job `qa-weekly-signoff-audit` (profile `qa`) | `17 6 * * 1` (Monday 06:17 UTC), `no_agent` (no LLM, the script *is* the job), `deliver=local`, `failure_deliver=local` — **nothing is sent to Telegram** |
+| `scripts/qa/cron/qa-weekly-signoff-audit.sh` (installed copy: `~/.hermes/profiles/qa/scripts/`) | keeps its own clone under `~/.hermes/profiles/qa/cache/signoff-audit/`, fetches, audits a **throwaway detached worktree of `origin/master`** (removed on exit; the shared clone `/home/sap/password-manager` is never touched), one run at a time (`flock`); sets `QA_GATE_GH_BUDGET_MS=600000` — the gate's 20 s default is sized for the hook and, on a whole-board audit, turned 13 cards into A11 "time budget exhausted" in the rehearsal |
+| `node scripts/qa/signoff-audit-local.mjs run --db … --maintenance-card … --out-dir … --fail-on-a11` | runs `signoff-gate.mjs audit --json-out`, then reports **to the agents, on the board** (below). Exit 0 whatever the audit found; 2 = operational failure; 3 = usage |
+| `node scripts/qa/signoff-audit-local.mjs check-stale --db … --maintenance-card … [--max-age-days 8]` | exit 1 + `AUDIT MISSING: …` when the newest `AUDIT-RUN:` stamp written by `qa` on the maintenance card is older than 8 days or absent — for **another** mechanism (architect's review cron): a job that did not run cannot report its own absence |
+| `node scripts/qa/signoff-audit-local.selftest.mjs` | 41-case fixture proof (stub `hermes`, real gate audit, GitHub off); also run by `qa-signoff-audit.yml` on PRs that touch these files and on `workflow_dispatch` |
+
+What each run writes — and nothing else (`hermes kanban comment` / `hermes kanban attach`, author `qa`; it never
+unblocks, completes, reassigns or edits a card):
+
+1. on the permanent maintenance card **`t_9c3f521a`** "AUDIT: résultats hebdomadaires du gate" (`triage`, never
+   dispatched): the full text report and the `--json` document as **attachments**
+   (`qa-signoff-audit-<YYYYMMDDTHHMMSSZ>.txt|.json`);
+2. on **every card in violation**, and every card carrying `A11` (which fails the audit under `--fail-on-a11`): one
+   comment whose first line is `AUDIT <YYYY-MM-DD> : <RULE>, <RULE>` — the owning agent reads it on its card. A
+   same-day re-run does not repeat it;
+3. on the maintenance card, **last**: a synthesis whose first line is the machine-readable stamp
+   `AUDIT-RUN: <ISO8601>` (counts, bypass block, revision audited, cards with findings). A run that could not finish
+   posts `AUDIT-RUN-FAILED: <ISO8601>` instead, which `check-stale` does not count as a run.
+
+The `AUDIT` comments are **inert for the gate**: they carry no verdict marker, no loose `verdict:` path, no
+sign-off-exception key and no evidence label (`assertInertForGate` refuses to post otherwise), and the selftest
+re-audits the fixture board after posting and requires every card's violation and advisory set to be unchanged.
+
+`qa-signoff-audit.yml` no longer has a `schedule` (it pointed at the dead `hermes-host` runner and produced a
+`cancelled` run every week since 2026-09-21) and no real-board job: it is the fixture regression test above, on
+`ubuntu-latest`.
+
 ---
 
 ## 7. Effective date and grandfathering
@@ -701,7 +739,7 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 7 | Hermes-core observation (payload, not a repo defect): the `pre_tool_call` payload's `extra.task_id` is the *session id* (`agent/inline_tool_executors.py::tool_hook_ids` → `effective_task_id`), and the kanban identity keys are scrubbed from hook subprocesses (`agent/delegation_context.py::scrub_kanban_env`). The gate now compensates from the worker's location §6.4; do **not** "fix" this by un-scrubbing the identity keys — that scrub is deliberate runtime scoping | `architect` (record only) |
 | 8 | Run-metadata `verdict` is the one author-independent verdict source, kept deliberately by `t_338f47fd` (AC 1c: "run-metadata sources keep their current behaviour"), so a non-QA run still satisfies `R1` by self-declaring; `A8_VERDICT_SELF_DECLARED` makes it visible. Decide whether `R1` should also reject a non-`qa` run's metadata — one live card depends on it today (`t_710ed14c`, an `architect` run), so the decision needs that card's QA review first | `qa` (gate lane) |
 | 9 | Prose verdict records that are **not** colon-separated are no longer read at all (§5.8, `t_df8e644a`): the live em-dash form `QA-001g verdict — pass-with-conditions` (`t_78b46688`, whose card keeps a run-metadata verdict, so no outcome changed) and any `verdict — <token>` form. Re-admit one only with a path guard (a match whose span is part of a path/file name stays inert) rather than by re-widening the separator, and only with its own regression cases. Measured cost of the narrowing: 1 live comment; the failure direction is `R1`, never a silent pass | `qa` (gate lane) |
-| 10 | `R9`/`R10` rollout (§5.9): after the merge, re-install the hook in all 7 profiles (`install-signoff-gate.sh --all --apply` + verifier) and confirm `gh auth status` succeeds **in the hook environment** of each profile — without it every completion only gets `A11`, i.e. the rule is silently advisory. The scheduled audit needs a `gh` token with admin read for branch protection (a GitHub-hosted `GITHUB_TOKEN` cannot read it). Since `t_b102b100` the scheduled audit runs with `--fail-on-a11`, so until that token exists on its runner the run is **red** on A11 by design — not a defect to silence | `qa` (install) + `architect` (runner/token) |
+| 10 | `R9`/`R10` rollout (§5.9): after the merge, re-install the hook in all 7 profiles (`install-signoff-gate.sh --all --apply` + verifier) and confirm `gh auth status` succeeds **in the hook environment** of each profile — without it every completion only gets `A11`, i.e. the rule is silently advisory. The weekly audit runs on the host with its `gh` login (§6.5, `t_8a64c3dd`), which reads branch protection; it passes `--fail-on-a11`, so an A11 there is reported as a FAIL and on each A11 card — not a defect to silence | `qa` (install) + `architect` (runner/token) |
 | 11 | `ci.yml` cancels an in-progress `master` run when the next merge lands (`concurrency … cancel-in-progress: true`), which leaves a merge commit with `cancelled` required checks → `R10` until re-run. Decide whether `push` runs on `master` should stop cancelling (e.g. `cancel-in-progress: ${{ github.event_name == 'pull_request' }}`); `ci.yml` is a collision hotspot, so this is a decision, not a silent edit. **Decided and closed (`t_694c9e37`, card created by `architect`):** on the default branch the group is per run and `cancel-in-progress` is false; PR runs keep cancelling each other — evidence in `tests/evidence/t_694c9e37/` | `architect` |
 | 12 | ~~Linking is by mention~~ — **closed by `t_7e8bf917` (2026-10-08)**: a PR links a card only by declaration (head branch, or a `Closes`/`Card:`/`Task:` body line outside code); mentions are `A14_PR_MENTIONS_CARD` (§5.9). Live: `#114` no longer links `t_75180b28`. Optional follow-up for `architect`: a PR template carrying a `Closes t_xxxxxxxx` line | `architect` |
 | 13 | Bypass report (§5.10, `t_5b5b61e2`): (a) the watch thresholds `X1` 2 / `X2` 2 / `X3` 10 per 30 days are a QA proposal — on the 2026-10-10 snapshot both `X1` (5) and `X3` (54) are above them, so either the values or the practice need a decision; (b) Hermes records no actor for a CLI/dashboard completion and has no `--override "<reason>"` flag, and `hermes kanban complete --force` on a running card is indistinguishable from a worker completion — closing either gap is a Hermes-side change (or a CLI wrapper, which architect decision #505 declined); (c) the PR-only `bypass-report-fixture` job in `qa-signoff-audit.yml` adds a `pull_request` trigger limited to the gate files (fixture board only, never required) — confirm it is acceptable under CI-001h's "no PR trigger" design | `architect` |
@@ -725,3 +763,4 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 2026-10-09 | `t_b2588ee7` — **§5.6 an exception can be withdrawn**. `findException` kept the first applied exception and nothing could replace it, so an exception recorded in error was the one irrevocable object of the gate. New explicit key `qa-signoff-exception withdrawn: <reason>` (chosen over "last occurrence wins", rationale in §5.6 and in the `findException` doc comment), under the same author allowlist and code-span rule as the exception itself; records replayed in posting order (`ORDER BY created_at, id` — a same-second tie keeps posting order); a withdrawal with no exception in force is a no-op; a later exception re-arms. `EXCEPTION_RE` no longer reads `qa-signoff-exception-withdrawn: …` / `qa-signoff-exception: withdrawn — …` as an exception. New report-only codes `X2_EXCEPTION_WITHDRAWN` and `A16_EXCEPTION_WITHDRAWAL_IGNORED` (A11–A15 were already taken). Selftest 172 → 188 (RED against the master gate: all 16 new cases fail, the 172 earlier cases pass). Master-vs-branch audit over a live-board snapshot (142 done cards): 0 violation-set, 0 advisory-set, 0 operative-exception changes (`tests/evidence/t_b2588ee7/`) |
 | 2026-10-10 | `t_5b5b61e2` — **§5.10 the audit lists every bypass**, in the "bypasses & degradations" block `t_b102b100` opened: `X1_EXCEPTION` (each exception in force, plus the redundant records that repeat it), `X2_EXCEPTION_WITHDRAWN` (history, not an active bypass — consistent with `t_b2588ee7`) and the new report-only `X3_COMPLETED_OUTSIDE_HOOK` (a completion the hook never saw: synthesized-run completion from the CLI/dashboard, completion with no run, `manual_complete` event — read from `task_events`; Hermes has no `--override` flag and records no actor, both stated). One line per occurrence — card, date, author, reason, state — in the text report, `--json` (`counts.exceptions` / `exceptions_withdrawn` / `completed_outside_hook`, per-card `records`, per-type `trend`) and the run summary; a per-month trend, last-30-vs-previous-30 and a watch threshold per type (`BYPASS_WATCH_30D`, `--now-iso`). A bypass **never** changes the exit code. Reasons are secret-scanned on full length (`secret-guard.mjs`; withheld on a hit or when the scanner is missing), fence runs shortened, Markdown-escaped in the summary. A board without `task_events` reports `X3` as `not available`, and the hook is unaffected. `qa-signoff-audit.yml` gains a PR-only `bypass-report-fixture` job (fixture board, gate files only, not required — §10 item 13). Selftest 188 → 207 (RED against the master gate: 18 of the 19 new cases fail; the hook-on-legacy-board control passes; all 188 earlier cases pass). Master-vs-branch audit over a 144-card live snapshot: 0 violation-set changes, the only advisory change is `X3` on 54 cards (`tests/evidence/t_5b5b61e2/`) |
 | 2026-10-10 | `t_90a4bd73` — **§5.5 `R7` security-track classification v2 (scope-v2)**, decision `t_18230e85` option C (committed byte-identical as `docs/decisions/ARCH-DECISION-t_18230e85.md`, sha256 `aaa3a94d…82fa1`). The regex is replaced by `SCOPE_V2_TOKENS`, which are ADR-referenced boundary tokens. The `security` Test-Type AND is dropped and the `¬qa` exemption kept. Tokens have no trailing `\b`, which fixes `AUTOFILL_REQUEST`, `bridge messages`, `bridge_message` and `crypto boundaries`. Measured on the live board, `nonce` was matched inside French "annonce" (2 false positives), so `nonce` now requires a non-letter before it. New `R7_V2_EPOCH_ISO` cut-over (`--r7-v2-epoch-iso`): a card completed before it keeps its v1 obligation, and a card only v2 classifies gets the new report-only `A17_R7_SCOPE_V2_UNGATED`. Without the cut-over, 11 already-completed post-gate cards would turn red. The architect confirms the cut-over at review. Also fixed: `--json` output to a pipe was cut at 65536 bytes, because `process.exit()` ran before stdout drained; it is now written, then exit (`writeThenExit`). Selftest 207 → 222. RED against the base gate: 11 of the 15 new cases fail, and the 4 guards pass. A mutation run with 8 mutants shows each new case fails on the mutant that removes what it guards. Before/after `audit --strict-history` on a live-board snapshot: 3 → 21 audited cards are security-track, R7 violations 0 → 0, 15 `A17`, FAIL count unchanged (49 → 49); without the cut-over FAIL 49 → 57 (11 `R7`). Tables and scripts are in `tests/evidence/t_90a4bd73/` |
+| 2026-10-10 | `t_8a64c3dd` — **§6.5 the weekly board audit runs locally and reports on the board**. Adil's decision 2026-10-09 (public repo: no self-hosted runner, no new token; results go to the agents, not to Telegram). A `qa` Hermes cron job (`no_agent`, `deliver=local`) runs `scripts/qa/cron/qa-weekly-signoff-audit.sh`: own clone, throwaway worktree of `origin/master`, `signoff-audit-local.mjs run --fail-on-a11` on `~/.hermes/kanban.db`. Each run attaches the full report to the maintenance card `t_9c3f521a`, posts `AUDIT <date> : <rule>` (author `qa`) on every card in violation or with `A11`, then a synthesis whose first line is `AUDIT-RUN: <ISO8601>`; `check-stale` (exit 1 past 8 days or with no stamp) is the hook for architect's review cron (criterion 4). The comments are gate-inert (guarded, and re-audited in the selftest). `qa-signoff-audit.yml` loses its `schedule` (dead `hermes-host` runner, `cancelled` weekly since 2026-09-21) and its real-board job; it keeps `bypass-report-fixture` and gains `local-audit-reporter-fixture`, both on `pull_request` (gate/reporter paths) and `workflow_dispatch`. New selftest: 41 cases (a mutant that puts `verdict: fail` in the notice with the guard disabled fails 14 of them, including the gate-inertness re-audit). The wrapper raises the gate's GitHub budget to 10 min (`QA_GATE_GH_BUDGET_MS`): with the hook-sized 20 s default a whole-board audit produced 13 A11 that were all "time budget exhausted". Live: a dress rehearsal on a copy of the board (real CLI, real `gh`) and a real run on the board, both re-audited with identical violation/advisory sets. Evidence in `tests/evidence/t_8a64c3dd/` |

@@ -1,0 +1,5 @@
+AUDIT 2026-10-10 : R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING, A11_CI_STATE_UNVERIFIABLE
+
+Weekly QA sign-off gate audit, posted automatically by qa (t_8a64c3dd). This notice changes nothing on the card: no status, assignee or record is touched.
+The rules above are the gate's findings for this card as of this run; their meaning is in QA_SIGN_OFF_GATE.md section 4.
+Full report: maintenance card t_9c3f521a, file qa-signoff-audit-20261010T194449Z.txt.

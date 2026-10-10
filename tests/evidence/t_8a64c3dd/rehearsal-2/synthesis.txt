@@ -1,0 +1,42 @@
+AUDIT-RUN: 2026-10-10T19:51:49Z
+result: FAIL (gate exit 1, --fail-on-a11)
+revision: origin/master 960459f8ce7f763f304773e724d4fbc19fcd6881
+board: /home/sap/qa-audit-rehearsal-t_8a64c3dd/board.db
+cards: done 155 · enforced 128 · FAIL 32 · grandfathered 27
+bypasses & degradations: A11 0 · X1 5 · X2 0 · X3 54
+card notices: 32 posted, 0 already posted for this date
+report files attached to this card: qa-signoff-audit-20261010T195149Z.txt, qa-signoff-audit-20261010T195149Z.json
+
+cards with findings:
+- t_08b05087 (docs): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+- t_15897ff9 (architect): R5_EVIDENCE_FILE_MISSING
+- t_18a945c2 (docs): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+- t_39a7e9eb (qa): R2_QA_VERDICT_INVALID
+- t_42ecc3e6 (architect): R2_QA_VERDICT_INVALID
+- t_4a892f1d (qa): R5_EVIDENCE_FILE_MISSING
+- t_4f872624 (architect): R1_QA_VERDICT_MISSING
+- t_56490bf2 (docs): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+- t_65c5a636 (architect): R3_VERDICT_NOT_TERMINAL
+- t_6b1528aa (qa): R5_EVIDENCE_FILE_MISSING
+- t_76ec1e22 (docs): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+- t_7918f010 (backend): R4_EVIDENCE_MISSING
+- t_80fc0326 (architect): R2_QA_VERDICT_INVALID
+- t_8577a5a9 (architect): R5_EVIDENCE_FILE_MISSING
+- t_92a0d0eb (qa): R6_CONDITIONS_UNTRACKED
+- t_aeccec51 (architect): R2_QA_VERDICT_INVALID
+- t_b51a1ff3 (architect): R2_QA_VERDICT_INVALID
+- t_c4eb81f1 (docs): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+- t_c7c986c7 (architect): R5_EVIDENCE_FILE_MISSING
+- t_cbaa9f7d (docs): R1_QA_VERDICT_MISSING
+- t_cc570a8b (backend): R2_QA_VERDICT_INVALID
+- t_ce76ba78 (qa): R5_EVIDENCE_FILE_MISSING
+- t_d7c21957 (docs): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+- t_e2468413 (docs): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+- t_e88bcc25 (architect): R2_QA_VERDICT_INVALID
+- t_ecbcafe1 (qa): R2_QA_VERDICT_INVALID
+- t_f37504f0 (frontend): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+- t_f59c6bee (qa): R5_EVIDENCE_FILE_MISSING
+- t_f666adb9 (frontend): R2_QA_VERDICT_INVALID
+- t_f9d4d3bb (architect): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+- t_fe000001 (backend): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
+- t_fe0be554 (docs): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING
