@@ -1,0 +1,21 @@
+# stub-cases.sh — 2026-10-10T12:44:57Z — repo 1fc8907 — verifier under test: scripts/qa/hooks/verify-signoff-gate.sh (sha256 f862f5440f22)
+[ok] A real shape (architect/docs/qa 2026-10-09): sign-off drift + unrelated secret-guard drift -> warn + info, 0 FAIL: FAIL=0 (want 0) info=1 (want 1)
+         warn - hermes hooks doctor: sign-off hook shows only the expected post-install mtime drift (approval refresh is interactive-only; hooks_auto_accept: true keeps the hook live — see the live fire below)
+         info - hermes hooks doctor: 1 issue(s) on an unrelated hook <stub-root>/profiles/p/agent-hooks/secret-guard.sh — not counted here (see <stub-root>/signoff-gate-doctor-p.txt)
+[ok] B all clean -> 0 FAIL, 0 info: FAIL=0 (want 0) info=0 (want 0)
+[ok] C negative: sign-off hook has a 2nd warning of its own -> FAIL: FAIL=1 (want 1) info=0 (want 0)
+         FAIL - hermes hooks doctor: sign-off hook has issues beyond the expected mtime drift (0 error(s), 2 warning(s)) — see <stub-root>/signoff-gate-doctor-p.txt
+[ok] D negative: sign-off hook error (✗) even with the other hook clean -> FAIL: FAIL=1 (want 1) info=0 (want 0)
+         FAIL - hermes hooks doctor: sign-off hook has issues beyond the expected mtime drift (1 error(s), 0 warning(s)) — see <stub-root>/signoff-gate-doctor-p.txt
+[ok] E negative: doctor has no section for the sign-off hook (only the other hook's) -> FAIL, other hook still info: FAIL=1 (want 1) info=1 (want 1)
+         FAIL - hermes hooks doctor does not check the sign-off hook — see <stub-root>/signoff-gate-doctor-p.txt
+         info - hermes hooks doctor: 1 issue(s) on an unrelated hook <stub-root>/profiles/p/agent-hooks/secret-guard.sh — not counted here (see <stub-root>/signoff-gate-doctor-p.txt)
+[ok] F negative: hooks list genuinely lacks the hook -> FAIL: FAIL=1 (want 1) info=0 (want 0)
+         FAIL - hermes hooks list does not show the hook
+[ok] G negative: hooks list itself fails (exit 120) -> FAIL reported as a hermes failure: FAIL=1 (want 1) info=0 (want 0)
+         FAIL - hermes hooks list failed (exit 120)
+[ok] H unrelated hook whose path merely contains the name (qa-signoff-gate.sh.bak) is not mistaken for the sign-off hook -> FAIL (no section): FAIL=1 (want 1) info=1 (want 1)
+         FAIL - hermes hooks doctor does not check the sign-off hook — see <stub-root>/signoff-gate-doctor-p.txt
+         info - hermes hooks doctor: 1 issue(s) on an unrelated hook <stub-root>/profiles/p/agent-hooks/qa-signoff-gate.sh.bak — not counted here (see <stub-root>/signoff-gate-doctor-p.txt)
+
+stub cases: 8 behave as expected · 0 misbehave

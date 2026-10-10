@@ -1,0 +1,7 @@
+# repro-ac1-pipefail.sh — 2026-10-10T12:36:43Z — profile qa — shell options: pipefail=on
+run 1: old test -> ABSENT · new test -> present (hermes exit 0)
+run 2: old test -> ABSENT · new test -> present (hermes exit 0)
+run 3: old test -> ABSENT · new test -> present (hermes exit 0)
+run 4: old test -> ABSENT · new test -> present (hermes exit 0)
+run 5: old test -> ABSENT · new test -> present (hermes exit 0)
+old pipeline PIPESTATUS=120 0  (hermes · grep)
