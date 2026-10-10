@@ -1,0 +1,26 @@
+no markdownlint config in repo
+== master README.md
+rc=1
+== PR README.md
+rc=1
+25
+25
+== findings by rule (master | pr)
+     23 MD013
+      1 MD036
+      1 MD040
+--
+     23 MD013
+      1 MD036
+      1 MD040
+== new-in-PR (rule+message diff, line numbers stripped)
+none
+== lines touched by PR flagged?
+@@ -196,6 +196,19 @@ variables and falls back to the defaults shown:
+no findings in changed README lines 196-214
+== .env.example / evidence secret scan
+8.30.1
+4:00PM INF 2 commits scanned.
+4:00PM INF scanned ~15807 bytes (15.81 KB) in 14ms
+4:00PM INF no leaks found
+gitleaks rc=0

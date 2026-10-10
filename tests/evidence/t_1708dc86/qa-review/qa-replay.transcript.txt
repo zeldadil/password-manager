@@ -1,0 +1,47 @@
+== toolchain
+v22.23.3
+9.12.0
+2026-10-10T15:59:44Z
+HEAD=8d03a04083f2d65da19c0e9c55ab435dc2548770
+CHECK PASS: clone at PR head
+== pnpm install
++ vitest 3.2.7
+
+Done in 2.5s
+CHECK PASS: install rc=0
+NOTE: :3000 busy on host
+
+== Case A: README Configuration block verbatim, .env.local = unmodified copy of .env.example
+exported: PORT=3000 HOST=127.0.0.1 NODE_ENV=development DATABASE_URL=./dev.db AUTO_LOCK_TIMEOUT_MS=900000
+migrate rc=0
+> tsx src/migrate.ts
+
+[migrate] All migrations applied successfully.
+CHECK PASS: A migrate rc=0
+CHECK PASS: A dev.db at apps/services/api/dev.db (212992 bytes)
+CHECK PASS: A no dev.db at repo root
+health HTTP 200 body={"status":"ok","version":"0.1.0","timestamp":"2026-10-10T15:59:52.785Z"}
+register HTTP 201 keys=id,email,username,kdfParams
+unlock HTTP 200 keys=accessToken,refreshToken,expiresIn,tokenType
+CHECK PASS: A real entry point (start) on :3000 health/register/unlock 200/201/200
+CHECK PASS: A no error in API log
+
+== Case B: edit PORT in .env.local -> 3917, export, pnpm dev (README block)
+health HTTP 200 body={"status":"ok","version":"0.1.0","timestamp":"2026-10-10T15:59:58.158Z"}
+register HTTP 201 keys=id,email,username,kdfParams
+unlock HTTP 200 keys=accessToken,refreshToken,expiresIn,tokenType
+CHECK PASS: B pnpm dev API follows .env.local PORT=3917
+CHECK PASS: B no db/port error in dev log
+
+== Case C (control): .env.local NOT exported -> PORT from file has no effect
+CHECK PASS: C sanity: env var path works (3918)
+CHECK PASS: C 3917 silent without export (file alone is inert, as documented)
+
+== Case D (negative control): DATABASE_URL=file:./dev.db (old .env.example value)
+		throw new TypeError('Cannot open database because the directory does not exist');
+CHECK PASS: D file: URL fails as documented
+
+== Old value from master's .env.example, sourced the same way
+DATABASE_URL=file:./dev.db
+
+RESULT: PASS
