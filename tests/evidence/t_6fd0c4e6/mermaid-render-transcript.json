@@ -1,0 +1,26 @@
+{
+ "tool": "mermaid (jsdelivr npm mermaid@11, ESM) parse()+render() in Chromium",
+ "mermaid_version": "11.17.2",
+ "inputs": {
+  "README_d577aa4": "mermaid.d577aa4.mmd",
+  "t_5b4429c9_control": "mermaid.t_5b4429c9-control.mmd"
+ },
+ "results": {
+  "README_d577aa4": {
+   "ok": true,
+   "svgLen": 25545,
+   "nodes": 8,
+   "clusters": 2,
+   "edges": 8,
+   "labels": [
+    "Server trust boundary \u2014 apps/services/api",
+    "Client \u2014 browser trust boundary"
+   ],
+   "errIcons": 0
+  },
+  "t_5b4429c9_control": {
+   "ok": false,
+   "err": "Parse error on line 4:\n...[(\ufffdrowser Extension (Content Script + Ba\n-----------------------^\nExpecting 'SQE', 'DOUBLECIRCLEEND', 'PE', '-)', 'STADIUMEND', 'SUBROUTINEEND', 'PIPE', 'CYLINDEREND', 'DIAMOND_STOP', 'TAGEND', 'TRAPEND', 'INVTRAPEND', 'UNICODE_TEXT', 'TEXT', 'TAGSTART', got 'PS'"
+  }
+ }
+}

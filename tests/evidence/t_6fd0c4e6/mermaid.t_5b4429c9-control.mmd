@@ -1,0 +1,24 @@
+flowchart TB
+    subgraph Client["Client / Browser Trust Boundary"]
+        WER["Web App (UI)"]
+        EXT[(¢rowser Extension (Content Script + Background)"]
+    end
+    subgraph Server["server-Side Trust Boundary"]
+        API[""Hermes Backend Services"]
+        VAULT[""Vault (Secrets / Credentials)"]
+        DB[""Persistent Store"]
+    end
+    EXT -->|call / message| API
+    WEB -->|API requests| API
+    API -->|read / write| DB
+    API -->|store / retrieve| VAUL
+    EXT -.->|secure channel| VAULTJ    EXT -.->|external dependency| EXTERNAL["External Services / LLM APIs / Telegram"]
+    API -.->|external dependency| EXTERNAL
+    classDef client fill:#0f172a, stroke:#22d3ee, stroke-width:1.5px
+    classDef server fill:#0f172a, stroke:#34d399, stroke-width:1.5px
+    classDef vault fill:#0f172a, stroke:#fb7185, stroke-width:1.5px
+    classDef external fill:#0f172a, stroke:#94a3b8, stroke-width:1.5px, stroke-dasharray:4 4
+    class WEB,EXT client
+    class API,DB server
+    class VAULT vault
+    class EXTERNAL external
