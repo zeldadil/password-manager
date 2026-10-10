@@ -193,12 +193,25 @@ variables and falls back to the defaults shown:
 | `AUTO_LOCK_TIMEOUT_MS` | `900000` (15 min) | Auto-lock idle timeout |
 | `JWT_SECRET` | built-in development fallback | Token signing secret. **Required when `NODE_ENV=production`** (the API refuses to sign tokens without it). |
 
-Nothing in the repository loads a `.env` / `.env.local` file automatically, so
-copying [`.env.example`](.env.example) has **no effect** unless you export the
-variables in your shell, e.g. `PORT=3001 pnpm dev`. When overriding `DATABASE_URL`,
-pass a plain file path such as `./dev.db`: the `file:./dev.db` form shown in
-`.env.example` is handed to SQLite as a literal path and fails with
-*"Cannot open database because the directory does not exist"*.
+Nothing in the repository loads a `.env` / `.env.local` file automatically (no
+dotenv, no `--env-file`). To override values from a file, copy
+[`.env.example`](.env.example) and **export** its variables into your shell from the
+repository root, then run the pnpm commands in that same shell:
+
+```bash
+cp .env.example .env.local        # edit .env.local (synthetic values only)
+set -a; . ./.env.local; set +a    # export every variable defined in the file
+pnpm --filter @password-manager/api migrate
+pnpm dev
+```
+
+The exports only last for that shell session. For a one-off override, prefix the
+command instead, e.g. `PORT=3001 pnpm dev`.
+
+`DATABASE_URL` must be a plain file path such as `./dev.db` (the value in
+`.env.example`), not a `file:` URL: `better-sqlite3` treats `file:./dev.db` as a
+literal path and fails with *"Cannot open database because the directory does not
+exist"*.
 
 ### Common commands
 
