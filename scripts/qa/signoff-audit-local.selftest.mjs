@@ -181,7 +181,7 @@ const before = gateAudit();
 const stateBefore = stateSnapshot();
 check("precondition: the fixture has a violating card, an A11 card and a compliant card", before[VIOLATING].includes('"R1_QA_VERDICT_MISSING"') && before[A11_CARD].includes("A11_CI_STATE_UNVERIFIABLE") && before[COMPLIANT] === JSON.stringify({ v: [], a: [] }), JSON.stringify(before));
 const NOW = "2026-10-12T06:17:00Z";
-const r1 = tool(["run", "--db", db, "--repo", repo, "--maintenance-card", MAINT, "--out-dir", out, "--fail-on-a11", "--now-iso", NOW, "--hermes-bin", stub]);
+const r1 = tool(["run", "--db", db, "--repo", repo, "--maintenance-card", MAINT, "--out-dir", out, "--fail-on-a11", "--now-iso", NOW, "--hermes-bin", stub, "--revision-label", "origin/master"]);
 check("run exits 0 (findings are reported, not an error of the job)", r1.status === 0, r1.stderr + r1.stdout);
 const vComments = commentsOn(VIOLATING);
 check(
@@ -196,6 +196,7 @@ const mComments = commentsOn(MAINT);
 const summary = mComments[mComments.length - 1]?.body || "";
 check("maintenance card: synthesis comment whose FIRST line is `AUDIT-RUN: 2026-10-12T06:17:00Z`", summary.split("\n")[0] === `${STAMP_PREFIX} ${NOW}`, summary);
 check("synthesis: result FAIL (gate exit 1, --fail-on-a11) and both cards listed", /result: FAIL \(gate exit 1, --fail-on-a11\)/.test(summary) && summary.includes(`- ${VIOLATING} (backend): R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING`) && summary.includes(`- ${A11_CARD} (frontend): A11_CI_STATE_UNVERIFIABLE`), summary);
+check("synthesis names the audited revision as the wrapper passed it (fixture repo: no git → unknown sha)", summary.includes("revision audited: origin/master @ unknown"), summary);
 const att = rows(`SELECT filename, stored_path, uploaded_by FROM task_attachments WHERE task_id = ${sql(MAINT)} ORDER BY id`);
 check("maintenance card: the full text report and the JSON report are attached, by qa", att.length === 2 && att[0].filename === "qa-signoff-audit-20261012T061700Z.txt" && att[1].filename === "qa-signoff-audit-20261012T061700Z.json" && att.every((a) => a.uploaded_by === "qa"), JSON.stringify(att));
 const reportText = readFileSync(att[0].stored_path, "utf8");

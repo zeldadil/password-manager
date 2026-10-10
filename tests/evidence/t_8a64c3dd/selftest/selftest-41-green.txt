@@ -1,0 +1,49 @@
+signoff-audit-local selftest — fixture root: /home/sap/.hermes/profiles/qa/cache/scratch/signoff-audit-local-selftest-W9sYQK
+1. unit
+  ok   guard refuses a gate-readable comment: "QA-VERDICT: pass"
+  ok   guard refuses a gate-readable comment: "verdict: fail"
+  ok   guard refuses a gate-readable comment: "Verdict — pass"
+  ok   guard refuses a gate-readable comment: "qa-signoff-exception: x"
+  ok   guard refuses a gate-readable comment: "qa sign-off exception — y"
+  ok   guard refuses a gate-readable comment: "Evidence: tests/evidence/x/README.md"
+  ok   guard refuses a gate-readable comment: "attachment: a.txt"
+  ok   guard refuses a gate-readable comment: "Artifacts — x"
+  ok   every rule id (alone and all together) yields a comment the guard accepts
+  ok   findings: rules deduplicated, A11 added, malformed card id / rule dropped
+2. run on the fixture board (--fail-on-a11, GitHub off)
+  ok   precondition: the fixture has a violating card, an A11 card and a compliant card
+  ok   run exits 0 (findings are reported, not an error of the job)
+  ok   violating card: exactly one qa comment `AUDIT 2026-10-12 : R1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING`
+  ok   A11 card: one comment `AUDIT 2026-10-12 : A11_CI_STATE_UNVERIFIABLE`
+  ok   compliant card: no AUDIT comment
+  ok   maintenance card: synthesis comment whose FIRST line is `AUDIT-RUN: 2026-10-12T06:17:00Z`
+  ok   synthesis: result FAIL (gate exit 1, --fail-on-a11) and both cards listed
+  ok   synthesis names the audited revision as the wrapper passed it (fixture repo: no git → unknown sha)
+  ok   maintenance card: the full text report and the JSON report are attached, by qa
+  ok   attached text report is the real gate audit output (header + FAIL line for the violating card)
+  ok   the job only ever calls `hermes kanban comment` / `hermes kanban attach` (no complete/unblock/assign/edit, no send)
+  ok   every write carries --author qa and targets the audited board (HERMES_KANBAN_DB)
+  ok   synthesis is posted LAST (the stamp means the run finished)
+  ok   no card status / assignee / title / body changed
+  ok   gate-inert: every card's violation and advisory set is identical after the AUDIT comments
+3. idempotence
+  ok   same-day re-run exits 0 and adds no duplicate card notice
+  ok   …and its synthesis says `0 posted, 2 already posted for this date`
+  ok   next week's run posts a new notice on the still-violating card
+4. check-stale
+  ok   fresh stamp (1 day old) → exit 0 `AUDIT OK`
+  ok   negative control: stamp older than 8 days → exit 1 `AUDIT MISSING`
+  ok   boundary: exactly 8 days → still OK
+  ok   negative control: maintenance card with no stamp at all → exit 1 (last: never)
+  ok   a stamp written by another profile, a FAILED stamp and a quoted stamp are not runs → still exit 1
+  ok   check-stale refuses a card that is not the maintenance card (exit 3)
+5. failure paths
+  ok   run refuses a maintenance card id that is not the maintenance card: exit 2, nothing written
+  ok   run on a missing maintenance card: exit 2, nothing written
+  ok   missing --maintenance-card: usage exit 3
+  ok   a board write that fails → exit 2, and NO `AUDIT-RUN:` stamp is written
+  ok   …an `AUDIT-RUN-FAILED:` notice is posted instead
+  ok   hermes CLI missing → exit 2 (never a silent success)
+  ok   --dry-run: exit 0, plans the writes, performs none
+
+41 passed, 0 failed

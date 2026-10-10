@@ -79,4 +79,5 @@ node scripts/qa/signoff-audit-local.mjs run \
   --maintenance-card "$MAINT" \
   --out-dir "$REPORTS" \
   --hermes-bin "$HERMES_BIN" \
+  --revision-label "$REF" \
   --fail-on-a11

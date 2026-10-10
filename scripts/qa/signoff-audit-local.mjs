@@ -49,7 +49,7 @@
  * Usage:
  *   node scripts/qa/signoff-audit-local.mjs run --db PATH --maintenance-card ID
  *        --out-dir DIR [--repo PATH] [--fail-on-a11] [--now-iso ISO]
- *        [--hermes-bin PATH] [--author qa] [--dry-run]
+ *        [--hermes-bin PATH] [--author qa] [--revision-label REF] [--dry-run]
  *   node scripts/qa/signoff-audit-local.mjs check-stale --db PATH
  *        --maintenance-card ID [--max-age-days 8] [--now-iso ISO] [--author qa]
  *
@@ -204,7 +204,7 @@ function n(v) {
   return v === undefined || v === null ? "n/a" : String(v);
 }
 
-export function summaryBody({ stamp, gateExit, doc, sha, db, findings, posted, skipped, reportNames, failOnA11 }) {
+export function summaryBody({ stamp, gateExit, doc, sha, revisionLabel, db, findings, posted, skipped, reportNames, failOnA11 }) {
   const c = doc.counts || {};
   const deg = new Map((doc.degradations || []).map((d) => [d.key, d]));
   const degLine = (key, label) => {
@@ -217,7 +217,7 @@ export function summaryBody({ stamp, gateExit, doc, sha, db, findings, posted, s
   const lines = [
     `${STAMP_PREFIX} ${stamp}`,
     `result: ${result} (gate exit ${gateExit}${failOnA11 ? ", --fail-on-a11" : ""})`,
-    `revision: origin/master ${sha || "unknown"}`,
+    `revision audited: ${revisionLabel || "checkout"} @ ${sha || "unknown"}`,
     `board: ${db}`,
     `cards: done ${n(c.done_cards)} · enforced ${n(c.enforced)} · FAIL ${n(c.failures)} · grandfathered ${n(c.grandfathered)}`,
     `bypasses & degradations: ${degLine("a11", "A11")} · ${degLine("x1", "X1")} · ${degLine("x2", "X2")} · ${degLine("x3", "X3")}`,
@@ -344,6 +344,7 @@ export function runAudit(args) {
         gateExit: g.status,
         doc,
         sha: gitHead(repo),
+        revisionLabel: args["revision-label"] || null,
         db,
         findings,
         posted,
