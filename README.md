@@ -195,8 +195,8 @@ variables and falls back to the defaults shown:
 
 Nothing in the repository loads a `.env` / `.env.local` file automatically (no
 dotenv, no `--env-file`). To override values from a file, copy
-[`.env.example`](.env.example) and **export** its variables into your shell from the
-repository root, then run the pnpm commands in that same shell:
+[`.env.example`](.env.example) and **export** its variables into your shell
+from the repository root, then run the pnpm commands in that same shell:
 
 ```bash
 cp .env.example .env.local        # edit .env.local (synthetic values only)

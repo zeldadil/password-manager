@@ -1,0 +1,55 @@
+
+=== 1. Clone (/home/sap/.hermes/kanban/workspaces/t_1708dc86/repo @ docs/t_1708dc86-quickstart-env-fix) ===
+23d39af docs(t_1708dc86): DATABASE_URL plain path in .env.example; document exporting .env.local
+
+=== 2. nvm install && nvm use (reads .nvmrc) ===
+.nvmrc: 22
+node v22.23.3
+
+=== 3. corepack enable && pnpm install ===
+pnpm 9.12.0
+pnpm install OK in 3s
+
+=== Config: cp .env.example .env.local, edit PORT, export with set -a ===
+29:DATABASE_URL=./dev.db
+18:PORT=3999
+20:HOST=127.0.0.1
+22:NODE_ENV=development
+29:DATABASE_URL=./dev.db
+33:AUTO_LOCK_TIMEOUT_MS=900000
+exported: PORT=3999 HOST=127.0.0.1 NODE_ENV=development DATABASE_URL=./dev.db
+
+=== 4. pnpm --filter @password-manager/api migrate (with exported DATABASE_URL) ===
+> tsx src/migrate.ts
+
+[migrate] All migrations applied successfully.
+-rw-r--r-- 1 sap sap 212992 Oct 10 15:48 apps/services/api/dev.db
+
+=== Real API entry point (pnpm --filter @password-manager/api start = tsx src/index.ts) ===
+--- api log ---
+
+> @password-manager/api@0.1.0 start /home/sap/.hermes/profiles/docs/cache/scratch/tmp.d1LaxiGO3q/password-manager/apps/services/api
+> tsx src/index.ts
+
+{"level":30,"time":1791647317614,"pid":284019,"hostname":"ai-server","msg":"Server listening at http://127.0.0.1:3999"}
+[api] @password-manager/api v0.1.0 listening at http://127.0.0.1:3999 (development)
+{"level":30,"time":1791647317963,"pid":284019,"hostname":"ai-server","reqId":"req-1","req":{"method":"GET","url":"/health","host":"127.0.0.1:3999","remoteAddress":"127.0.0.1","remotePort":48966},"msg":"incoming request"}
+{"level":30,"time":1791647317968,"pid":284019,"hostname":"ai-server","reqId":"req-1","res":{"statusCode":200},"responseTime":4.309635000000071,"msg":"request completed"}
+--- GET /health on PORT from .env.local (3999) ---
+{"status":"ok","version":"0.1.0","timestamp":"2026-10-10T15:48:37.977Z"}
+--- POST /auth/register (synthetic) ---
+HTTP 201
+{"id":"d4f4f849-fe1c-4b7b-ae5a-72f79735c24c","email":"alice@example.test","username":"alice","kdfParams":{"algorithm":"argon2id","memory":65536,"iterations":3,"parallelism":4,"hashLength":32}}
+--- POST /auth/unlock (synthetic; tokens redacted) ---
+HTTP 200
+keys: accessToken,refreshToken,expiresIn,tokenType tokenType: Bearer
+
+=== Negative control: old value DATABASE_URL=file:./dev.db on the same entry point ===
+exit code: 1
+		throw new TypeError('Cannot open database because the directory does not exist');
+
+=== 5. pnpm dev (API + Web UI) with the exported .env.local ===
+{"status":"ok","version":"0.1.0","timestamp":"2026-10-10T15:48:43.639Z"}
+Local:   http://localhost:5173/
+
+=== RESULT: PASS ===
