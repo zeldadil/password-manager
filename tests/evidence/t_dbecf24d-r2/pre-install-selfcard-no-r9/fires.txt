@@ -1,0 +1,56 @@
+# t_dbecf24d live fire — phase pre-install — 2026-10-11T09:50:49Z
+fixture board: sqlite3 .backup snapshot of ~/.hermes/kanban.db (live board not written)
+fixture card: t_dbecf24d — running · SEC-GATE rollout: make R9/R10 enforce for real (hook reinstalled + gh auth in hook env, 7 profiles)
+PR #148 now: #148 OPEN head=evidence/t_dbecf24d-r2
+repo gate (master clone): e1478eb9139aaaa622f963e784e9b3dbd0b1a0196edcde689cb4284a0ba9e60b  @ 0930d9f
+
+── architect
+   installed gate sha256: 3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749
+   A probe (inside hook): gh auth exit=0 [✓ Logged in to github.com account zeldadil (/home/sap/.config/gh/hosts.yml)] HOME=/home/sap gh=/usr/bin/gh token-env=false · installed gate 3c2d72b3884f… check: R9=false A11=false violations=-
+   B real fire (GitHub live): block=0 R9_PR_NOT_MERGED=0
+   C control (QA_GATE_GITHUB=off): R9_PR_NOT_MERGED=0
+   RESULT architect: FAIL
+
+── backend
+   installed gate sha256: 3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749
+   A probe (inside hook): gh auth exit=0 [✓ Logged in to github.com account zeldadil (/home/sap/.config/gh/hosts.yml)] HOME=/home/sap gh=/usr/bin/gh token-env=false · installed gate 3c2d72b3884f… check: R9=false A11=false violations=-
+   B real fire (GitHub live): block=0 R9_PR_NOT_MERGED=0
+   C control (QA_GATE_GITHUB=off): R9_PR_NOT_MERGED=0
+   RESULT backend: FAIL
+
+── browser
+   installed gate sha256: 3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749
+   A probe (inside hook): gh auth exit=0 [✓ Logged in to github.com account zeldadil (/home/sap/.config/gh/hosts.yml)] HOME=/home/sap gh=/usr/bin/gh token-env=false · installed gate 3c2d72b3884f… check: R9=false A11=false violations=-
+   B real fire (GitHub live): block=0 R9_PR_NOT_MERGED=0
+   C control (QA_GATE_GITHUB=off): R9_PR_NOT_MERGED=0
+   RESULT browser: FAIL
+
+── docs
+   installed gate sha256: 3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749
+   A probe (inside hook): gh auth exit=0 [✓ Logged in to github.com account zeldadil (/home/sap/.config/gh/hosts.yml)] HOME=/home/sap gh=/usr/bin/gh token-env=false · installed gate 3c2d72b3884f… check: R9=false A11=false violations=-
+   B real fire (GitHub live): block=0 R9_PR_NOT_MERGED=0
+   C control (QA_GATE_GITHUB=off): R9_PR_NOT_MERGED=0
+   RESULT docs: FAIL
+
+── frontend
+   installed gate sha256: 3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749
+   A probe (inside hook): gh auth exit=0 [✓ Logged in to github.com account zeldadil (/home/sap/.config/gh/hosts.yml)] HOME=/home/sap gh=/usr/bin/gh token-env=false · installed gate 3c2d72b3884f… check: R9=false A11=false violations=-
+   B real fire (GitHub live): block=0 R9_PR_NOT_MERGED=0
+   C control (QA_GATE_GITHUB=off): R9_PR_NOT_MERGED=0
+   RESULT frontend: FAIL
+
+── product
+   installed gate sha256: 3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749
+   A probe (inside hook): gh auth exit=0 [✓ Logged in to github.com account zeldadil (/home/sap/.config/gh/hosts.yml)] HOME=/home/sap gh=/usr/bin/gh token-env=false · installed gate 3c2d72b3884f… check: R9=false A11=false violations=-
+   B real fire (GitHub live): block=0 R9_PR_NOT_MERGED=0
+   C control (QA_GATE_GITHUB=off): R9_PR_NOT_MERGED=0
+   RESULT product: FAIL
+
+── qa
+   installed gate sha256: 3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749
+   A probe (inside hook): gh auth exit=0 [✓ Logged in to github.com account zeldadil (/home/sap/.config/gh/hosts.yml)] HOME=/home/sap gh=/usr/bin/gh token-env=false · installed gate 3c2d72b3884f… check: R9=false A11=false violations=-
+   B real fire (GitHub live): block=0 R9_PR_NOT_MERGED=0
+   C control (QA_GATE_GITHUB=off): R9_PR_NOT_MERGED=0
+   RESULT qa: FAIL
+
+phase pre-install: 0 PASS · 7 FAIL (of 7 profiles)

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # t_dbecf24d — per-profile live fire of the REAL installed hook on a fixture card with an OPEN PR.
 #
-# Usage: bash fire-profiles.sh <phase-label> <fixture-card> <open-pr>   (round 2: t_dbecf24d + its own evidence PR)
+# Usage: bash fire-profiles.sh <phase-label> <fixture-card> <open-pr> [inject]
+#        round 2: bash fire-profiles.sh <phase> t_fx148r9 148 inject
 #
 # Fixture: a read-only snapshot of the live board (sqlite3 .backup) — the fire never touches the
-# live board. Fixture card: t_20f78461 (BR-001a), linked to PR #110 which is OPEN on GitHub at
+# live board. Round-1 fixture card (2026-10-08): t_20f78461 (BR-001a), linked to PR #110 which was OPEN on GitHub at
 # fire time (re-read below, not assumed). `hermes hooks test` only fires the hook; it never
 # calls kanban_complete.
 #
@@ -26,7 +27,25 @@ SCRATCH="${TMPDIR:-/home/sap/.hermes/profiles/qa/cache/scratch}/t_dbecf24d-r2-${
 mkdir -p "${OUT}/probe" "${SCRATCH}"
 
 FIXTURE_DB="${SCRATCH}/board-snapshot.db"
+rm -f "${FIXTURE_DB}"
 sqlite3 /home/sap/.hermes/kanban.db ".backup '${FIXTURE_DB}'"
+if [ "${4:-}" = "synthetic" ]; then
+  live_rows=$(sqlite3 /home/sap/.hermes/kanban.db "SELECT count(*) FROM tasks WHERE id='${TASK}'")
+  [ "${live_rows}" = "0" ] || { echo "synthetic fixture id ${TASK} exists on the LIVE board — refusing" >&2; exit 2; }
+  now=$(date -u +%s)
+  sqlite3 "${FIXTURE_DB}" "INSERT INTO tasks (id,title,body,assignee,status,created_by,created_at,started_at) VALUES ('${TASK}','FIXTURE (t_dbecf24d round 2): code card declared only by open PR #${PRNUM}','Synthetic fixture card, exists only in a board snapshot. Deliverable: code','qa','running','qa',${now},${now});"
+fi
+# Round 2 (2026-10-11): PR #110 (round-1 fixture) is merged, and t_dbecf24d itself is already
+# satisfied by its merged evidence PR #121 (A12, no R9), so neither yields R9 any more. The R9
+# fixture is a card INJECTED INTO THE SNAPSHOT ONLY (never the live board): t_fx148r9, declared by
+# a `Closes t_fx148r9` line in the body of the OPEN pull request ${PRNUM}. It carries a valid qa
+# verdict with an existing evidence path, so R9 is the only rule left that can block it.
+if [ "${4:-}" = "inject" ]; then
+  [ "$(sqlite3 /home/sap/.hermes/kanban.db "SELECT count(*) FROM tasks WHERE id='${TASK}'")" = "0" ] || { echo "fixture id ${TASK} exists on the LIVE board — abort" >&2; exit 4; }
+  NOW=$(date +%s)
+  sqlite3 "${FIXTURE_DB}" "INSERT INTO tasks (id,title,body,assignee,status,created_by,created_at,started_at) VALUES ('${TASK}','FIXTURE (t_dbecf24d r2): code card whose only linked PR #${PRNUM} is OPEN','Deliverable: code — snapshot-only fixture, never on the live board.','backend','running','qa',${NOW},${NOW});"
+  sqlite3 "${FIXTURE_DB}" "INSERT INTO task_comments (task_id,author,body,created_at) VALUES ('${TASK}','qa','QA-VERDICT: pass'||char(10)||char(10)||'Evidence: QA_SIGN_OFF_GATE.md',${NOW});"
+fi
 PAYLOAD="${SCRATCH}/payload.json"
 printf '{"args":{"task_id":"%s","summary":"t_dbecf24d rollout fire"},"task_id":"%s"}\n' "${TASK}" "${TASK}" > "${PAYLOAD}"
 

@@ -1,0 +1,19 @@
+# pre-install installed copies (sha256) — backups in profile-local scratch, not committed
+3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749  /home/sap/.hermes/profiles/architect/agent-hooks/signoff-gate.mjs
+4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de  /home/sap/.hermes/profiles/architect/agent-hooks/qa-signoff-gate.sh
+3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749  /home/sap/.hermes/profiles/backend/agent-hooks/signoff-gate.mjs
+4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de  /home/sap/.hermes/profiles/backend/agent-hooks/qa-signoff-gate.sh
+3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749  /home/sap/.hermes/profiles/browser/agent-hooks/signoff-gate.mjs
+4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de  /home/sap/.hermes/profiles/browser/agent-hooks/qa-signoff-gate.sh
+3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749  /home/sap/.hermes/profiles/docs/agent-hooks/signoff-gate.mjs
+4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de  /home/sap/.hermes/profiles/docs/agent-hooks/qa-signoff-gate.sh
+3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749  /home/sap/.hermes/profiles/frontend/agent-hooks/signoff-gate.mjs
+4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de  /home/sap/.hermes/profiles/frontend/agent-hooks/qa-signoff-gate.sh
+3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749  /home/sap/.hermes/profiles/product/agent-hooks/signoff-gate.mjs
+4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de  /home/sap/.hermes/profiles/product/agent-hooks/qa-signoff-gate.sh
+3c2d72b3884f387ef0a23e1664447c9c0bb4496ef82b78496d99f5ebc8dc6749  /home/sap/.hermes/profiles/qa/agent-hooks/signoff-gate.mjs
+4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de  /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh
+
+# repo (origin/master 0930d9f, clone HEAD 8eea1c8)
+e1478eb9139aaaa622f963e784e9b3dbd0b1a0196edcde689cb4284a0ba9e60b  /home/sap/.hermes/kanban/workspaces/t_dbecf24d/repo/scripts/qa/signoff-gate.mjs
+4e1efa9e2e03bc2ccf447f2b8861ff0216f9482574ea46a6793afe707b28c2de  /home/sap/.hermes/kanban/workspaces/t_dbecf24d/repo/scripts/qa/hooks/qa-signoff-gate.sh
