@@ -403,6 +403,20 @@ pnpm test          # unit tests (Vitest), all packages
 On the verification run, all three exited with code 0. `pnpm test` reported
 `53 passed` (crypto), `393 passed` (web) and `615 passed` (api).
 
+**Tests must run on Node 22.** `pnpm install` refuses another Node major
+(`engine-strict`), but `pnpm test` / `pnpm exec vitest` do not check `engines`: they
+use whichever `node` is first on `PATH`. Hermes agent shells put a Node 26 binary
+(`~/.hermes/tools/node-26.7.0-linux-x64/bin/node`) first on `PATH`. Under Node 26 about
+65 web tests fail with `RequestInit: Expected signal ("AbortSignal {}") to be an
+instance of AbortSignal`. That is a toolchain mismatch, not a code bug. The web
+Vitest configs therefore run a guard (`apps/web/vitest.node-guard.ts`) that stops
+the run before any test, with *"Unsupported Node.js version for the apps/web tests:
+found Node 26 ..., expected Node 22.x"*. Vitest prints a *"No test files found,
+exiting with code 1"* line just before that error. Ignore it: it is how Vitest 3
+reports a failing global setup, and the test files are fine. Fix: check `node --version`, then run
+`nvm use` (reads `.nvmrc`), or put a Node 22 binary first, for example
+`PATH=/usr/bin:$PATH pnpm test` when `/usr/bin/node` is Node 22.
+
 **7. E2E smoke test (Playwright)**
 
 Install the browsers once. `--with-deps` also installs the operating-system
@@ -444,6 +458,7 @@ WebKit needs `libgtk-4.so.1`). Run `pnpm test:e2e:install`, which uses
 | API errors about missing tables (`no such table: users`) | Migrations were not run against this database file. Run `pnpm --filter @password-manager/api migrate` with the same `DATABASE_URL` the API uses. |
 | Changes in `.env.local` have no effect | The file is not loaded automatically. Run `set -a; . ./.env.local; set +a` in the shell where you run pnpm (§3). |
 | `Unsupported engine` / wrong Node version warnings | Use Node 22 (`nvm use`). |
+| `pnpm test` (web) stops at once with *"Unsupported Node.js version for the apps/web tests: found Node 26 ..."*, or (without the guard) ~65 tests fail with `RequestInit: Expected signal ("AbortSignal {}") to be an instance of AbortSignal` | Tests are running on Node 26, often the Hermes tools binary first on `PATH`. Use Node 22: `nvm use`, or `PATH=/usr/bin:$PATH pnpm test` (§8, step 6). |
 | `pnpm: command not found` or the wrong pnpm version | Run `corepack enable` (§1). |
 | Unlock fails with HTTP 500 when `NODE_ENV=production` | `JWT_SECRET` is not set (§3). |
 | Browser unlock fails under `pnpm dev`: POST `/auth/unlock` (or any `/api/v1/*` request) returns HTTP 502 `text/plain`, and the Vite log shows `[vite] http proxy error: /auth/unlock` | The request is not reaching the API through the dev proxy. Check that the API is running, and that the proxy target matches it: `HOST`/`PORT` in the shell that runs `pnpm dev`, or `API_PROXY_TARGET` (§7.3). |

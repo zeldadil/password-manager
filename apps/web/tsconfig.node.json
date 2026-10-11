@@ -22,6 +22,8 @@
     "dev-proxy.test.ts",
     "vitest.config.ts",
     "vitest.integration.config.ts",
-    "vitest.a11y.config.ts"
+    "vitest.a11y.config.ts",
+    "vitest.node-guard.ts",
+    "vitest.node-guard.test.ts"
   ]
 }
