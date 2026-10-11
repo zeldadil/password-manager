@@ -172,12 +172,21 @@ curl -X POST http://127.0.0.1:3000/auth/unlock \
 
 The OpenAPI document is served at `http://127.0.0.1:3000/openapi.json`.
 
-> **Known gap — Web UI ↔ API under `pnpm dev`.** The Web UI calls the API with
-> relative URLs (`/auth/*`, `/api/v1/*`), but `apps/web/vite.config.ts` configures no
-> dev proxy. The Web UI page loads on port 5173, but its API calls go to the Vite
-> server instead of the API on port 3000, so login/unlock **from the browser does not
-> work yet** in local dev. Use the `curl` checks above to exercise the API until a
-> dev proxy (or equivalent) is added.
+**Web UI under `pnpm dev`.** The Vite dev server forwards the Web UI's API calls
+(`/auth/*` and `/api/v1/*` on port 5173) to the API. The target is
+`API_PROXY_TARGET` if set, else `http://HOST:PORT` (the API's own variables), else
+`http://127.0.0.1:3000`. With the synthetic user registered above, open
+`http://localhost:5173/login` and unlock: the form gets HTTP 200 and lands on
+`/vault`.
+
+> **Known limitation.** After unlock, the Vault page shows "Loading resources…" for a
+> few seconds, then "Failed to load resources." with a Retry button, and does not
+> list resources. Retry does not help. The Web UI's API client calls `fetch` unbound,
+> so the browser throws "Illegal invocation" before any `GET /api/v1/resources` is
+> sent.
+> The fix is tracked as task `t_76755bb3`. Until it lands, use `curl` to work with
+> folders and resources (see
+> [`docs/development/setup.md`](docs/development/setup.md) §8).
 
 ### Configuration (optional)
 
@@ -192,6 +201,12 @@ variables and falls back to the defaults shown:
 | `DATABASE_URL` | `./dev.db` | SQLite **file path**, relative to `apps/services/api` |
 | `AUTO_LOCK_TIMEOUT_MS` | `900000` (15 min) | Auto-lock idle timeout |
 | `JWT_SECRET` | built-in development fallback | Token signing secret. **Required when `NODE_ENV=production`** (the API refuses to sign tokens without it). |
+
+The Web UI dev server (Vite) reads one more variable, only under `pnpm dev`:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `API_PROXY_TARGET` | unset (then `http://HOST:PORT`, then `http://127.0.0.1:3000`) | API URL the Vite dev proxy forwards `/auth/*` and `/api/v1/*` to. Set it only when the API runs somewhere the API variables do not describe, e.g. `http://127.0.0.1:4000`. |
 
 Nothing in the repository loads a `.env` / `.env.local` file automatically (no
 dotenv, no `--env-file`). To override values from a file, copy
