@@ -30,7 +30,7 @@ with a database, and with the tests passing.
 > | OpenAPI document (`/openapi.json`) | Implemented |
 > | Swagger UI (interactive API docs page) | **Planned**. Not served. |
 > | Web UI talking to the API under `pnpm dev` (Vite dev proxy, browser login) | Implemented ([§7.3](#73-web-ui--api-in-local-dev-vite-dev-proxy)) |
-> | Vault page listing resources in the browser after unlock | **Known limitation**: stays on "Loading resources…" until task `t_76755bb3` lands ([§7.3](#73-web-ui--api-in-local-dev-vite-dev-proxy)) |
+> | Vault page listing resources in the browser after unlock | **Known limitation**: shows "Failed to load resources." (after a brief "Loading resources…") until task `t_76755bb3` lands ([§7.3](#73-web-ui--api-in-local-dev-vite-dev-proxy)) |
 > | Playwright E2E | Implemented as a browser-matrix smoke test. It does not drive the app yet. |
 
 ---
@@ -291,8 +291,9 @@ With a registered synthetic user (§8, step 3), open `http://localhost:5173/logi
 and unlock. The request `POST /auth/unlock` returns HTTP 200 and the browser
 lands on `/vault` (verified by QA, `tests/evidence/t_99248680/README.md`).
 
-**Known limitation:** after unlock, the Vault page stays on "Loading resources…"
-and does not list resources. The Web UI's API client
+**Known limitation:** after unlock, the Vault page shows "Loading resources…" for a
+few seconds, then "Failed to load resources." with a Retry button, and does not
+list resources. Retry does not help. The Web UI's API client
 (`apps/web/src/api/client.ts`) calls `fetch` unbound, so the browser throws
 `TypeError: … Illegal invocation` before any `GET /api/v1/resources` is sent.
 The fix is tracked as task `t_76755bb3`. Until it lands, use the `curl` checks in
@@ -384,8 +385,9 @@ HTTP 401.
 
 Open `http://localhost:5173/login` in a browser and unlock with the synthetic
 user from step 3. Expected: the browser lands on `/vault`, with the Lock and
-Account buttons. The Vault page then stays on "Loading resources…". That is the
-known limitation tracked as task `t_76755bb3`
+Account buttons. The Vault page then shows "Loading resources…" for a few
+seconds, followed by "Failed to load resources." and a Retry button. That error is
+the known limitation tracked as task `t_76755bb3`
 ([§7.3](#73-web-ui--api-in-local-dev-vite-dev-proxy)), not a setup error.
 
 **6. Tests**
@@ -444,8 +446,8 @@ WebKit needs `libgtk-4.so.1`). Run `pnpm test:e2e:install`, which uses
 | `Unsupported engine` / wrong Node version warnings | Use Node 22 (`nvm use`). |
 | `pnpm: command not found` or the wrong pnpm version | Run `corepack enable` (§1). |
 | Unlock fails with HTTP 500 when `NODE_ENV=production` | `JWT_SECRET` is not set (§3). |
-| Browser unlock fails under `pnpm dev`: POST `/auth/unlock` returns 404, or a request to `/api/v1/*` returns HTML | The request is not reaching the API through the dev proxy. Check that the API is running, and that the proxy target matches it: `HOST`/`PORT` in the shell that runs `pnpm dev`, or `API_PROXY_TARGET` (§7.3). |
-| After unlock, `/vault` stays on "Loading resources…" | Known limitation, task `t_76755bb3` (§7.3). Use `curl` (§8) for resources until it is fixed. |
+| Browser unlock fails under `pnpm dev`: POST `/auth/unlock` (or any `/api/v1/*` request) returns HTTP 502 `text/plain`, and the Vite log shows `[vite] http proxy error: /auth/unlock` | The request is not reaching the API through the dev proxy. Check that the API is running, and that the proxy target matches it: `HOST`/`PORT` in the shell that runs `pnpm dev`, or `API_PROXY_TARGET` (§7.3). |
+| After unlock, `/vault` shows "Failed to load resources." with a Retry button (after a brief "Loading resources…") | Known limitation, task `t_76755bb3` (§7.3). Use `curl` (§8) for resources until it is fixed. |
 
 ---
 

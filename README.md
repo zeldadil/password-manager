@@ -179,9 +179,11 @@ The OpenAPI document is served at `http://127.0.0.1:3000/openapi.json`.
 `http://localhost:5173/login` and unlock: the form gets HTTP 200 and lands on
 `/vault`.
 
-> **Known limitation.** After unlock, the Vault page stays on "Loading resources…"
-> and does not list resources. The Web UI's API client calls `fetch` unbound, so the
-> browser throws "Illegal invocation" before any `GET /api/v1/resources` is sent.
+> **Known limitation.** After unlock, the Vault page shows "Loading resources…" for a
+> few seconds, then "Failed to load resources." with a Retry button, and does not
+> list resources. Retry does not help. The Web UI's API client calls `fetch` unbound,
+> so the browser throws "Illegal invocation" before any `GET /api/v1/resources` is
+> sent.
 > The fix is tracked as task `t_76755bb3`. Until it lands, use `curl` to work with
 > folders and resources (see
 > [`docs/development/setup.md`](docs/development/setup.md) §8).
