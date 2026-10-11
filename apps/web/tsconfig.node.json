@@ -18,6 +18,8 @@
   },
   "include": [
     "vite.config.ts",
+    "dev-proxy.ts",
+    "dev-proxy.test.ts",
     "vitest.config.ts",
     "vitest.integration.config.ts",
     "vitest.a11y.config.ts"
