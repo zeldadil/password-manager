@@ -1,0 +1,20 @@
+## HEAD 38a1ca4e7ef6c091d81c93f4eca021a29efe286b
+## cadaea2 ancestor of origin/master:
+yes
+## docs files changed since cadaea2:
+(empty = none)
+## stale-claim grep (README.md, docs/), outside tests/evidence:
+0 hits
+## t_76755bb3 caveat present:
+README.md:1
+docs/development/setup.md:5
+## anchor target + inbound links:
+docs/development/setup.md:271:### 7.3 Web UI ↔ API in local dev (Vite dev proxy)
+3
+## unbound fetch still on master (caveat still needed):
+57:    this.fetchImpl = options.fetchImpl ?? fetch
+## prettier --check differing-line count, e4e150c vs cadaea2:
+e4e150c README.md prettier-diff-lines=120
+cadaea2 README.md prettier-diff-lines=120
+e4e150c docs/development/setup.md prettier-diff-lines=108
+cadaea2 docs/development/setup.md prettier-diff-lines=108

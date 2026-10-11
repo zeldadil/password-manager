@@ -1,0 +1,36 @@
+## node v22.23.3, pnpm 9.12.0, HEAD 38a1ca4
+install exit 0
+migrate exit 0
+
+## F: default pnpm dev, Vault caveat + Retry (setup.md 7.3 / 8 step 5 / README Known limitation)
+register via :5173 -> HTTP 201
+POST /auth/unlock -> HTTP 200; url now /vault
+after-unlock t+0.0s: Loading resources…
+after-unlock t+3.1s: Failed to load resources. (retry buttons=1, listitems=0)
+after-unlock final after ~10s: Failed to load resources. (retry buttons=1, listitems=0)
+after-retry-1 t+0.0s: Failed to load resources. (retry buttons=1, listitems=0)
+after-retry-1 t+1.0s: Loading resources…
+after-retry-1 t+3.0s: Failed to load resources. (retry buttons=1, listitems=0)
+after-retry-1 final after ~10s: Failed to load resources. (retry buttons=1, listitems=0)
+after-retry-1 new window.fetch calls: [{"url":"/api/v1/resources","receiverIsWindow":false,"threw":null,"rejected":"TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation"},{"url":"/api/v1/resources","receiverIsWindow":false,"threw":null,"rejected":"TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation"},{"url":"/api/v1/resources","receiverIsWindow":false,"threw":null,"rejected":"TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation"}]
+after-retry-1 RESULT: still failing (Retry does not help)
+after-retry-2 t+0.0s: Failed to load resources. (retry buttons=1, listitems=0)
+after-retry-2 t+1.0s: Loading resources…
+after-retry-2 t+3.0s: Failed to load resources. (retry buttons=1, listitems=0)
+after-retry-2 final after ~10s: Failed to load resources. (retry buttons=1, listitems=0)
+after-retry-2 new window.fetch calls: [{"url":"/api/v1/resources","receiverIsWindow":false,"threw":null,"rejected":"TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation"},{"url":"/api/v1/resources","receiverIsWindow":false,"threw":null,"rejected":"TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation"},{"url":"/api/v1/resources","receiverIsWindow":false,"threw":null,"rejected":"TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation"}]
+after-retry-2 RESULT: still failing (Retry does not help)
+probe3 exit 0
+API log lines for /api/v1/resources: 0
+
+## G: Troubleshooting row - Web UI alone, proxy target unreachable (default 127.0.0.1:3000, nothing listening)
+listening on 127.0.0.1:3000 before G? 0
+POST :5173/auth/unlock -> 502 text/plain
+GET :5173/api/v1/resources -> 502 text/plain
+vite log proxy-error lines (verbatim):
+10:17:40 AM [vite] http proxy error: /auth/unlock
+10:17:40 AM [vite] http proxy error: /api/v1/resources
+
+## secret check on dev logs
+0
+all servers stopped
