@@ -1,87 +1,51 @@
 name: QA sign-off audit
 
 # ──────────────────────────────────────────────────────────────────────────────
-# CI-001h (t_ea0783c5) — scheduled, board-wide audit of the QA sign-off gate.
+# Fixture regression test of the QA sign-off gate's board audit — NOT the
+# weekly audit itself (t_8a64c3dd).
 #
-# Policy: QA_SIGN_OFF_GATE.md §2 "Detection (board audit)" + §6 (enforcement
-# tooling); TEST_STRATEGY §11/§12; architect decision t_33dcad7d
-# (docs/decisions/qa-signoff-gate-followups-t_33dcad7d.md → "CI wiring for the
-# board audit").
+# The weekly board audit runs LOCALLY, on the host that carries the board, as
+# a Hermes cron job of the `qa` profile (`qa-weekly-signoff-audit`, Mondays
+# 06:17 UTC): scripts/qa/cron/qa-weekly-signoff-audit.sh audits a throwaway
+# worktree of origin/master with `signoff-gate.mjs audit --fail-on-a11` and
+# `scripts/qa/signoff-audit-local.mjs` reports the result to the agents on the
+# board (report attached to the maintenance card t_9c3f521a, one
+# `AUDIT <date> : <rule>` comment per card in violation, an `AUDIT-RUN:` stamp
+# for missed-run detection). See QA_SIGN_OFF_GATE.md §6.5.
 #
-# Why this is its own workflow file and not a 9th job in ci.yml:
-#   * The audit is a board-wide policy/retro report, NOT a per-PR code-quality
-#     gate. It must never block a merge.
-#   * ci.yml is an active collision hotspot across the QA-001 CI cards
-#     (b / c / d / g each edit it). A separate file adds no hunk to it. The
-#     per-PR job graph in ci.yml (install-lockfile → lint-typecheck → unit →
-#     integration → e2e → dependency-audit → secret-scan → build) is not
-#     touched by CI-001h, and the board audit has no `pull_request`/`push`
-#     trigger (the PR-only fixture job below never reads the board).
+# Why the `schedule` trigger and the real-board job were removed (t_8a64c3dd,
+# Adil's decision 2026-10-09, architect analysis #632 on t_30d7dff5):
+#   * a GitHub-hosted runner cannot see ~/.hermes/kanban.db, so a scheduled
+#     board audit here can only report "AUDIT NOT RUN";
+#   * the repository is PUBLIC: a self-hosted runner with the board mounted
+#     would let a fork PR run code on the host (~/.hermes, agent credentials).
+#     The `hermes-host` runner (CI-001h / t_527d4720 option 1) is abandoned;
+#     the weekly schedule had produced a `cancelled` run every week since
+#     2026-09-21. The repository variable QA_SIGNOFF_AUDIT_RUNNER is no longer
+#     read.
 #
-# Triggers: weekly `schedule` + `workflow_dispatch` for the board audit.
-# `qa-signoff-audit` must NOT be added to the required status checks on
-# `master` (CI-001h AC3/AC4) — branch protection is unchanged. It reports; it
-# does not gate.
-#
-# `pull_request` (t_5b5b61e2) runs ONLY the `bypass-report-fixture` job, and
-# only when the gate, its selftest, the summary script, the secret scanner or
-# this file change: it executes the selftest and then the real audit + summary
-# steps against the selftest's synthetic bypass board, so a change to the
-# report is exercised on the PR itself. It never reads the real board (a
-# GitHub runner cannot see it), it is not a required check, and the board
-# audit job is skipped on `pull_request`.
-#
-# Bypasses (t_5b5b61e2, QA_SIGN_OFF_GATE.md §5.10): the audit lists, in the
-# same "Bypasses and degradations" block as A11, every X1 sign-off exception in
-# force, every X2 withdrawn exception (history) and every X3 completion made
-# outside the completion hook (`hermes kanban complete` from a terminal,
-# dashboard approval, direct board edit) — card, date, author, reason, state,
-# plus a trend and a watch threshold. A bypass NEVER fails the audit; it is
-# made visible. Reasons are free text: they travel as JSON (never through a
-# shell), are secret-scanned by the gate and Markdown-escaped by the summary.
-#
-# Board transport — read this before "fixing" a red run:
-#   The gate reads a SQLite board through `sqlite3`. The canonical board lives
-#   at ~/.hermes/kanban.db on the trusted host; a GitHub-hosted runner cannot
-#   see it. Board resolution order is:
-#     1. workflow_dispatch input `board_db`  (explicit path on the runner)
-#     2. $HERMES_KANBAN_DB
-#     3. $HOME/.hermes/kanban.db
-#   When none of them exists the audit cannot run: the job ends RED with
-#   "AUDIT NOT RUN" in the run summary. It never reports a green audit that did
-#   not happen, because a green scheduled compliance job that audits nothing is
-#   worse than no job at all.
-#   Pointing the job at a self-hosted runner that has the board mounted is a
-#   repository-variable change, no file edit:
-#     * `vars.QA_SIGNOFF_AUDIT_RUNNER` = the self-hosted runner label.
-#       Unset → `ubuntu-latest` (where the audit cannot run — see above).
-#   The transport decision itself (self-hosted runner vs. a published board
-#   snapshot) is an architect follow-up raised by the CI-001h card.
+# What remains here, on `ubuntu-latest`, with fixture boards only (never the
+# real board), as a non-regression test:
+#   * `bypass-report-fixture` (t_5b5b61e2) — the gate selftest, then the real
+#     audit + summary steps against the selftest's synthetic bypass board;
+#   * `local-audit-reporter-fixture` (t_8a64c3dd) — the selftest of the local
+#     reporter: a fixture board, a stub `hermes` CLI, the real gate audit; it
+#     proves a card in violation receives its `AUDIT` comment, the comments do
+#     not change any card's gate result, and `check-stale` flags a missing run.
+# Triggers: `pull_request` limited to the gate/reporter files, and
+# `workflow_dispatch`. Not a required check on master: it never gates a merge.
 # ──────────────────────────────────────────────────────────────────────────────
 
 on:
-  schedule:
-    # Mondays 06:17 UTC — off the hour, so the run does not queue behind the
-    # top-of-the-hour cron crowd.
-    - cron: "17 6 * * 1"
   workflow_dispatch:
-    inputs:
-      board_db:
-        description: "Path to the board SQLite file on the runner (empty = auto-resolve)"
-        required: false
-        type: string
-      strict_history:
-        description: "Retro mode: also fail on pre-epoch (grandfathered) cards with no verdict/evidence"
-        required: false
-        type: boolean
-        default: false
-  # t_5b5b61e2: exercise the bypass report on the PR that changes it (fixture
-  # board only — see the header). Not a required check.
   pull_request:
     paths:
       - "scripts/qa/signoff-gate.mjs"
       - "scripts/qa/signoff-gate.selftest.mjs"
       - "scripts/qa/signoff-audit-summary.mjs"
+      - "scripts/qa/signoff-audit-local.mjs"
+      - "scripts/qa/signoff-audit-local.selftest.mjs"
+      - "scripts/qa/cron/qa-weekly-signoff-audit.sh"
       - "scripts/qa/secret-guard.mjs"
       - ".github/workflows/qa-signoff-audit.yml"
 
@@ -90,195 +54,21 @@ permissions:
 
 env:
   NODE_VERSION: "22"
-  PNPM_VERSION: "9.12.0"
 
 concurrency:
-  # Never cancel an in-flight audit — the report it writes is the evidence.
   group: qa-signoff-audit-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  qa-signoff-audit:
-    name: qa-signoff-audit
-    # The board audit never runs on a PR: a GitHub-hosted runner has no board,
-    # and the PR path is covered by `bypass-report-fixture` below.
-    if: github.event_name != 'pull_request'
-    runs-on: ${{ vars.QA_SIGNOFF_AUDIT_RUNNER || 'ubuntu-latest' }}
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Same toolchain pinning as ci.yml (NODE_VERSION / PNPM_VERSION) so the
-      # audit runs in the environment the rest of the pipeline uses.
-      # There is deliberately no `pnpm install`: the gate script has zero npm
-      # dependencies (QA_SIGN_OFF_GATE.md §6), so neither a lockfile drift nor a
-      # network hiccup must be able to block — or fake-green — a board audit.
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Verify the gate script is present
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ ! -f scripts/qa/signoff-gate.mjs ]; then
-            echo "::error title=Gate script missing::scripts/qa/signoff-gate.mjs is not on this ref — the board audit cannot run. The script ships with the QA-001h gate card (PR #16)."
-            exit 1
-          fi
-          node --version
-
-      - name: Resolve the board database
-        id: board
-        shell: bash
-        env:
-          BOARD_INPUT: ${{ inputs.board_db }}
-        run: |
-          set -uo pipefail
-          db=""
-          for candidate in "$BOARD_INPUT" "${HERMES_KANBAN_DB:-}" "$HOME/.hermes/kanban.db"; do
-            if [ -n "$candidate" ] && [ -f "$candidate" ]; then
-              db="$candidate"
-              break
-            fi
-          done
-          if [ -n "$db" ]; then
-            printf 'available=true\n' >> "$GITHUB_OUTPUT"
-            printf 'db=%s\n' "$db" >> "$GITHUB_OUTPUT"
-            echo "Board database: $db"
-          else
-            printf 'available=false\n' >> "$GITHUB_OUTPUT"
-            printf 'db=\n' >> "$GITHUB_OUTPUT"
-            echo "::warning title=QA sign-off audit not run::no board database found on this runner (board_db input, HERMES_KANBAN_DB, HOME/.hermes/kanban.db). The audit did NOT run — this run does not certify board compliance."
-          fi
-
-      - name: Run the board audit
-        id: audit
-        if: steps.board.outputs.available == 'true'
-        shell: bash
-        env:
-          BOARD_DB: ${{ steps.board.outputs.db }}
-          STRICT_HISTORY: ${{ inputs.strict_history }}
-        run: |
-          set -uo pipefail
-          # --fail-on-a11 (t_b102b100, QA_SIGN_OFF_GATE.md §5.9): this audit runs
-          # WITH GitHub, so an A11_CI_STATE_UNVERIFIABLE here is a real
-          # degradation (token, branch-protection read, time budget) and turns
-          # the run red. A11 stays a per-card advisory everywhere else.
-          # --json-out: the same evaluation, machine-readable, for the
-          # "Bypasses and degradations" summary + annotations below (no second
-          # GitHub pass).
-          args=(audit --repo "$GITHUB_WORKSPACE" --db "$BOARD_DB" --fail-on-a11 --json-out "$RUNNER_TEMP/qa-signoff-audit.json")
-          if [ "$STRICT_HISTORY" = "true" ]; then
-            args+=(--strict-history)
-          fi
-          echo "+ node scripts/qa/signoff-gate.mjs ${args[*]}"
-          set +e
-          node scripts/qa/signoff-gate.mjs "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/qa-signoff-audit.txt"
-          code="${PIPESTATUS[0]}"
-          set -e
-          printf '%s\n' "$code" > "$RUNNER_TEMP/qa-signoff-audit.exit"
-          printf 'exit=%s\n' "$code" >> "$GITHUB_OUTPUT"
-          exit "$code"
-
-      - name: Upload the audit report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: qa-signoff-audit
-          path: |
-            ${{ runner.temp }}/qa-signoff-audit.txt
-            ${{ runner.temp }}/qa-signoff-audit.json
-          if-no-files-found: warn
-          retention-days: 30
-
-      - name: Write the run summary
-        if: always()
-        shell: bash
-        env:
-          BOARD_DB: ${{ steps.board.outputs.db }}
-          GIT_REF: ${{ github.ref }}
-          GH_EVENT_NAME: ${{ github.event_name }}
-        run: |
-          set -uo pipefail
-          board_shown="${BOARD_DB:-none found on this runner}"
-          {
-            echo "## QA sign-off gate — board audit"
-            echo
-            echo "| field | value |"
-            echo "|---|---|"
-            echo "| ref | $GIT_REF |"
-            echo "| event | $GH_EVENT_NAME |"
-            echo "| board | $board_shown |"
-            echo
-          } >> "$GITHUB_STEP_SUMMARY"
-          # "Bypasses and degradations" block (t_b102b100 + t_5b5b61e2): one
-          # counter row per type — A11, X1 exceptions in force, X2 withdrawn
-          # exceptions, X3 completions outside the hook — a trend table, then
-          # one row per card (A11) or per occurrence (X1/X2/X3: date, card,
-          # author, reason, state) in the summary; ::warning:: / ::notice::
-          # annotations on stdout. Only when the audit ran: the "AUDIT NOT RUN"
-          # branch below already says nothing was counted. A missing JSON — or
-          # a type the board could not provide — is reported as "not
-          # available" by the script itself, never as 0. A bypass never
-          # changes the run's colour (the exit code is the audit's own).
-          if [ -f "$RUNNER_TEMP/qa-signoff-audit.txt" ]; then
-            node scripts/qa/signoff-audit-summary.mjs --json "$RUNNER_TEMP/qa-signoff-audit.json" || echo "::error title=Degradations summary failed::scripts/qa/signoff-audit-summary.mjs could not read the audit JSON"
-          fi
-          {
-            if [ -f "$RUNNER_TEMP/qa-signoff-audit.txt" ]; then
-              audit_exit="$(cat "$RUNNER_TEMP/qa-signoff-audit.exit" 2>/dev/null || echo '?')"
-              echo "### Audit report (exit code $audit_exit)"
-              echo
-              echo '```text'
-              cat "$RUNNER_TEMP/qa-signoff-audit.txt"
-              echo '```'
-            else
-              echo "### AUDIT NOT RUN"
-              echo
-              echo "No board database was found on this runner, so the board audit did not run."
-              echo "**This run does not certify board compliance** — it is not evidence that the"
-              echo "board passes. Fix the board transport before reading any colour from this"
-              echo "workflow: set the repository variable \`QA_SIGNOFF_AUDIT_RUNNER\` to a"
-              echo "self-hosted runner that has the board mounted, or pass the \`board_db\`"
-              echo "dispatch input."
-            fi
-            echo
-            echo "---"
-            echo "_Reported by .github/workflows/qa-signoff-audit.yml (CI-001h). Not a required check on master: it reports, it does not gate merges._"
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo "--- summary written ---"
-          cat "$GITHUB_STEP_SUMMARY"
-
-      - name: Enforce the audit outcome
-        if: always()
-        shell: bash
-        run: |
-          set -uo pipefail
-          if [ "${{ steps.board.outputs.available }}" != "true" ]; then
-            echo "::error title=QA sign-off audit not run::no board database on this runner — refusing to finish green for an audit that did not happen."
-            exit 1
-          fi
-          code="$(cat "$RUNNER_TEMP/qa-signoff-audit.exit" 2>/dev/null || echo 3)"
-          echo "Board audit exit code: $code"
-          exit "$code"
-
   # ────────────────────────────────────────────────────────────────────────────
-  # t_5b5b61e2 — the bypass report, executed for real on the PR that changes it.
-  # Same scripts and the same audit/summary invocation as the job above, on the
-  # selftest's synthetic bypass board (X1/X2/X3 cards, a secret-shaped reason,
-  # Markdown in a reason). Expected: selftest green, audit exit 0 — the board
-  # carries bypasses only, and a bypass never fails the audit — and a run
-  # summary listing every occurrence. Independent of `install-lockfile` (like
-  # `secret-scan` and `sast` in ci.yml): zero npm dependencies, no install.
+  # t_5b5b61e2 — the bypass report, executed for real on the selftest's
+  # synthetic bypass board (X1/X2/X3 cards, a secret-shaped reason, Markdown in
+  # a reason). Expected: selftest green, audit exit 0 — the board carries
+  # bypasses only, and a bypass never fails the audit — and a run summary
+  # listing every occurrence. Zero npm dependencies, no install.
   # ────────────────────────────────────────────────────────────────────────────
   bypass-report-fixture:
     name: bypass-report-fixture
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -344,5 +134,55 @@ jobs:
             ${{ runner.temp }}/selftest.txt
             ${{ runner.temp }}/bypass-audit.txt
             ${{ runner.temp }}/bypass-audit.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # t_8a64c3dd — the local weekly audit's reporter, on a fixture board with a
+  # stub `hermes` CLI (no ~/.hermes, no GitHub: QA_GATE_GITHUB=off). Covers the
+  # negative control (a card in violation gets `AUDIT <date> : <rule>`), gate
+  # inertness of those comments, idempotence, the `AUDIT-RUN:` stamp and
+  # `check-stale`, and the failure paths. Also syntax-checks the cron wrapper.
+  # ────────────────────────────────────────────────────────────────────────────
+  local-audit-reporter-fixture:
+    name: local-audit-reporter-fixture
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cron wrapper parses (bash -n)
+        shell: bash
+        run: bash -n scripts/qa/cron/qa-weekly-signoff-audit.sh
+
+      - name: Reporter selftest
+        shell: bash
+        run: |
+          set -uo pipefail
+          sqlite3 --version
+          set +e
+          node scripts/qa/signoff-audit-local.selftest.mjs 2>&1 | tee "$RUNNER_TEMP/local-audit-selftest.txt"
+          code="${PIPESTATUS[0]}"
+          set -e
+          {
+            echo "## Local weekly audit reporter — fixture selftest (t_8a64c3dd)"
+            echo
+            echo '```text'
+            cat "$RUNNER_TEMP/local-audit-selftest.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"
+
+      - name: Upload the reporter selftest output
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-audit-reporter-fixture
+          path: ${{ runner.temp }}/local-audit-selftest.txt
           if-no-files-found: warn
           retention-days: 14
