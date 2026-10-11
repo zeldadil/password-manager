@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiClient } from './client'
 import { ApiError } from './errors'
@@ -364,5 +364,73 @@ describe('ApiClient — error normalization', () => {
       'PATCH',
       'DELETE',
     ])
+  })
+})
+
+// t_76755bb3 regression: a browser's `window.fetch` throws
+// "TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation" when
+// called with a receiver other than the global object. jsdom/Node fetch does not
+// check the receiver, so the default (no `fetchImpl`) path is exercised here with
+// a global stub that enforces the browser rule.
+describe('ApiClient — default fetch (no fetchImpl injected)', () => {
+  function stubBrowserLikeFetch(respond: () => Response) {
+    const receivers: unknown[] = []
+    const strictFetch = vi.fn(function (this: unknown) {
+      receivers.push(this)
+      if (this !== undefined && this !== globalThis) {
+        return Promise.reject(
+          new TypeError("Failed to execute 'fetch' on 'Window': Illegal invocation"),
+        )
+      }
+      return Promise.resolve(respond())
+    })
+    vi.stubGlobal('fetch', strictFetch)
+    return { strictFetch, receivers }
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('calls the global fetch with a valid receiver (not the ApiClient instance)', async () => {
+    const { strictFetch, receivers } = stubBrowserLikeFetch(() =>
+      jsonResponse(envelope({ data: [] })),
+    )
+    const store = new InMemoryTokenStore()
+    store.setTokens({ accessToken: 'jwt-a', refreshToken: 'refresh-a' })
+    const client = new ApiClient({ baseUrl: BASE_URL, tokenStore: store })
+
+    await expect(client.get('/resources')).resolves.toEqual({ data: [] })
+
+    expect(strictFetch).toHaveBeenCalledTimes(1)
+    expect(receivers[0] === undefined || receivers[0] === globalThis).toBe(true)
+    const [url, init] = strictFetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toBe(`${BASE_URL}/resources`)
+    expect(new Headers(init.headers).get('Authorization')).toBe('Bearer jwt-a')
+  })
+
+  it('resolves the global fetch at call time, so a later stub is honoured', async () => {
+    const client = new ApiClient({ baseUrl: BASE_URL, tokenStore: new InMemoryTokenStore() })
+    const { strictFetch } = stubBrowserLikeFetch(() => jsonResponse(envelope({ ok: true })))
+
+    await expect(client.get('/ping')).resolves.toEqual({ ok: true })
+    expect(strictFetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('uses a valid receiver on the /auth/refresh path too', async () => {
+    let call = 0
+    const { receivers } = stubBrowserLikeFetch(() => {
+      call += 1
+      if (call === 1) return jsonResponse(envelope(null, errorHeader()), { status: 401 })
+      if (call === 2) return jsonResponse(envelope({ jwt: 'jwt-b', refreshToken: 'refresh-b' }))
+      return jsonResponse(envelope({ data: [] }))
+    })
+    const store = new InMemoryTokenStore()
+    store.setTokens({ accessToken: 'jwt-a', refreshToken: 'refresh-a' })
+    const client = new ApiClient({ baseUrl: BASE_URL, tokenStore: store })
+
+    await expect(client.get('/resources')).resolves.toEqual({ data: [] })
+    expect(receivers).toHaveLength(3)
+    expect(receivers.every((r) => r === undefined || r === globalThis)).toBe(true)
   })
 })

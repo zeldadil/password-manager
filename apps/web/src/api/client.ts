@@ -54,7 +54,12 @@ export class ApiClient {
   constructor(options: ApiClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/+$/, '')
     this.tokenStore = options.tokenStore
-    this.fetchImpl = options.fetchImpl ?? fetch
+    // Never store the bare global `fetch` and call it as `this.fetchImpl(...)`:
+    // the receiver would be this ApiClient, and browsers reject that with
+    // "TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation"
+    // (t_76755bb3). The wrapper calls the global fetch unbound, looked up at call
+    // time so a test stub installed after construction is still honoured.
+    this.fetchImpl = options.fetchImpl ?? ((input, init) => globalThis.fetch(input, init))
     this.publicPaths = options.publicPaths ?? DEFAULT_PUBLIC_PATHS
     this.onUnauthorized = options.onUnauthorized
   }
