@@ -93,3 +93,23 @@ before running them elsewhere. Then:
 3. `bash live.sh port3301 3301`
 
 Requirements: Node 22 on PATH, a free port 5173, and Playwright Chromium installed.
+
+## 6. Second re-execution (2026-10-11, `rerun-2026-10-11/`)
+
+The first run's worker was reclaimed before it posted a verdict. A new `qa` run did not reuse its
+transcripts. It re-ran every step on the same checkout (app code identical to `origin/master` b1db88f;
+`git diff --stat origin/master` outside this directory is empty), Node v22.23.3:
+
+- `vitest run dev-proxy.test.ts`: 8/8 passed.
+- `mut.sh`: pre-fix `vite.config.ts` gives 2 failed / 6 passed with the same two assertions; restored gives 8/8;
+  typecheck exit 0; eslint exit 0.
+- `live.sh default` and `live.sh port3301 3301`: migrate exit 0, direct API health 200 (port 3000 and 3301),
+  POST /auth/unlock through the login form 200, final URL /vault, `RESULT: PASS`, harness exit 0 in both runs.
+  The boundary and abuse table in section 4 reproduced exactly.
+- The dev logs of both runs contain no `accessToken`, `refreshToken`, synthetic password or JWT-shaped (`eyJ…`)
+  value. The logs are not committed.
+
+Observation (harness, not the proxy): the harness's `bodyKeys` for the 401 on `/api/v1/resources` is
+sometimes `["header","body"]` and sometimes `["<non-JSON body>"]` across runs, with the same status and
+`application/json` content type each time. This is a timing artefact of reading the response body in the
+harness, not a proxy defect.
