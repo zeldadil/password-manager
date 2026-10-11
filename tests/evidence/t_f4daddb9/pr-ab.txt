@@ -1,0 +1,5 @@
+snapshot not-done cards: 63; PRs read from GitHub: 150 (open 2, closed-unmerged 21, merged 127)
+CHANGED t_6fabf929 [todo, qa] QA-002: Critical Web E2E
+  before: {"applies":false,"v":[],"linked":[]}
+  after:  {"applies":true,"v":["R9_PR_NOT_MERGED"],"linked":[]}  mentions: #32:closed:body
+not-done cards whose R9/R10 outcome changes: 1 of 63

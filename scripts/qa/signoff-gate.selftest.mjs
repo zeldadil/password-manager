@@ -1148,6 +1148,12 @@ const LK_TASK_BOLD = prCard("FE-960f merged PR declares `- **Task:** <id>` in a 
 const LK_CLOSES_PROSE = prCard("FE-960g `Closes` followed by prose, the id later on the line / in a quote", { body: DECLARED_CODE });
 const LK_OWN_PLUS_FOREIGN = prCard("FE-960h own merged PR + a foreign open PR that mentions the card");
 const LK_TITLE_ONLY = prCard("FE-960i merged PR names the card only in its title", { body: DECLARED_CODE });
+// t_f4daddb9 (objection #597, architect decision): a mention by an UNMERGED PR
+// triggers R9 even with no `Deliverable: code` and no branch named after the
+// card; a mention by a merged PR stays A14 only. Bodies carry no declaration.
+const MN_OPEN_TITLE = prCard("FE-961a open PR names the card only in its title, branch not named after it", { body: "**Test Types:** unit\nImplement the thing." });
+const MN_MERGED_TITLE = prCard("FE-961b merged PR names the card only in its title (control)", { body: "**Test Types:** unit\nImplement the thing." });
+const MN_CLOSED_PROSE = prCard("FE-961c PR closed unmerged mentions the card in prose", { body: "**Test Types:** unit\nImplement the thing." });
 const GH_LINK = join(root, "gh-link.json");
 writeFileSync(
   GH_LINK,
@@ -1167,8 +1173,11 @@ writeFileSync(
         merged(928, LK_OWN_PLUS_FOREIGN, sha("b"), { body: "Own PR.", headRefName: `feature/${LK_OWN_PLUS_FOREIGN}` }),
         open(929, LK_OWN_PLUS_FOREIGN, { body: `Unrelated fix; see ${LK_OWN_PLUS_FOREIGN} for context.`, headRefName: "fix/other" }),
         merged(930, LK_TITLE_ONLY, sha("b"), { title: `feat: something (${LK_TITLE_ONLY})`, body: "No declaration." }),
+        open(931, MN_OPEN_TITLE, { title: `feat: thing (${MN_OPEN_TITLE})`, body: "Implements the thing.", headRefName: "feature/other-work" }),
+        merged(932, MN_MERGED_TITLE, sha("b"), { title: `feat: thing (${MN_MERGED_TITLE})`, body: "Implements the thing.", headRefName: "feature/other-work-2" }),
+        { ...open(933, MN_CLOSED_PROSE, { body: `Abandoned attempt at ${MN_CLOSED_PROSE}.`, headRefName: "feature/abandoned" }), state: "CLOSED" },
       ],
-      branches: ["master"],
+      branches: ["master", "feature/other-work"],
     },
     null,
     2,
@@ -2555,10 +2564,14 @@ console.log("\n7. A PR links a card only by declaration — head branch or `Clos
   );
 
   // AC 4 at fixture level — the live #114 shape on t_75180b28.
+  // Amended by t_f4daddb9: the card here has NO PR of its own, so the open
+  // foreign PR that mentions it now TRIGGERS R9 (a mention may trigger, never
+  // satisfy). The real t_75180b28 had its own head-branch PR #116 — that shape
+  // is the next case (#928 + #929): the mention neither links nor triggers.
   r = prCheck(LK_PROSE_OPEN);
   check(
-    "live #114 shape: an open foreign PR (#922) that quotes the card in prose → not linked, no R9 naming it, card out of scope; A14 keeps it visible",
-    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.applies === false && JSON.stringify(linkedNums(r)) === "[]" && JSON.stringify(mentionNums(r)) === "[922]" && /#922/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    "#114 shape with no own PR (amended, t_f4daddb9): an open foreign PR (#922) that quotes the card in prose → not linked, but R9 applies and names #922 as an unmerged mention; A14 keeps it visible",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && r.pr && r.pr.applies === true && JSON.stringify(linkedNums(r)) === "[]" && JSON.stringify(mentionNums(r)) === "[922]" && /#922 \(open/.test(r.detail("R9_PR_NOT_MERGED")) && /#922/.test(r.detail("A14_PR_MENTIONS_CARD")),
     show(r),
   );
   r = prCheck(LK_OWN_PLUS_FOREIGN);
@@ -2597,6 +2610,80 @@ console.log("\n7. A PR links a card only by declaration — head branch or `Clos
     "a longer id (#909 `Closes <id>9`) is neither a link nor a mention → no A14",
     r.code === 0 && r.pr && r.pr.applies === false && !r.adv.includes("A14_PR_MENTIONS_CARD"),
     show(r),
+  );
+
+  // ── t_f4daddb9: an unmerged mention TRIGGERS R9, never satisfies it ──────
+  console.log("\n7b. A mention by an unmerged PR triggers R9 (never satisfies it); a merged mention stays A14 (§5.9, t_f4daddb9):");
+  r = prCheck(MN_OPEN_TITLE);
+  check(
+    "(repro #597) open PR #931 names the card only in its title, head `feature/other-work` (pushed), card without `Deliverable: code` → applies=true, R9 naming #931; A14 kept",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && r.pr && r.pr.applies === true && JSON.stringify(linkedNums(r)) === "[]" && JSON.stringify(r.pr.unmerged_mentioning_prs) === "[931]" && /#931 \(open; title\)/.test(r.detail("R9_PR_NOT_MERGED")) && r.adv.includes("A14_PR_MENTIONS_CARD"),
+    show(r),
+  );
+  r = prCheck(MN_MERGED_TITLE);
+  check(
+    "(control) merged PR #932 names the card only in its title, no other trigger → no R9, applies=false, A14 naming #932 (behaviour unchanged)",
+    r.code === 0 && r.rules.length === 0 && r.pr && r.pr.applies === false && /#932 \(merged; title\)/.test(r.detail("A14_PR_MENTIONS_CARD")),
+    show(r),
+  );
+  r = prCheck(MN_CLOSED_PROSE);
+  check(
+    "PR #933 closed without merge mentions the card in prose → applies=true, R9 naming #933 as closed without being merged",
+    r.code === 1 && r.rules.length === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && r.pr && r.pr.applies === true && /#933 \(closed without being merged; body\)/.test(r.detail("R9_PR_NOT_MERGED")),
+    show(r),
+  );
+  r = prCheck(LK_PROSE_MERGED);
+  check(
+    "a merged mention still never SATISFIES R9: #921 (merged, prose) on a `Deliverable: code` card → R9 from the declaration only; #921 is not named as an unmerged trigger",
+    r.code === 1 && r.rules[0] === "R9_PR_NOT_MERGED" && !/#921 \(merged/.test(r.detail("R9_PR_NOT_MERGED")) && /declares `Deliverable: code`/.test(r.detail("R9_PR_NOT_MERGED")),
+    show(r),
+  );
+  r = prCheck(MN_OPEN_TITLE, GH_DOWN);
+  check(
+    "GitHub unreachable → the unmerged-mention trigger cannot be read: A11 only, never a block (open mode unchanged)",
+    r.code === 0 && r.rules.length === 0 && r.adv.includes("A11_CI_STATE_UNVERIFIABLE"),
+    show(r),
+  );
+
+  // Pure-function replay of the card's exact reproduction (no board, no network).
+  const gate = await import(new URL(`file://${GATE}`).href);
+  const stubGh = (prs, branches, failBranches = false) => ({
+    repo: "fixture-owner/fixture-repo",
+    listPullRequests: () => prs,
+    listBranches: () => {
+      if (failBranches) throw new gate.GitHubUnavailable("branches: HTTP 502");
+      return branches;
+    },
+    defaultBranch: () => "master",
+    requiredChecks: () => [],
+    commitChecks: () => ({ runs: [], statuses: [], workflow_runs: null }),
+  });
+  const repro = gate.evaluatePrRule(
+    { id: "t_abcd1234", body: "Implement the thing." },
+    stubGh([{ number: 901, title: "feat: thing (t_abcd1234)", body: "Implements the thing.", headRefName: "feature/other-work", state: "OPEN" }], ["feature/other-work"]),
+  );
+  check(
+    "evaluatePrRule — exact #597 reproduction (t_abcd1234, open #901 title-only, branch feature/other-work) → facts.applies=true + R9_PR_NOT_MERGED naming #901",
+    repro.facts.applies === true && repro.violations.length === 1 && repro.violations[0].rule === "R9_PR_NOT_MERGED" && /#901/.test(repro.violations[0].detail) && repro.advisories.some((a) => a.rule === "A14_PR_MENTIONS_CARD"),
+    JSON.stringify({ applies: repro.facts.applies, v: repro.violations.map((x) => x.rule), a: repro.advisories.map((x) => x.rule) }),
+  );
+  const ctl = gate.evaluatePrRule(
+    { id: "t_abcd1234", body: "Implement the thing." },
+    stubGh([{ number: 902, title: "feat: thing (t_abcd1234)", body: "Implements the thing.", headRefName: "feature/other-work", state: "MERGED", mergedAt: "2026-10-10T00:00:00Z", mergeCommit: { oid: "b".repeat(40) }, baseRefName: "master" }], ["master"]),
+  );
+  check(
+    "evaluatePrRule — control: same shape but #902 MERGED (branch deleted) → applies=false, no violation, A14 only",
+    ctl.facts.applies === false && ctl.violations.length === 0 && ctl.advisories.length === 1 && ctl.advisories[0].rule === "A14_PR_MENTIONS_CARD",
+    JSON.stringify({ applies: ctl.facts.applies, v: ctl.violations.map((x) => x.rule), a: ctl.advisories.map((x) => x.rule) }),
+  );
+  const brDown = gate.evaluatePrRule(
+    { id: "t_abcd1234", body: "Implement the thing." },
+    stubGh([{ number: 901, title: "feat: thing (t_abcd1234)", body: "Implements the thing.", headRefName: "feature/other-work", state: "OPEN" }], [], true),
+  );
+  check(
+    "evaluatePrRule — branch list unreadable but an unmerged PR mentions the card → R9 still applies (the trigger is already known), no A11",
+    brDown.facts.applies === true && brDown.violations.length === 1 && brDown.violations[0].rule === "R9_PR_NOT_MERGED" && !brDown.advisories.some((a) => a.rule === "A11_CI_STATE_UNVERIFIABLE"),
+    JSON.stringify({ applies: brDown.facts.applies, v: brDown.violations.map((x) => x.rule), a: brDown.advisories.map((x) => x.rule) }),
   );
 }
 

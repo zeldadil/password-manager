@@ -87,7 +87,9 @@
  * is named after the card, or its body has a `Closes <id>` / `Card: <id>` /
  * `Task: <id>` line outside code. A mere mention (title, prose, quote, code
  * span/fence) is the advisory A14_PR_MENTIONS_CARD — never a link, so it can
- * neither trigger nor satisfy R9.
+ * never satisfy R9. When no PR declares the card, a mention by an UNMERGED PR
+ * (open, or closed unmerged) does trigger R9 (t_f4daddb9): a mention may
+ * trigger, never satisfy. A mention by a merged PR stays A14 only.
  *
  * R10 judges the run the merge triggered (t_339a0d02): the `push` run on the
  * merge commit, its newest attempt included. A run on the same SHA from another
@@ -1053,7 +1055,9 @@ function idMentionRe(taskId) {
 // A PR is linked to a card only when it *declares* it: its head branch is named
 // after the card, or its body carries a line `Closes <id>` / `Card: <id>` /
 // `Task: <id>` outside code. Any other occurrence of the id (title, prose,
-// quote, code) is a *mention*: reported as A14_PR_MENTIONS_CARD, never a link.
+// quote, code) is a *mention*: reported as A14_PR_MENTIONS_CARD, never a link
+// (an unmerged mentioning PR still triggers R9 when nothing declares the card,
+// t_f4daddb9).
 // Live origin: PR #114 only quoted t_75180b28 in a fixture and was named by R9
 // on that card; the same looseness let a merged PR that merely cites a card
 // satisfy R9 without delivering its code.
@@ -1406,35 +1410,50 @@ export function evaluatePrRule(task, gh) {
   }
   facts.linked_prs = linked;
   facts.mentioning_prs = mentioning;
-  // A14 — a mention is never a link and never a violation, but it stays visible.
+  // A14 — a mention is never a link and never satisfies R9, but it stays visible.
+  // t_f4daddb9: when no PR declares the card, a mention by an UNMERGED PR
+  // triggers R9 (below); a mention by a merged PR is A14 only.
   if (mentioning.length) {
     const desc = (p) => `#${p.number} (${p.merged ? "merged" : p.state.toLowerCase() || "unknown state"}; ${p.mentioned_in.join(" + ")})`;
+    const anyUnmerged = mentioning.some((p) => !p.merged);
     advise(
       "A14_PR_MENTIONS_CARD",
-      `PR ${mentioning.map(desc).join(", ")} mention${mentioning.length === 1 ? "s" : ""} ${task.id} without declaring it — not linked: neither counted for nor against §5.9. If one of them delivers this card, add a \`Closes ${task.id}\` line to its body (or name its head branch after the card)`,
+      `PR ${mentioning.map(desc).join(", ")} mention${mentioning.length === 1 ? "s" : ""} ${task.id} without declaring it — not linked: a mention never satisfies §5.9${anyUnmerged ? "; while no PR declares the card, a mention by an unmerged PR triggers R9" : ""}. If one of them delivers this card, add a \`Closes ${task.id}\` line to its body (or name its head branch after the card)`,
     );
   }
 
   if (linked.length === 0) {
     const declared = CODE_DELIVERABLE_RE.test(task.body || "");
+    // t_f4daddb9 (architect decision on objection #597): a mention by a PR that
+    // is NOT merged (open, or closed unmerged) makes R9 applicable — a mention
+    // may TRIGGER R9, never SATISFY it. A mention by a merged PR stays A14 only.
+    const unmergedMentions = mentioning.filter((p) => !p.merged);
+    facts.unmerged_mentioning_prs = unmergedMentions.map((p) => p.number);
+    const triggered = declared || unmergedMentions.length > 0;
     let branches;
     try {
       branches = gh.listBranches().filter((b) => mention.test(b));
     } catch (e) {
-      if (!declared) return unverifiable("the branch list", e);
+      if (!triggered) return unverifiable("the branch list", e);
       branches = [];
     }
     facts.pushed_branches = branches;
-    if (!declared && branches.length === 0) {
+    if (!triggered && branches.length === 0) {
       facts.applies = false;
-      facts.reason = "no PR declares the card (head branch named after it, or a `Closes`/`Card:`/`Task:` body line), no pushed branch is named after it, and its body does not declare `Deliverable: code`";
+      facts.reason = "no PR declares the card (head branch named after it, or a `Closes`/`Card:`/`Task:` body line), no unmerged PR mentions it, no pushed branch is named after it, and its body does not declare `Deliverable: code`";
       return { violations, advisories, facts };
     }
     facts.applies = true;
-    const why = branches.length ? `branch(es) ${branches.map((b) => `\`${b}\``).join(", ")} are pushed` : "the card body declares `Deliverable: code`";
+    const state = (p) => (p.state === "OPEN" ? "open" : "closed without being merged");
+    const whys = [];
+    if (unmergedMentions.length) {
+      whys.push(`unmerged PR(s) ${unmergedMentions.map((p) => `#${p.number} (${state(p)}; ${p.mentioned_in.join(" + ")})`).join(", ")} mention the card — a mention by an unmerged PR triggers R9 but can never satisfy it`);
+    }
+    if (branches.length) whys.push(`branch(es) ${branches.map((b) => `\`${b}\``).join(", ")} are pushed`);
+    if (declared) whys.push("the card body declares `Deliverable: code`");
     add(
       "R9_PR_NOT_MERGED",
-      `no pull request declares ${task.id} (head branch named after the card, or a \`Closes ${task.id}\` / \`Card: ${task.id}\` / \`Task: ${task.id}\` line in its body — a mention in the title or prose does not link)${mentioning.length ? `, only mention(s): ${mentioning.map((p) => `#${p.number}`).join(", ")}` : ""}, yet ${why} — code is delivered only through a PR merged into master: open the PR with \`Closes ${task.id}\` in its body, move the card to review with "PR: #<n>", and let the merger complete it (§5.9)`,
+      `no pull request declares ${task.id} (head branch named after the card, or a \`Closes ${task.id}\` / \`Card: ${task.id}\` / \`Task: ${task.id}\` line in its body — a mention in the title or prose does not link)${mentioning.length ? `, only mention(s): ${mentioning.map((p) => `#${p.number}`).join(", ")}` : ""}, yet ${whys.join("; ")} — code is delivered only through a PR merged into master: open the PR with \`Closes ${task.id}\` in its body (or add that line to the mentioning PR if it delivers this card), move the card to review with "PR: #<n>", and let the merger complete it (§5.9)`,
     );
     return { violations, advisories, facts };
   }
