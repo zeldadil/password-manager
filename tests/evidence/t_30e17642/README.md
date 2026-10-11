@@ -51,6 +51,10 @@ command: every file below says how it was made.
   control in a second fresh `qa` session: `gh pr view 999999 …` reached GitHub (rows 13041) and `git merge-base`
   returned the master hash (row 13045). The tool result also shows the repo's `CLAUDE.md` being injected into the
   agent's context — see finding 1 below.
+- `rerun-after-master-merge.txt` — re-run after `origin/master` (4698e42) was merged into the branch to clear the
+  `QA_SIGN_OFF_GATE.md` changelog conflict: selftest 90/0, gate selftest 230/230, `verify-merge-guard.sh --all
+  --live` 93 ok / 0 FAIL, and a real `gh pr merge 999999` from a later qa dispatcher session (run 1959) refused by the
+  hook, while `gh pr view`, `gh pr list` and a local `git merge` in the same session went through.
 
 ## Findings for architect (not fixed here — scope boundary)
 
