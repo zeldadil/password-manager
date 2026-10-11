@@ -32,6 +32,8 @@ name: QA sign-off audit
 #     reporter: a fixture board, a stub `hermes` CLI, the real gate audit; it
 #     proves a card in violation receives its `AUDIT` comment, the comments do
 #     not change any card's gate result, and `check-stale` flags a missing run.
+#   * `merge-guard-selftest` (t_30e17642) — the merge-guard hook selftest
+#     (QA_SIGN_OFF_GATE.md §6.6).
 # Triggers: `pull_request` limited to the gate/reporter files, and
 # `workflow_dispatch`. Not a required check on master: it never gates a merge.
 # ──────────────────────────────────────────────────────────────────────────────
@@ -47,6 +49,9 @@ on:
       - "scripts/qa/signoff-audit-local.selftest.mjs"
       - "scripts/qa/cron/qa-weekly-signoff-audit.sh"
       - "scripts/qa/secret-guard.mjs"
+      - "scripts/qa/merge-guard.mjs"
+      - "scripts/qa/merge-guard.selftest.mjs"
+      - "scripts/qa/hooks/merge-guard.sh"
       - ".github/workflows/qa-signoff-audit.yml"
 
 permissions:
@@ -186,3 +191,37 @@ jobs:
           path: ${{ runner.temp }}/local-audit-selftest.txt
           if-no-files-found: warn
           retention-days: 14
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # t_30e17642 — the merge-guard selftest (QA_SIGN_OFF_GATE.md §6.6): every
+  # refused merge form is blocked, every allowed neighbour passes, the wrapper
+  # fails closed. Pure node, no install, no board, no network.
+  # ────────────────────────────────────────────────────────────────────────────
+  merge-guard-selftest:
+    name: merge-guard-selftest
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Merge-guard selftest
+        shell: bash
+        run: |
+          set -uo pipefail
+          set +e
+          node scripts/qa/merge-guard.selftest.mjs 2>&1 | tee "$RUNNER_TEMP/merge-guard-selftest.txt"
+          code="${PIPESTATUS[0]}"
+          set -e
+          {
+            echo "## Merge guard — selftest (t_30e17642)"
+            echo
+            echo '```text'
+            cat "$RUNNER_TEMP/merge-guard-selftest.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"

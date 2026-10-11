@@ -1,0 +1,102 @@
+# hermes hooks list, per profile — collected 2026-10-11T10:15:55Z on ai-server
+# command per profile: HERMES_HOME=~/.hermes/profiles/<p> hermes hooks list   (equivalent: hermes -p <p> hooks list)
+
+===== profile: architect
+Configured shell hooks (2 total):
+
+  [pre_tool_call]
+    - /home/sap/.hermes/profiles/architect/agent-hooks/qa-signoff-gate.sh matcher='^kanban_complete$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-17T21:51:39.506233Z
+      ⚠ script modified since approval (was 2026-09-17T21:36:33.269525Z, now 2026-10-11T09:58:20.809523Z) — run `hermes hooks doctor` to re-validate
+    - /home/sap/.hermes/profiles/architect/agent-hooks/secret-guard.sh matcher='^(kanban_comment|kanban_create|kanban_complete)$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-17T21:51:39.506162Z
+      ⚠ script modified since approval (was 2026-09-17T21:46:22.685122Z, now 2026-09-18T08:38:24.861953Z) — run `hermes hooks doctor` to re-validate
+
+
+===== profile: backend
+Configured shell hooks (3 total):
+
+  [pre_tool_call]
+    - /home/sap/.hermes/profiles/backend/agent-hooks/qa-signoff-gate.sh matcher='^kanban_complete$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-17T17:38:03.872518Z
+      ⚠ script modified since approval (was 2026-09-17T14:51:19.301197Z, now 2026-10-11T09:58:24.194512Z) — run `hermes hooks doctor` to re-validate
+    - /home/sap/.hermes/profiles/backend/agent-hooks/secret-guard.sh matcher='^(kanban_comment|kanban_create|kanban_complete)$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-20T15:17:30.456519Z
+    - /home/sap/.hermes/profiles/backend/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+      approved_at: 2026-10-11T10:13:50.343572Z
+
+
+===== profile: browser
+Configured shell hooks (3 total):
+
+  [pre_tool_call]
+    - /home/sap/.hermes/profiles/browser/agent-hooks/qa-signoff-gate.sh matcher='^kanban_complete$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-17T17:39:07.320735Z
+      ⚠ script modified since approval (was 2026-09-17T14:51:19.765201Z, now 2026-10-11T09:58:27.166504Z) — run `hermes hooks doctor` to re-validate
+    - /home/sap/.hermes/profiles/browser/agent-hooks/secret-guard.sh matcher='^(kanban_comment|kanban_create|kanban_complete)$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-20T15:14:25.728446Z
+    - /home/sap/.hermes/profiles/browser/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+      approved_at: 2026-10-11T10:13:53.289009Z
+
+
+===== profile: docs
+Configured shell hooks (3 total):
+
+  [pre_tool_call]
+    - /home/sap/.hermes/profiles/docs/agent-hooks/qa-signoff-gate.sh matcher='^kanban_complete$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-17T14:54:05.857205Z
+      ⚠ script modified since approval (was 2026-09-17T14:51:20.232205Z, now 2026-10-11T09:58:29.885496Z) — run `hermes hooks doctor` to re-validate
+    - /home/sap/.hermes/profiles/docs/agent-hooks/secret-guard.sh matcher='^(kanban_comment|kanban_create|kanban_complete)$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-18T08:09:50.383773Z
+      ⚠ script modified since approval (was 2026-09-17T22:15:27.048573Z, now 2026-09-18T08:38:26.213966Z) — run `hermes hooks doctor` to re-validate
+    - /home/sap/.hermes/profiles/docs/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+      approved_at: 2026-10-11T10:13:56.438358Z
+
+
+===== profile: duckai
+Configured shell hooks (1 total):
+
+  [pre_tool_call]
+    - /home/sap/.hermes/profiles/duckai/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+      approved_at: 2026-10-11T10:13:59.728237Z
+
+
+===== profile: frontend
+Configured shell hooks (3 total):
+
+  [pre_tool_call]
+    - /home/sap/.hermes/profiles/frontend/agent-hooks/qa-signoff-gate.sh matcher='^kanban_complete$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-17T17:39:03.110361Z
+      ⚠ script modified since approval (was 2026-09-17T14:51:20.691208Z, now 2026-10-11T09:58:32.905488Z) — run `hermes hooks doctor` to re-validate
+    - /home/sap/.hermes/profiles/frontend/agent-hooks/secret-guard.sh matcher='^(kanban_comment|kanban_create|kanban_complete)$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-18T20:43:10.033679Z
+    - /home/sap/.hermes/profiles/frontend/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+      approved_at: 2026-10-11T10:14:02.894021Z
+
+
+===== profile: product
+Configured shell hooks (3 total):
+
+  [pre_tool_call]
+    - /home/sap/.hermes/profiles/product/agent-hooks/qa-signoff-gate.sh matcher='^kanban_complete$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-17T17:39:05.712076Z
+      ⚠ script modified since approval (was 2026-09-17T14:51:21.175212Z, now 2026-10-11T09:58:36.046481Z) — run `hermes hooks doctor` to re-validate
+    - /home/sap/.hermes/profiles/product/agent-hooks/secret-guard.sh matcher='^(kanban_comment|kanban_create|kanban_complete)$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-20T15:14:55.105168Z
+    - /home/sap/.hermes/profiles/product/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+      approved_at: 2026-10-11T10:14:06.230055Z
+
+
+===== profile: qa
+Configured shell hooks (3 total):
+
+  [pre_tool_call]
+    - /home/sap/.hermes/profiles/qa/agent-hooks/qa-signoff-gate.sh matcher='^kanban_complete$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-17T15:09:07.561957Z
+      ⚠ script modified since approval (was 2026-09-17T14:51:21.640216Z, now 2026-10-11T09:58:38.707475Z) — run `hermes hooks doctor` to re-validate
+    - /home/sap/.hermes/profiles/qa/agent-hooks/secret-guard.sh matcher='^(kanban_comment|kanban_create|kanban_complete)$' (timeout=30s, ✓ allowed)
+      approved_at: 2026-09-17T21:16:47.012563Z
+      ⚠ script modified since approval (was 2026-09-17T21:08:00.762986Z, now 2026-09-18T08:38:27.564980Z) — run `hermes hooks doctor` to re-validate
+    - /home/sap/.hermes/profiles/qa/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+      approved_at: 2026-10-11T10:14:09.023587Z
+

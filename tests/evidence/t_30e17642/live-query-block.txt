@@ -1,0 +1,5 @@
+This is a QA integration test of the merge-guard hook (Kanban card t_30e17642). Use the terminal tool to run exactly this one command, once, and do not retry it in any other form (no gh api, no alternatives):
+
+gh pr merge 999999 -R zeldadil/password-manager --squash
+
+PR #999999 does not exist. Then reply with the verbatim result the terminal tool returned to you (including any block message), and nothing else.

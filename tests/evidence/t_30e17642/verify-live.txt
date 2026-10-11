@@ -1,0 +1,112 @@
+merge-guard verification — repo hook sha256 d25eabe9307c…, gate sha256 d20aab094b5b…
+
+── backend (/home/sap/.hermes/profiles/backend)
+   ok   - hook installed and executable
+   ok   - gate logic installed
+   ok   - installed hook matches the repo copy
+   ok   - installed gate matches the repo copy
+   ok   - config.yaml carries the merge-guard entry
+   ok   - entry sets fail_closed: true
+   ok   - matcher covers terminal|process_manage|execute_code|tool_call|mcp merge
+   ok   - hermes hooks list: listed, ✓ allowed
+   ok   - hermes hooks doctor: merge-guard entry clean
+   ok   - live: gh pr merge blocked (R_GH_PR_MERGE)
+   ok   - live: gh api -X PUT …/merge blocked
+   ok   - live: gh pr view allowed
+   ok   - live: git merge-base allowed
+
+── browser (/home/sap/.hermes/profiles/browser)
+   ok   - hook installed and executable
+   ok   - gate logic installed
+   ok   - installed hook matches the repo copy
+   ok   - installed gate matches the repo copy
+   ok   - config.yaml carries the merge-guard entry
+   ok   - entry sets fail_closed: true
+   ok   - matcher covers terminal|process_manage|execute_code|tool_call|mcp merge
+   ok   - hermes hooks list: listed, ✓ allowed
+   ok   - hermes hooks doctor: merge-guard entry clean
+   ok   - live: gh pr merge blocked (R_GH_PR_MERGE)
+   ok   - live: gh api -X PUT …/merge blocked
+   ok   - live: gh pr view allowed
+   ok   - live: git merge-base allowed
+
+── docs (/home/sap/.hermes/profiles/docs)
+   ok   - hook installed and executable
+   ok   - gate logic installed
+   ok   - installed hook matches the repo copy
+   ok   - installed gate matches the repo copy
+   ok   - config.yaml carries the merge-guard entry
+   ok   - entry sets fail_closed: true
+   ok   - matcher covers terminal|process_manage|execute_code|tool_call|mcp merge
+   ok   - hermes hooks list: listed, ✓ allowed
+   ok   - hermes hooks doctor: merge-guard entry clean
+   ok   - live: gh pr merge blocked (R_GH_PR_MERGE)
+   ok   - live: gh api -X PUT …/merge blocked
+   ok   - live: gh pr view allowed
+   ok   - live: git merge-base allowed
+
+── duckai (/home/sap/.hermes/profiles/duckai)
+   ok   - hook installed and executable
+   ok   - gate logic installed
+   ok   - installed hook matches the repo copy
+   ok   - installed gate matches the repo copy
+   ok   - config.yaml carries the merge-guard entry
+   ok   - entry sets fail_closed: true
+   ok   - matcher covers terminal|process_manage|execute_code|tool_call|mcp merge
+   ok   - hermes hooks list: listed, ✓ allowed
+   ok   - hermes hooks doctor: merge-guard entry clean
+   ok   - live: gh pr merge blocked (R_GH_PR_MERGE)
+   ok   - live: gh api -X PUT …/merge blocked
+   ok   - live: gh pr view allowed
+   ok   - live: git merge-base allowed
+
+── frontend (/home/sap/.hermes/profiles/frontend)
+   ok   - hook installed and executable
+   ok   - gate logic installed
+   ok   - installed hook matches the repo copy
+   ok   - installed gate matches the repo copy
+   ok   - config.yaml carries the merge-guard entry
+   ok   - entry sets fail_closed: true
+   ok   - matcher covers terminal|process_manage|execute_code|tool_call|mcp merge
+   ok   - hermes hooks list: listed, ✓ allowed
+   ok   - hermes hooks doctor: merge-guard entry clean
+   ok   - live: gh pr merge blocked (R_GH_PR_MERGE)
+   ok   - live: gh api -X PUT …/merge blocked
+   ok   - live: gh pr view allowed
+   ok   - live: git merge-base allowed
+
+── product (/home/sap/.hermes/profiles/product)
+   ok   - hook installed and executable
+   ok   - gate logic installed
+   ok   - installed hook matches the repo copy
+   ok   - installed gate matches the repo copy
+   ok   - config.yaml carries the merge-guard entry
+   ok   - entry sets fail_closed: true
+   ok   - matcher covers terminal|process_manage|execute_code|tool_call|mcp merge
+   ok   - hermes hooks list: listed, ✓ allowed
+   ok   - hermes hooks doctor: merge-guard entry clean
+   ok   - live: gh pr merge blocked (R_GH_PR_MERGE)
+   ok   - live: gh api -X PUT …/merge blocked
+   ok   - live: gh pr view allowed
+   ok   - live: git merge-base allowed
+
+── qa (/home/sap/.hermes/profiles/qa)
+   ok   - hook installed and executable
+   ok   - gate logic installed
+   ok   - installed hook matches the repo copy
+   ok   - installed gate matches the repo copy
+   ok   - config.yaml carries the merge-guard entry
+   ok   - entry sets fail_closed: true
+   ok   - matcher covers terminal|process_manage|execute_code|tool_call|mcp merge
+   ok   - hermes hooks list: listed, ✓ allowed
+   ok   - hermes hooks doctor: merge-guard entry clean
+   ok   - live: gh pr merge blocked (R_GH_PR_MERGE)
+   ok   - live: gh api -X PUT …/merge blocked
+   ok   - live: gh pr view allowed
+   ok   - live: git merge-base allowed
+
+── architect (exclusion check)
+   ok   - architect/config.yaml has no merge-guard entry
+   ok   - hermes hooks list for architect has no merge-guard
+
+verification: 93 ok · 0 FAIL

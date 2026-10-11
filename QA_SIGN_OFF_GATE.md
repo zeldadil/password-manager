@@ -623,6 +623,45 @@ re-audits the fixture board after posting and requires every card's violation an
 `cancelled` run every week since 2026-09-21) and no real-board job: it is the fixture regression test above, on
 `ubuntu-latest`.
 
+### 6.6 Merge guard — only architect merges a PR (`t_30e17642`)
+
+§5.9 makes the **merger** (architect, in practice) the one who merges a code card's PR and then completes the card.
+Nothing enforced it: every agent pushes with the owner's token, so GitHub records every merge as `mergedBy: zeldadil`,
+and on 2026-10-09 `qa` workers merged their own PRs (#124, #125, probably #126). The merge guard is a second
+`pre_tool_call` hook, installed in **every profile except `architect`**, that refuses a PR merge before it runs:
+
+```yaml
+hooks:
+  pre_tool_call:
+    - matcher: "^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$"
+      command: "<profile-home>/agent-hooks/merge-guard.sh"
+      timeout: 15
+      fail_closed: true
+```
+
+| Rule | Refused |
+|---|---|
+| `R_GH_PR_MERGE` | `gh pr merge …` in any form: flags and `-R`/`--repo` anywhere, behind `&&`/`;`/`\|\|`/`\|`/newline, env assignments or wrappers (`sudo`, `env`, `timeout`, `xargs`, `find -exec`), inside `bash -c`, `eval`, `$(…)`, backticks, a heredoc or pipe fed to a shell, and in `execute_code` / `python -c` code |
+| `R_API_PULL_MERGE` | any `…/pulls/<n>/merge` REST path (`gh api`, `-X PUT`, `--method PUT`, curl, scripts) |
+| `R_API_BRANCH_MERGE` | the branch-merge endpoint `repos/<o>/<r>/merges` (lands a branch with no PR) |
+| `R_GRAPHQL_MERGE` | the `mergePullRequest` / `enablePullRequestAutoMerge` mutations |
+| `R_GH_ALIAS_MERGE` | a `gh alias set`/`import` that would hide a merge behind a new name |
+| `R_MCP_MERGE_TOOL` | an MCP `merge_pull_request` tool (the `product` profile loads the GitHub MCP server) |
+
+Allowed: `gh pr view|checks|create|list|diff|review`, `git merge-base`, a local `git merge`, and text that only
+*mentions* a merge (echo/grep data, a commit message, a `gh pr create --body`). The block reason names the rule and
+says **"le merge revient à architect"**, citing §5.9. Logic and selftest:
+`scripts/qa/merge-guard.mjs`, `node scripts/qa/merge-guard.selftest.mjs`. Install / verify:
+`scripts/qa/hooks/install-merge-guard.sh --all --apply` (refuses `architect`) and
+`scripts/qa/hooks/verify-merge-guard.sh --all --live`.
+
+- **No kill-switch file** on purpose (any agent could create it). A false positive costs one hand-off to architect;
+  rollback is the `config.yaml.bak.<timestamp>` the installer leaves, plus `hermes hooks revoke <hook path>`.
+- **A running session keeps the hooks it started with**: the guard applies to sessions started after the install.
+- **It is a guard, not a sandbox**: a process that builds the command at run time (string concatenation, a script
+  file written then run, a browser click on GitHub) is not seen. The residual paths are listed in
+  `tests/evidence/t_30e17642/README.md`.
+
 ---
 
 ## 7. Effective date and grandfathering
@@ -764,3 +803,4 @@ is a repo path, because the live payload's `cwd` was the verifier's own checkout
 | 2026-10-10 | `t_5b5b61e2` — **§5.10 the audit lists every bypass**, in the "bypasses & degradations" block `t_b102b100` opened: `X1_EXCEPTION` (each exception in force, plus the redundant records that repeat it), `X2_EXCEPTION_WITHDRAWN` (history, not an active bypass — consistent with `t_b2588ee7`) and the new report-only `X3_COMPLETED_OUTSIDE_HOOK` (a completion the hook never saw: synthesized-run completion from the CLI/dashboard, completion with no run, `manual_complete` event — read from `task_events`; Hermes has no `--override` flag and records no actor, both stated). One line per occurrence — card, date, author, reason, state — in the text report, `--json` (`counts.exceptions` / `exceptions_withdrawn` / `completed_outside_hook`, per-card `records`, per-type `trend`) and the run summary; a per-month trend, last-30-vs-previous-30 and a watch threshold per type (`BYPASS_WATCH_30D`, `--now-iso`). A bypass **never** changes the exit code. Reasons are secret-scanned on full length (`secret-guard.mjs`; withheld on a hit or when the scanner is missing), fence runs shortened, Markdown-escaped in the summary. A board without `task_events` reports `X3` as `not available`, and the hook is unaffected. `qa-signoff-audit.yml` gains a PR-only `bypass-report-fixture` job (fixture board, gate files only, not required — §10 item 13). Selftest 188 → 207 (RED against the master gate: 18 of the 19 new cases fail; the hook-on-legacy-board control passes; all 188 earlier cases pass). Master-vs-branch audit over a 144-card live snapshot: 0 violation-set changes, the only advisory change is `X3` on 54 cards (`tests/evidence/t_5b5b61e2/`) |
 | 2026-10-10 | `t_90a4bd73` — **§5.5 `R7` security-track classification v2 (scope-v2)**, decision `t_18230e85` option C (committed byte-identical as `docs/decisions/ARCH-DECISION-t_18230e85.md`, sha256 `aaa3a94d…82fa1`). The regex is replaced by `SCOPE_V2_TOKENS`, which are ADR-referenced boundary tokens. The `security` Test-Type AND is dropped and the `¬qa` exemption kept. Tokens have no trailing `\b`, which fixes `AUTOFILL_REQUEST`, `bridge messages`, `bridge_message` and `crypto boundaries`. Measured on the live board, `nonce` was matched inside French "annonce" (2 false positives), so `nonce` now requires a non-letter before it. New `R7_V2_EPOCH_ISO` cut-over (`--r7-v2-epoch-iso`): a card completed before it keeps its v1 obligation, and a card only v2 classifies gets the new report-only `A17_R7_SCOPE_V2_UNGATED`. Without the cut-over, 11 already-completed post-gate cards would turn red. The architect confirms the cut-over at review. Also fixed: `--json` output to a pipe was cut at 65536 bytes, because `process.exit()` ran before stdout drained; it is now written, then exit (`writeThenExit`). Selftest 207 → 222. RED against the base gate: 11 of the 15 new cases fail, and the 4 guards pass. A mutation run with 8 mutants shows each new case fails on the mutant that removes what it guards. Before/after `audit --strict-history` on a live-board snapshot: 3 → 21 audited cards are security-track, R7 violations 0 → 0, 15 `A17`, FAIL count unchanged (49 → 49); without the cut-over FAIL 49 → 57 (11 `R7`). Tables and scripts are in `tests/evidence/t_90a4bd73/` |
 | 2026-10-10 | `t_8a64c3dd` — **§6.5 the weekly board audit runs locally and reports on the board**. Adil's decision 2026-10-09 (public repo: no self-hosted runner, no new token; results go to the agents, not to Telegram). A `qa` Hermes cron job (`no_agent`, `deliver=local`) runs `scripts/qa/cron/qa-weekly-signoff-audit.sh`: own clone, throwaway worktree of `origin/master`, `signoff-audit-local.mjs run --fail-on-a11` on `~/.hermes/kanban.db`. Each run attaches the full report to the maintenance card `t_9c3f521a`, posts `AUDIT <date> : <rule>` (author `qa`) on every card in violation or with `A11`, then a synthesis whose first line is `AUDIT-RUN: <ISO8601>`; `check-stale` (exit 1 past 8 days or with no stamp) is the hook for architect's review cron (criterion 4). The comments are gate-inert (guarded, and re-audited in the selftest). `qa-signoff-audit.yml` loses its `schedule` (dead `hermes-host` runner, `cancelled` weekly since 2026-09-21) and its real-board job; it keeps `bypass-report-fixture` and gains `local-audit-reporter-fixture`, both on `pull_request` (gate/reporter paths) and `workflow_dispatch`. New selftest: 41 cases (a mutant that puts `verdict: fail` in the notice with the guard disabled fails 14 of them, including the gate-inertness re-audit). The wrapper raises the gate's GitHub budget to 10 min (`QA_GATE_GH_BUDGET_MS`): with the hook-sized 20 s default a whole-board audit produced 13 A11 that were all "time budget exhausted". Live: a dress rehearsal on a copy of the board (real CLI, real `gh`) and a real run on the board, both re-audited with identical violation/advisory sets. Evidence in `tests/evidence/t_8a64c3dd/` |
+| 2026-10-11 | `t_30e17642` — **§6.6 merge guard: only architect merges a PR**. New `pre_tool_call` hook `merge-guard.sh` (logic `scripts/qa/merge-guard.mjs`), installed in every profile except `architect` (`backend`, `browser`, `docs`, `duckai`, `frontend`, `product`, `qa`); the installer refuses `architect`. It refuses `gh pr merge` in any form, `pulls/<n>/merge` REST calls, the branch-merge endpoint, the GraphQL merge mutations, merge aliases and the MCP `merge_pull_request` tool, across `terminal`, `process_manage`, `execute_code` and `tool_call`; the reason says "le merge revient à architect" and cites §5.9. Read-only `gh pr` commands, `gh pr create`, `git merge-base` and a local `git merge` stay allowed. Selftest 90 cases (55 refused forms, 24 allowed neighbours, fail-closed and wrapper cases), non-vacuity shown by 4 mutated gates; a real `gh pr merge` from a fresh `qa` session was refused by the hook (`tests/evidence/t_30e17642/`) |
