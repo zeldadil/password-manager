@@ -1,0 +1,25 @@
+snapshot: 235 cards, taken 2026-10-11T10:01:31Z from the live board (read only)
+reference gate @ b1db88f sha256 e1478eb9139aaaa622f963e784e9b3dbd0b1a0196edcde689cb4284a0ba9e60b
+branch gate    @ 520ba52 sha256 ed532b738d544546a1a6b0c4f1c1113ca87ce7d3a6d9adf5e0c2dba70ea6613e
+audit-before audit exit=1
+audit-after audit exit=1
+audit-before-strict audit exit=1
+audit-after-strict audit exit=1
+
+=== default view (epochs applied) ===
+cards audited — before: 161, after: 161; cards with >=1 violation — before: 35, after: 35
+cards with any A14 mention (after): 15; of which with an UNMERGED mentioning PR: 0
+cards whose violation set changes (any rule): 0
+cards whose §5.9 outcome (applies/linked/judged/R9-R10) changes: 0
+cards with an unmerged mentioning PR (after), whatever the outcome:
+audit summary — before: {"done_cards":161,"enforced":134,"failures":35,"grandfathered":27,"a11":0,"exceptions":{"available":true,"cards":5,"occurrences":5},"exceptions_withdrawn":{"available":true,"cards":0,"occurrences":0},"completed_outside_hook":{"available":true,"cards":54,"occurrences":54}}
+audit summary — after:  {"done_cards":161,"enforced":134,"failures":35,"grandfathered":27,"a11":0,"exceptions":{"available":true,"cards":5,"occurrences":5},"exceptions_withdrawn":{"available":true,"cards":0,"occurrences":0},"completed_outside_hook":{"available":true,"cards":54,"occurrences":54}}
+
+=== --strict-history view (retrofit: grandfathered cards judged too) ===
+cards audited — before: 161, after: 161; cards with >=1 violation — before: 53, after: 53
+cards with any A14 mention (after): 15; of which with an UNMERGED mentioning PR: 0
+cards whose violation set changes (any rule): 0
+cards whose §5.9 outcome (applies/linked/judged/R9-R10) changes: 0
+cards with an unmerged mentioning PR (after), whatever the outcome:
+audit summary — before: {"done_cards":161,"enforced":134,"failures":53,"grandfathered":27,"a11":0,"exceptions":{"available":true,"cards":5,"occurrences":5},"exceptions_withdrawn":{"available":true,"cards":0,"occurrences":0},"completed_outside_hook":{"available":true,"cards":54,"occurrences":54}}
+audit summary — after:  {"done_cards":161,"enforced":134,"failures":53,"grandfathered":27,"a11":0,"exceptions":{"available":true,"cards":5,"occurrences":5},"exceptions_withdrawn":{"available":true,"cards":0,"occurrences":0},"completed_outside_hook":{"available":true,"cards":54,"occurrences":54}}
