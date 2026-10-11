@@ -1,0 +1,29 @@
+## node v22.23.3, master b1db88f, label port3301, PORT=3301
+migrate exit 0
+## direct API: GET 127.0.0.1:3301/health -> 200
+## curl via :5173
+POST :5173/auth/unlock (empty JSON) -> 400 application/json; charset=utf-8
+GET :5173/api/v1/resources -> 401 application/json; charset=utf-8
+GET :5173/login (SPA) -> 200 text/html
+GET :5173/vault (SPA) -> 200 text/html
+## abuse / boundary cases
+GET :5173/authors (must stay with Vite) -> 200 text/html
+GET :5173/auth (no slash, stays with Vite) -> 200 text/html
+GET :5173/api/v2/x (not proxied) -> 200 text/html
+GET :5173/health (not proxied) -> 200 text/html
+GET :5173/auth/%2e%2e/health (encoded traversal) -> 200 application/json; charset=utf-8
+GET :5173/auth/../health (raw traversal, --path-as-is) -> 200 application/json; charset=utf-8
+POST :5173/auth/unlock Host: evil.example.test -> 403 text/plain
+## harness
+register via http://localhost:5173/auth/register -> HTTP 201
+in-page GET /api/v1/resources (no token): {"status":401,"contentType":"application/json; charset=utf-8"}
+final URL: http://localhost:5173/vault
+vault h1: Vault
+API responses seen by the page:
+  {"method":"POST","path":"/auth/unlock","status":200,"contentType":"application/json; charset=utf-8","bodyKeys":["accessToken","refreshToken","expiresIn","tokenType"]}
+  {"method":"GET","path":"/api/v1/resources","status":401,"contentType":"application/json; charset=utf-8","bodyKeys":["header","body"]}
+RESULT: PASS
+harness exit 0
+## dev log secret check (tokens / password echoed?)
+1
+servers stopped

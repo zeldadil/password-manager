@@ -1,0 +1,10 @@
+
+ RUN  v3.2.7 <workspace>/repo/apps/web
+
+ ✓ dev-proxy.test.ts (8 tests) 327ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  09:42:08
+   Duration  1.17s (transform 84ms, setup 227ms, collect 267ms, tests 327ms, environment 0ms, prepare 104ms)
+

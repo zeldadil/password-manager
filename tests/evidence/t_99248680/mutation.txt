@@ -1,0 +1,25 @@
+## mutation: vite.config.ts from b1db88f^ (pre-fix)
+ apps/web/vite.config.ts | 7 -------
+ 1 file changed, 7 deletions(-)
+   ✓ resolveApiProxyTarget > defaults to the API defaults (127.0.0.1:3000) 2ms
+   ✓ resolveApiProxyTarget > follows the PORT/HOST variables the API itself reads 1ms
+   ✓ resolveApiProxyTarget > lets API_PROXY_TARGET override everything 0ms
+   ✓ createApiDevProxy > proxies exactly the /auth/ and /api/v1/ prefixes to the API 1ms
+   ✓ createApiDevProxy > does not capture SPA routes 1ms
+   × vite dev server (apps/web/vite.config.ts) forwards API calls > POST /auth/unlock on the Vite origin reaches the API with body intact 37ms
+     → expected 404 to be 200 // Object.is equality
+   × vite dev server (apps/web/vite.config.ts) forwards API calls > GET /api/v1/resources on the Vite origin returns API JSON, not index.html 60ms
+     → expected 'text/html' to contain 'application/json'
+   ✓ vite dev server (apps/web/vite.config.ts) forwards API calls > SPA routes are still served by Vite (index.html) 54ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  dev-proxy.test.ts > vite dev server (apps/web/vite.config.ts) forwards API calls > POST /auth/unlock on the Vite origin reaches the API with body intact
+AssertionError: expected 404 to be 200 // Object.is equality
+ FAIL  dev-proxy.test.ts > vite dev server (apps/web/vite.config.ts) forwards API calls > GET /api/v1/resources on the Vite origin returns API JSON, not index.html
+AssertionError: expected 'text/html' to contain 'application/json'
+      Tests  2 failed | 6 passed (8)
+## restored; re-run
+      Tests  8 passed (8)
+## typecheck
+typecheck exit 0
+## lint touched files
+eslint exit 0
