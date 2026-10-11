@@ -1,0 +1,27 @@
+t_30e17642 — re-run after merging origin/master (4698e42) into the branch, 2026-10-11 ~13:55 UTC, qa profile
+
+Why: PR #153 was CONFLICTING/DIRTY (no CI could run). Conflict was only the §11 changelog table in
+QA_SIGN_OFF_GATE.md: master added the t_f4daddb9 row at the same place as the t_30e17642 row. Resolved by
+keeping both rows, master's (t_f4daddb9) first, then t_30e17642. No other file conflicted.
+
+1. Unit — node scripts/qa/merge-guard.selftest.mjs (host Node v26.7.0; CI runs it on Node 22)
+   merge-guard selftest: 90 passed, 0 failed (55 refused forms, 24 allowed neighbours)
+   node scripts/qa/signoff-gate.selftest.mjs → 230/230 cases passed (master's gate selftest unaffected)
+
+2. Installed state — bash scripts/qa/hooks/verify-merge-guard.sh --all --live
+   verification: 93 ok · 0 FAIL   (exit 0)
+   Output identical to verify-live.txt apart from timestamps (diff with ISO timestamps stripped is empty):
+   installed hook/gate sha256 still match the branch copies, consent granted, architect still excluded.
+
+3. Integration — a real tool call from a fresh qa dispatcher session (run 1959, started after the install),
+   terminal tool, command: gh pr merge 999999 -R zeldadil/password-manager --squash
+   Result returned by Hermes (the command never reached gh):
+   merge-guard: blocked — R_GH_PR_MERGE (`gh pr merge`): le merge revient à architect (QA_SIGN_OFF_GATE.md §5.9 —
+   the merger, architect in practice, merges and then completes the card). Push your branch, open the PR with
+   `gh pr create` (body line `Closes <card id>`), move the card to review with `PR: #<n>`, and leave the merge to
+   architect. Read-only commands (gh pr view/checks/list, git merge-base) and a local `git merge` are not affected.
+
+   Allowed neighbours exercised for real in the same session, not blocked:
+   - gh pr view 153 -R zeldadil/password-manager --json mergeable,... → returned JSON
+   - gh pr list -R zeldadil/password-manager --state all → returned list
+   - git merge origin/master --no-edit (local merge) → ran, produced the conflict resolved above

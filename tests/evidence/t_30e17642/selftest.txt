@@ -1,0 +1,101 @@
+merge-guard selftest — gate: /home/sap/.hermes/kanban/workspaces/t_30e17642/repo/scripts/qa/merge-guard.mjs
+
+A. refused merge forms (55)
+  ok   A gh pr merge, plain squash
+  ok   A gh pr merge, no number (current branch)
+  ok   A gh pr merge -R after the number
+  ok   A gh pr merge --repo before the number
+  ok   A gh pr merge --repo=…
+  ok   A gh -R … pr merge (flag before the subcommand)
+  ok   A gh pr -R … merge (flag between)
+  ok   A gh pr merge --auto
+  ok   A gh pr merge --admin
+  ok   A after &&
+  ok   A after ;
+  ok   A after ||
+  ok   A on a second line
+  ok   A piped to tee
+  ok   A inside a subshell
+  ok   A inside if/then
+  ok   A behind env assignments
+  ok   A absolute path to gh
+  ok   A quoted command words
+  ok   A backslash-continued line
+  ok   A behind sudo/env/timeout
+  ok   A via xargs
+  ok   A via xargs -I
+  ok   A via find -exec
+  ok   A bash -c '…'
+  ok   A bash -lc with && inside
+  ok   A eval
+  ok   A watch '…'
+  ok   A ssh host '…'
+  ok   A $( … ) substitution
+  ok   A backticks inside double quotes
+  ok   A $( … ) inside double quotes of a data command
+  ok   A echo … | bash
+  ok   A heredoc fed to bash
+  ok   A heredoc piped to sh
+  ok   A here-string to bash
+  ok   A python3 -c subprocess list
+  ok   A python3 heredoc os.system
+  ok   A gh api -X PUT …/merge
+  ok   A gh api --method PUT with {owner}/{repo}
+  ok   A gh api …/merge -R style, default method
+  ok   A gh api with a shell variable
+  ok   A curl -X PUT
+  ok   A REST branch merge (no PR)
+  ok   A GraphQL mergePullRequest
+  ok   A GraphQL enablePullRequestAutoMerge
+  ok   A gh alias set to pr merge
+  ok   A gh alias import (content not visible)
+  ok   A execute_code: subprocess list
+  ok   A execute_code: terminal() string
+  ok   A execute_code: urllib PUT
+  ok   A process_manage submit to a pty shell
+  ok   A tool_call wrapping terminal
+  ok   A tool_call wrapping the MCP merge tool
+  ok   A MCP github merge_pull_request
+
+B. allowed neighbouring commands (24)
+  ok   B gh pr view --json mergeable…
+  ok   B gh pr view state,mergedAt
+  ok   B gh pr checks
+  ok   B gh pr create
+  ok   B gh pr create whose body mentions gh pr merge
+  ok   B gh pr list
+  ok   B gh pr diff / status / checkout / review
+  ok   B git merge-base
+  ok   B git merge (local)
+  ok   B git merge --no-ff -m
+  ok   B git log --merges
+  ok   B gh api on the PR (no /merge)
+  ok   B gh run list
+  ok   B commit message mentions gh pr merge
+  ok   B echo mentions gh pr merge
+  ok   B grep for gh pr merge
+  ok   B hermes kanban comment mentions it
+  ok   B heredoc written to a file
+  ok   B word merge elsewhere
+  ok   B gh pr view piped to jq
+  ok   B execute_code without a merge
+  ok   B process_manage poll
+  ok   B tool_call wrapping gh pr checks
+  ok   B MCP github get_pull_request
+
+C. fail-closed behaviour
+  ok   C malformed JSON payload
+  ok   C empty payload
+  ok   C JSON array payload
+  ok   C payload with args instead of tool_input (allow)
+  ok   C payload with args instead of tool_input (block)
+  ok   C wrapper fails closed when node is not on PATH
+  ok   C wrapper fails closed when merge-guard.mjs is missing
+
+D. shell wrapper end-to-end (gate resolved via MERGE_GUARD_SCRIPT)
+  ok   D wrapper blocks gh pr merge
+  ok   D wrapper blocks gh api PUT …/merge
+  ok   D wrapper allows gh pr view
+  ok   D wrapper allows git merge-base
+
+merge-guard selftest: 90 passed, 0 failed (55 refused forms, 24 allowed neighbours)

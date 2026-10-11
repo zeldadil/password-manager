@@ -1,0 +1,198 @@
+### refuse architect
+install-merge-guard: refusing to install into 'architect' — the merge belongs to architect (QA_SIGN_OFF_GATE.md §5.9)
+exit=3
+### dry run --all
+merge-guard installer — DRY RUN · profiles root: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx · excluded: architect
+hook source:  /home/sap/.hermes/kanban/workspaces/t_30e17642/repo/scripts/qa/hooks/merge-guard.sh (sha256 d25eabe9307c…)
+gate source:  /home/sap/.hermes/kanban/workspaces/t_30e17642/repo/scripts/qa/merge-guard.mjs (sha256 d20aab094b5b…)
+matcher:      ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$
+python:       /home/sap/.hermes/installs/b48fa304433e633d/environments/35a067b004624e3da8a8bd06cd9fd450/venv/bin/python3
+
+── backend (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/shell-hooks-allowlist.json
+
+── browser (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/shell-hooks-allowlist.json
+
+── docs (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/shell-hooks-allowlist.json
+
+── duckai (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/shell-hooks-allowlist.json
+
+── frontend (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/shell-hooks-allowlist.json
+
+── product (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/shell-hooks-allowlist.json
+
+── qa (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/shell-hooks-allowlist.json
+
+── zz-nohooks (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/shell-hooks-allowlist.json
+
+── zz-posthook (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/shell-hooks-allowlist.json
+
+exit=0
+### apply --all (hermes hooks list check uses HERMES_HOME=fixture dir)
+merge-guard installer — APPLY · profiles root: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx · excluded: architect
+hook source:  /home/sap/.hermes/kanban/workspaces/t_30e17642/repo/scripts/qa/hooks/merge-guard.sh (sha256 d25eabe9307c…)
+gate source:  /home/sap/.hermes/kanban/workspaces/t_30e17642/repo/scripts/qa/merge-guard.mjs (sha256 d20aab094b5b…)
+matcher:      ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$
+python:       /home/sap/.hermes/installs/b48fa304433e633d/environments/35a067b004624e3da8a8bd06cd9fd450/venv/bin/python3
+
+── backend (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/config.yaml (backup: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/config.yaml.bak.20261011100859)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── browser (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/config.yaml (backup: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/config.yaml.bak.20261011100902)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── docs (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/config.yaml (backup: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/config.yaml.bak.20261011100905)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── duckai (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/config.yaml (backup: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/config.yaml.bak.20261011100909)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── frontend (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/config.yaml (backup: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/config.yaml.bak.20261011100912)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── product (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/config.yaml (backup: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/config.yaml.bak.20261011100915)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── qa (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/config.yaml (backup: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/config.yaml.bak.20261011100918)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── zz-nohooks (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/config.yaml (backup: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/config.yaml.bak.20261011100920)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── zz-posthook (/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/config.yaml (backup: /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/config.yaml.bak.20261011100923)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/agent-hooks/merge-guard.sh in /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+Next: scripts/qa/hooks/verify-merge-guard.sh --all --live
+exit=0
+### idempotent re-apply
+exit=0
+9
+### architect untouched?
+ls: cannot access '/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/architect/agent-hooks': No such file or directory
+architect config identical
+### diffs
+--- architect
+--- backend
+114a115,118
+>     - matcher: "^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$"
+>       command: "/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/backend/agent-hooks/merge-guard.sh"
+>       timeout: 15
+>       fail_closed: true
+--- browser
+105a106,109
+>     - matcher: "^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$"
+>       command: "/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/browser/agent-hooks/merge-guard.sh"
+>       timeout: 15
+>       fail_closed: true
+--- docs
+283a284,287
+>     - matcher: "^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$"
+>       command: "/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/docs/agent-hooks/merge-guard.sh"
+>       timeout: 15
+>       fail_closed: true
+--- duckai
+32a33,40
+> 
+> # SEC-GATE t_30e17642 merge-guard — see scripts/qa/hooks/install-merge-guard.sh
+> hooks:
+>   pre_tool_call:
+>     - matcher: "^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$"
+>       command: "/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/duckai/agent-hooks/merge-guard.sh"
+>       timeout: 15
+>       fail_closed: true
+--- frontend
+108a109,112
+>     - matcher: "^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$"
+>       command: "/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/frontend/agent-hooks/merge-guard.sh"
+>       timeout: 15
+>       fail_closed: true
+--- product
+235a236,239
+>     - matcher: "^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$"
+>       command: "/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/product/agent-hooks/merge-guard.sh"
+>       timeout: 15
+>       fail_closed: true
+--- qa
+113a114,117
+>     - matcher: "^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$"
+>       command: "/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/qa/agent-hooks/merge-guard.sh"
+>       timeout: 15
+>       fail_closed: true
+--- zz-nohooks
+model: x
+kanban:
+  review_dispatch: true
+
+# SEC-GATE t_30e17642 merge-guard — see scripts/qa/hooks/install-merge-guard.sh
+hooks:
+  pre_tool_call:
+    - matcher: "^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$"
+      command: "/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-nohooks/agent-hooks/merge-guard.sh"
+      timeout: 15
+      fail_closed: true
+--- zz-posthook
+model: x
+hooks:
+  pre_tool_call:
+    - matcher: "^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$"
+      command: "/home/sap/.hermes/kanban/workspaces/t_30e17642/fx/zz-posthook/agent-hooks/merge-guard.sh"
+      timeout: 15
+      fail_closed: true
+  post_tool_call:
+  - matcher: "^terminal$"
+    command: /bin/true
+# trailing comment
+other: 1

@@ -1,0 +1,141 @@
+== mutation allow-all
+exit=1
+FAIL lines: 58
+A gh pr merge, plain squash
+A gh pr merge, no number (current branch)
+A gh pr merge -R after the number
+A gh pr merge --repo before the number
+A gh pr merge --repo=…
+A gh -R … pr merge (flag before the subcommand)
+A gh pr -R … merge (flag between)
+A gh pr merge --auto
+A gh pr merge --admin
+A after &&
+A after ;
+A after ||
+A on a second line
+A piped to tee
+A inside a subshell
+A inside if/then
+A behind env assignments
+A absolute path to gh
+A quoted command words
+A backslash-continued line
+A behind sudo/env/timeout
+A via xargs
+A via xargs -I
+A via find -exec
+A bash -c '…'
+A bash -lc with && inside
+A eval
+A watch '…'
+A ssh host '…'
+A $( … ) substitution
+A backticks inside double quotes
+A $( … ) inside double quotes of a data command
+A echo … | bash
+A heredoc fed to bash
+A heredoc piped to sh
+A here-string to bash
+A python3 -c subprocess list
+A python3 heredoc os.system
+A gh api -X PUT …/merge
+A gh api --method PUT with {owner}/{repo}
+A gh api …/merge -R style, default method
+A gh api with a shell variable
+A curl -X PUT
+A REST branch merge (no PR)
+A GraphQL mergePullRequest
+A GraphQL enablePullRequestAutoMerge
+A gh alias set to pr merge
+A gh alias import (content not visible)
+A execute_code: subprocess list
+A execute_code: terminal() string
+A execute_code: urllib PUT
+A process_manage submit to a pty shell
+A tool_call wrapping terminal
+A tool_call wrapping the MCP merge tool
+A MCP github merge_pull_request
+C payload with args instead of tool_input (block)
+D wrapper blocks gh pr merge
+D wrapper blocks gh api PUT …/merge
+merge-guard selftest: 32 passed, 58 failed (55 refused forms, 24 allowed neighbours)
+== mutation block-all
+exit=1
+FAIL lines: 41
+A gh api -X PUT …/merge
+A gh api --method PUT with {owner}/{repo}
+A gh api …/merge -R style, default method
+A gh api with a shell variable
+A curl -X PUT
+A REST branch merge (no PR)
+A GraphQL mergePullRequest
+A GraphQL enablePullRequestAutoMerge
+A gh alias set to pr merge
+A gh alias import (content not visible)
+A execute_code: urllib PUT
+A tool_call wrapping the MCP merge tool
+A MCP github merge_pull_request
+B gh pr view --json mergeable…
+B gh pr view state,mergedAt
+B gh pr checks
+B gh pr create
+B gh pr create whose body mentions gh pr merge
+B gh pr list
+B gh pr diff / status / checkout / review
+B git merge-base
+B git merge (local)
+B git merge --no-ff -m
+B git log --merges
+B gh api on the PR (no /merge)
+B gh run list
+B commit message mentions gh pr merge
+B echo mentions gh pr merge
+B grep for gh pr merge
+B hermes kanban comment mentions it
+B heredoc written to a file
+B word merge elsewhere
+B gh pr view piped to jq
+B execute_code without a merge
+B process_manage poll
+B tool_call wrapping gh pr checks
+B MCP github get_pull_request
+C payload with args instead of tool_input (allow)
+D wrapper blocks gh api PUT …/merge
+D wrapper allows gh pr view
+D wrapper allows git merge-base
+merge-guard selftest: 49 passed, 41 failed (55 refused forms, 24 allowed neighbours)
+== mutation naive-substring
+exit=1
+FAIL lines: 22
+A gh -R … pr merge (flag before the subcommand)
+A gh pr -R … merge (flag between)
+A quoted command words
+A backslash-continued line
+A python3 -c subprocess list
+A gh api -X PUT …/merge
+A gh api --method PUT with {owner}/{repo}
+A gh api …/merge -R style, default method
+A gh api with a shell variable
+A curl -X PUT
+A REST branch merge (no PR)
+A GraphQL mergePullRequest
+A GraphQL enablePullRequestAutoMerge
+A gh alias set to pr merge
+A gh alias import (content not visible)
+B gh pr create whose body mentions gh pr merge
+B commit message mentions gh pr merge
+B echo mentions gh pr merge
+B grep for gh pr merge
+B hermes kanban comment mentions it
+B heredoc written to a file
+D wrapper blocks gh api PUT …/merge
+merge-guard selftest: 68 passed, 22 failed (55 refused forms, 24 allowed neighbours)
+== mutation no-data-heads
+exit=1
+FAIL lines: 4
+B commit message mentions gh pr merge
+B echo mentions gh pr merge
+B grep for gh pr merge
+B hermes kanban comment mentions it
+merge-guard selftest: 86 passed, 4 failed (55 refused forms, 24 allowed neighbours)

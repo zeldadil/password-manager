@@ -1,0 +1,41 @@
+merge-guard installer — DRY RUN · profiles root: /home/sap/.hermes/profiles · excluded: architect
+hook source:  /home/sap/.hermes/kanban/workspaces/t_30e17642/repo/scripts/qa/hooks/merge-guard.sh (sha256 d25eabe9307c…)
+gate source:  /home/sap/.hermes/kanban/workspaces/t_30e17642/repo/scripts/qa/merge-guard.mjs (sha256 d20aab094b5b…)
+matcher:      ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$
+python:       /home/sap/.hermes/installs/b48fa304433e633d/environments/35a067b004624e3da8a8bd06cd9fd450/venv/bin/python3
+
+── backend (/home/sap/.hermes/profiles/backend)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/backend/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/profiles/backend/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/profiles/backend/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/profiles/backend/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/backend/shell-hooks-allowlist.json
+
+── browser (/home/sap/.hermes/profiles/browser)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/browser/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/profiles/browser/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/profiles/browser/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/profiles/browser/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/browser/shell-hooks-allowlist.json
+
+── docs (/home/sap/.hermes/profiles/docs)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/docs/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/profiles/docs/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/profiles/docs/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/profiles/docs/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/docs/shell-hooks-allowlist.json
+
+── duckai (/home/sap/.hermes/profiles/duckai)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/duckai/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/profiles/duckai/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/profiles/duckai/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/profiles/duckai/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/duckai/shell-hooks-allowlist.json
+
+── frontend (/home/sap/.hermes/profiles/frontend)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/frontend/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/profiles/frontend/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/profiles/frontend/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/profiles/frontend/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/frontend/shell-hooks-allowlist.json
+
+── product (/home/sap/.hermes/profiles/product)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/product/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/profiles/product/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/profiles/product/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/profiles/product/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/product/shell-hooks-allowlist.json
+
+── qa (/home/sap/.hermes/profiles/qa)
+   would copy merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/qa/agent-hooks/
+   patch-hook-entry: DRY RUN — /home/sap/.hermes/profiles/qa/config.yaml would gain pre_tool_call entry ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$ → /home/sap/.hermes/profiles/qa/agent-hooks/merge-guard.sh
+   would record pre_tool_call consent for /home/sap/.hermes/profiles/qa/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/qa/shell-hooks-allowlist.json
+

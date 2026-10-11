@@ -1,0 +1,25 @@
+## 1. tampered gate in fx/qa (an allow-all gate)
+   FAIL - installed gate differs from the repo copy — reinstall
+   FAIL - live: gh pr merge NOT blocked:       stdout: {}       parsed: <none — hook contributed nothing to the dispatcher>
+   FAIL - live: gh api PUT …/merge NOT blocked
+verification: 10 ok · 3 FAIL
+exit=1
+## 2. hook entry removed from fx/backend config
+   FAIL - config.yaml has no merge-guard.sh entry
+   FAIL - entry does not set fail_closed: true
+   FAIL - matcher does not cover the guarded tools
+   FAIL - hermes hooks list does not show the hook
+   FAIL - hermes hooks doctor did not check the hook
+   FAIL - live: gh pr merge NOT blocked: No shell hooks configured for event: pre_tool_call (with matcher filter --for-tool=terminal)
+   FAIL - live: gh api PUT …/merge NOT blocked
+   FAIL - live: gh pr view NOT allowed: No shell hooks configured for event: pre_tool_call (with matcher filter --for-tool=terminal)
+   FAIL - live: git merge-base NOT allowed
+verification: 4 ok · 9 FAIL
+exit=1
+## 3. merge-guard planted into fx/architect
+   FAIL - architect/config.yaml carries merge-guard — architect must keep the merge
+verification: 82 ok · 1 FAIL
+exit=1
+## 4. restored fixture verifies clean again
+verification: 119 ok · 0 FAIL
+exit=0

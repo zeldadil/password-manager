@@ -1,0 +1,7 @@
+# node scripts/qa/merge-guard.mjs check --tool <tool> -- "<text>"  (residual-path probe, 2026-10-11)
+g=gh; $g pr merge 1                                          → ALLOW
+"g""h" pr merge 1                                            → BLOCK R_GH_PR_MERGE
+echo Z2ggcHIgbWVyZ2UgMQ== | base64 -d | bash                 → ALLOW
+import subprocess; subprocess.run(["g"+"h", "pr", "merge", "1"]) → ALLOW
+grep -rn "pulls/1/merge" docs                                → BLOCK R_API_PULL_MERGE
+grep -rn mergePullRequest docs                               → BLOCK R_GRAPHQL_MERGE

@@ -1,0 +1,6 @@
+This is a QA integration test of the merge-guard hook (Kanban card t_30e17642), allowed-path control. Use the terminal tool to run exactly these two commands, each once, as two separate terminal calls, and nothing else:
+
+1. gh pr view 999999 -R zeldadil/password-manager --json state,mergeable
+2. git -C /home/sap/.hermes/kanban/workspaces/t_30e17642/repo merge-base HEAD origin/master
+
+PR #999999 does not exist. Then reply with the verbatim results the terminal tool returned for each, and nothing else.

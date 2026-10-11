@@ -1,0 +1,49 @@
+merge-guard installer — APPLY · profiles root: /home/sap/.hermes/profiles · excluded: architect
+hook source:  /home/sap/.hermes/kanban/workspaces/t_30e17642/repo/scripts/qa/hooks/merge-guard.sh (sha256 d25eabe9307c…)
+gate source:  /home/sap/.hermes/kanban/workspaces/t_30e17642/repo/scripts/qa/merge-guard.mjs (sha256 d20aab094b5b…)
+matcher:      ^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$
+python:       /home/sap/.hermes/installs/b48fa304433e633d/environments/35a067b004624e3da8a8bd06cd9fd450/venv/bin/python3
+
+── backend (/home/sap/.hermes/profiles/backend)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/backend/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/profiles/backend/config.yaml (backup: /home/sap/.hermes/profiles/backend/config.yaml.bak.20261011101350)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/profiles/backend/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/backend/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/profiles/backend/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── browser (/home/sap/.hermes/profiles/browser)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/browser/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/profiles/browser/config.yaml (backup: /home/sap/.hermes/profiles/browser/config.yaml.bak.20261011101353)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/profiles/browser/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/browser/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/profiles/browser/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── docs (/home/sap/.hermes/profiles/docs)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/docs/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/profiles/docs/config.yaml (backup: /home/sap/.hermes/profiles/docs/config.yaml.bak.20261011101356)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/profiles/docs/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/docs/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/profiles/docs/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── duckai (/home/sap/.hermes/profiles/duckai)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/duckai/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/profiles/duckai/config.yaml (backup: /home/sap/.hermes/profiles/duckai/config.yaml.bak.20261011101359)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/profiles/duckai/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/duckai/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/profiles/duckai/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── frontend (/home/sap/.hermes/profiles/frontend)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/frontend/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/profiles/frontend/config.yaml (backup: /home/sap/.hermes/profiles/frontend/config.yaml.bak.20261011101402)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/profiles/frontend/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/frontend/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/profiles/frontend/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── product (/home/sap/.hermes/profiles/product)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/product/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/profiles/product/config.yaml (backup: /home/sap/.hermes/profiles/product/config.yaml.bak.20261011101406)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/profiles/product/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/product/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/profiles/product/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+── qa (/home/sap/.hermes/profiles/qa)
+   copied merge-guard.sh + merge-guard.mjs → /home/sap/.hermes/profiles/qa/agent-hooks/
+   patch-hook-entry: patched /home/sap/.hermes/profiles/qa/config.yaml (backup: /home/sap/.hermes/profiles/qa/config.yaml.bak.20261011101408)
+   approve-hook: recorded pre_tool_call consent for /home/sap/.hermes/profiles/qa/agent-hooks/merge-guard.sh in /home/sap/.hermes/profiles/qa/shell-hooks-allowlist.json
+   verified: hermes hooks list →    - /home/sap/.hermes/profiles/qa/agent-hooks/merge-guard.sh matcher='^(terminal|process_manage|execute_code|tool_call|mcp__.*merge.*)$' (timeout=15s, ✓ allowed)
+
+Next: scripts/qa/hooks/verify-merge-guard.sh --all --live
