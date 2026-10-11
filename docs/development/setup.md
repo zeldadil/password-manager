@@ -6,6 +6,10 @@ with a database, and with the tests passing.
 - **Verified against:** `master` at `dd7ec14`, on Ubuntu 24.04 (Linux 6.8) with
   Node.js v22.23.3 and pnpm 9.12.0, on 2026-10-10. Every command in this guide was
   run from a fresh clone. Where a command printed something, the output is quoted.
+  §7.3 (Vite dev proxy) was updated on 2026-10-11 against `master` at `0930d9f`:
+  with `PORT=3311 pnpm dev`, `POST /auth/register` and `POST /auth/unlock` sent to
+  port 5173 returned 201 and 200 from the API. The browser login step comes from
+  QA's evidence (`tests/evidence/t_99248680/README.md`).
 - **Example values:** all emails, passwords and secrets in this guide are
   **synthetic**. Never put real credentials into examples, `.env` files or issues.
 
@@ -25,7 +29,8 @@ with a database, and with the tests passing.
 > | `pnpm dev`: API (port 3000) + Web UI (port 5173) | Implemented |
 > | OpenAPI document (`/openapi.json`) | Implemented |
 > | Swagger UI (interactive API docs page) | **Planned**. Not served. |
-> | Web UI talking to the API under `pnpm dev` | **Known gap**: no Vite dev proxy yet ([§7.3](#73-known-gap-web-ui--api-in-local-dev)) |
+> | Web UI talking to the API under `pnpm dev` (Vite dev proxy, browser login) | Implemented ([§7.3](#73-web-ui--api-in-local-dev-vite-dev-proxy)) |
+> | Vault page listing resources in the browser after unlock | **Known limitation**: stays on "Loading resources…" until task `t_76755bb3` lands ([§7.3](#73-web-ui--api-in-local-dev-vite-dev-proxy)) |
 > | Playwright E2E | Implemented as a browser-matrix smoke test. It does not drive the app yet. |
 
 ---
@@ -108,6 +113,7 @@ default. Skip this section unless you want to override a default.
 | `AUTO_LOCK_TIMEOUT_MS` | `900000` (15 min) | no | Vault auto-lock idle timeout, in milliseconds | `900000` |
 | `JWT_SECRET` | built-in development fallback | **yes when `NODE_ENV=production`** | Signing secret for access tokens | generate one: `openssl rand -hex 32` |
 | `E2E_BASE_URL` | unset | no | Base URL for Playwright (only for future app-level E2E flows) | `http://localhost:5173` |
+| `API_PROXY_TARGET` | unset | no | Read by the **Web UI dev server** (Vite), not by the API. URL the dev proxy forwards `/auth/*` and `/api/v1/*` to. When unset, the proxy uses `http://HOST:PORT`, else `http://127.0.0.1:3000` (§7.3). | `http://127.0.0.1:4000` |
 
 ### Important: nothing loads `.env` files automatically
 
@@ -262,14 +268,35 @@ pnpm --filter @password-manager/api start   # API only, no watch
 pnpm --filter @password-manager/web dev     # Web UI only
 ```
 
-### 7.3 Known gap: Web UI ↔ API in local dev
+### 7.3 Web UI ↔ API in local dev (Vite dev proxy)
 
-The Web UI calls the API with relative URLs (`/auth/*`, `/api/v1/*`), but
-`apps/web/vite.config.ts` does not configure a dev proxy. The page loads on port
-5173, but its API calls reach the Vite server, not the API on port 3000. As a
-result, **login and unlock from the browser do not work yet under `pnpm dev`**.
-Until a dev proxy (or an equivalent) is added, use the `curl` checks in §8 to
-exercise the API.
+The Web UI calls the API with relative URLs (`/auth/*`, `/api/v1/*`). Under
+`pnpm dev`, the Vite dev server forwards those two path prefixes to the API
+(`apps/web/vite.config.ts`, `apps/web/dev-proxy.ts`). Every other path, such as
+`/login` or `/vault`, stays with Vite and serves the Web UI.
+
+The proxy target is chosen in this order:
+
+1. `API_PROXY_TARGET`, if set (for example `http://127.0.0.1:4000`).
+2. `http://HOST:PORT`, from the same variables the API reads. A wildcard bind
+   address (`0.0.0.0`, `::`) is reached through `127.0.0.1`. So
+   `PORT=3001 pnpm dev` keeps the API and the proxy on the same port.
+3. `http://127.0.0.1:3000`, the API defaults.
+
+Set `API_PROXY_TARGET` only when the API runs somewhere `HOST`/`PORT` in the Vite
+shell do not describe, for example when you start the Web UI on its own
+(`pnpm --filter @password-manager/web dev`) against an API on another port.
+
+With a registered synthetic user (§8, step 3), open `http://localhost:5173/login`
+and unlock. The request `POST /auth/unlock` returns HTTP 200 and the browser
+lands on `/vault` (verified by QA, `tests/evidence/t_99248680/README.md`).
+
+**Known limitation:** after unlock, the Vault page stays on "Loading resources…"
+and does not list resources. The Web UI's API client
+(`apps/web/src/api/client.ts`) calls `fetch` unbound, so the browser throws
+`TypeError: … Illegal invocation` before any `GET /api/v1/resources` is sent.
+The fix is tracked as task `t_76755bb3`. Until it lands, use the `curl` checks in
+§8 to work with folders and resources.
 
 ### 7.4 Running in production mode (local check only)
 
@@ -355,8 +382,11 @@ HTTP 401.
 
 **5. Web UI**
 
-Open `http://localhost:5173` in a browser. The page loads. Browser login does not
-work yet ([§7.3](#73-known-gap-web-ui--api-in-local-dev)).
+Open `http://localhost:5173/login` in a browser and unlock with the synthetic
+user from step 3. Expected: the browser lands on `/vault`, with the Lock and
+Account buttons. The Vault page then stays on "Loading resources…". That is the
+known limitation tracked as task `t_76755bb3`
+([§7.3](#73-web-ui--api-in-local-dev-vite-dev-proxy)), not a setup error.
 
 **6. Tests**
 
@@ -414,7 +444,8 @@ WebKit needs `libgtk-4.so.1`). Run `pnpm test:e2e:install`, which uses
 | `Unsupported engine` / wrong Node version warnings | Use Node 22 (`nvm use`). |
 | `pnpm: command not found` or the wrong pnpm version | Run `corepack enable` (§1). |
 | Unlock fails with HTTP 500 when `NODE_ENV=production` | `JWT_SECRET` is not set (§3). |
-| Browser login does nothing under `pnpm dev` | Known gap, no Vite dev proxy (§7.3). Use `curl`. |
+| Browser unlock fails under `pnpm dev`: POST `/auth/unlock` returns 404, or a request to `/api/v1/*` returns HTML | The request is not reaching the API through the dev proxy. Check that the API is running, and that the proxy target matches it: `HOST`/`PORT` in the shell that runs `pnpm dev`, or `API_PROXY_TARGET` (§7.3). |
+| After unlock, `/vault` stays on "Loading resources…" | Known limitation, task `t_76755bb3` (§7.3). Use `curl` (§8) for resources until it is fixed. |
 
 ---
 
@@ -428,8 +459,8 @@ the owning tasks land:
 - **Dev seed command** (`pnpm db:seed` or similar) to load synthetic demo data into
   `dev.db`.
 - **Swagger UI** page for the API. Only `/openapi.json` is served today.
-- **Vite dev proxy** (or equivalent) so the Web UI can reach the API under
-  `pnpm dev`.
+- **Vault resource list in the browser** after unlock (task `t_76755bb3`, fix for
+  the unbound `fetch` in the Web UI's API client).
 - **App-level Playwright E2E flows** (QA-002) that start the app and use
   `E2E_BASE_URL`.
 - **Browser extension** (`apps/browser-firefox` is a scaffold only).
