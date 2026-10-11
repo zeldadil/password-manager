@@ -1,0 +1,38 @@
+## node v22.23.3, pnpm 9.12.0, HEAD e4e150c
+install exit 0
+migrate exit 0
+
+## A: default pnpm dev (README Quick Start), browser probe
+GET 127.0.0.1:3000/health direct -> 200 application/json; charset=utf-8
+register via :5173 -> HTTP 201
+final URL: http://localhost:5173/vault
+requests by page: ["POST /auth/unlock"]
+responses: ["POST /auth/unlock 200"]
+Lock button count: 1; Account button count: 1
+"Loading resources…" visible after 6s: 0
+GET /api/v1/resources sent by page: 0
+console/page error mentions "Illegal invocation": false
+body text (first 400 chars): Skip to main content Vault · Password Manager Password Manager Lock Light Account FOLDERS TAGS Vault Search Failed to load resources. Retry
+DOC CLAIM unlock->/vault with Lock+Account: HOLDS
+DOC CLAIM t_76755bb3 caveat (stuck loading, no GET resources, Illegal invocation): DOES NOT HOLD
+probe exit 0
+
+## B: PORT=3311 pnpm dev, curl through :5173
+POST :5173/auth/register -> 201 application/json; charset=utf-8
+POST :5173/auth/unlock -> 200 application/json; charset=utf-8
+GET :5173/api/v1/resources (no token) -> 401 application/json; charset=utf-8
+GET :5173/login -> 200 text/html
+listening on 127.0.0.1:3000? 0
+
+## C: API alone on PORT=3312, Web UI alone with API_PROXY_TARGET (setup.md 7.3 example)
+POST :5173/auth/register -> 201 application/json; charset=utf-8
+GET :5173/api/v1/resources (no token) -> 401 application/json; charset=utf-8
+
+## D: control - same split, Web UI WITHOUT API_PROXY_TARGET (proxy -> 127.0.0.1:3000, nothing there)
+POST :5173/auth/unlock -> 502 text/plain
+GET :5173/api/v1/resources -> 502 text/plain
+vite log proxy error lines: 2
+
+## secret check on dev logs (password / token keys echoed?)
+0
+all servers stopped

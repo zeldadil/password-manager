@@ -1,0 +1,9 @@
+## node v22.23.3, HEAD e4e150c
+register via :5173 -> HTTP 201
+t+0.0s: Loading resources…
+t+3.0s: Failed to load resources. (Retry)
+final state after ~20s: Failed to load resources. (Retry)
+window.fetch calls: [{"url":"/auth/unlock","receiverIsWindow":true,"threw":null,"rejected":null},{"url":"/api/v1/resources","receiverIsWindow":false,"threw":null,"rejected":"TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation"},{"url":"/api/v1/resources","receiverIsWindow":false,"threw":null,"rejected":"TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation"},{"url":"/api/v1/resources","receiverIsWindow":false,"threw":null,"rejected":"TypeError: Failed to execute 'fetch' on 'Window': Illegal invocation"}]
+probe2 exit 0
+API log lines for /api/v1/resources: 0
+servers stopped
