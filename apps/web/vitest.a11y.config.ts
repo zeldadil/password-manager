@@ -20,6 +20,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    // Fail fast on a Node major other than the pinned one (t_cf31ee46).
+    globalSetup: ['./vitest.node-guard.ts'],
     include: ['src/**/*.a11y.test.{ts,tsx}'],
   },
 })
