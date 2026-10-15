@@ -1,0 +1,12 @@
+Firing 2 hook(s) for event 'pre_tool_call':
+
+  → /home/sap/.hermes/profiles/browser/agent-hooks/qa-signoff-gate.sh
+      exit=2  elapsed=2.534s
+      stdout: {"decision":"block","reason":"QA sign-off gate blocked this completion of t_fx148r9 (2 violation(s)):\n  - R4_EVIDENCE_MISSING: no evidence artifact — attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (§5.7)\n  - R9_...
+      parsed (Hermes wire shape): {"action": "block", "message": "QA sign-off gate blocked this completion of t_fx148r9 (2 violation(s)):\n  - R4_EVIDENCE_MISSING: no evidence artifact \u2014 attach the file (kanban_attach) or name a CI run URL / committed path (e.g. tests/evidence/<task-id>/README.md) in the QA verdict comment; put the path after an `Evidence:` label, which is what marks it as this card's own evidence (\u00a75.7)\n  - R9_PR_NOT_MERGED: PR not merged: no pull request linked to t_fx148r9 is merged into master \u2014 #148 is open (not merged). The card completes after the merge, by the merger (\u00a75.9)\nRecord the verdict on the card, then call kanban_complete again:\n  hermes kanban comment t_fx148r9 --author qa --body \"QA-VERDICT: pass \u2014 evidence: tests/evidence/t_fx148r9/README.md\"\nA code card completes only after its PR is merged into master with green CI on the merge commit (\u00a75.9):\n  the author moves the card to review with \"PR: #<n>\" (kanban_request_review); the merger completes it after the merge.\nPolicy: QA_SIGN_OFF_GATE.md \u00b7 re-check: node scripts/qa/signoff-gate.mjs check --task t_fx148r9 --pre-complete"}
+
+  → /home/sap/.hermes/profiles/browser/agent-hooks/secret-guard.sh
+      exit=0  elapsed=0.053s
+      stdout: {}
+      parsed: <none — hook contributed nothing to the dispatcher>
+
