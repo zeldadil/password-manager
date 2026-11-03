@@ -419,6 +419,26 @@ export function looseVerdict(text) {
 }
 
 /**
+ * The comment's own marker verdict (t_a352d5a3): the first `QA-VERDICT: <token>`
+ * that is not inside code (`codeRanges`) and not on a block-quote line. A quoted
+ * or code-wrapped marker is documentation — another card's verdict, a pasted
+ * command, a transcript — never qa's record on this card. Returns the match or null.
+ */
+const VERDICT_MARKER_RE_G = new RegExp(VERDICT_MARKER_RE.source, "gi");
+export function markerVerdict(text) {
+  const ranges = codeRanges(text);
+  for (const m of text.matchAll(VERDICT_MARKER_RE_G)) {
+    // The match may start on the boundary character; locate `qa` itself.
+    const at = m.index + m[0].search(/qa/i);
+    if (insideRanges(at, ranges)) continue;
+    const lineStart = text.lastIndexOf("\n", at - 1) + 1;
+    if (/^[ \t]{0,3}>/.test(text.slice(lineStart, at))) continue;
+    return m;
+  }
+  return null;
+}
+
+/**
  * The regions an operative verdict claims as its own evidence: from just after
  * each evidence label to the end of that paragraph (a blank line, heading or
  * table row closes it). A label *inside* a code span/fence is a quoted template,
@@ -570,7 +590,7 @@ export function collectVerdicts(board, task) {
     // §3: only a QA profile records a QA verdict — both comment paths, not just
     // the loose one.
     if (!QA_PROFILES.has(String(c.author || "").trim())) continue;
-    const marker = VERDICT_MARKER_RE.exec(text);
+    const marker = markerVerdict(text);
     if (marker) {
       found.push({
         token: normalizeVerdictToken(marker[1]),

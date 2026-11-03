@@ -1,0 +1,4 @@
+counts master: {'done_cards': 172, 'enforced': 145, 'failures': 56, 'grandfathered': 27, 'a11': 39, 'exceptions': {'available': True, 'cards': 5, 'occurrences': 5}, 'exceptions_withdrawn': {'available': True, 'cards': 0, 'occurrences': 0}, 'completed_outside_hook': {'available': True, 'cards': 60, 'occurrences': 60}}
+counts branch: {'done_cards': 172, 'enforced': 145, 'failures': 56, 'grandfathered': 27, 'a11': 39, 'exceptions': {'available': True, 'cards': 5, 'occurrences': 5}, 'exceptions_withdrawn': {'available': True, 'cards': 0, 'occurrences': 0}, 'completed_outside_hook': {'available': True, 'cards': 60, 'occurrences': 60}}
+cards: 172 / 172; changed: 0
+cards that LOSE a pass / pass-with-conditions: 0
