@@ -184,6 +184,20 @@ const VERDICT_MARKER_RE = /(?:^|[\s(])qa[\s_-]*verdict\s*:\s*([a-z][a-z-]*)/i;
 // fallback that still reads `**QA-VERDICT: pass**`, which the marker rejects because
 // the `*` of the bold markup precedes `qa` (live record: t_f49d448c).
 const VERDICT_LOOSE_RE = /verdict\s*:\s*([a-z][a-z-]*)/i;
+// t_d8a84fe2 — the loose path reads qa's *own* prose verdict, never one it merely
+// mentions. Live case: qa note #954 on t_93cf5611 told architect which sign-off
+// line to post ("ARCH-VERDICT: approved") and the gate recorded a QA verdict
+// "approved" (R2). The dangerous shapes recorded a QA *pass* on a card qa had not
+// reviewed: another actor's verdict quoted in a code span / fence, in a block
+// quote, or attributed in prose ("the worker verdict: pass"). An occurrence is
+// therefore skipped when it sits inside code (`codeRanges`), on a block-quote
+// line, or right after a word naming another actor; the first remaining one is
+// the comment's loose verdict. A bare "Round-2 review — verdict: pass." and the
+// bold `**QA-VERDICT: pass**` are still read (t_df8e644a, t_f49d448c).
+const VERDICT_LOOSE_RE_G = new RegExp(VERDICT_LOOSE_RE.source, "gi");
+// Only names of OTHER actors: "reviewer" / "author" are left out on purpose,
+// because qa uses them for itself (t_80fc0326 #63, "reviewer verdict: CHANGES…").
+const FOREIGN_VERDICT_PREFIX_RE = /\b(?:arch(?:itect)?|frontend|backend|browser|docs|product|worker|dashboard|human)(?:['’]s)?[\s_-]*$/i;
 // Same leading boundary as VERDICT_MARKER_RE (t_c3cb6842): a marker that only
 // appears inside a code span — a handoff quoting the recording command, a
 // troubleshooting transcript — is documentation, not a live deferral
@@ -388,6 +402,23 @@ function insideRanges(index, ranges) {
 }
 
 /**
+ * The comment's own loose verdict (t_d8a84fe2): the first `verdict: <token>`
+ * that is not inside code, not on a block-quote line, and not attributed to
+ * another actor by the word right before it. Returns the RegExp match or null.
+ */
+export function looseVerdict(text) {
+  const ranges = codeRanges(text);
+  for (const m of text.matchAll(VERDICT_LOOSE_RE_G)) {
+    if (insideRanges(m.index, ranges)) continue;
+    const lineStart = text.lastIndexOf("\n", m.index - 1) + 1;
+    if (/^[ \t]{0,3}>/.test(text.slice(lineStart, m.index))) continue;
+    if (FOREIGN_VERDICT_PREFIX_RE.test(text.slice(Math.max(lineStart, m.index - 40), m.index))) continue;
+    return m;
+  }
+  return null;
+}
+
+/**
  * The regions an operative verdict claims as its own evidence: from just after
  * each evidence label to the end of that paragraph (a blank line, heading or
  * table row closes it). A label *inside* a code span/fence is a quoted template,
@@ -552,7 +583,7 @@ export function collectVerdicts(board, task) {
       continue;
     }
     {
-      const loose = VERDICT_LOOSE_RE.exec(text);
+      const loose = looseVerdict(text);
       if (loose) {
         found.push({
           token: normalizeVerdictToken(loose[1]),

@@ -1,0 +1,7 @@
+#98 t_f49d448c [done] old=deferred new=- @ "Root cause:** the gate evaluated `R8` on the **oldest** `QA-VERDICT: deferred — t_…` marke"
+#110 t_4e1b6937 [done] old=fail new=- @ "the blind secret-hygiene assertion) — it would sign off `QA-VERDICT: fail` as done. Not do"
+#173 t_df8e644a [done] old=pass new=- @ "pan exclusions explicitly NOT added (would break live `**QA-VERDICT: pass**` on t_f49d448c"
+#744 t_8a64c3dd [done] old=fail new=- @ "1_QA_VERDICT_MISSING, R4_EVIDENCE_MISSING`.\n\nA RED mutant (`verdict: fail` in the notice, "
+#747 t_6df8813b [done] old=fail new=- @ "10)\n\nAC1 done: comment 745 on t_5b4429c9. First line is `QA-VERDICT: fail`. It claims both"
+#954 t_93cf5611 [done] old=approved new=- @ "ICT, approved, sign-off, signed off, LGTM). Posting an ARCH-VERDICT: approved line from th"
+qa comments: 490; read by the loose path (no marker): 24; reading changed: 6

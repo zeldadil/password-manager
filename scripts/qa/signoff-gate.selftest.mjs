@@ -821,6 +821,67 @@ const LOOSE_NONQA = card({
 });
 fixtureFile(`tests/evidence/${LOOSE_NONQA}/README.md`);
 
+// ── t_d8a84fe2 fixtures: the loose path must not read a mentioned verdict ──
+// Live case: qa note #954 on t_93cf5611 told architect which sign-off line to
+// post ("ARCH-VERDICT: approved") and the gate recorded a QA verdict "approved"
+// (R2). Worse shapes below would record a QA *pass* for a card nobody reviewed:
+// another profile's verdict quoted in backticks, in a block quote, in a fence,
+// or attributed in prose. Each card has its evidence file, so only the verdict
+// reading can change the result.
+const LV_ARCH_PREFIX = card({
+  title: "BE-970a qa note citing the architect sign-off wording (live t_93cf5611 #954)",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict("qa to architect: posting an ARCH-VERDICT: approved line from the architect profile should clear R7.")],
+});
+const LV_CODE_SPAN = card({
+  title: "BE-970b qa note quoting a frontend self-check in a code span",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict("qa note: the frontend self-check says `verdict: pass`; I have not reviewed it yet.\nEvidence: tests/evidence/__ID__/README.md")],
+});
+fixtureFile(`tests/evidence/${LV_CODE_SPAN}/README.md`);
+const LV_ATTRIBUTED = card({
+  title: "BE-970c qa note naming the worker's verdict in prose",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict("qa note: the worker verdict: pass on this card was not checked by qa.\nEvidence: tests/evidence/__ID__/README.md")],
+});
+fixtureFile(`tests/evidence/${LV_ATTRIBUTED}/README.md`);
+const LV_QUOTE = card({
+  title: "BE-970d qa note quoting a verdict in a block quote",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict("Quoting the frontend comment for the record:\n> verdict: pass — evidence: tests/evidence/__ID__/README.md\n\nNot reviewed by qa yet.")],
+});
+fixtureFile(`tests/evidence/${LV_QUOTE}/README.md`);
+const LV_FENCE = card({
+  title: "BE-970e qa note quoting a verdict in a fenced block",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict("Transcript of the worker output:\n```\nverdict: pass\nEvidence: tests/evidence/__ID__/README.md\n```\nqa has not reviewed it.")],
+});
+fixtureFile(`tests/evidence/${LV_FENCE}/README.md`);
+const LV_NOT_A_VERDICT = card({
+  title: "BE-970f qa findings note: 'NOT a verdict: the worker verdict: pass …'",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict("qa findings, NOT a verdict: the worker verdict: pass on this card was fabricated.\nEvidence: tests/evidence/__ID__/README.md")],
+});
+fixtureFile(`tests/evidence/${LV_NOT_A_VERDICT}/README.md`);
+const LV_BOLD = card({
+  title: "BE-970g control: bold **QA-VERDICT: pass** (the shape the loose path exists for, t_f49d448c)",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict("**QA-VERDICT: pass**\nEvidence: tests/evidence/__ID__/README.md")],
+});
+fixtureFile(`tests/evidence/${LV_BOLD}/README.md`);
+const LV_QUOTE_THEN_REAL = card({
+  title: "BE-970h control: a quoted foreign verdict, then qa's own prose verdict",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict("> worker verdict: fail\n\nRound-2 review by qa — verdict: pass.\nEvidence: tests/evidence/__ID__/README.md")],
+});
+fixtureFile(`tests/evidence/${LV_QUOTE_THEN_REAL}/README.md`);
+const LV_SELF_REVIEWER = card({
+  title: "BE-970i control: qa names itself as reviewer (live t_80fc0326 #63 shape)",
+  body: "**Test Types:** unit",
+  comments: [qaVerdict("Round-2 review done; this card goes back to its owner (reviewer verdict: pass).\nEvidence: tests/evidence/__ID__/README.md")],
+});
+fixtureFile(`tests/evidence/${LV_SELF_REVIEWER}/README.md`);
+
 // Run metadata remains the one author-independent source (§3 row 3, AC 1c):
 // accepted — but a non-QA run self-declaring its verdict is reported as A8 so
 // the residual, documented hole is never invisible.
@@ -3222,6 +3283,41 @@ console.log("\n10. The audit lists every bypass — X1 exception, X2 withdrawn, 
   const nc = runGate(["check", "--task", B(1), "--db", bpDb, "--repo", repo, "--now-iso", NOW_ISO]);
   const nb = runGate(["audit", "--db", bpDb, "--repo", repo, "--now-iso", "yesterday"]);
   check("`check --now-iso` → refused (exit 3); `audit --now-iso yesterday` → refused (exit 3)", nc.code === 3 && nb.code === 3 && /ISO-8601/.test(nb.out), `check=${nc.code} audit=${nb.code} ${nb.out.slice(0, 120)}`);
+}
+
+console.log("\n11. The loose path reads only qa's own verdict, never a mentioned one (t_d8a84fe2):");
+{
+  const v = (taskId) => {
+    const r = gateJson(taskId);
+    return { r, verdict: r.parsed ? r.parsed.facts.verdict : undefined, rules: violationRules(r), invalid: r.parsed ? r.parsed.facts.invalid_verdicts : null };
+  };
+  const show = (x) => `exit=${x.r.code} verdict=${x.verdict} rules=[${x.rules.join(",")}] invalid=${JSON.stringify(x.invalid)}`;
+  const noVerdict = (x) => x.r.parsed !== null && !x.verdict && x.rules.includes("R1_QA_VERDICT_MISSING") && !x.rules.includes("R2_QA_VERDICT_INVALID");
+
+  let x = v(LV_ARCH_PREFIX);
+  check("(1) live #954 shape: `ARCH-VERDICT: approved` in a qa note → no QA verdict recorded (R1, never R2 \"approved\")", noVerdict(x), show(x));
+  x = v(LV_CODE_SPAN);
+  check("(2) a foreign `verdict: pass` inside a code span → no QA pass (R1) [old gate: recorded pass]", noVerdict(x), show(x));
+  x = v(LV_ATTRIBUTED);
+  check("(3) \"the worker verdict: pass\" in prose → attributed to another actor, no QA pass (R1) [old gate: recorded pass]", noVerdict(x), show(x));
+  x = v(LV_QUOTE);
+  check("(4) `> verdict: pass` in a block quote → no QA pass (R1) [old gate: recorded pass]", noVerdict(x), show(x));
+  x = v(LV_FENCE);
+  check("(5) `verdict: pass` inside a fenced block → no QA pass (R1) [old gate: recorded pass]", noVerdict(x), show(x));
+  x = v(LV_NOT_A_VERDICT);
+  check(
+    "(6) \"NOT a verdict: the worker verdict: pass\" → never a pass; fails closed on the off-vocabulary token \"the\" (R2), as before",
+    x.r.parsed !== null && x.verdict !== "pass" && x.rules.includes("R2_QA_VERDICT_INVALID"),
+    show(x),
+  );
+  x = v(LV_BOLD);
+  check("(7) control: bold **QA-VERDICT: pass** is still read (pass, 0 violations)", x.r.code === 0 && x.verdict === "pass" && x.rules.length === 0, show(x));
+  x = v(LV_QUOTE_THEN_REAL);
+  check("(8) control: a quoted foreign verdict is skipped and qa's own later prose verdict is read (pass, 0 violations)", x.r.code === 0 && x.verdict === "pass" && x.rules.length === 0, show(x));
+  x = v(LOOSE_QA);
+  check("(9) control: the t_df8e644a genuine loose `verdict: pass` is still read", x.r.code === 0 && x.verdict === "pass" && x.rules.length === 0, show(x));
+  x = v(LV_SELF_REVIEWER);
+  check("(10) control: qa naming itself (\"reviewer verdict: pass\") is still read — only other actors are excluded", x.r.code === 0 && x.verdict === "pass" && x.rules.length === 0, show(x));
 }
 
 console.log(`\n${cases - failures.length}/${cases} cases passed`);
