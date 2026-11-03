@@ -62,7 +62,11 @@ Full detail, rationale, and absolute rules in
 
 ## Disclosure policy
 
-- Security issues: do not open a public issue. Contact the maintainers directly.
+- **How to report:** use GitHub private vulnerability reporting
+  ([Report a vulnerability](https://github.com/zeldadil/password-manager/security/advisories/new),
+  also under the repository's Security tab). The report stays private between
+  you and the maintainers. Never open a public issue, pull request or
+  discussion about a security problem.
 - All security-relevant changes must pass the SEC-001 threat-vector checklist
   before merge.
 - Secret scanning (gitleaks / truffleHog) runs in CI on every push; a real
