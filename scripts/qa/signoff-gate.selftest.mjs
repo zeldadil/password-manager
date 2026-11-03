@@ -882,6 +882,26 @@ const LV_SELF_REVIEWER = card({
 });
 fixtureFile(`tests/evidence/${LV_SELF_REVIEWER}/README.md`);
 
+// ── t_a352d5a3 fixtures: the MARKER path must not read a quoted QA-VERDICT ──
+// PR #156 fixed the loose path; VERDICT_MARKER_RE still read a marker sitting
+// in a block quote, a fenced block or inside a code span (a backtick right
+// before `QA` was already rejected by its leading boundary, a code span that
+// starts earlier was not). A qa comment quoting another card's
+// `QA-VERDICT: pass` then counted as qa's verdict on this card.
+const MQ = (title, text) => {
+  const id = card({ title, body: "**Test Types:** unit", comments: [qaVerdict(text)] });
+  fixtureFile(`tests/evidence/${id}/README.md`);
+  return id;
+};
+const MQ_FENCE = MQ("BE-980a qa marker only inside a fenced block", "Transcript of the other card:\n```\nQA-VERDICT: pass\nEvidence: tests/evidence/__ID__/README.md\n```\nqa has not reviewed this card.");
+const MQ_QUOTE = MQ("BE-980b qa marker only on a block-quote line", "Quoting t_0000ffff for context:\n> QA-VERDICT: pass — evidence: tests/evidence/__ID__/README.md\n\nqa has not reviewed this card.");
+const MQ_SPAN = MQ("BE-980c qa marker inside a code span that starts before it", "The recorded command was `hermes kanban comment t_0000ffff QA-VERDICT: pass` on another card.\nEvidence: tests/evidence/__ID__/README.md");
+const MQ_QUOTE_THEN_REAL = MQ("BE-980d quoted fail, then qa's own marker pass", "> QA-VERDICT: fail (round 1, superseded)\n\nQA-VERDICT: pass\nEvidence: tests/evidence/__ID__/README.md");
+const MQ_QUOTED_PASS_REAL_FAIL = MQ("BE-980e quoted foreign pass, then qa's own marker fail", "Another card was signed off:\n> QA-VERDICT: pass\n\nQA-VERDICT: fail — this card is not done.\nEvidence: tests/evidence/__ID__/README.md");
+const MQ_BARE = MQ("BE-980f control: bare marker on its own line", "QA-VERDICT: pass\nEvidence: tests/evidence/__ID__/README.md");
+const MQ_BOLD = MQ("BE-980g control: bold marker on its own line", "**QA-VERDICT: pass**\nEvidence: tests/evidence/__ID__/README.md");
+const MQ_PROSE = MQ("BE-980h control: marker mid-line in plain prose", "Round 2 done, QA-VERDICT: pass.\nEvidence: tests/evidence/__ID__/README.md");
+
 // Run metadata remains the one author-independent source (§3 row 3, AC 1c):
 // accepted — but a non-QA run self-declaring its verdict is reported as A8 so
 // the residual, documented hole is never invisible.
@@ -3318,6 +3338,38 @@ console.log("\n11. The loose path reads only qa's own verdict, never a mentioned
   check("(9) control: the t_df8e644a genuine loose `verdict: pass` is still read", x.r.code === 0 && x.verdict === "pass" && x.rules.length === 0, show(x));
   x = v(LV_SELF_REVIEWER);
   check("(10) control: qa naming itself (\"reviewer verdict: pass\") is still read — only other actors are excluded", x.r.code === 0 && x.verdict === "pass" && x.rules.length === 0, show(x));
+}
+
+console.log("\n12. The marker path skips a QA-VERDICT in a quote, fence or code span (t_a352d5a3):");
+{
+  const v = (taskId) => {
+    const r = gateJson(taskId);
+    return { r, verdict: r.parsed ? r.parsed.facts.verdict : undefined, rules: violationRules(r) };
+  };
+  const show = (x) => `exit=${x.r.code} verdict=${x.verdict} rules=[${x.rules.join(",")}]`;
+  const none = (x) => x.r.parsed !== null && !x.verdict && x.rules.includes("R1_QA_VERDICT_MISSING");
+  const clean = (x) => x.r.code === 0 && x.verdict === "pass" && x.rules.length === 0;
+
+  let x = v(MQ_FENCE);
+  check("(1) marker only inside a fenced block → no QA verdict (R1) [old gate: pass]", none(x), show(x));
+  x = v(MQ_QUOTE);
+  check("(2) marker only on a `>` quote line → no QA verdict (R1) [old gate: pass]", none(x), show(x));
+  x = v(MQ_SPAN);
+  check("(3) marker inside a code span that starts earlier → no QA verdict (R1) [old gate: pass]", none(x), show(x));
+  x = v(MQ_QUOTE_THEN_REAL);
+  check("(4) quoted `fail`, then qa's own marker `pass` → pass, 0 violations [old gate: fail, R3]", clean(x), show(x));
+  x = v(MQ_QUOTED_PASS_REAL_FAIL);
+  check(
+    "(5) quoted foreign `pass`, then qa's own marker `fail` → fail, R3 [old gate: pass, card completes]",
+    x.r.parsed !== null && x.verdict === "fail" && x.rules.includes("R3_VERDICT_NOT_TERMINAL"),
+    show(x),
+  );
+  x = v(MQ_BARE);
+  check("(6) control: bare `QA-VERDICT: pass` on its own line is read", clean(x), show(x));
+  x = v(MQ_BOLD);
+  check("(7) control: bold `**QA-VERDICT: pass**` is read", clean(x), show(x));
+  x = v(MQ_PROSE);
+  check("(8) control: a marker mid-line in plain prose is read", clean(x), show(x));
 }
 
 console.log(`\n${cases - failures.length}/${cases} cases passed`);
