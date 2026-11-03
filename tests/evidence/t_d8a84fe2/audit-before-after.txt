@@ -1,0 +1,8 @@
+counts master: {'done_cards': 171, 'enforced': 144, 'failures': 54, 'grandfathered': 27, 'a11': 38, 'exceptions': {'available': True, 'cards': 5, 'occurrences': 5}, 'exceptions_withdrawn': {'available': True, 'cards': 0, 'occurrences': 0}, 'completed_outside_hook': {'available': True, 'cards': 59, 'occurrences': 59}}
+counts branch: {'done_cards': 171, 'enforced': 144, 'failures': 56, 'grandfathered': 27, 'a11': 38, 'exceptions': {'available': True, 'cards': 5, 'occurrences': 5}, 'exceptions_withdrawn': {'available': True, 'cards': 0, 'occurrences': 0}, 'completed_outside_hook': {'available': True, 'cards': 59, 'occurrences': 59}}
+cards: 171 / 171; changed: 4
+  t_1e217ae2 | verdict None -> None | rules [] -> ['R8_DEFERRAL_TARGET_INVALID'] | invalid [] -> []
+  t_6df8813b | verdict fail -> None | rules ['R3_VERDICT_NOT_TERMINAL'] -> ['R1_QA_VERDICT_MISSING'] | invalid [] -> []
+  t_8a64c3dd | verdict fail -> None | rules ['R3_VERDICT_NOT_TERMINAL'] -> ['R4_EVIDENCE_MISSING'] | invalid [] -> []
+  t_df8e644a | verdict pass -> None | rules [] -> ['R1_QA_VERDICT_MISSING'] | invalid [] -> []
+cards that LOSE a pass / pass-with-conditions: 1
