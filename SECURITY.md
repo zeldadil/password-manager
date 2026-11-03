@@ -25,13 +25,14 @@ SEC-001 covers 7 minimum attack vectors:
   vault key, computed **on the server**. `POST /auth/register` and
   `POST /auth/unlock` receive the master password in the request body
   (`apps/services/api/src/auth/register.ts`, `unlock.ts`) and run the KDF
-  server-side. The server must never log, return, or persist the plaintext
-  master password (see Absolute rules), but it **does** see it in transit and
-  in process memory.
-- **Key derivation — planned:** client-side KDF and end-to-end encryption, so
-  the server never sees the master password or the vault key
+  server-side. The master password is never stored or logged by the server
+  (see Absolute rules), but the server **does** see it in transit and in
+  process memory. This is **not** zero-knowledge today.
+- **Key derivation — approved target:** zero-knowledge — client-side KDF and
+  end-to-end encryption, so the server never sees the master password or the
+  vault key
   ([ADR-007](architecture/adr/ADR-007-vault-key-client-availability.md)
-  Option B). Not yet implemented; start is gated by `t_3f1b0521`.
+  Option B, Accepted). Not yet implemented; start is gated by `t_3f1b0521`.
 - **Nonce / IV:** 12 bytes, random per encryption. GCM nonce uniqueness is
   critical.
 - **Integrity:** GCM auth tag (built-in). Detects tampering; decryption fails

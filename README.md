@@ -27,9 +27,13 @@ small, safe surface. V1 scope is defined in [PROJECT_BRIEF.md](PROJECT_BRIEF.md)
 
 - Symmetric AEAD with a vault key derived from the master password — **not** OpenPGP.
 - No server-side keyring recovery.
-- **Target (ADR-007 Option B):** the server never sees the master password or the
-  vault key. **The current implementation does not meet this yet** — see the
-  feature-status table above.
+- **Current state:** the master password is sent to the server on
+  `POST /auth/register` and `POST /auth/unlock`, and the Argon2id KDF runs
+  **server-side**. The master password is never stored or logged. This is
+  **not** zero-knowledge yet.
+- **Approved target (ADR-007 Option B):** zero-knowledge — client-side KDF, so
+  the server never sees the master password or the vault key. Not yet
+  implemented — see the feature-status table above.
 - A full vault manager: password generation is a feature, not the product.
 
 See [ADR-001](architecture/adr/ADR-001-functional-patterns-from-passbolt.md) for the
