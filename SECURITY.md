@@ -1,7 +1,8 @@
 # Security
 
-This document summarises the security posture of the Password Manager project. The authoritative
-threat model and crypto decisions live in [SEC-001](architecture/adr/SEC-001-threat-model.md).
+This document summarises the security posture of the Password Manager project.
+The authoritative threat model and crypto decisions live in
+[SEC-001](architecture/adr/SEC-001-threat-model.md).
 
 ## Threat model summary
 
@@ -12,37 +13,59 @@ SEC-001 covers 7 minimum attack vectors:
 3. Hostile extension / page
 4. Leakage via logs / errors / URLs / telemetry
 5. Stolen device / unlocked session
-6. Forgotten master password / corrupted backup / failed migration
+6. Forgotten master password
+7. Corrupted backup / failed migration
 
 ## Crypto decisions summary (no secret values)
 
-| Decision | Choice | Rationale |
-|---|---|---|
-| KDF | Argon2id (per SEC-001) | Memory-hard, resistant to GPU/ASIC brute force |
-| AEAD | AES-256-GCM | Standard, audited, 128-bit authentication tag |
-| Key derivation | Master password → KDF → vault key | Server never sees or stores master password |
-| Nonce / IV | 12 bytes, random per encryption | GCM nonce uniqueness is critical |
-| Integrity | GCM auth tag (built-in) | Detects tamper; decryption fails on mismatch |
-| Lock / unlock | Vault key held in memory only, cleared on lock | Minimizes key exposure window |
-| Recovery | Post-MVP — not in V1 scope | Backup key MVP deferred |
-| Backup | Post-MVP — architecture prepared | Restore tested before shipping |
-| Browser bridge | Vault key in extension memory only, Web Crypto | No offscreen document in MVP; content scripts never touch crypto |
+- **KDF:** Argon2id (per SEC-001). Memory-hard, resistant to GPU/ASIC brute
+  force.
+- **AEAD:** AES-256-GCM. Standard, audited, 128-bit authentication tag.
+- **Key derivation — current implementation:** master password → Argon2id →
+  vault key, computed **on the server**. `POST /auth/register` and
+  `POST /auth/unlock` receive the master password in the request body
+  (`apps/services/api/src/auth/register.ts`, `unlock.ts`) and run the KDF
+  server-side. The server must never log, return, or persist the plaintext
+  master password (see Absolute rules), but it **does** see it in transit and
+  in process memory.
+- **Key derivation — planned:** client-side KDF and end-to-end encryption, so
+  the server never sees the master password or the vault key
+  ([ADR-007](architecture/adr/ADR-007-vault-key-client-availability.md)
+  Option B). Not yet implemented; start is gated by `t_3f1b0521`.
+- **Nonce / IV:** 12 bytes, random per encryption. GCM nonce uniqueness is
+  critical.
+- **Integrity:** GCM auth tag (built-in). Detects tampering; decryption fails
+  on mismatch.
+- **Lock / unlock:** vault key held in memory only (today: server process
+  memory, per SEC-001), cleared on `POST /auth/lock`. Minimizes the key
+  exposure window.
+- **Recovery:** post-MVP, not in V1 scope. Backup key MVP deferred.
+- **Backup:** post-MVP, architecture prepared. Restore tested before shipping.
+- **Browser bridge (planned):** vault key in extension memory only, Web
+  Crypto. No offscreen document in MVP; content scripts never touch crypto.
 
-Full detail, rationale, and absolute rules in [SEC-001](architecture/adr/SEC-001-threat-model.md).
+Full detail, rationale, and absolute rules in
+[SEC-001](architecture/adr/SEC-001-threat-model.md).
 
 ## Absolute rules
 
 - **No home-grown crypto.** Only standard, audited primitives.
-- **No real secrets in code, logs, errors, URLs, or telemetry.** Synthetic fixtures only.
-- **Positive AND negative tests per crypto change.** Tampered ciphertext must be rejected.
-- **Migration / rollback strategy** must exist before any schema change touches encrypted data.
-- **No plaintext master password or vault key ever logged, returned, or persisted** on the server.
+- **No real secrets in code, logs, errors, URLs, or telemetry.** Synthetic
+  fixtures only.
+- **Positive AND negative tests per crypto change.** Tampered ciphertext must
+  be rejected.
+- **Migration / rollback strategy** must exist before any schema change
+  touches encrypted data.
+- **No plaintext master password or vault key ever logged, returned, or
+  persisted** on the server.
 
 ## Disclosure policy
 
 - Security issues: do not open a public issue. Contact the maintainers directly.
-- All security-relevant changes must pass the SEC-001 threat-vector checklist before merge.
-- Secret scanning (gitleaks / truffleHog) runs in CI on every push; a real secret fails the pipeline.
+- All security-relevant changes must pass the SEC-001 threat-vector checklist
+  before merge.
+- Secret scanning (gitleaks / truffleHog) runs in CI on every push; a real
+  secret fails the pipeline.
 - **Response timeline:** we aim to acknowledge reports within 5 business days
   and provide a status update within 10 business days. There is no fixed
   deadline for a fix; complex issues may require more time, and we will
@@ -74,7 +97,7 @@ Full detail, rationale, and absolute rules in [SEC-001](architecture/adr/SEC-001
 
 ## Secrets in Kanban — absolute rule (SEC-001 extension, T_B51A1FF3)
 
-**Status: Active — 2026-09-17**
+Status: Active — 2026-09-17
 
 A Kanban board is a durable, shared artifact: comment bodies, completion
 summaries, run `result` fields, and run metadata are all stored in
@@ -128,6 +151,7 @@ there is no allowlist shared between them and no ordering dependency on
 correctness.
 
 **Cross-reference (open items):**
+
 - `QA_SIGN_OFF_GATE.md` is not yet in this tree — it lives on
   `qa/t_5455942d-gate-fix` (unmerged). Once that branch merges, the sentence
   "documented in `QA_SIGN_OFF_GATE.md`" above becomes resolvable in-tree. Owner:
@@ -138,11 +162,12 @@ correctness.
 
 - Architect profile: installed + allowlisted + `fail_closed: true`
   (`tests/evidence/t_b51a1ff3/hooks-doctor.txt`).
-- Backend/browser/docs/frontend/product profiles: installed + `fail_closed: true` +
-  `hooks_auto_accept: true`; hook self-approves on first dispatch (verified: the 5
-  profiles' `shell-hooks-allowlist.json` lack the entry pre-dispatch, and the hook
-  fires correctly in live-fire from `hermes hooks test` — which does **not** trigger
-  auto-accept, confirming the guard runs even before the allowlist entry exists).
+- Backend/browser/docs/frontend/product profiles: installed +
+  `fail_closed: true` + `hooks_auto_accept: true`; hook self-approves on first
+  dispatch (verified: the 5 profiles' `shell-hooks-allowlist.json` lack the
+  entry pre-dispatch, and the hook fires correctly in live-fire from
+  `hermes hooks test` — which does **not** trigger auto-accept, confirming the
+  guard runs even before the allowlist entry exists).
 - qa profile: installed + allowlisted + `fail_closed: true`
   (`tests/evidence/t_b51a1ff3/hooks-doctor.txt`).
 - Selftest: 21/21 cases pass (`scripts/qa/secret-guard.selftest.mjs`).
@@ -158,11 +183,12 @@ correctness.
 control on the trusted host. The hook, the board (`kanban.db`), the profile
 `config.yaml` and the allowlist all run with the worker's own file-system and
 Hermes credentials — there is no cryptographic boundary between a worker and its
-profile. The guard does not make a board comment impossible to create; it makes it
-fail at dispatch time for every profile that has the hook installed with
+profile. The guard does not make a board comment impossible to create; it makes
+it fail at dispatch time for every profile that has the hook installed with
 `fail_closed: true`. Treat it as a first line, not a promise.
 
 **Reference:** `scripts/qa/secret-guard.mjs` (gate logic), `scripts/qa/hooks/`
 (hook shell wrapper + installer + verifier).
 
-See [architecture/kanban/backlog.md](architecture/kanban/backlog.md) for the task that wires these into CI (QA-001d).
+See [architecture/kanban/backlog.md](architecture/kanban/backlog.md) for the
+task that wires these into CI (QA-001d).
